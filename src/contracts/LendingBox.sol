@@ -1,13 +1,13 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.7;
 
+import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@uniswap/lib/contracts/libraries/TransferHelper.sol";
 import "clones-with-immutable-args/Clone.sol";
 import "../interfaces/IButtonWoodBondController.sol";
 import "../interfaces/ISlipFactory.sol";
 import "../interfaces/ISlip.sol";
-import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
 import "../../utils/CBBImmutableArgs.sol";
 import "../interfaces/ILendingBox.sol";
 
@@ -34,12 +34,29 @@ contract LendingBox is
     uint256 public constant s_price_granularity = 1000000000;
 
     function initialize() external initializer {
-        if(penalty() > s_penalty_granularity) revert PenaltyTooHigh({given: penalty(), maxPenalty: s_price_granularity});
-        if(bond().isMature()) revert BondIsMature({given: bond().isMature(), required: false});
+        if (penalty() > s_penalty_granularity)
+            revert PenaltyTooHigh({
+                given: penalty(),
+                maxPenalty: s_price_granularity
+            });
+        if (bond().isMature())
+            revert BondIsMature({given: bond().isMature(), required: false});
         // Safe-Tranche cannot be the Z-Tranche
-        if(trancheIndex() >= bond().trancheCount() - 1) revert TrancheIndexOutOfBonds({given: trancheIndex(), maxIndex: bond().trancheCount() - 2});
-        if(price() > s_price_granularity) revert InitialPriceTooHigh({given: price(), maxPrice: s_price_granularity});
-        if(startDate() >= bond().maturityDate()) revert StartDateAfterMaturity({given: startDate(), maxStartDate: bond().maturityDate()});
+        if (trancheIndex() >= bond().trancheCount() - 1)
+            revert TrancheIndexOutOfBonds({
+                given: trancheIndex(),
+                maxIndex: bond().trancheCount() - 2
+            });
+        if (price() > s_price_granularity)
+            revert InitialPriceTooHigh({
+                given: price(),
+                maxPrice: s_price_granularity
+            });
+        if (startDate() >= bond().maturityDate())
+            revert StartDateAfterMaturity({
+                given: startDate(),
+                maxStartDate: bond().maturityDate()
+            });
 
         (ITranche safeTranche, ) = bond().tranches(trancheIndex());
         (ITranche riskTranche, ) = bond().tranches(bond().trancheCount() - 1);
@@ -67,8 +84,12 @@ contract LendingBox is
         - initial price of bond must be set
      */
 
-    function lend(uint256 stableAmount) override external {
-        if(startDate() > block.timestamp) revert LendingBoxNotStarted({given: startDate(), minStartDate: block.timestamp});
+    function lend(uint256 stableAmount) external override {
+        if (startDate() > block.timestamp)
+            revert LendingBoxNotStarted({
+                given: startDate(),
+                minStartDate: block.timestamp
+            });
 
         uint256 _currentPrice = this.currentPrice();
 
@@ -96,8 +117,12 @@ contract LendingBox is
         - must be enough stable tokens inside lending box to borrow 
      */
 
-    function borrow(uint256 collateralAmount) override external {
-        if(startDate() > block.timestamp) revert LendingBoxNotStarted({given: startDate(), minStartDate: block.timestamp});
+    function borrow(uint256 collateralAmount) external override {
+        if (startDate() > block.timestamp)
+            revert LendingBoxNotStarted({
+                given: startDate(),
+                minStartDate: block.timestamp
+            });
 
         //load storage into memory
 
@@ -107,7 +132,12 @@ contract LendingBox is
 
         (, uint256 safeRatio) = bond().tranches(trancheIndex());
         (, uint256 riskRatio) = bond().tranches(bond().trancheCount() - 1);
-        if(stableToken().balanceOf(address(this)) < (collateralAmount * safeRatio * _currentPrice) / price_granularity / tranche_granularity) revert NotEnoughFundsInLendingBox();
+        if (
+            stableToken().balanceOf(address(this)) <
+            (collateralAmount * safeRatio * _currentPrice) /
+                price_granularity /
+                tranche_granularity
+        ) revert NotEnoughFundsInLendingBox();
 
         TransferHelper.safeTransferFrom(
             address(collateralToken()),
@@ -153,7 +183,7 @@ contract LendingBox is
      * @dev returns time-weighted current price for Tranches, with final price as $1.00 at maturity
      */
 
-    function currentPrice() override external view returns (uint256) {
+    function currentPrice() external view override returns (uint256) {
         //load storage variables into memory
         uint256 _price = s_price_granularity;
         uint256 maturityDate = bond().maturityDate();
@@ -178,8 +208,15 @@ contract LendingBox is
      *  - `msg.sender` must have `approved` `stableAmount` of stable tokens to this contract
      */
 
-    function repay(uint256 stableAmount, uint256 zSlipAmount) override external {
-        if(startDate() > block.timestamp) revert LendingBoxNotStarted({given: startDate(), minStartDate: block.timestamp});
+    function repay(uint256 stableAmount, uint256 zSlipAmount)
+        external
+        override
+    {
+        if (startDate() > block.timestamp)
+            revert LendingBoxNotStarted({
+                given: startDate(),
+                minStartDate: block.timestamp
+            });
 
         //Require statement for "overpayment"?
 
@@ -261,8 +298,12 @@ contract LendingBox is
      *  - `msg.sender` must have `approved` `safeSlipAmount` of safe-Slip tokens to this contract
      */
 
-    function redeemA(uint256 safeSlipAmount) override external {
-        if(startDate() > block.timestamp) revert LendingBoxNotStarted({given: startDate(), minStartDate: block.timestamp});
+    function redeemA(uint256 safeSlipAmount) external override {
+        if (startDate() > block.timestamp)
+            revert LendingBoxNotStarted({
+                given: startDate(),
+                minStartDate: block.timestamp
+            });
 
         (ITranche safeTranche, ) = bond().tranches(trancheIndex());
         (ITranche riskTranche, ) = bond().tranches(bond().trancheCount() - 1);

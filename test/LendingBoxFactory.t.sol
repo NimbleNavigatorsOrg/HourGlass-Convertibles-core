@@ -2,27 +2,47 @@
 pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
-import "../src/contracts/LendingBoxFactory.sol";
+import "@buttonwood-protocol/tranche/contracts/Tranche.sol";
 import "../src/contracts/LendingBox.sol";
+import "../src/contracts/LendingBoxFactory.sol";
 import "../src/contracts/ButtonWoodBondController.sol";
 
-contract LendingBoxFactoryTest is Test {
+// import "../src/contracts/external/ERC20.sol";
 
+// import "@buttonwood-protocol/tranche/contracts/TrancheFactory.sol";
+// import "../src/contracts/Slip.sol";
+// import "../src/contracts/SlipFactory.sol";
+
+contract LendingBoxFactoryTest is Test {
     ButtonWoodBondController buttonWoodBondController;
     LendingBox lendingBox;
     LendingBoxFactory lendingBoxFactory;
 
+    // ERC20 collateralToken;
+    // ERC20 stableToken;
+    // TrancheFactory trancheFactory;
+    // Tranche tranche;
+    // Slip slip;
+    // SlipFactory slipFactory;
+
     function setUp() public {
-
-        // create buttonwood tranche factory
-
         // create buttonwood bond collateral token
+        // collateralToken = new ERC20("CollateralToken", "CT");
 
-        // create stable token
+        // // create stable token
+        // stableToken = new ERC20("StableToken", "ST");
 
-        // create slip
+        // // create tranche
+        // tranche = new Tranche();
 
-        // create slip factory
+        // // create buttonwood tranche factory
+        // trancheFactory = new TrancheFactory(address(tranche));
+
+        // // create slip
+        // slip = new Slip();
+
+        // // create slip factory
+        // slipFactory = new SlipFactory(address(slip));
 
         buttonWoodBondController = new ButtonWoodBondController();
         lendingBox = new LendingBox();
@@ -32,8 +52,6 @@ contract LendingBoxFactoryTest is Test {
     function testFactoryCreatesLendingBox() public {
         // keep this assert
         assertEq(lendingBoxFactory.implementation(), address(lendingBox));
-
-
 
         // call init on bondcontroller
 

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.7;
 
-import "@rari-capital/solmate/src/tokens/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "clones-with-immutable-args/Clone.sol";
-import '../src/interfaces/ISlipFactory.sol';
-import '../src/interfaces/IButtonWoodBondController.sol';
+import "../src/interfaces/ISlipFactory.sol";
+import "../src/interfaces/IButtonWoodBondController.sol";
 
 /**
  * @notice Defines the immutable arguments for a CBB
@@ -12,7 +12,6 @@ import '../src/interfaces/IButtonWoodBondController.sol';
  * we fetch args from the code section
  */
 contract CBBImmutableArgs is Clone {
-
     /**
      * @notice The bond that holds the tranches
      * @dev using ClonesWithImmutableArgs pattern here to save gas
@@ -49,8 +48,8 @@ contract CBBImmutableArgs is Clone {
      * @dev https://github.com/wighawag/clones-with-immutable-args
      * @return The asset being used to make bids
      */
-    function collateralToken() public pure returns (ERC20) {
-        return ERC20(_getArgAddress(72));
+    function collateralToken() public pure returns (IERC20) {
+        return IERC20(_getArgAddress(72));
     }
 
     /**
@@ -59,11 +58,11 @@ contract CBBImmutableArgs is Clone {
      * @dev https://github.com/wighawag/clones-with-immutable-args
      * @return The asset being used to make bids
      */
-    function stableToken() public pure returns (ERC20) {
-        return ERC20(_getArgAddress(92));
+    function stableToken() public pure returns (IERC20) {
+        return IERC20(_getArgAddress(92));
     }
 
-        /**
+    /**
      * @notice The initial price
      * @dev using ClonesWithImmutableArgs pattern here to save gas
      * @dev https://github.com/wighawag/clones-with-immutable-args
@@ -92,6 +91,4 @@ contract CBBImmutableArgs is Clone {
     function trancheIndex() public pure returns (uint256) {
         return _getArgUint256(176);
     }
-
-
 }
