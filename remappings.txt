@@ -1,0 +1,5 @@
+@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/
+@uniswap/lib/=lib/solidity-lib/
+clones-with-immutable-args/=lib/clones-with-immutable-args/src/
+@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/
+@rari-capital/solmate/src/=lib/solmate/src/
