@@ -16,3 +16,6 @@
 [submodule "lib/solmate"]
 	path = lib/solmate
 	url = https://github.com/Rari-Capital/solmate
+[submodule "lib/tranche"]
+	path = lib/tranche
+	url = https://github.com/buttonwood-protocol/tranche

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.7;
+pragma solidity ^0.8.7;
 
 import "@rari-capital/solmate/src/tokens/ERC20.sol";
 import "clones-with-immutable-args/Clone.sol";
