@@ -3,7 +3,7 @@ pragma solidity ^0.8.7;
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@uniswap/lib/contracts/libraries/TransferHelper.sol";
-import "./ITranche.sol";
+import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
 
 struct TrancheData {
     ITranche token;

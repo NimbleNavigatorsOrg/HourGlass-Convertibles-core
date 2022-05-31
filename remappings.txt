@@ -2,5 +2,5 @@
 @uniswap/lib/=lib/solidity-lib/
 clones-with-immutable-args/=lib/clones-with-immutable-args/src/
 @openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/
-@rari-capital/solmate/tokens/=lib/solmate/src/tokens/
-../interfaces/ITranche.sol=lib/tranche/contracts/interfaces/ITranche.sol
+@rari-capital/solmate/=lib/solmate/
+@buttonwood-protocol/tranche/contracts/interfaces/=lib/tranche/contracts/interfaces/

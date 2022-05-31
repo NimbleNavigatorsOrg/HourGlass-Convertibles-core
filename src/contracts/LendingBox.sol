@@ -7,7 +7,7 @@ import "clones-with-immutable-args/Clone.sol";
 import "../interfaces/IButtonWoodBondController.sol";
 import "../interfaces/ISlipFactory.sol";
 import "../interfaces/ISlip.sol";
-import "../interfaces/ITranche.sol";
+import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
 import "../../utils/CBBImmutableArgs.sol";
 import "../interfaces/ILendingBox.sol";
 

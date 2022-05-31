@@ -7,9 +7,8 @@ import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@uniswap/lib/contracts/libraries/TransferHelper.sol";
 import "../interfaces/IButtonWoodBondController.sol";
-import "../interfaces/ITrancheFactory.sol";
-import "../interfaces/ITranche.sol";
-
+import "@buttonwood-protocol/tranche/contracts/interfaces/ITrancheFactory.sol";
+import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
 /**
  * @dev Controller for a ButtonTranche bond
  *
