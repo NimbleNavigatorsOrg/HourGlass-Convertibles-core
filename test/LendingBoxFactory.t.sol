@@ -25,6 +25,14 @@ contract LendingBoxFactoryTest is Test {
     SlipFactory slipFactory;
     uint256[] ratios;
 
+    event LendingBoxCreated(
+        address collateralToken, 
+        address stableToken, 
+        uint256 trancheIndex,
+        uint256 penalty, 
+        address creator
+    );
+
     function setUp() public {
         //push numbers into array
         ratios.push(200);
@@ -102,7 +110,41 @@ contract LendingBoxFactoryTest is Test {
         assertEq(deployedLendingBox.price(), 5e8);
         assertEq(deployedLendingBox.startDate(), 1654100749);
         assertEq(deployedLendingBox.trancheIndex(), 0);
-
-        //TODO: Test event emission
     }
+
+     function testExpectEmit() public {
+
+        LendingBox tempBox = new LendingBox();
+        LendingBoxFactory boxFactory = new LendingBoxFactory(address(tempBox));
+
+        buttonWoodBondController.init(
+            address(trancheFactory),
+            address(collateralToken),
+            address(this),
+            ratios,
+            1656717949,
+            1000e9
+        );
+
+        vm.expectEmit(false, false, false, false);
+        // The event we expect
+        emit LendingBoxCreated(
+         address(collateralToken), 
+         address(stableToken), 
+         0,
+         500, 
+        address(this)
+        );
+        // The event we get
+        boxFactory.createLendingBox(            
+            buttonWoodBondController,
+            slipFactory,
+            500,
+            address(collateralToken),
+            address(stableToken),
+            5e8,
+            1654100749,
+            0
+        );
+    } 
 }
