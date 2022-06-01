@@ -1,6 +1,6 @@
-@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/
 @uniswap/lib/=lib/solidity-lib/
 clones-with-immutable-args/=lib/clones-with-immutable-args/src/
 @openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/
-@buttonwood-protocol/tranche/contracts=lib/tranche/contracts/
+@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/
+@buttonwood-protocol/tranche/=lib/tranche/
 forge-std/=lib\forge-std\src/
