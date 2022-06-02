@@ -112,7 +112,7 @@ contract LendingBoxFactoryTest is Test {
         assertEq(deployedLendingBox.trancheIndex(), 0);
     }
 
-     function testExpectEmit() public {
+     function testCreateLendingBoxEmitsExpectedEvent() public {
 
         LendingBox tempBox = new LendingBox();
         LendingBoxFactory boxFactory = new LendingBoxFactory(address(tempBox));
@@ -126,7 +126,7 @@ contract LendingBoxFactoryTest is Test {
             1000e9
         );
 
-        vm.expectEmit(false, false, false, false);
+        vm.expectEmit(true, true, true, true);
         // The event we expect
         emit LendingBoxCreated(
          address(collateralToken), 
