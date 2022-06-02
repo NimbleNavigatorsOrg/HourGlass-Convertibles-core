@@ -292,13 +292,59 @@ contract LendingBox is
     }
 
     /**
-     * @dev allows lender to redeem safe-slip for tranches and/or stables
+     * @dev allows lender to redeem safe-slip for tranches
      * @param safeSlipAmount The amount of safe-slips to redeem
      * Requirements:
      *  - `msg.sender` must have `approved` `safeSlipAmount` of safe-Slip tokens to this contract
      */
 
-    function redeemA(uint256 safeSlipAmount) external override {
+    function redeemTranche(uint256 safeSlipAmount) external override {
+        if (block.timestamp < bond().maturityDate())
+            revert BondNotMatureYet({
+                maturityDate: bond().maturityDate(),
+                currentTime: block.timestamp
+            });
+
+        (ITranche safeTranche, ) = bond().tranches(trancheIndex());
+        (ITranche riskTranche, ) = bond().tranches(bond().trancheCount() - 1);
+
+        address safeSlipTokenAddress = s_safeSlipTokenAddress;
+        uint256 safeTrancheBalance = IERC20(address(safeTranche)).balanceOf(
+            address(this)
+        );
+
+        //burn safe-slips
+        ISlip(safeSlipTokenAddress).burn(_msgSender(), safeSlipAmount);
+
+        //transfer safe-Tranche after maturity only
+        TransferHelper.safeTransfer(
+            address(safeTranche),
+            _msgSender(),
+            (safeSlipAmount)
+        );
+
+        uint256 zPenaltyTotal = IERC20(address(riskTranche)).balanceOf(
+            address(this)
+        ) - IERC20(s_riskSlipTokenAddress).totalSupply();
+
+        //transfer risk-Tranche penalty after maturity only
+        TransferHelper.safeTransfer(
+            address(riskTranche),
+            _msgSender(),
+            (safeSlipAmount * zPenaltyTotal) / safeTrancheBalance
+        );
+
+        emit RedeemTranche(_msgSender(), safeSlipAmount);
+    }
+
+    /**
+     * @dev allows lender to redeem safe-slip for stables
+     * @param safeSlipAmount The amount of safe-slips to redeem
+     * Requirements:
+     *  - `msg.sender` must have `approved` `safeSlipAmount` of safe-Slip tokens to this contract
+     */
+
+    function redeemStable(uint256 safeSlipAmount) external override {
         if (startDate() > block.timestamp)
             revert LendingBoxNotStarted({
                 given: startDate(),
@@ -306,7 +352,6 @@ contract LendingBox is
             });
 
         (ITranche safeTranche, ) = bond().tranches(trancheIndex());
-        (ITranche riskTranche, ) = bond().tranches(bond().trancheCount() - 1);
 
         address safeSlipTokenAddress = s_safeSlipTokenAddress;
 
@@ -326,30 +371,9 @@ contract LendingBox is
         TransferHelper.safeTransfer(
             address(stableToken()),
             _msgSender(),
-            (safeSlipAmount * stableBalance) /
-                (repaidSafeSlips) /
-                safeSlipSupply
+            (safeSlipAmount * stableBalance) / (repaidSafeSlips)
         );
 
-        if (block.timestamp >= bond().maturityDate()) {
-            //transfer safe-Tranche after maturity only
-            TransferHelper.safeTransfer(
-                address(safeTranche),
-                _msgSender(),
-                (safeSlipAmount * safeTrancheBalance) / safeSlipSupply
-            );
-
-            uint256 zPenaltyTotal = IERC20(address(riskTranche)).balanceOf(
-                address(this)
-            ) - IERC20(s_riskSlipTokenAddress).totalSupply();
-
-            //transfer risk-Tranche penalty after maturity only
-            TransferHelper.safeTransfer(
-                address(riskTranche),
-                _msgSender(),
-                (safeSlipAmount * zPenaltyTotal) / safeSlipSupply
-            );
-        }
-        emit RedeemA(_msgSender(), safeSlipAmount, this.currentPrice());
+        emit RedeemStable(_msgSender(), safeSlipAmount, this.currentPrice());
     }
 }

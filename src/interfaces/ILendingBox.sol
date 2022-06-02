@@ -10,10 +10,10 @@ import "clones-with-immutable-args/Clone.sol";
  */
 
 interface ILendingBox {
-
     event Lend(address, uint256, uint256);
     event Borrow(address, uint256, uint256);
-    event RedeemA(address, uint256, uint256);
+    event RedeemStable(address, uint256, uint256);
+    event RedeemTranche(address, uint256);
     event Repay(address, uint256, uint256, uint256, uint256);
 
     error PenaltyTooHigh(uint256 given, uint256 maxPenalty);
@@ -22,6 +22,7 @@ interface ILendingBox {
     error InitialPriceTooHigh(uint256 given, uint256 maxPrice);
     error StartDateAfterMaturity(uint256 given, uint256 maxStartDate);
     error LendingBoxNotStarted(uint256 given, uint256 minStartDate);
+    error BondNotMatureYet(uint256 maturityDate, uint256 currentTime);
     error NotEnoughFundsInLendingBox();
 
     /**
@@ -65,11 +66,20 @@ interface ILendingBox {
     function repay(uint256 stableAmount, uint256 zSlipAmount) external;
 
     /**
-     * @dev allows lender to redeem safe-slip for tranches and/or stables
+     * @dev allows lender to redeem safe-slip for tranches
      * @param safeSlipAmount The amount of safe-slips to redeem
      * Requirements:
      *  - `msg.sender` must have `approved` `safeSlipAmount` of safe-Slip tokens to this contract
      */
 
-    function redeemA(uint256 safeSlipAmount) external;
+    function redeemTranche(uint256 safeSlipAmount) external;
+
+    /**
+     * @dev allows lender to redeem safe-slip for stables
+     * @param safeSlipAmount The amount of safe-slips to redeem
+     * Requirements:
+     *  - `msg.sender` must have `approved` `safeSlipAmount` of safe-Slip tokens to this contract
+     */
+
+    function redeemStable(uint256 safeSlipAmount) external;
 }
