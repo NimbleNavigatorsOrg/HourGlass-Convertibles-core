@@ -12,22 +12,30 @@ import "../src/contracts/Slip.sol";
 import "../src/contracts/SlipFactory.sol";
 
 contract LendingBoxFactoryTest is Test {
-    ButtonWoodBondController buttonWoodBondController;
-    LendingBox lendingBox;
-    LendingBoxFactory lendingBoxFactory;
+    ButtonWoodBondController s_buttonWoodBondController;
+    LendingBox s_lendingBox;
+    LendingBoxFactory s_lendingBoxFactory;
 
-    ERC20 collateralToken;
+    ERC20 s_collateralToken;
 
-    ERC20 stableToken;
-    TrancheFactory trancheFactory;
-    Tranche tranche;
-    CBBSlip slip;
-    SlipFactory slipFactory;
-    uint256[] ratios;
+    ERC20 s_stableToken;
+    TrancheFactory s_trancheFactory;
+    Tranche s_tranche;
+    CBBSlip s_slip;
+    SlipFactory s_slipFactory;
+    uint256[] s_ratios;
+    uint256 constant s_penalty = 500;
+    uint256 constant s_price = 5e8;
+    uint256 constant s_startDate = 1654100749;
+    uint256 constant s_trancheIndex = 0;
+    uint256 constant s_maturityDate = 1656717949;
+    uint256 constant s_depositLimit = 1000e9;
+    error PenaltyTooHigh(uint256 given, uint256 maxPenalty);
+    address s_deployedLendingBoxAddress;
 
     event LendingBoxCreated(
-        address collateralToken, 
-        address stableToken, 
+        address s_collateralToken, 
+        address s_stableToken, 
         uint256 trancheIndex,
         uint256 penalty, 
         address creator
@@ -35,116 +43,170 @@ contract LendingBoxFactoryTest is Test {
 
     function setUp() public {
         //push numbers into array
-        ratios.push(200);
-        ratios.push(300);
-        ratios.push(500);
+        s_ratios.push(200);
+        s_ratios.push(300);
+        s_ratios.push(500);
 
         // create buttonwood bond collateral token
-        collateralToken = new ERC20("CollateralToken", "CT");
+        s_collateralToken = new ERC20("CollateralToken", "CT");
 
         // // create stable token
-        stableToken = new ERC20("StableToken", "ST");
+        s_stableToken = new ERC20("StableToken", "ST");
 
         // // create tranche
-        tranche = new Tranche();
+        s_tranche = new Tranche();
 
         // // create buttonwood tranche factory
-        trancheFactory = new TrancheFactory(address(tranche));
+        s_trancheFactory = new TrancheFactory(address(s_tranche));
 
-        // // create slip
-        slip = new CBBSlip();
+        // // create s_slip
+        s_slip = new CBBSlip();
 
-        // // create slip factory
-        slipFactory = new SlipFactory(address(slip));
+        // // create s_slip factory
+        s_slipFactory = new SlipFactory(address(s_slip));
 
-        buttonWoodBondController = new ButtonWoodBondController();
-        lendingBox = new LendingBox();
-        lendingBoxFactory = new LendingBoxFactory(address(lendingBox));
+        s_buttonWoodBondController = new ButtonWoodBondController();
+        s_lendingBox = new LendingBox();
+        s_lendingBoxFactory = new LendingBoxFactory(address(s_lendingBox));
+
+        s_buttonWoodBondController.init(
+            address(s_trancheFactory),
+            address(s_collateralToken),
+            address(this),
+            s_ratios,
+            s_maturityDate,
+            s_depositLimit
+        );
+
+        s_deployedLendingBoxAddress = s_lendingBoxFactory.createLendingBox(            
+            s_buttonWoodBondController,
+            s_slipFactory,
+            s_penalty,
+            address(s_collateralToken),
+            address(s_stableToken),
+            s_price,
+            s_startDate,
+            s_trancheIndex
+        );
     }
 
     function testFactoryCreatesLendingBox() public {
-        // keep this assert
-        assertEq(lendingBoxFactory.implementation(), address(lendingBox));
-
-        // call init on bondcontroller
-        buttonWoodBondController.init(
-            address(trancheFactory),
-            address(collateralToken),
-            address(this),
-            ratios,
-            1656717949,
-            1000e9
-        );
-
-        // call createLendingbox should return an address from factory
-        address deployedLendingBoxAddress = lendingBoxFactory.createLendingBox(
-            buttonWoodBondController,
-            slipFactory,
-            500,
-            address(collateralToken),
-            address(stableToken),
-            5e8,
-            1654100749,
-            0
-        );
-
         // wrap address in ILendingBox and make assertions on inital values
-        LendingBox deployedLendingBox = LendingBox(deployedLendingBoxAddress);
+        LendingBox deployedLendingBox = LendingBox(s_deployedLendingBoxAddress);
+
+        // keep this assert
+        assertEq(s_lendingBoxFactory.implementation(), address(s_lendingBox));
+
         assertEq(
             address(deployedLendingBox.bond()),
-            address(buttonWoodBondController)
+            address(s_buttonWoodBondController)
         );
         assertEq(
             address(deployedLendingBox.slipFactory()),
-            address(slipFactory)
+            address(s_slipFactory)
         );
-        assertEq(deployedLendingBox.penalty(), 500);
+        assertEq(deployedLendingBox.penalty(), s_penalty);
         assertEq(
             address(deployedLendingBox.collateralToken()),
-            address(collateralToken)
+            address(s_collateralToken)
         );
         assertEq(
             address(deployedLendingBox.stableToken()),
-            address(stableToken)
+            address(s_stableToken)
         );
-        assertEq(deployedLendingBox.price(), 5e8);
-        assertEq(deployedLendingBox.startDate(), 1654100749);
-        assertEq(deployedLendingBox.trancheIndex(), 0);
+        assertEq(deployedLendingBox.price(), s_price);
+        assertEq(deployedLendingBox.startDate(), s_startDate);
+        assertEq(deployedLendingBox.trancheIndex(), s_trancheIndex);
     }
 
      function testCreateLendingBoxEmitsExpectedEvent() public {
 
-        LendingBox tempBox = new LendingBox();
-        LendingBoxFactory boxFactory = new LendingBoxFactory(address(tempBox));
-
-        buttonWoodBondController.init(
-            address(trancheFactory),
-            address(collateralToken),
-            address(this),
-            ratios,
-            1656717949,
-            1000e9
-        );
-
         vm.expectEmit(true, true, true, true);
         // The event we expect
         emit LendingBoxCreated(
-         address(collateralToken), 
-         address(stableToken), 
-         0,
-         500, 
+         address(s_collateralToken), 
+         address(s_stableToken), 
+         s_trancheIndex,
+         s_penalty, 
         address(this)
         );
         // The event we get
-        boxFactory.createLendingBox(            
-            buttonWoodBondController,
-            slipFactory,
-            500,
-            address(collateralToken),
-            address(stableToken),
-            5e8,
-            1654100749,
-            0
+        s_lendingBoxFactory.createLendingBox(            
+            s_buttonWoodBondController,
+            s_slipFactory,
+            s_penalty,
+            address(s_collateralToken),
+            address(s_stableToken),
+            s_price,
+            s_startDate,
+            s_trancheIndex
         );
     } 
+
+    function testFailIncorrectlyInitializePenalty() public {
+        s_lendingBoxFactory.createLendingBox(            
+            s_buttonWoodBondController,
+            s_slipFactory,
+            1001,
+            address(s_collateralToken),
+            address(s_stableToken),
+            s_price,
+            s_startDate,
+            s_trancheIndex
+        );
+    }
+
+    function testFailBondIsMature() public {
+        s_buttonWoodBondController.mature();
+
+        s_lendingBoxFactory.createLendingBox(            
+            s_buttonWoodBondController,
+            s_slipFactory,
+            s_penalty,
+            address(s_collateralToken),
+            address(s_stableToken),
+            s_price,
+            s_startDate,
+            s_trancheIndex
+        );
+    }
+
+    function testFailTrancheIndexOutOfBounds() public {
+        s_lendingBoxFactory.createLendingBox(            
+            s_buttonWoodBondController,
+            s_slipFactory,
+            s_penalty,
+            address(s_collateralToken),
+            address(s_stableToken),
+            s_price,
+            s_startDate,
+            3
+        );
+    }
+
+    function testFailInitialPriceTooHigh() public {
+        s_lendingBoxFactory.createLendingBox(            
+            s_buttonWoodBondController,
+            s_slipFactory,
+            s_penalty,
+            address(s_collateralToken),
+            address(s_stableToken),
+            1000000001,
+            s_startDate,
+            s_trancheIndex
+        );
+    }
+
+    function testFailStartDateAfterMaturity() public {
+        s_lendingBoxFactory.createLendingBox(            
+            s_buttonWoodBondController,
+            s_slipFactory,
+            s_penalty,
+            address(s_collateralToken),
+            address(s_stableToken),
+            s_price,
+            s_maturityDate,
+            s_trancheIndex
+        );
+    }
 }
