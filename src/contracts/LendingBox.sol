@@ -77,14 +77,14 @@ contract LendingBox is
     }
 
     /**
-     * @dev Lends stableAmount of stable-tokens for safe-Tranche slips
-     * @param stableAmount The amount of stable tokens to lend
-     * Requirements:
-     *  - `msg.sender` must have `approved` `stableAmount` stable tokens to this contract
-        - initial price of bond must be set
+     * @inheritdoc ILendingBox
      */
 
-    function lend(uint256 stableAmount) external override {
+    function lend(
+        address _borrower,
+        address _lender,
+        uint256 stableAmount
+    ) external override {
         if (startDate() > block.timestamp)
             revert LendingBoxNotStarted({
                 given: startDate(),
@@ -92,90 +92,120 @@ contract LendingBox is
             });
 
         uint256 _currentPrice = this.currentPrice();
+        (, uint256 safeRatio) = bond().tranches(trancheIndex());
+        (, uint256 riskRatio) = bond().tranches(bond().trancheCount() - 1);
 
+        // calculate mint amount of A* based on current Price
+        uint256 mintAmount = (stableAmount * s_price_granularity) /
+            _currentPrice;
+        ISlip(s_safeSlipTokenAddress).mint(_lender, mintAmount);
+
+        // transfer collateral from msg.sender into CBB
+        uint256 collateralAmount = (mintAmount * s_tranche_granularity) /
+            safeRatio;
+        TransferHelper.safeTransferFrom(
+            bond().collateralToken(),
+            _msgSender(),
+            address(this),
+            collateralAmount
+        );
+
+        // tranche it (call deposit on buttonwoodBond)
+        bond().deposit(collateralAmount);
+
+        // mint Z* to _borrower
+        uint256 zTrancheAmount = (mintAmount * riskRatio) / safeRatio;
+        ISlip(s_riskSlipTokenAddress).mint(_borrower, zTrancheAmount);
+
+        // send stables borrower address
         TransferHelper.safeTransferFrom(
             address(stableToken()),
             _msgSender(),
-            address(this),
+            _borrower,
             stableAmount
         );
 
-        uint256 mintAmount = (stableAmount * s_price_granularity) /
-            _currentPrice;
-
-        ISlip(s_safeSlipTokenAddress).mint(_msgSender(), mintAmount);
-        emit Lend(_msgSender(), stableAmount, _currentPrice);
-    }
-
-    /**
-     * @dev Borrows with collateralAmount of collateral-tokens. Collateral tokens get tranched
-     * and any non-lending box tranches get sent back to msg.sender
-     * @param collateralAmount The buttonTranche bond tied to this Convertible Bond Box
-     * Requirements:
-     *  - `msg.sender` must have `approved` `collateralAmount` collateral tokens to this contract
-        - initial price of bond must be set
-        - must be enough stable tokens inside lending box to borrow 
-     */
-
-    function borrow(uint256 collateralAmount) external override {
-        if (startDate() > block.timestamp)
-            revert LendingBoxNotStarted({
-                given: startDate(),
-                minStartDate: block.timestamp
-            });
-
-        //load storage into memory
-
-        uint256 price_granularity = s_price_granularity;
-        uint256 tranche_granularity = s_tranche_granularity;
-        uint256 _currentPrice = this.currentPrice();
-
-        (, uint256 safeRatio) = bond().tranches(trancheIndex());
-        (, uint256 riskRatio) = bond().tranches(bond().trancheCount() - 1);
-        if (
-            stableToken().balanceOf(address(this)) <
-            (collateralAmount * safeRatio * _currentPrice) /
-                price_granularity /
-                tranche_granularity
-        ) revert NotEnoughFundsInLendingBox();
-
-        TransferHelper.safeTransferFrom(
-            address(collateralToken()),
-            _msgSender(),
-            address(this),
-            collateralAmount
-        );
-        TransferHelper.safeApprove(
-            address(collateralToken()),
-            address(bond()),
-            collateralAmount
-        );
-        bond().deposit(collateralAmount);
-
-        TransferHelper.safeTransfer(
-            address(stableToken()),
-            _msgSender(),
-            (collateralAmount * safeRatio * _currentPrice) /
-                tranche_granularity /
-                price_granularity
-        );
-
         //send back unused tranches to msg.sender
+        //TODO optimize for gas?
         for (uint256 i = 0; i < bond().trancheCount(); i++) {
             if (i != trancheIndex() && i != bond().trancheCount() - 1) {
                 (ITranche tranche, ) = bond().tranches(i);
                 TransferHelper.safeTransfer(
                     address(tranche),
-                    _msgSender(),
+                    _borrower,
                     tranche.balanceOf(address(this))
                 );
             }
         }
 
-        ISlip(s_riskSlipTokenAddress).mint(
+        emit Lend(_msgSender(), stableAmount, _currentPrice);
+    }
+
+    /**
+     * @inheritdoc ILendingBox
+     */
+
+    function borrow(
+        address _borrower,
+        address _lender,
+        uint256 collateralAmount
+    ) external override {
+        if (startDate() > block.timestamp)
+            revert LendingBoxNotStarted({
+                given: startDate(),
+                minStartDate: block.timestamp
+            });
+
+        uint256 _currentPrice = this.currentPrice();
+        (, uint256 safeRatio) = bond().tranches(trancheIndex());
+        (, uint256 riskRatio) = bond().tranches(bond().trancheCount() - 1);
+
+        // transfer collateral from msg.sender
+        TransferHelper.safeTransferFrom(
+            bond().collateralToken(),
             _msgSender(),
-            (collateralAmount * riskRatio) / tranche_granularity
+            address(this),
+            collateralAmount
         );
+
+        // tranche it (call deposit on buttonwoodBond)
+        bond().deposit(collateralAmount);
+
+        // Need to give lender A* slips
+        // calculate mint amount of A* based on tranches received
+        uint256 mintAmount = (collateralAmount * safeRatio) /
+            s_tranche_granularity;
+        ISlip(s_safeSlipTokenAddress).mint(_lender, mintAmount);
+
+        //Need to give borrower the stables and Z* slips
+        // mint Z* to _borrower
+        uint256 zTrancheAmount = (mintAmount * riskRatio) / safeRatio;
+        ISlip(s_riskSlipTokenAddress).mint(_borrower, zTrancheAmount);
+
+        //calculate stableAmount and send to borrower address
+        uint256 stableAmount = (mintAmount * _currentPrice) /
+            s_price_granularity;
+
+        TransferHelper.safeTransferFrom(
+            address(stableToken()),
+            _msgSender(),
+            _borrower,
+            stableAmount
+        );
+
+        // send unused tranches to borrower
+        //TODO optimize for gas?
+        for (uint256 i = 0; i < bond().trancheCount(); i++) {
+            if (i != trancheIndex() && i != bond().trancheCount() - 1) {
+                (ITranche tranche, ) = bond().tranches(i);
+                TransferHelper.safeTransfer(
+                    address(tranche),
+                    _borrower,
+                    tranche.balanceOf(address(this))
+                );
+            }
+        }
+
         emit Borrow(_msgSender(), collateralAmount, _currentPrice);
     }
 
@@ -199,13 +229,7 @@ contract LendingBox is
     }
 
     /**
-     * @dev allows repayment of loan in exchange for proportional amount of safe-Tranche and Z-tranche
-     * - any unpaid amount of Z-slips after maturity will be penalized upon redeeming
-     * @param stableAmount The amount of stable-Tokens to repay with
-     * @param zSlipAmount The amount of Z-slips to redeem
-     * Requirements:
-     *  - `msg.sender` must have `approved` `zSlipAmount` z-Slip tokens to this contract
-     *  - `msg.sender` must have `approved` `stableAmount` of stable tokens to this contract
+     * @inheritdoc ILendingBox
      */
 
     function repay(uint256 stableAmount, uint256 zSlipAmount)
@@ -217,8 +241,6 @@ contract LendingBox is
                 given: startDate(),
                 minStartDate: block.timestamp
             });
-
-        //Require statement for "overpayment"?
 
         //Load into memory
         uint256 _currentPrice = this.currentPrice();
@@ -292,10 +314,7 @@ contract LendingBox is
     }
 
     /**
-     * @dev allows lender to redeem safe-slip for tranches
-     * @param safeSlipAmount The amount of safe-slips to redeem
-     * Requirements:
-     *  - `msg.sender` must have `approved` `safeSlipAmount` of safe-Slip tokens to this contract
+     * @inheritdoc ILendingBox
      */
 
     function redeemTranche(uint256 safeSlipAmount) external override {
@@ -338,10 +357,7 @@ contract LendingBox is
     }
 
     /**
-     * @dev allows lender to redeem safe-slip for stables
-     * @param safeSlipAmount The amount of safe-slips to redeem
-     * Requirements:
-     *  - `msg.sender` must have `approved` `safeSlipAmount` of safe-Slip tokens to this contract
+     * @inheritdoc ILendingBox
      */
 
     function redeemStable(uint256 safeSlipAmount) external override {

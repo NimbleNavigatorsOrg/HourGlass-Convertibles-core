@@ -33,7 +33,11 @@ interface ILendingBox {
         - initial price of bond must be set
      */
 
-    function lend(uint256 stableAmount) external;
+    function lend(
+        address _borrower,
+        address _lender,
+        uint256 stableAmount
+    ) external;
 
     /**
      * @dev Borrows with collateralAmount of collateral-tokens. Collateral tokens get tranched
@@ -45,7 +49,11 @@ interface ILendingBox {
         - must be enough stable tokens inside lending box to borrow 
      */
 
-    function borrow(uint256 collateralAmount) external;
+    function borrow(
+        address _borrower,
+        address _lender,
+        uint256 collateralAmount
+    ) external;
 
     /**
      * @dev returns time-weighted current price for Tranches, with final price as $1.00 at maturity
