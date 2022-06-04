@@ -35,10 +35,10 @@ contract LendingBoxTest is Test {
     address s_deployedLendingBoxAddress;
 
     event LendingBoxCreated(
-        address s_collateralToken, 
-        address s_stableToken, 
+        address s_collateralToken,
+        address s_stableToken,
         uint256 trancheIndex,
-        uint256 penalty, 
+        uint256 penalty,
         address creator
     );
 
@@ -79,7 +79,7 @@ contract LendingBoxTest is Test {
             s_depositLimit
         );
 
-        s_deployedLendingBoxAddress = s_lendingBoxFactory.createLendingBox(            
+        s_deployedLendingBoxAddress = s_lendingBoxFactory.createLendingBox(
             s_buttonWoodBondController,
             s_slipFactory,
             s_penalty,
@@ -92,25 +92,33 @@ contract LendingBoxTest is Test {
     }
 
     function testCurrentPrice() public {
-        vm.warp((s_startDate + s_maturityDate)/2);
+        vm.warp((s_startDate + s_maturityDate) / 2);
 
-        uint256 currentPrice = LendingBox(s_deployedLendingBoxAddress).currentPrice();
-        uint256 price = LendingBox(s_deployedLendingBoxAddress).price();
-        uint256 priceGranularity = LendingBox(s_deployedLendingBoxAddress).s_price_granularity();
+        uint256 currentPrice = LendingBox(s_deployedLendingBoxAddress)
+            .currentPrice();
+        uint256 price = LendingBox(s_deployedLendingBoxAddress).initialPrice();
+        uint256 priceGranularity = LendingBox(s_deployedLendingBoxAddress)
+            .s_price_granularity();
 
-        assertEq((priceGranularity - price)/2 + price, currentPrice);
+        assertEq((priceGranularity - price) / 2 + price, currentPrice);
     }
 
     function testRepay() public {
         vm.warp(s_startDate + 1);
         uint256 stableAmount = 10;
         uint256 zSlipAmount = 20;
-        LendingBox(s_deployedLendingBoxAddress).repay(stableAmount, zSlipAmount);
+        LendingBox(s_deployedLendingBoxAddress).repay(
+            stableAmount,
+            zSlipAmount
+        );
     }
 
     function testFailRepayLendingBoxNotStarted() public {
         uint256 stableAmount = 10;
         uint256 zSlipAmount = 20;
-        LendingBox(s_deployedLendingBoxAddress).repay(stableAmount, zSlipAmount);
+        LendingBox(s_deployedLendingBoxAddress).repay(
+            stableAmount,
+            zSlipAmount
+        );
     }
 }

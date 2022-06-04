@@ -34,10 +34,10 @@ contract LendingBoxFactoryTest is Test {
     address s_deployedLendingBoxAddress;
 
     event LendingBoxCreated(
-        address s_collateralToken, 
-        address s_stableToken, 
+        address s_collateralToken,
+        address s_stableToken,
         uint256 trancheIndex,
-        uint256 penalty, 
+        uint256 penalty,
         address creator
     );
 
@@ -78,7 +78,7 @@ contract LendingBoxFactoryTest is Test {
             s_depositLimit
         );
 
-        s_deployedLendingBoxAddress = s_lendingBoxFactory.createLendingBox(            
+        s_deployedLendingBoxAddress = s_lendingBoxFactory.createLendingBox(
             s_buttonWoodBondController,
             s_slipFactory,
             s_penalty,
@@ -114,24 +114,23 @@ contract LendingBoxFactoryTest is Test {
             address(deployedLendingBox.stableToken()),
             address(s_stableToken)
         );
-        assertEq(deployedLendingBox.price(), s_price);
+        assertEq(deployedLendingBox.initialPrice(), s_price);
         assertEq(deployedLendingBox.startDate(), s_startDate);
         assertEq(deployedLendingBox.trancheIndex(), s_trancheIndex);
     }
 
-     function testCreateLendingBoxEmitsExpectedEvent() public {
-
+    function testCreateLendingBoxEmitsExpectedEvent() public {
         vm.expectEmit(true, true, true, true);
         // The event we expect
         emit LendingBoxCreated(
-         address(s_collateralToken), 
-         address(s_stableToken), 
-         s_trancheIndex,
-         s_penalty, 
-        address(this)
+            address(s_collateralToken),
+            address(s_stableToken),
+            s_trancheIndex,
+            s_penalty,
+            address(this)
         );
         // The event we get
-        s_lendingBoxFactory.createLendingBox(            
+        s_lendingBoxFactory.createLendingBox(
             s_buttonWoodBondController,
             s_slipFactory,
             s_penalty,
@@ -141,10 +140,10 @@ contract LendingBoxFactoryTest is Test {
             s_startDate,
             s_trancheIndex
         );
-    } 
+    }
 
     function testFailIncorrectlyInitializePenalty() public {
-        s_lendingBoxFactory.createLendingBox(            
+        s_lendingBoxFactory.createLendingBox(
             s_buttonWoodBondController,
             s_slipFactory,
             1001,
@@ -159,7 +158,7 @@ contract LendingBoxFactoryTest is Test {
     function testFailBondIsMature() public {
         s_buttonWoodBondController.mature();
 
-        s_lendingBoxFactory.createLendingBox(            
+        s_lendingBoxFactory.createLendingBox(
             s_buttonWoodBondController,
             s_slipFactory,
             s_penalty,
@@ -172,7 +171,7 @@ contract LendingBoxFactoryTest is Test {
     }
 
     function testFailTrancheIndexOutOfBounds() public {
-        s_lendingBoxFactory.createLendingBox(            
+        s_lendingBoxFactory.createLendingBox(
             s_buttonWoodBondController,
             s_slipFactory,
             s_penalty,
@@ -185,7 +184,7 @@ contract LendingBoxFactoryTest is Test {
     }
 
     function testFailInitialPriceTooHigh() public {
-        s_lendingBoxFactory.createLendingBox(            
+        s_lendingBoxFactory.createLendingBox(
             s_buttonWoodBondController,
             s_slipFactory,
             s_penalty,
@@ -198,7 +197,7 @@ contract LendingBoxFactoryTest is Test {
     }
 
     function testFailStartDateAfterMaturity() public {
-        s_lendingBoxFactory.createLendingBox(            
+        s_lendingBoxFactory.createLendingBox(
             s_buttonWoodBondController,
             s_slipFactory,
             s_penalty,

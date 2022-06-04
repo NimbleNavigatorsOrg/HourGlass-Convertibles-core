@@ -29,11 +29,18 @@ contract LendingBox is
     address public s_safeSlipTokenAddress;
     address public s_riskSlipTokenAddress;
 
+    uint256 public s_startDate = 0;
+
     uint256 public constant s_tranche_granularity = 1000;
     uint256 public constant s_penalty_granularity = 1000;
     uint256 public constant s_price_granularity = 1000000000;
 
-    function initialize() external initializer {
+    function initialize(
+        address _borrower,
+        address _lender,
+        uint256 _stableAmount,
+        uint256 _collateralAmount
+    ) external initializer {
         if (penalty() > s_penalty_granularity)
             revert PenaltyTooHigh({
                 given: penalty(),
@@ -47,15 +54,16 @@ contract LendingBox is
                 given: trancheIndex(),
                 maxIndex: bond().trancheCount() - 2
             });
-        if (price() > s_price_granularity)
+        if (initialPrice() > s_price_granularity)
             revert InitialPriceTooHigh({
-                given: price(),
+                given: initialPrice(),
                 maxPrice: s_price_granularity
             });
-        if (startDate() >= bond().maturityDate())
-            revert StartDateAfterMaturity({
-                given: startDate(),
-                maxStartDate: bond().maturityDate()
+
+        if (_stableAmount * _collateralAmount != 0)
+            revert OnlyLendOrBorrow({
+                calcProduct: _stableAmount * _collateralAmount,
+                expectedProduct: 0
             });
 
         (ITranche safeTranche, ) = bond().tranches(trancheIndex());
@@ -74,6 +82,17 @@ contract LendingBox is
             "Risk-CBB-Slip",
             address(riskTranche)
         );
+
+        if (_stableAmount != 0) {
+            _lend(_borrower, _lender, _stableAmount, initialPrice());
+        }
+
+        if (_collateralAmount != 0) {
+            _borrow(_borrower, _lender, _collateralAmount, initialPrice());
+        }
+
+        //set LendingBox Start Date to be time when init() is called
+        s_startDate = block.timestamp;
     }
 
     /**
@@ -83,62 +102,17 @@ contract LendingBox is
     function lend(
         address _borrower,
         address _lender,
-        uint256 stableAmount
+        uint256 _stableAmount
     ) external override {
-        if (startDate() > block.timestamp)
+        if (s_startDate == 0)
             revert LendingBoxNotStarted({
                 given: startDate(),
                 minStartDate: block.timestamp
             });
 
-        uint256 _currentPrice = this.currentPrice();
-        (, uint256 safeRatio) = bond().tranches(trancheIndex());
-        (, uint256 riskRatio) = bond().tranches(bond().trancheCount() - 1);
+        uint256 price = this.currentPrice();
 
-        // calculate mint amount of A* based on current Price
-        uint256 mintAmount = (stableAmount * s_price_granularity) /
-            _currentPrice;
-        ISlip(s_safeSlipTokenAddress).mint(_lender, mintAmount);
-
-        // transfer collateral from msg.sender into CBB
-        uint256 collateralAmount = (mintAmount * s_tranche_granularity) /
-            safeRatio;
-        TransferHelper.safeTransferFrom(
-            bond().collateralToken(),
-            _msgSender(),
-            address(this),
-            collateralAmount
-        );
-
-        // tranche it (call deposit on buttonwoodBond)
-        bond().deposit(collateralAmount);
-
-        // mint Z* to _borrower
-        uint256 zTrancheAmount = (mintAmount * riskRatio) / safeRatio;
-        ISlip(s_riskSlipTokenAddress).mint(_borrower, zTrancheAmount);
-
-        // send stables borrower address
-        TransferHelper.safeTransferFrom(
-            address(stableToken()),
-            _msgSender(),
-            _borrower,
-            stableAmount
-        );
-
-        //send back unused tranches to msg.sender
-        //TODO optimize for gas?
-        for (uint256 i = 0; i < bond().trancheCount(); i++) {
-            if (i != trancheIndex() && i != bond().trancheCount() - 1) {
-                (ITranche tranche, ) = bond().tranches(i);
-                TransferHelper.safeTransfer(
-                    address(tranche),
-                    _borrower,
-                    tranche.balanceOf(address(this))
-                );
-            }
-        }
-
-        emit Lend(_msgSender(), stableAmount, _currentPrice);
+        _lend(_borrower, _lender, _stableAmount, price);
     }
 
     /**
@@ -148,65 +122,17 @@ contract LendingBox is
     function borrow(
         address _borrower,
         address _lender,
-        uint256 collateralAmount
+        uint256 _collateralAmount
     ) external override {
-        if (startDate() > block.timestamp)
+        if (s_startDate == 0)
             revert LendingBoxNotStarted({
                 given: startDate(),
                 minStartDate: block.timestamp
             });
 
-        uint256 _currentPrice = this.currentPrice();
-        (, uint256 safeRatio) = bond().tranches(trancheIndex());
-        (, uint256 riskRatio) = bond().tranches(bond().trancheCount() - 1);
+        uint256 price = this.currentPrice();
 
-        // transfer collateral from msg.sender
-        TransferHelper.safeTransferFrom(
-            bond().collateralToken(),
-            _msgSender(),
-            address(this),
-            collateralAmount
-        );
-
-        // tranche it (call deposit on buttonwoodBond)
-        bond().deposit(collateralAmount);
-
-        // Need to give lender A* slips
-        // calculate mint amount of A* based on tranches received
-        uint256 mintAmount = (collateralAmount * safeRatio) /
-            s_tranche_granularity;
-        ISlip(s_safeSlipTokenAddress).mint(_lender, mintAmount);
-
-        //Need to give borrower the stables and Z* slips
-        // mint Z* to _borrower
-        uint256 zTrancheAmount = (mintAmount * riskRatio) / safeRatio;
-        ISlip(s_riskSlipTokenAddress).mint(_borrower, zTrancheAmount);
-
-        //calculate stableAmount and send to borrower address
-        uint256 stableAmount = (mintAmount * _currentPrice) /
-            s_price_granularity;
-
-        TransferHelper.safeTransferFrom(
-            address(stableToken()),
-            _msgSender(),
-            _borrower,
-            stableAmount
-        );
-
-        // send unused tranches to borrower
-        //TODO optimize for gas?
-        for (uint256 i = 0; i < bond().trancheCount(); i++) {
-            if (i != trancheIndex() && i != bond().trancheCount() - 1) {
-                (ITranche tranche, ) = bond().tranches(i);
-                TransferHelper.safeTransfer(
-                    address(tranche),
-                    _borrower,
-                    tranche.balanceOf(address(this))
-                );
-            }
-        }
-
-        emit Borrow(_msgSender(), collateralAmount, _currentPrice);
+        _borrow(_borrower, _lender, _collateralAmount, price);
     }
 
     /**
@@ -215,35 +141,35 @@ contract LendingBox is
 
     function currentPrice() external view override returns (uint256) {
         //load storage variables into memory
-        uint256 _price = s_price_granularity;
+        uint256 price = s_price_granularity;
         uint256 maturityDate = bond().maturityDate();
 
         if (block.timestamp < maturityDate) {
-            _price =
-                _price -
-                ((_price - price()) * (maturityDate - block.timestamp)) /
-                (maturityDate - startDate());
+            price =
+                price -
+                ((price - initialPrice()) * (maturityDate - block.timestamp)) /
+                (maturityDate - s_startDate);
         }
 
-        return _price;
+        return price;
     }
 
     /**
      * @inheritdoc ILendingBox
      */
 
-    function repay(uint256 stableAmount, uint256 zSlipAmount)
+    function repay(uint256 _stableAmount, uint256 _zSlipAmount)
         external
         override
     {
-        if (startDate() > block.timestamp)
+        if (s_startDate == 0)
             revert LendingBoxNotStarted({
                 given: startDate(),
                 minStartDate: block.timestamp
             });
 
         //Load into memory
-        uint256 _currentPrice = this.currentPrice();
+        uint256 price = this.currentPrice();
         uint256 maturityDate = bond().maturityDate();
 
         (ITranche safeTranche, uint256 safeRatio) = bond().tranches(
@@ -255,16 +181,16 @@ contract LendingBox is
 
         // Calculate safeTranche payout
         //TODO: Decimals conversion?
-        uint256 safeTranchePayout = (stableAmount * s_price_granularity) /
-            _currentPrice;
+        uint256 safeTranchePayout = (_stableAmount * s_price_granularity) /
+            price;
 
-        if (stableAmount != 0) {
+        if (_stableAmount != 0) {
             //Repay stables to LendingBox
             TransferHelper.safeTransferFrom(
                 address(stableToken()),
                 _msgSender(),
                 address(this),
-                stableAmount
+                _stableAmount
             );
 
             //transfer A-tranches from LendingBox to msg.sender
@@ -277,7 +203,7 @@ contract LendingBox is
 
         //calculate Z-tranche payout
         uint256 zTranchePaidFor = (safeTranchePayout * riskRatio) / safeRatio;
-        uint256 zTrancheUnpaid = zSlipAmount - zTranchePaidFor;
+        uint256 zTrancheUnpaid = _zSlipAmount - zTranchePaidFor;
 
         //Apply penalty to any Z-tranches that have not been repaid for after maturity
         if (block.timestamp >= maturityDate) {
@@ -306,10 +232,10 @@ contract LendingBox is
 
         emit Repay(
             _msgSender(),
-            stableAmount,
+            _stableAmount,
             zTranchePaidFor,
             zTrancheUnpaid,
-            _currentPrice
+            price
         );
     }
 
@@ -361,7 +287,7 @@ contract LendingBox is
      */
 
     function redeemStable(uint256 safeSlipAmount) external override {
-        if (startDate() > block.timestamp)
+        if (s_startDate == 0)
             revert LendingBoxNotStarted({
                 given: startDate(),
                 minStartDate: block.timestamp
@@ -391,5 +317,122 @@ contract LendingBox is
         );
 
         emit RedeemStable(_msgSender(), safeSlipAmount, this.currentPrice());
+    }
+
+    function _lend(
+        address _borrower,
+        address _lender,
+        uint256 _stableAmount,
+        uint256 _price
+    ) internal {
+        (, uint256 safeRatio) = bond().tranches(trancheIndex());
+        (, uint256 riskRatio) = bond().tranches(bond().trancheCount() - 1);
+
+        // calculate mint amount of A* based on current Price
+        uint256 mintAmount = (_stableAmount * s_price_granularity) / _price;
+        ISlip(s_safeSlipTokenAddress).mint(_lender, mintAmount);
+
+        // transfer collateral from msg.sender into CBB
+        uint256 collateralAmount = (mintAmount * s_tranche_granularity) /
+            safeRatio;
+        TransferHelper.safeTransferFrom(
+            bond().collateralToken(),
+            _msgSender(),
+            address(this),
+            collateralAmount
+        );
+
+        // tranche it (call deposit on buttonwoodBond)
+        bond().deposit(collateralAmount);
+
+        // mint Z* to _borrower
+        uint256 zTrancheAmount = (mintAmount * riskRatio) / safeRatio;
+        ISlip(s_riskSlipTokenAddress).mint(_borrower, zTrancheAmount);
+
+        // send stables borrower address
+        TransferHelper.safeTransferFrom(
+            address(stableToken()),
+            _msgSender(),
+            _borrower,
+            _stableAmount
+        );
+
+        //send back unused tranches to borrower
+        //TODO optimize for gas?
+        for (uint256 i = 0; i < bond().trancheCount(); i++) {
+            if (i != trancheIndex() && i != bond().trancheCount() - 1) {
+                (ITranche tranche, ) = bond().tranches(i);
+                TransferHelper.safeTransfer(
+                    address(tranche),
+                    _borrower,
+                    tranche.balanceOf(address(this))
+                );
+            }
+        }
+
+        emit Lend(_msgSender(), _borrower, _lender, _stableAmount, _price);
+    }
+
+    function _borrow(
+        address _borrower,
+        address _lender,
+        uint256 _collateralAmount,
+        uint256 _price
+    ) internal {
+        (, uint256 safeRatio) = bond().tranches(trancheIndex());
+        (, uint256 riskRatio) = bond().tranches(bond().trancheCount() - 1);
+
+        // transfer collateral from msg.sender
+        TransferHelper.safeTransferFrom(
+            bond().collateralToken(),
+            _msgSender(),
+            address(this),
+            _collateralAmount
+        );
+
+        // tranche it (call deposit on buttonwoodBond)
+        bond().deposit(_collateralAmount);
+
+        // Need to give lender A* slips
+        // calculate mint amount of A* based on tranches received
+        uint256 mintAmount = (_collateralAmount * safeRatio) /
+            s_tranche_granularity;
+        ISlip(s_safeSlipTokenAddress).mint(_lender, mintAmount);
+
+        //Need to give borrower the stables and Z* slips
+        // mint Z* to _borrower
+        uint256 zTrancheAmount = (mintAmount * riskRatio) / safeRatio;
+        ISlip(s_riskSlipTokenAddress).mint(_borrower, zTrancheAmount);
+
+        //calculate stableAmount and send to borrower address
+        uint256 stableAmount = (mintAmount * _price) / s_price_granularity;
+
+        TransferHelper.safeTransferFrom(
+            address(stableToken()),
+            _msgSender(),
+            _borrower,
+            stableAmount
+        );
+
+        // send unused tranches to borrower
+        //TODO optimize for gas?
+        for (uint256 i = 0; i < bond().trancheCount(); i++) {
+            if (i != trancheIndex() && i != bond().trancheCount() - 1) {
+                (ITranche tranche, ) = bond().tranches(i);
+                TransferHelper.safeTransfer(
+                    address(tranche),
+                    _borrower,
+                    tranche.balanceOf(address(this))
+                );
+            }
+        }
+
+        emit Borrow(
+            _msgSender(),
+            _borrower,
+            _lender,
+            _collateralAmount,
+            _price
+        );
     }
 }

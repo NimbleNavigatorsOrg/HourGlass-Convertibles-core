@@ -10,8 +10,8 @@ import "clones-with-immutable-args/Clone.sol";
  */
 
 interface ILendingBox {
-    event Lend(address, uint256, uint256);
-    event Borrow(address, uint256, uint256);
+    event Lend(address, address, address, uint256, uint256);
+    event Borrow(address, address, address, uint256, uint256);
     event RedeemStable(address, uint256, uint256);
     event RedeemTranche(address, uint256);
     event Repay(address, uint256, uint256, uint256, uint256);
@@ -20,14 +20,15 @@ interface ILendingBox {
     error BondIsMature(bool given, bool required);
     error TrancheIndexOutOfBonds(uint256 given, uint256 maxIndex);
     error InitialPriceTooHigh(uint256 given, uint256 maxPrice);
-    error StartDateAfterMaturity(uint256 given, uint256 maxStartDate);
     error LendingBoxNotStarted(uint256 given, uint256 minStartDate);
     error BondNotMatureYet(uint256 maturityDate, uint256 currentTime);
-    error NotEnoughFundsInLendingBox();
+    error OnlyLendOrBorrow(uint256 calcProduct, uint256 expectedProduct);
 
     /**
-     * @dev Lends stableAmount of stable-tokens for safe-Tranche slips
-     * @param stableAmount The amount of stable tokens to lend
+     * @dev Lends stableAmount of stable-tokens for safe-Tranche slips when provided with matching borrow collateral
+     * @param _borrower The address to send the Z* and stableTokens to 
+     * @param _lender The address to send the safeSlips to 
+     * @param _stableAmount The amount of stable tokens to lend
      * Requirements:
      *  - `msg.sender` must have `approved` `stableAmount` stable tokens to this contract
         - initial price of bond must be set
@@ -36,13 +37,15 @@ interface ILendingBox {
     function lend(
         address _borrower,
         address _lender,
-        uint256 stableAmount
+        uint256 _stableAmount
     ) external;
 
     /**
-     * @dev Borrows with collateralAmount of collateral-tokens. Collateral tokens get tranched
-     * and any non-lending box tranches get sent back to msg.sender
-     * @param collateralAmount The buttonTranche bond tied to this Convertible Bond Box
+     * @dev Borrows with collateralAmount of collateral-tokens when provided with a matching amount of stableTokens.
+     * Collateral tokens get tranched and any non-lending box tranches get sent back to borrower 
+     * @param _borrower The address to send the Z* and stableTokens to 
+     * @param _lender The address to send the safeSlips to 
+     * @param _collateralAmount The buttonTranche bond tied to this Convertible Bond Box
      * Requirements:
      *  - `msg.sender` must have `approved` `collateralAmount` collateral tokens to this contract
         - initial price of bond must be set
@@ -52,7 +55,7 @@ interface ILendingBox {
     function borrow(
         address _borrower,
         address _lender,
-        uint256 collateralAmount
+        uint256 _collateralAmount
     ) external;
 
     /**

@@ -68,7 +68,7 @@ contract CBBImmutableArgs is Clone {
      * @dev https://github.com/wighawag/clones-with-immutable-args
      * @return The asset being used to make bids
      */
-    function price() public pure returns (uint256) {
+    function initialPrice() public pure returns (uint256) {
         return _getArgUint256(112);
     }
 

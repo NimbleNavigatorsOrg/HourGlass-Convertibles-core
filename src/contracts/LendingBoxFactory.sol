@@ -51,9 +51,13 @@ contract LendingBoxFactory is ILendingBoxFactory {
         );
         LendingBox clone = LendingBox(implementation.clone(data));
 
-        clone.initialize();
-
-        emit LendingBoxCreated(collateralToken, stableToken, trancheIndex, penalty, msg.sender);
+        emit LendingBoxCreated(
+            collateralToken,
+            stableToken,
+            trancheIndex,
+            penalty,
+            msg.sender
+        );
         return address(clone);
     }
 }
