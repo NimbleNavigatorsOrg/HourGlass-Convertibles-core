@@ -11,6 +11,9 @@ import "../interfaces/ISlip.sol";
 import "../../utils/CBBImmutableArgs.sol";
 import "../interfaces/ILendingBox.sol";
 
+import "forge-std/console2.sol";
+
+
 /**
  * @dev Convertible Bond Box for a ButtonTranche bond
  *
@@ -92,11 +95,16 @@ contract LendingBox is
         // initial borrow/lend at initialPrice, provided matching order is provided
 
         if (_stableAmount != 0) {
-            this.lend(_borrower, _lender, _stableAmount, s_matcherAddress);
+            (bool success, bytes memory data) = address(this).delegatecall(
+            abi.encodeWithSignature("lend(address, address, uint256)", _borrower, _lender, _stableAmount));
+            require(success);
         }
 
         if (_collateralAmount != 0) {
-            this.borrow(_borrower, _lender, _collateralAmount, s_matcherAddress);
+             console2.log("inside Initialize");
+            (bool success, bytes memory data) = address(this).delegatecall(
+            abi.encodeWithSignature("borrow(address, address, uint256)", _borrower, _lender, _collateralAmount));
+            require(success);
         }
     }
 
@@ -107,8 +115,7 @@ contract LendingBox is
     function lend(
         address _borrower,
         address _lender,
-        uint256 _stableAmount,
-        address _matcherAddress
+        uint256 _stableAmount
     ) external override {
         if (s_startDate == 0)
             revert LendingBoxNotStarted({
@@ -133,8 +140,7 @@ contract LendingBox is
             collateralAmount,
             _stableAmount,
             mintAmount,
-            zTrancheAmount,
-            _matcherAddress
+            zTrancheAmount
         );
 
         emit Lend(_msgSender(), _borrower, _lender, _stableAmount, price);
@@ -147,9 +153,9 @@ contract LendingBox is
     function borrow(
         address _borrower,
         address _lender,
-        uint256 _collateralAmount,
-        address _matcherAddress
+        uint256 _collateralAmount
     ) external override {
+        console2.log("Borrow start");
         if (s_startDate == 0)
             revert LendingBoxNotStarted({
                 given: 0,
@@ -173,8 +179,7 @@ contract LendingBox is
             _collateralAmount,
             stableAmount,
             mintAmount,
-            zTrancheAmount,
-            _matcherAddress
+            zTrancheAmount
         );
 
         emit Borrow(_msgSender(), _borrower, _lender, _collateralAmount, price);
@@ -370,14 +375,13 @@ contract LendingBox is
         uint256 _collateralAmount,
         uint256 _stableAmount,
         uint256 _safeSlipAmount,
-        uint256 _riskSlipAmount,
-        address _matcherAddress
+        uint256 _riskSlipAmount
     ) internal {
 
         //Transfer collateral to ConvertibleBondBox
         TransferHelper.safeTransferFrom(
             address(collateralToken()),
-            _matcherAddress,
+            _msgSender(),
             address(this),
             _collateralAmount
         );

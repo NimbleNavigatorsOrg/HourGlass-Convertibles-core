@@ -37,8 +37,7 @@ interface ILendingBox {
     function lend(
         address _borrower,
         address _lender,
-        uint256 _stableAmount,
-        address _matcherAddress
+        uint256 _stableAmount
     ) external;
 
     /**
@@ -56,8 +55,7 @@ interface ILendingBox {
     function borrow(
         address _borrower,
         address _lender,
-        uint256 _collateralAmount,
-        address _matcherAddress
+        uint256 _collateralAmount
     ) external;
 
     /**
