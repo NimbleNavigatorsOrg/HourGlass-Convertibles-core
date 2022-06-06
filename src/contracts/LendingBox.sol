@@ -28,6 +28,7 @@ contract LendingBox is
 {
     address public s_safeSlipTokenAddress;
     address public s_riskSlipTokenAddress;
+    address public s_matcherAddress;
 
     uint256 public s_startDate = 0;
 
@@ -66,6 +67,8 @@ contract LendingBox is
                 expectedProduct: 0
             });
 
+        s_matcherAddress = msg.sender;
+
         (ITranche safeTranche, ) = bond().tranches(trancheIndex());
         (ITranche riskTranche, ) = bond().tranches(bond().trancheCount() - 1);
 
@@ -89,11 +92,11 @@ contract LendingBox is
         // initial borrow/lend at initialPrice, provided matching order is provided
 
         if (_stableAmount != 0) {
-            this.lend(_borrower, _lender, _stableAmount);
+            this.lend(_borrower, _lender, _stableAmount, s_matcherAddress);
         }
 
         if (_collateralAmount != 0) {
-            this.borrow(_borrower, _lender, _collateralAmount);
+            this.borrow(_borrower, _lender, _collateralAmount, s_matcherAddress);
         }
     }
 
@@ -104,11 +107,12 @@ contract LendingBox is
     function lend(
         address _borrower,
         address _lender,
-        uint256 _stableAmount
+        uint256 _stableAmount,
+        address _matcherAddress
     ) external override {
         if (s_startDate == 0)
             revert LendingBoxNotStarted({
-                given: startDate(),
+                given: 0,
                 minStartDate: block.timestamp
             });
 
@@ -129,7 +133,8 @@ contract LendingBox is
             collateralAmount,
             _stableAmount,
             mintAmount,
-            zTrancheAmount
+            zTrancheAmount,
+            _matcherAddress
         );
 
         emit Lend(_msgSender(), _borrower, _lender, _stableAmount, price);
@@ -142,11 +147,12 @@ contract LendingBox is
     function borrow(
         address _borrower,
         address _lender,
-        uint256 _collateralAmount
+        uint256 _collateralAmount,
+        address _matcherAddress
     ) external override {
         if (s_startDate == 0)
             revert LendingBoxNotStarted({
-                given: startDate(),
+                given: 0,
                 minStartDate: block.timestamp
             });
 
@@ -167,7 +173,8 @@ contract LendingBox is
             _collateralAmount,
             stableAmount,
             mintAmount,
-            zTrancheAmount
+            zTrancheAmount,
+            _matcherAddress
         );
 
         emit Borrow(_msgSender(), _borrower, _lender, _collateralAmount, price);
@@ -202,7 +209,7 @@ contract LendingBox is
     {
         if (s_startDate == 0)
             revert LendingBoxNotStarted({
-                given: startDate(),
+                given: 0,
                 minStartDate: block.timestamp
             });
 
@@ -327,7 +334,7 @@ contract LendingBox is
     function redeemStable(uint256 safeSlipAmount) external override {
         if (s_startDate == 0)
             revert LendingBoxNotStarted({
-                given: startDate(),
+                given: 0,
                 minStartDate: block.timestamp
             });
 
@@ -363,43 +370,45 @@ contract LendingBox is
         uint256 _collateralAmount,
         uint256 _stableAmount,
         uint256 _safeSlipAmount,
-        uint256 _riskSlipAmount
+        uint256 _riskSlipAmount,
+        address _matcherAddress
     ) internal {
+
         //Transfer collateral to ConvertibleBondBox
         TransferHelper.safeTransferFrom(
-            bond().collateralToken(),
-            _msgSender(),
+            address(collateralToken()),
+            _matcherAddress,
             address(this),
             _collateralAmount
         );
 
         //Tranche the collateral
-        bond().deposit(_collateralAmount);
+        // bond().deposit(_collateralAmount);
 
-        //Mint safeSlips to the lender
-        ISlip(s_safeSlipTokenAddress).mint(_lender, _safeSlipAmount);
+        // //Mint safeSlips to the lender
+        // ISlip(s_safeSlipTokenAddress).mint(_lender, _safeSlipAmount);
 
-        //Mint riskSlips to the lender
-        ISlip(s_riskSlipTokenAddress).mint(_borrower, _riskSlipAmount);
+        // //Mint riskSlips to the lender
+        // ISlip(s_riskSlipTokenAddress).mint(_borrower, _riskSlipAmount);
 
-        //Transfer stables to borrower
-        TransferHelper.safeTransferFrom(
-            address(stableToken()),
-            _msgSender(),
-            _borrower,
-            _stableAmount
-        );
+        // //Transfer stables to borrower
+        // TransferHelper.safeTransferFrom(
+        //     address(stableToken()),
+        //     _msgSender(),
+        //     _borrower,
+        //     _stableAmount
+        // );
 
-        //Transfer unused tranches to borrower
-        for (uint256 i = 0; i < bond().trancheCount(); i++) {
-            if (i != trancheIndex() && i != bond().trancheCount() - 1) {
-                (ITranche tranche, ) = bond().tranches(i);
-                TransferHelper.safeTransfer(
-                    address(tranche),
-                    _borrower,
-                    tranche.balanceOf(address(this))
-                );
-            }
-        }
+        // //Transfer unused tranches to borrower
+        // for (uint256 i = 0; i < bond().trancheCount(); i++) {
+        //     if (i != trancheIndex() && i != bond().trancheCount() - 1) {
+        //         (ITranche tranche, ) = bond().tranches(i);
+        //         TransferHelper.safeTransfer(
+        //             address(tranche),
+        //             _borrower,
+        //             tranche.balanceOf(address(this))
+        //         );
+        //     }
+        // }
     }
 }

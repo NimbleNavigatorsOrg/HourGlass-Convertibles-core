@@ -27,7 +27,6 @@ contract LendingBoxFactory is ILendingBoxFactory {
      * @param stableToken The address of the stable-token being lent for the safe-Tranche
      * @param trancheIndex The index of the safe-Tranche
      * @param price The initial price
-     * @param startDate The start date
      */
     function createLendingBox(
         IButtonWoodBondController bond,
@@ -36,7 +35,6 @@ contract LendingBoxFactory is ILendingBoxFactory {
         address collateralToken,
         address stableToken,
         uint256 price,
-        uint256 startDate,
         uint256 trancheIndex
     ) public returns (address) {
         bytes memory data = abi.encodePacked(
@@ -46,7 +44,6 @@ contract LendingBoxFactory is ILendingBoxFactory {
             collateralToken,
             stableToken,
             price,
-            startDate,
             trancheIndex
         );
         LendingBox clone = LendingBox(implementation.clone(data));

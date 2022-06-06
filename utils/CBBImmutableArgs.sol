@@ -73,22 +73,12 @@ contract CBBImmutableArgs is Clone {
     }
 
     /**
-     * @notice The start date
-     * @dev using ClonesWithImmutableArgs pattern here to save gas
-     * @dev https://github.com/wighawag/clones-with-immutable-args
-     * @return The asset being used to make bids
-     */
-    function startDate() public pure returns (uint256) {
-        return _getArgUint256(144);
-    }
-
-    /**
      * @notice The tranche index used to pick a safe tranche
      * @dev using ClonesWithImmutableArgs pattern here to save gas
      * @dev https://github.com/wighawag/clones-with-immutable-args
      * @return The asset being used to make bids
      */
     function trancheIndex() public pure returns (uint256) {
-        return _getArgUint256(176);
+        return _getArgUint256(144);
     }
 }

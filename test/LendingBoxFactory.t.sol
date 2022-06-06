@@ -85,7 +85,6 @@ contract LendingBoxFactoryTest is Test {
             address(s_collateralToken),
             address(s_stableToken),
             s_price,
-            s_startDate,
             s_trancheIndex
         );
     }
@@ -115,7 +114,7 @@ contract LendingBoxFactoryTest is Test {
             address(s_stableToken)
         );
         assertEq(deployedLendingBox.initialPrice(), s_price);
-        assertEq(deployedLendingBox.startDate(), s_startDate);
+        assertEq(deployedLendingBox.s_startDate(), block.timestamp);
         assertEq(deployedLendingBox.trancheIndex(), s_trancheIndex);
     }
 
@@ -137,7 +136,6 @@ contract LendingBoxFactoryTest is Test {
             address(s_collateralToken),
             address(s_stableToken),
             s_price,
-            s_startDate,
             s_trancheIndex
         );
     }
@@ -150,7 +148,6 @@ contract LendingBoxFactoryTest is Test {
             address(s_collateralToken),
             address(s_stableToken),
             s_price,
-            s_startDate,
             s_trancheIndex
         );
     }
@@ -165,7 +162,6 @@ contract LendingBoxFactoryTest is Test {
             address(s_collateralToken),
             address(s_stableToken),
             s_price,
-            s_startDate,
             s_trancheIndex
         );
     }
@@ -178,7 +174,6 @@ contract LendingBoxFactoryTest is Test {
             address(s_collateralToken),
             address(s_stableToken),
             s_price,
-            s_startDate,
             3
         );
     }
@@ -191,7 +186,6 @@ contract LendingBoxFactoryTest is Test {
             address(s_collateralToken),
             address(s_stableToken),
             1000000001,
-            s_startDate,
             s_trancheIndex
         );
     }
@@ -204,7 +198,6 @@ contract LendingBoxFactoryTest is Test {
             address(s_collateralToken),
             address(s_stableToken),
             s_price,
-            s_maturityDate,
             s_trancheIndex
         );
     }
