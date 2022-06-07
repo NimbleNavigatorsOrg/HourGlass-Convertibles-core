@@ -198,17 +198,10 @@ contract LendingBoxTest is Test {
         s_deployedLendingBox.initialize(address(1), address(2), s_depositLimit, 0);
     }
 
-    function testCannotInitializeAndBorrowLendingBoxNotStarted() public {
-        vm.warp(0);
-    //     vm.expectRevert(abi.encodeWithSelector(
-    //         ILendingBox(s_deployedLendingBoxAddress).LendingBoxNotStarted.selector,
-    //         0,
-    //         0
-    //     )
-    // );
-    bytes memory customError = abi.encodeWithSignature("LendingBoxNotStarted(uint256,uint256)", 0, 0);
+    function testCannotBorrowLendingBoxNotStarted() public {
+        bytes memory customError = abi.encodeWithSignature("LendingBoxNotStarted(uint256,uint256)", 0, block.timestamp);
         vm.expectRevert(customError);
-        s_deployedLendingBox.initialize(address(1), address(2), s_depositLimit, 0);
+        s_deployedLendingBox.borrow(address(1), address(2), s_depositLimit);
     }
 
     function testInitializeAndLendEmitsLend() public {
@@ -222,6 +215,12 @@ contract LendingBoxTest is Test {
         s_deployedLendingBox.initialize(address(1), address(2), 0, s_depositLimit/10);
     }
 
+    function testCannotLendLendingBoxNotStarted() public {
+        bytes memory customError = abi.encodeWithSignature("LendingBoxNotStarted(uint256,uint256)", 0, block.timestamp);
+        vm.expectRevert(customError);
+        s_deployedLendingBox.lend(address(1), address(2), s_depositLimit);
+    }
+
     function testCurrentPrice() public {
         vm.warp((s_deployedLendingBox.s_startDate() + s_maturityDate) / 2);
 
@@ -233,7 +232,4 @@ contract LendingBoxTest is Test {
 
         assertEq((priceGranularity - price) / 2 + price, currentPrice);
     }
-
-
-
 }
