@@ -13,7 +13,6 @@ import "../interfaces/ILendingBox.sol";
 
 import "forge-std/console2.sol";
 
-
 /**
  * @dev Convertible Bond Box for a ButtonTranche bond
  *
@@ -95,17 +94,18 @@ contract LendingBox is
         // initial borrow/lend at initialPrice, provided matching order is provided
 
         if (_stableAmount != 0) {
-            (bool success, bytes memory data) = address(this).delegatecall(
-            abi.encodeWithSignature("lend(address, address, uint256)", _borrower, _lender, _stableAmount));
+            (bool success,) = address(this).delegatecall(
+            abi.encodeWithSignature("lend(address,address,uint256)", _borrower, _lender, _stableAmount));
             require(success);
         }
 
         if (_collateralAmount != 0) {
-             console2.log("inside Initialize");
-            (bool success, bytes memory data) = address(this).delegatecall(
-            abi.encodeWithSignature("borrow(address, address, uint256)", _borrower, _lender, _collateralAmount));
+            (bool success,) = address(this).delegatecall(
+            abi.encodeWithSignature("borrow(address,address,uint256)", _borrower, _lender, _collateralAmount));
             require(success);
         }
+
+        emit Initialized(_borrower, _lender, _stableAmount, _collateralAmount);
     }
 
     /**
@@ -155,7 +155,6 @@ contract LendingBox is
         address _lender,
         uint256 _collateralAmount
     ) external override {
-        console2.log("Borrow start");
         if (s_startDate == 0)
             revert LendingBoxNotStarted({
                 given: 0,
@@ -386,33 +385,34 @@ contract LendingBox is
             _collateralAmount
         );
 
-        //Tranche the collateral
-        // bond().deposit(_collateralAmount);
+        collateralToken().approve(address(bond()), 1e18);
+        // // Tranche the collateral
+        bond().deposit(_collateralAmount);
 
         // //Mint safeSlips to the lender
-        // ISlip(s_safeSlipTokenAddress).mint(_lender, _safeSlipAmount);
+        ISlip(s_safeSlipTokenAddress).mint(_lender, _safeSlipAmount);
 
         // //Mint riskSlips to the lender
-        // ISlip(s_riskSlipTokenAddress).mint(_borrower, _riskSlipAmount);
+        ISlip(s_riskSlipTokenAddress).mint(_borrower, _riskSlipAmount);
 
-        // //Transfer stables to borrower
-        // TransferHelper.safeTransferFrom(
-        //     address(stableToken()),
-        //     _msgSender(),
-        //     _borrower,
-        //     _stableAmount
-        // );
+        // // Transfer stables to borrower
+        TransferHelper.safeTransferFrom(
+            address(stableToken()),
+            _msgSender(),
+            _borrower,
+            _stableAmount
+        );
 
         // //Transfer unused tranches to borrower
-        // for (uint256 i = 0; i < bond().trancheCount(); i++) {
-        //     if (i != trancheIndex() && i != bond().trancheCount() - 1) {
-        //         (ITranche tranche, ) = bond().tranches(i);
-        //         TransferHelper.safeTransfer(
-        //             address(tranche),
-        //             _borrower,
-        //             tranche.balanceOf(address(this))
-        //         );
-        //     }
-        // }
+        for (uint256 i = 0; i < bond().trancheCount(); i++) {
+            if (i != trancheIndex() && i != bond().trancheCount() - 1) {
+                (ITranche tranche, ) = bond().tranches(i);
+                TransferHelper.safeTransfer(
+                    address(tranche),
+                    _borrower,
+                    tranche.balanceOf(address(this))
+                );
+            }
+        }
     }
 }

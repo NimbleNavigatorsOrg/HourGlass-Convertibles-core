@@ -9,6 +9,10 @@ import "@uniswap/lib/contracts/libraries/TransferHelper.sol";
 import "../interfaces/IButtonWoodBondController.sol";
 import "@buttonwood-protocol/tranche/contracts/interfaces/ITrancheFactory.sol";
 import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
+
+import "forge-std/console2.sol";
+
+
 /**
  * @dev Controller for a ButtonTranche bond
  *
@@ -98,20 +102,24 @@ contract ButtonWoodBondController is IButtonWoodBondController, OwnableUpgradeab
      * @inheritdoc IButtonWoodBondController
      */
     function deposit(uint256 amount) external override {
+
         require(amount > 0, "BondController: invalid amount");
 
         // saving totalDebt in memory to minimize sloads
         uint256 _totalDebt = totalDebt;
+
         require(_totalDebt > 0 || amount >= MINIMUM_FIRST_DEPOSIT, "BondController: invalid initial amount");
         require(!isMature, "BondController: Already mature");
 
         uint256 collateralBalance = IERC20(collateralToken).balanceOf(address(this));
+
         require(depositLimit == 0 || collateralBalance + amount <= depositLimit, "BondController: Deposit limit");
 
         TrancheData[] memory _tranches = tranches;
 
         uint256 newDebt;
         uint256[] memory trancheValues = new uint256[](trancheCount);
+
         for (uint256 i = 0; i < _tranches.length; i++) {
             // NOTE: solidity 0.8 checks for over/underflow natively so no need for SafeMath
             uint256 trancheValue = (amount * _tranches[i].ratio) / TRANCHE_RATIO_GRANULARITY;
@@ -130,6 +138,7 @@ contract ButtonWoodBondController is IButtonWoodBondController, OwnableUpgradeab
         TransferHelper.safeTransferFrom(collateralToken, _msgSender(), address(this), amount);
         // saving feeBps in memory to minimize sloads
         uint256 _feeBps = feeBps;
+
         for (uint256 i = 0; i < trancheValues.length; i++) {
             uint256 trancheValue = trancheValues[i];
             // fee tranche tokens are minted and held by the contract

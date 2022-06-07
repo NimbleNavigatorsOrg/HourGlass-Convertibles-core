@@ -15,6 +15,7 @@ interface ILendingBox {
     event RedeemStable(address, uint256, uint256);
     event RedeemTranche(address, uint256);
     event Repay(address, uint256, uint256, uint256, uint256);
+    event Initialized(address, address, uint256, uint256);
 
     error PenaltyTooHigh(uint256 given, uint256 maxPenalty);
     error BondIsMature(bool given, bool required);

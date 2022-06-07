@@ -30,7 +30,7 @@ contract LendingBoxTest is Test {
     uint256 constant s_price = 5e8;
     uint256 constant s_trancheIndex = 0;
     uint256 constant s_maturityDate = 1656717949;
-    uint256 constant s_depositLimit = 1000e9;
+    uint256 constant s_depositLimit = 1000e10;
     error PenaltyTooHigh(uint256 given, uint256 maxPenalty);
     address s_deployedLendingBoxAddress;
 
@@ -41,6 +41,13 @@ contract LendingBoxTest is Test {
         uint256 penalty,
         address creator
     );
+
+    event Lend(address, address, address, uint256, uint256);
+    event Borrow(address, address, address, uint256, uint256);
+    event RedeemStable(address, uint256, uint256);
+    event RedeemTranche(address, uint256);
+    event Repay(address, uint256, uint256, uint256, uint256);
+    event Initialized(address, address, uint256, uint256);
 
     function setUp() public {
         //push numbers into array
@@ -93,14 +100,124 @@ contract LendingBoxTest is Test {
         s_deployedLendingBox = LendingBox(s_deployedLendingBoxAddress);
     }
 
-    function testInitializeAndBorrow() public {
+    function testInitializeAndBorrowEmitsInitialized() public {
         vm.warp(1);
         s_collateralToken.approve(s_deployedLendingBoxAddress, 1e18);
         s_stableToken.approve(s_deployedLendingBoxAddress, 1e18);
 
         vm.prank(address(this));
+        vm.expectEmit(true, true, true, true);
+        emit Initialized(address(1), address(2), 0, s_depositLimit);
+        s_deployedLendingBox.initialize(address(1), address(2), s_depositLimit, 0);
+    }
 
-        s_deployedLendingBox.initialize(address(0), address(1), 10000, 0);
+    function testFailInitializePenaltyTooHigh() public {
+        s_deployedLendingBoxAddress = s_lendingBoxFactory.createLendingBox(
+            s_buttonWoodBondController,
+            s_slipFactory,
+            s_penalty,
+            address(s_collateralToken),
+            address(s_stableToken),
+            1001,
+            s_trancheIndex
+        );
+
+        s_deployedLendingBox = LendingBox(s_deployedLendingBoxAddress);
+        s_deployedLendingBox.initialize(address(1), address(2), s_depositLimit, 0);
+    }
+
+    function testFailInitializeBondIsMature() public {
+            s_buttonWoodBondController.mature();
+        s_deployedLendingBoxAddress = s_lendingBoxFactory.createLendingBox(
+            s_buttonWoodBondController,
+            s_slipFactory,
+            s_penalty,
+            address(s_collateralToken),
+            address(s_stableToken),
+            1001,
+            s_trancheIndex
+        );
+
+        s_deployedLendingBox = LendingBox(s_deployedLendingBoxAddress);
+        s_deployedLendingBox.initialize(address(1), address(2), s_depositLimit, 0);
+    }
+
+    function testFailInitializeTrancheIndexOutOfBonds() public {
+        s_deployedLendingBoxAddress = s_lendingBoxFactory.createLendingBox(
+            s_buttonWoodBondController,
+            s_slipFactory,
+            s_penalty,
+            address(s_collateralToken),
+            address(s_stableToken),
+            1001,
+            3
+        );
+
+        s_deployedLendingBox = LendingBox(s_deployedLendingBoxAddress);
+        s_deployedLendingBox.initialize(address(1), address(2), s_depositLimit, 0);
+    }
+
+    function testFailInitializeInitialPriceTooHigh() public {
+        s_deployedLendingBoxAddress = s_lendingBoxFactory.createLendingBox(
+            s_buttonWoodBondController,
+            s_slipFactory,
+            s_penalty,
+            address(s_collateralToken),
+            address(s_stableToken),
+            1000000001,
+            s_trancheIndex
+        );
+
+        s_deployedLendingBox = LendingBox(s_deployedLendingBoxAddress);
+        s_deployedLendingBox.initialize(address(1), address(2), s_depositLimit, 0);
+    }
+
+    function testFailInitializeOnlyLendOrBorrow() public {
+        s_deployedLendingBoxAddress = s_lendingBoxFactory.createLendingBox(
+            s_buttonWoodBondController,
+            s_slipFactory,
+            s_penalty,
+            address(s_collateralToken),
+            address(s_stableToken),
+            s_price,
+            s_trancheIndex
+        );
+
+        s_deployedLendingBox = LendingBox(s_deployedLendingBoxAddress);
+        s_deployedLendingBox.initialize(address(1), address(2), 1, 1);
+    }
+
+    function testInitializeAndBorrowEmitsBorrow() public {
+        vm.warp(1);
+        s_collateralToken.approve(s_deployedLendingBoxAddress, 1e18);
+        s_stableToken.approve(s_deployedLendingBoxAddress, 1e18);
+
+        vm.prank(address(this));
+        vm.expectEmit(true, true, true, true);
+        emit Borrow(address(this), address(1), address(2), s_depositLimit, s_price);
+        s_deployedLendingBox.initialize(address(1), address(2), s_depositLimit, 0);
+    }
+
+    //     function testInitializeAndBorrowLendingBoxNotStarted() public {
+    //     vm.warp(1);
+    //     s_collateralToken.approve(s_deployedLendingBoxAddress, 1e18);
+    //     s_stableToken.approve(s_deployedLendingBoxAddress, 1e18);
+
+    //     vm.prank(address(this));
+    //     vm.expectEmit(true, true, true, true);
+    //     emit Borrow(address(this), address(1), address(2), s_depositLimit, s_price);
+    //     s_deployedLendingBox.initialize(address(1), address(2), s_depositLimit, 0);
+    // }
+
+    function testInitializeAndLendEmitsLend() public {
+        vm.warp(1);
+        s_collateralToken.approve(s_deployedLendingBoxAddress, 1e18);
+        s_stableToken.approve(s_deployedLendingBoxAddress, 1e18);
+
+        vm.prank(address(this));
+        vm.expectEmit(true, true, true, true);
+        emit Lend(address(this), address(1), address(2), s_depositLimit/10, s_price);
+        s_deployedLendingBox.initialize(address(1), address(2), 0, s_depositLimit/10);
     }
 
     function testCurrentPrice() public {
