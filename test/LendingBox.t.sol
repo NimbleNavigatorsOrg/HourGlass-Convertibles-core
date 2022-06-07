@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
 import "../src/contracts/LendingBox.sol";
+import "../src/interfaces/ILendingBox.sol";
 import "../src/contracts/LendingBoxFactory.sol";
 import "../src/contracts/ButtonWoodBondController.sol";
 import "@buttonwood-protocol/tranche/contracts/Tranche.sol";
@@ -188,7 +189,6 @@ contract LendingBoxTest is Test {
     }
 
     function testInitializeAndBorrowEmitsBorrow() public {
-        vm.warp(1);
         s_collateralToken.approve(s_deployedLendingBoxAddress, 1e18);
         s_stableToken.approve(s_deployedLendingBoxAddress, 1e18);
 
@@ -198,16 +198,18 @@ contract LendingBoxTest is Test {
         s_deployedLendingBox.initialize(address(1), address(2), s_depositLimit, 0);
     }
 
-    //     function testInitializeAndBorrowLendingBoxNotStarted() public {
-    //     vm.warp(1);
-    //     s_collateralToken.approve(s_deployedLendingBoxAddress, 1e18);
-    //     s_stableToken.approve(s_deployedLendingBoxAddress, 1e18);
-
-    //     vm.prank(address(this));
-    //     vm.expectEmit(true, true, true, true);
-    //     emit Borrow(address(this), address(1), address(2), s_depositLimit, s_price);
-    //     s_deployedLendingBox.initialize(address(1), address(2), s_depositLimit, 0);
-    // }
+    function testCannotInitializeAndBorrowLendingBoxNotStarted() public {
+        vm.warp(0);
+    //     vm.expectRevert(abi.encodeWithSelector(
+    //         ILendingBox(s_deployedLendingBoxAddress).LendingBoxNotStarted.selector,
+    //         0,
+    //         0
+    //     )
+    // );
+    bytes memory customError = abi.encodeWithSignature("LendingBoxNotStarted(uint256,uint256)", 0, 0);
+        vm.expectRevert(customError);
+        s_deployedLendingBox.initialize(address(1), address(2), s_depositLimit, 0);
+    }
 
     function testInitializeAndLendEmitsLend() public {
         vm.warp(1);
