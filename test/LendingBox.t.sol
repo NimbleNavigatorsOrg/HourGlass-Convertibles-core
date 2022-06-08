@@ -33,6 +33,7 @@ contract LendingBoxTest is Test {
     uint256 constant s_maturityDate = 1656717949;
     uint256 constant s_depositLimit = 1000e10;
     uint256 constant s_safeSlipAmount = 10;
+    uint256 constant s_endOfUnixTime = 2147483647;
     // error PenaltyTooHigh(uint256 given, uint256 maxPenalty);
     address s_deployedLendingBoxAddress;
 
@@ -259,8 +260,10 @@ contract LendingBoxTest is Test {
 
     // repay()
 
-    function testRepay() public {
-        vm.warp(s_maturityDate + 1);
+    function testRepay(uint256 time) public {
+        //More parameters can be added to this test
+        vm.assume(time < s_endOfUnixTime - s_maturityDate);
+        vm.warp(s_maturityDate + time);
         vm.prank(address(this));
         s_deployedLendingBox.initialize(address(1), address(2), s_depositLimit, 0);
         vm.startPrank(s_deployedLendingBoxAddress);
@@ -279,21 +282,34 @@ contract LendingBoxTest is Test {
 
     //redeemTranche()
 
-    function testRedeemTranche() public {
-        vm.warp(s_maturityDate + 1);
+    function testRedeemTranche(uint256 amount, uint256 time, uint256 collateralAmount) public {
+        (ITranche safeTranche, uint256 ratio) = s_buttonWoodBondController.tranches(0);
+        // If the below line is commented out, we get an arithmatic underflow/overflow error. Why?
+        vm.assume(time < s_endOfUnixTime - s_maturityDate);
+        // vm.assume(collateralAmount <= s_depositLimit);
+        // vm.assume(collateralAmount > 10e9);
+        vm.assume(amount < 1e18);
+
+        vm.warp(s_maturityDate + time);
+
         vm.prank(address(this));
-        emit Initialized(address(1), address(2), 0, s_depositLimit);
         s_deployedLendingBox.initialize(address(1), address(2), s_depositLimit, 0);
-        vm.startPrank(s_deployedLendingBoxAddress);
-        CBBSlip(s_deployedLendingBox.s_safeSlipTokenAddress()).mint(address(this), 1e18);
+
+        vm.startPrank(address(s_buttonWoodBondController));
+        safeTranche.mint(s_deployedLendingBoxAddress, amount);
         vm.stopPrank();
+
+        vm.startPrank(s_deployedLendingBoxAddress);
+        CBBSlip(s_deployedLendingBox.s_safeSlipTokenAddress()).mint(address(this), amount);
+        vm.stopPrank();
+
         vm.expectEmit(true, true, true, true);
-        emit RedeemTranche(address(this), s_safeSlipAmount);
-        s_deployedLendingBox.redeemTranche(s_safeSlipAmount);
+        emit RedeemTranche(address(this), amount);
+        s_deployedLendingBox.redeemTranche(amount);
     }
 
     function testCannotRedeemTrancheBondNotMatureYet(uint256 time) public {
-        vm.assume(time <= s_maturityDate && time > 0);
+        vm.assume(time <= s_maturityDate && time != 0);
         vm.warp(s_maturityDate - time);
         vm.prank(address(this));
         emit Initialized(address(1), address(2), 0, s_depositLimit);
@@ -308,7 +324,8 @@ contract LendingBoxTest is Test {
 
     // redeemStable()
 
-    function testRedeemStable() public {
+    function testRedeemStable(uint256 safeSlipAmount) public {
+        vm.assume(safeSlipAmount <= 1e18);
         vm.prank(address(this));
         emit Initialized(address(1), address(2), 0, s_depositLimit);
         s_deployedLendingBox.initialize(address(1), address(2), s_depositLimit, 0);
@@ -316,8 +333,8 @@ contract LendingBoxTest is Test {
         CBBSlip(s_deployedLendingBox.s_safeSlipTokenAddress()).mint(address(this), 1e18);
         vm.stopPrank();
         vm.expectEmit(true, true, true, true);
-        emit RedeemStable(address(this), s_safeSlipAmount, s_deployedLendingBox.currentPrice());
-        s_deployedLendingBox.redeemStable(s_safeSlipAmount);
+        emit RedeemStable(address(this), safeSlipAmount, s_deployedLendingBox.currentPrice());
+        s_deployedLendingBox.redeemStable(safeSlipAmount);
     }
 
     function testCannotRedeemStableLendingBoxNotStarted() public {

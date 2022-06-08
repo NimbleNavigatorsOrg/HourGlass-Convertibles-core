@@ -62,7 +62,7 @@ contract LendingBox is
                 given: initialPrice(),
                 maxPrice: s_price_granularity
             });
-
+    // TODO G approve below revert
         if ((_stableAmount != 0 && _collateralAmount != 0) || (_stableAmount == 0 && _collateralAmount == 0))
             revert OnlyLendOrBorrow({
                 _stableAmount: _stableAmount,
@@ -211,6 +211,7 @@ contract LendingBox is
         external
         override
     {
+        console2.log("start repay()");
         if (s_startDate == 0)
             revert LendingBoxNotStarted({
                 given: 0,
@@ -219,6 +220,7 @@ contract LendingBox is
 
         //Load into memory
         uint256 price = this.currentPrice();
+        console2.log("before maturity date");
         uint256 maturityDate = bond().maturityDate();
 
         (ITranche safeTranche, uint256 safeRatio) = bond().tranches(
@@ -279,6 +281,7 @@ contract LendingBox is
             zTranchePaidFor + zTrancheUnpaid
         );
 
+
         emit Repay(
             _msgSender(),
             _stableAmount,
@@ -318,9 +321,12 @@ contract LendingBox is
             (safeSlipAmount)
         );
 
+        console2.log("second Transfer");
         uint256 zPenaltyTotal = IERC20(address(riskTranche)).balanceOf(
             address(this)
         ) - IERC20(s_riskSlipTokenAddress).totalSupply();
+
+        console2.log("third Transfer");
 
         //transfer risk-Tranche penalty after maturity only
         TransferHelper.safeTransfer(
