@@ -101,6 +101,8 @@ contract LendingBoxTest is Test {
         s_deployedLendingBox = LendingBox(s_deployedLendingBoxAddress);
     }
 
+    // initialize()
+
     function testInitializeAndBorrowEmitsInitialized() public {
         vm.warp(1);
         s_collateralToken.approve(s_deployedLendingBoxAddress, 1e18);
@@ -198,12 +200,6 @@ contract LendingBoxTest is Test {
         s_deployedLendingBox.initialize(address(1), address(2), s_depositLimit, 0);
     }
 
-    function testCannotBorrowLendingBoxNotStarted() public {
-        bytes memory customError = abi.encodeWithSignature("LendingBoxNotStarted(uint256,uint256)", 0, block.timestamp);
-        vm.expectRevert(customError);
-        s_deployedLendingBox.borrow(address(1), address(2), s_depositLimit);
-    }
-
     function testInitializeAndLendEmitsLend() public {
         vm.warp(1);
         s_collateralToken.approve(s_deployedLendingBoxAddress, 1e18);
@@ -215,11 +211,23 @@ contract LendingBoxTest is Test {
         s_deployedLendingBox.initialize(address(1), address(2), 0, s_depositLimit/10);
     }
 
+    // lend()
+
     function testCannotLendLendingBoxNotStarted() public {
         bytes memory customError = abi.encodeWithSignature("LendingBoxNotStarted(uint256,uint256)", 0, block.timestamp);
         vm.expectRevert(customError);
         s_deployedLendingBox.lend(address(1), address(2), s_depositLimit);
     }
+
+    //borrow()
+
+    function testCannotBorrowLendingBoxNotStarted() public {
+        bytes memory customError = abi.encodeWithSignature("LendingBoxNotStarted(uint256,uint256)", 0, block.timestamp);
+        vm.expectRevert(customError);
+        s_deployedLendingBox.borrow(address(1), address(2), s_depositLimit);
+    }
+
+    // currentPrice()
 
     function testCurrentPrice() public {
         vm.warp((s_deployedLendingBox.s_startDate() + s_maturityDate) / 2);
@@ -231,5 +239,28 @@ contract LendingBoxTest is Test {
             .s_price_granularity();
 
         assertEq((priceGranularity - price) / 2 + price, currentPrice);
+    }
+
+    // repay()
+
+    function testRepay() public {
+        s_collateralToken.approve(s_deployedLendingBoxAddress, 1e18);
+        s_stableToken.approve(s_deployedLendingBoxAddress, 1e18);
+        vm.warp(s_maturityDate + 1);
+        vm.prank(address(this));
+        s_deployedLendingBox.initialize(address(1), address(2), s_depositLimit, 0);
+        vm.startPrank(s_deployedLendingBoxAddress);
+        CBBSlip(s_deployedLendingBox.s_riskSlipTokenAddress()).mint(address(this), 1e18);
+        vm.stopPrank();
+
+        vm.expectEmit(true, true, true, true);
+        emit Repay(address(this), 100000, 250000, 187501, 1000000000);
+        s_deployedLendingBox.repay(100000, 625001);
+    }
+
+    function testCannotRepayLendingBoxNotStarted() public {
+        bytes memory customError = abi.encodeWithSignature("LendingBoxNotStarted(uint256,uint256)", 0, block.timestamp);
+        vm.expectRevert(customError);
+        s_deployedLendingBox.repay(100000, 625001);
     }
 }

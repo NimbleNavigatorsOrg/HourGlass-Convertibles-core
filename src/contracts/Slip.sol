@@ -7,6 +7,8 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "../interfaces/ISlip.sol";
 import "@buttonwood-protocol/tranche/contracts/external/ERC20.sol";
 
+import "forge-std/console2.sol";
+
 /**
  * @dev ERC20 token to represent a single tranche for a ButtonTranche bond
  * Note: this contract has non-transferrable ownership given at init-time
