@@ -47,7 +47,7 @@ contract LendingBox is
         if (penalty() > s_penalty_granularity)
             revert PenaltyTooHigh({
                 given: penalty(),
-                maxPenalty: s_price_granularity
+                maxPenalty: s_penalty_granularity
             });
         if (bond().isMature())
             revert BondIsMature({given: bond().isMature(), required: false});
@@ -63,10 +63,10 @@ contract LendingBox is
                 maxPrice: s_price_granularity
             });
 
-        if (_stableAmount * _collateralAmount != 0)
+        if ((_stableAmount != 0 && _collateralAmount != 0) || (_stableAmount == 0 && _collateralAmount == 0))
             revert OnlyLendOrBorrow({
-                calcProduct: _stableAmount * _collateralAmount,
-                expectedProduct: 0
+                _stableAmount: _stableAmount,
+                _collateralAmount: _collateralAmount
             });
 
         s_matcherAddress = msg.sender;
@@ -293,6 +293,7 @@ contract LendingBox is
      */
 
     function redeemTranche(uint256 safeSlipAmount) external override {
+        console2.log(block.timestamp, bond().maturityDate());
         if (block.timestamp < bond().maturityDate())
             revert BondNotMatureYet({
                 maturityDate: bond().maturityDate(),
@@ -387,7 +388,9 @@ contract LendingBox is
 
         collateralToken().approve(address(bond()), 1e18);
         // // Tranche the collateral
+        console2.log(_collateralAmount, "ya");
         bond().deposit(_collateralAmount);
+        console2.log(_collateralAmount, "na");
 
         // //Mint safeSlips to the lender
         ISlip(s_safeSlipTokenAddress).mint(_lender, _safeSlipAmount);

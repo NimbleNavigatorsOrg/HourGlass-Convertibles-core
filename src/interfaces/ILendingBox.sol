@@ -23,7 +23,7 @@ interface ILendingBox {
     error InitialPriceTooHigh(uint256 given, uint256 maxPrice);
     error LendingBoxNotStarted(uint256 given, uint256 minStartDate);
     error BondNotMatureYet(uint256 maturityDate, uint256 currentTime);
-    error OnlyLendOrBorrow(uint256 calcProduct, uint256 expectedProduct);
+    error OnlyLendOrBorrow(uint256 _stableAmount,  uint256 _collateralAmount);
 
     /**
      * @dev Lends stableAmount of stable-tokens for safe-Tranche slips when provided with matching borrow collateral

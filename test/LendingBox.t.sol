@@ -33,7 +33,7 @@ contract LendingBoxTest is Test {
     uint256 constant s_maturityDate = 1656717949;
     uint256 constant s_depositLimit = 1000e10;
     uint256 constant s_safeSlipAmount = 10;
-    error PenaltyTooHigh(uint256 given, uint256 maxPenalty);
+    // error PenaltyTooHigh(uint256 given, uint256 maxPenalty);
     address s_deployedLendingBoxAddress;
 
     event LendingBoxCreated(
@@ -99,23 +99,44 @@ contract LendingBoxTest is Test {
             s_trancheIndex
         );
 
+        s_collateralToken.approve(s_deployedLendingBoxAddress, type(uint256).max);
+        s_stableToken.approve(s_deployedLendingBoxAddress, type(uint256).max);
+
         s_deployedLendingBox = LendingBox(s_deployedLendingBoxAddress);
     }
 
     // initialize()
 
-    function testInitializeAndBorrowEmitsInitialized() public {
-        vm.warp(1);
-        s_collateralToken.approve(s_deployedLendingBoxAddress, 1e18);
-        s_stableToken.approve(s_deployedLendingBoxAddress, 1e18);
-
+    function testInitializeAndBorrowEmitsInitialized(uint256 collateralAmount) public {
+        vm.assume(collateralAmount <= s_depositLimit);
+        vm.assume(collateralAmount > 10e9);
         vm.prank(address(this));
         vm.expectEmit(true, true, true, true);
-        emit Initialized(address(1), address(2), 0, s_depositLimit);
+        emit Initialized(address(1), address(2), 0, collateralAmount);
+        s_deployedLendingBox.initialize(address(1), address(2), collateralAmount, 0);
+    }
+
+    function testCannotInitializePenaltyTooHigh(uint256 penalty) public {
+        vm.assume(penalty > s_lendingBox.s_penalty_granularity());
+        s_deployedLendingBoxAddress = s_lendingBoxFactory.createLendingBox(
+            s_buttonWoodBondController,
+            s_slipFactory,
+            penalty,
+            address(s_collateralToken),
+            address(s_stableToken),
+            s_price,
+            s_trancheIndex
+        );
+
+        s_deployedLendingBox = LendingBox(s_deployedLendingBoxAddress);
+
+        bytes memory customError = abi.encodeWithSignature("PenaltyTooHigh(uint256,uint256)", penalty, s_lendingBox.s_penalty_granularity());
+        vm.expectRevert(customError);
         s_deployedLendingBox.initialize(address(1), address(2), s_depositLimit, 0);
     }
 
-    function testFailInitializePenaltyTooHigh() public {
+    function testCannotInitializeBondIsMature() public {
+        s_buttonWoodBondController.mature();
         s_deployedLendingBoxAddress = s_lendingBoxFactory.createLendingBox(
             s_buttonWoodBondController,
             s_slipFactory,
@@ -127,11 +148,14 @@ contract LendingBoxTest is Test {
         );
 
         s_deployedLendingBox = LendingBox(s_deployedLendingBoxAddress);
+
+        bytes memory customError = abi.encodeWithSignature("BondIsMature(bool,bool)", s_buttonWoodBondController.isMature(), false);
+        vm.expectRevert(customError);
         s_deployedLendingBox.initialize(address(1), address(2), s_depositLimit, 0);
     }
 
-    function testFailInitializeBondIsMature() public {
-            s_buttonWoodBondController.mature();
+    function testCannotInitializeTrancheIndexOutOfBonds(uint256 trancheIndex) public {
+        vm.assume(trancheIndex >= s_buttonWoodBondController.trancheCount() - 1);
         s_deployedLendingBoxAddress = s_lendingBoxFactory.createLendingBox(
             s_buttonWoodBondController,
             s_slipFactory,
@@ -139,44 +163,36 @@ contract LendingBoxTest is Test {
             address(s_collateralToken),
             address(s_stableToken),
             1001,
-            s_trancheIndex
+            trancheIndex
         );
-
         s_deployedLendingBox = LendingBox(s_deployedLendingBoxAddress);
+
+        bytes memory customError = abi.encodeWithSignature("TrancheIndexOutOfBonds(uint256,uint256)", trancheIndex, s_buttonWoodBondController.trancheCount() - 2);
+        vm.expectRevert(customError);
         s_deployedLendingBox.initialize(address(1), address(2), s_depositLimit, 0);
     }
 
-    function testFailInitializeTrancheIndexOutOfBonds() public {
+    function testCannotInitializeInitialPriceTooHigh(uint256 price) public {
+        vm.assume(price > s_lendingBox.s_price_granularity());
         s_deployedLendingBoxAddress = s_lendingBoxFactory.createLendingBox(
             s_buttonWoodBondController,
             s_slipFactory,
             s_penalty,
             address(s_collateralToken),
             address(s_stableToken),
-            1001,
-            3
-        );
-
-        s_deployedLendingBox = LendingBox(s_deployedLendingBoxAddress);
-        s_deployedLendingBox.initialize(address(1), address(2), s_depositLimit, 0);
-    }
-
-    function testFailInitializeInitialPriceTooHigh() public {
-        s_deployedLendingBoxAddress = s_lendingBoxFactory.createLendingBox(
-            s_buttonWoodBondController,
-            s_slipFactory,
-            s_penalty,
-            address(s_collateralToken),
-            address(s_stableToken),
-            1000000001,
+            price,
             s_trancheIndex
         );
 
         s_deployedLendingBox = LendingBox(s_deployedLendingBoxAddress);
+        bytes memory customError = abi.encodeWithSignature("InitialPriceTooHigh(uint256,uint256)", price, s_lendingBox.s_price_granularity());
+        vm.expectRevert(customError);
         s_deployedLendingBox.initialize(address(1), address(2), s_depositLimit, 0);
     }
 
-    function testFailInitializeOnlyLendOrBorrow() public {
+    function testCannotInitializeOnlyLendOrBorrow(uint256 collateralAmount, uint256 stableAmount) public {
+        vm.assume((stableAmount != 0 && collateralAmount != 0) || (stableAmount == 0 && collateralAmount == 0));
+
         s_deployedLendingBoxAddress = s_lendingBoxFactory.createLendingBox(
             s_buttonWoodBondController,
             s_slipFactory,
@@ -188,28 +204,29 @@ contract LendingBoxTest is Test {
         );
 
         s_deployedLendingBox = LendingBox(s_deployedLendingBoxAddress);
-        s_deployedLendingBox.initialize(address(1), address(2), 1, 1);
+
+        bytes memory customError = abi.encodeWithSignature("OnlyLendOrBorrow(uint256,uint256)", collateralAmount, stableAmount);
+        vm.expectRevert(customError);
+        s_deployedLendingBox.initialize(address(1), address(2), stableAmount, collateralAmount);
     }
 
-    function testInitializeAndBorrowEmitsBorrow() public {
-        s_collateralToken.approve(s_deployedLendingBoxAddress, 1e18);
-        s_stableToken.approve(s_deployedLendingBoxAddress, 1e18);
+    function testInitializeAndBorrowEmitsBorrow(uint256 collateralAmount) public {
+        vm.assume(collateralAmount <= s_depositLimit);
+        vm.assume(collateralAmount > 10e9);
+        vm.prank(address(this));
+        vm.expectEmit(true, true, true, true);
+        emit Borrow(address(this), address(1), address(2), collateralAmount, s_price);
+        s_deployedLendingBox.initialize(address(1), address(2), collateralAmount, 0);
+    }
+
+    function testInitializeAndLendEmitsLend(uint256 stableAmount) public {
+        vm.assume(stableAmount <= s_depositLimit);
+        vm.assume(stableAmount > 10e9);
 
         vm.prank(address(this));
         vm.expectEmit(true, true, true, true);
-        emit Borrow(address(this), address(1), address(2), s_depositLimit, s_price);
-        s_deployedLendingBox.initialize(address(1), address(2), s_depositLimit, 0);
-    }
-
-    function testInitializeAndLendEmitsLend() public {
-        vm.warp(1);
-        s_collateralToken.approve(s_deployedLendingBoxAddress, 1e18);
-        s_stableToken.approve(s_deployedLendingBoxAddress, 1e18);
-
-        vm.prank(address(this));
-        vm.expectEmit(true, true, true, true);
-        emit Lend(address(this), address(1), address(2), s_depositLimit/10, s_price);
-        s_deployedLendingBox.initialize(address(1), address(2), 0, s_depositLimit/10);
+        emit Lend(address(this), address(1), address(2), stableAmount/10, s_price);
+        s_deployedLendingBox.initialize(address(1), address(2), 0, stableAmount/10);
     }
 
     // lend()
@@ -232,28 +249,23 @@ contract LendingBoxTest is Test {
 
     function testCurrentPrice() public {
         vm.warp((s_deployedLendingBox.s_startDate() + s_maturityDate) / 2);
-
         uint256 currentPrice = s_deployedLendingBox
             .currentPrice();
         uint256 price = s_deployedLendingBox.initialPrice();
         uint256 priceGranularity = s_deployedLendingBox
             .s_price_granularity();
-
         assertEq((priceGranularity - price) / 2 + price, currentPrice);
     }
 
     // repay()
 
     function testRepay() public {
-        s_collateralToken.approve(s_deployedLendingBoxAddress, 1e18);
-        s_stableToken.approve(s_deployedLendingBoxAddress, 1e18);
         vm.warp(s_maturityDate + 1);
         vm.prank(address(this));
         s_deployedLendingBox.initialize(address(1), address(2), s_depositLimit, 0);
         vm.startPrank(s_deployedLendingBoxAddress);
         CBBSlip(s_deployedLendingBox.s_riskSlipTokenAddress()).mint(address(this), 1e18);
         vm.stopPrank();
-
         vm.expectEmit(true, true, true, true);
         emit Repay(address(this), 100000, 250000, 187501, 1000000000);
         s_deployedLendingBox.repay(100000, 625001);
@@ -269,27 +281,20 @@ contract LendingBoxTest is Test {
 
     function testRedeemTranche() public {
         vm.warp(s_maturityDate + 1);
-        s_collateralToken.approve(s_deployedLendingBoxAddress, 1e18);
-        s_stableToken.approve(s_deployedLendingBoxAddress, 1e18);
-
         vm.prank(address(this));
         emit Initialized(address(1), address(2), 0, s_depositLimit);
         s_deployedLendingBox.initialize(address(1), address(2), s_depositLimit, 0);
         vm.startPrank(s_deployedLendingBoxAddress);
         CBBSlip(s_deployedLendingBox.s_safeSlipTokenAddress()).mint(address(this), 1e18);
         vm.stopPrank();
-                // ask why RedeemTranche does not emit currentPrice, but RedeemStable does
-
         vm.expectEmit(true, true, true, true);
         emit RedeemTranche(address(this), s_safeSlipAmount);
         s_deployedLendingBox.redeemTranche(s_safeSlipAmount);
     }
 
-    function testCannotRedeemTrancheBondNotMatureYet() public {
-        vm.warp(s_maturityDate - 1);
-        s_collateralToken.approve(s_deployedLendingBoxAddress, 1e18);
-        s_stableToken.approve(s_deployedLendingBoxAddress, 1e18);
-
+    function testCannotRedeemTrancheBondNotMatureYet(uint256 time) public {
+        vm.assume(time <= s_maturityDate && time > 0);
+        vm.warp(s_maturityDate - time);
         vm.prank(address(this));
         emit Initialized(address(1), address(2), 0, s_depositLimit);
         s_deployedLendingBox.initialize(address(1), address(2), s_depositLimit, 0);
@@ -304,9 +309,6 @@ contract LendingBoxTest is Test {
     // redeemStable()
 
     function testRedeemStable() public {
-        s_collateralToken.approve(s_deployedLendingBoxAddress, 1e18);
-        s_stableToken.approve(s_deployedLendingBoxAddress, 1e18);
-
         vm.prank(address(this));
         emit Initialized(address(1), address(2), 0, s_depositLimit);
         s_deployedLendingBox.initialize(address(1), address(2), s_depositLimit, 0);
