@@ -279,11 +279,6 @@ contract LendingBox is
             zTranchePaidFor + zTrancheUnpaid
         );
 
-
-        console2.log("_stableAmount", _stableAmount);
-        console2.log("zTranchePaidFor", zTranchePaidFor);
-        console2.log("zTrancheUnpaid", zTrancheUnpaid);
-        console2.log("price", price);
         emit Repay(
             _msgSender(),
             _stableAmount,

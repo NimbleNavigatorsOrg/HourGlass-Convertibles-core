@@ -32,6 +32,7 @@ contract LendingBoxTest is Test {
     uint256 constant s_trancheIndex = 0;
     uint256 constant s_maturityDate = 1656717949;
     uint256 constant s_depositLimit = 1000e10;
+    uint256 constant s_safeSlipAmount = 10;
     error PenaltyTooHigh(uint256 given, uint256 maxPenalty);
     address s_deployedLendingBoxAddress;
 
@@ -262,5 +263,64 @@ contract LendingBoxTest is Test {
         bytes memory customError = abi.encodeWithSignature("LendingBoxNotStarted(uint256,uint256)", 0, block.timestamp);
         vm.expectRevert(customError);
         s_deployedLendingBox.repay(100000, 625001);
+    }
+
+    //redeemTranche()
+
+    function testRedeemTranche() public {
+        vm.warp(s_maturityDate + 1);
+        s_collateralToken.approve(s_deployedLendingBoxAddress, 1e18);
+        s_stableToken.approve(s_deployedLendingBoxAddress, 1e18);
+
+        vm.prank(address(this));
+        emit Initialized(address(1), address(2), 0, s_depositLimit);
+        s_deployedLendingBox.initialize(address(1), address(2), s_depositLimit, 0);
+        vm.startPrank(s_deployedLendingBoxAddress);
+        CBBSlip(s_deployedLendingBox.s_safeSlipTokenAddress()).mint(address(this), 1e18);
+        vm.stopPrank();
+                // ask why RedeemTranche does not emit currentPrice, but RedeemStable does
+
+        vm.expectEmit(true, true, true, true);
+        emit RedeemTranche(address(this), s_safeSlipAmount);
+        s_deployedLendingBox.redeemTranche(s_safeSlipAmount);
+    }
+
+    function testCannotRedeemTrancheBondNotMatureYet() public {
+        vm.warp(s_maturityDate - 1);
+        s_collateralToken.approve(s_deployedLendingBoxAddress, 1e18);
+        s_stableToken.approve(s_deployedLendingBoxAddress, 1e18);
+
+        vm.prank(address(this));
+        emit Initialized(address(1), address(2), 0, s_depositLimit);
+        s_deployedLendingBox.initialize(address(1), address(2), s_depositLimit, 0);
+        vm.startPrank(s_deployedLendingBoxAddress);
+        CBBSlip(s_deployedLendingBox.s_safeSlipTokenAddress()).mint(address(this), 1e18);
+        vm.stopPrank();
+        bytes memory customError = abi.encodeWithSignature("BondNotMatureYet(uint256,uint256)", s_maturityDate, block.timestamp);
+        vm.expectRevert(customError);
+        s_deployedLendingBox.redeemTranche(s_safeSlipAmount);
+    }
+
+    // redeemStable()
+
+    function testRedeemStable() public {
+        s_collateralToken.approve(s_deployedLendingBoxAddress, 1e18);
+        s_stableToken.approve(s_deployedLendingBoxAddress, 1e18);
+
+        vm.prank(address(this));
+        emit Initialized(address(1), address(2), 0, s_depositLimit);
+        s_deployedLendingBox.initialize(address(1), address(2), s_depositLimit, 0);
+        vm.startPrank(s_deployedLendingBoxAddress);
+        CBBSlip(s_deployedLendingBox.s_safeSlipTokenAddress()).mint(address(this), 1e18);
+        vm.stopPrank();
+        vm.expectEmit(true, true, true, true);
+        emit RedeemStable(address(this), s_safeSlipAmount, s_deployedLendingBox.currentPrice());
+        s_deployedLendingBox.redeemStable(s_safeSlipAmount);
+    }
+
+    function testCannotRedeemStableLendingBoxNotStarted() public {
+        bytes memory customError = abi.encodeWithSignature("LendingBoxNotStarted(uint256,uint256)", 0, block.timestamp);
+        vm.expectRevert(customError);
+        s_deployedLendingBox.redeemStable(s_safeSlipAmount);
     }
 }
