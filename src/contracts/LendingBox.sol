@@ -63,7 +63,7 @@ contract LendingBox is
                 maxPrice: s_price_granularity
             });
     // TODO G approve below revert
-        if ((_stableAmount != 0 && _collateralAmount != 0) || (_stableAmount == 0 && _collateralAmount == 0))
+        if (_stableAmount * _collateralAmount != 0)
             revert OnlyLendOrBorrow({
                 _stableAmount: _stableAmount,
                 _collateralAmount: _collateralAmount
