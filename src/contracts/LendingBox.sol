@@ -47,10 +47,10 @@ contract LendingBox is
         if (bond().isMature())
             revert BondIsMature({given: bond().isMature(), required: false});
         // Safe-Tranche cannot be the Z-Tranche
-        if (trancheIndex() >= bond().trancheCount() - 1)
+        if (trancheIndex() >= trancheCount() - 1)
             revert TrancheIndexOutOfBounds({
                 given: trancheIndex(),
-                maxIndex: bond().trancheCount() - 2
+                maxIndex: trancheCount() - 2
             });
         if (initialPrice() > priceGranularity())
             revert InitialPriceTooHigh({
@@ -63,8 +63,11 @@ contract LendingBox is
                 _collateralAmount: _collateralAmount
             });
 
-        (ITranche safeTranche, ) = bond().tranches(trancheIndex());
-        (ITranche riskTranche, ) = bond().tranches(bond().trancheCount() - 1);
+            ITranche safeTranche = safeTranche();
+            ITranche riskTranche = riskTranche();
+
+            console2.log("address(safeTranche)", address(safeTranche));
+            console2.log("address(riskTranche)", address(riskTranche));
 
         // clone deploy safe slip
         s_safeSlipTokenAddress = slipFactory().createSlip(
@@ -115,16 +118,13 @@ contract LendingBox is
                 minStartDate: block.timestamp
             });
 
-        (, uint256 safeRatio) = bond().tranches(trancheIndex());
-        (, uint256 riskRatio) = bond().tranches(bond().trancheCount() - 1);
-
         uint256 price = this.currentPrice();
 
         uint256 mintAmount = (_stableAmount * priceGranularity()) / price;
         uint256 collateralAmount = (mintAmount * trancheGranularity()) /
-            safeRatio;
+            safeRatio();
 
-        uint256 zTrancheAmount = (mintAmount * riskRatio) / safeRatio;
+        uint256 zTrancheAmount = (mintAmount * riskRatio()) / safeRatio();
 
         _atomicDeposit(
             _borrower,
@@ -155,13 +155,10 @@ contract LendingBox is
 
         uint256 price = this.currentPrice();
 
-        (, uint256 safeRatio) = bond().tranches(trancheIndex());
-        (, uint256 riskRatio) = bond().tranches(bond().trancheCount() - 1);
-
-        uint256 mintAmount = (_collateralAmount * safeRatio) /
+        uint256 mintAmount = (_collateralAmount * safeRatio()) /
             trancheGranularity();
 
-        uint256 zTrancheAmount = (mintAmount * riskRatio) / safeRatio;
+        uint256 zTrancheAmount = (mintAmount * riskRatio()) / safeRatio();
         uint256 stableAmount = (mintAmount * price) / priceGranularity();
 
         _atomicDeposit(
@@ -183,7 +180,7 @@ contract LendingBox is
     function currentPrice() external view override returns (uint256) {
         //load storage variables into memory
         uint256 price = priceGranularity();
-        uint256 maturityDate = bond().maturityDate();
+        uint256 maturityDate = maturityDate();
 
         if (block.timestamp < maturityDate) {
             price =
@@ -211,14 +208,7 @@ contract LendingBox is
 
         //Load into memory
         uint256 price = this.currentPrice();
-        uint256 maturityDate = bond().maturityDate();
-
-        (ITranche safeTranche, uint256 safeRatio) = bond().tranches(
-            trancheIndex()
-        );
-        (ITranche riskTranche, uint256 riskRatio) = bond().tranches(
-            bond().trancheCount() - 1
-        );
+        uint256 maturityDate = maturityDate();
 
         // Calculate safeTranche payout
         //TODO: Decimals conversion?
@@ -236,14 +226,14 @@ contract LendingBox is
 
             //transfer A-tranches from LendingBox to msg.sender
             TransferHelper.safeTransfer(
-                address(safeTranche),
+                address(safeTranche()),
                 _msgSender(),
                 safeTranchePayout
             );
         }
 
         //calculate Z-tranche payout
-        uint256 zTranchePaidFor = (safeTranchePayout * riskRatio) / safeRatio;
+        uint256 zTranchePaidFor = (safeTranchePayout * riskRatio()) / safeRatio();
         uint256 zTrancheUnpaid = _zSlipAmount - zTranchePaidFor;
 
         //Apply penalty to any Z-tranches that have not been repaid for after maturity
@@ -261,7 +251,7 @@ contract LendingBox is
 
         // //transfer Z-tranches from LendingBox to msg.sender
         TransferHelper.safeTransfer(
-            address(riskTranche),
+            address(riskTranche()),
             _msgSender(),
             zTranchePaidFor + zTrancheUnpaid
         );
@@ -286,17 +276,14 @@ contract LendingBox is
      */
 
     function redeemTranche(uint256 safeSlipAmount) external override {
-        if (block.timestamp < bond().maturityDate())
+        if (block.timestamp < maturityDate())
             revert BondNotMatureYet({
-                maturityDate: bond().maturityDate(),
+                maturityDate: maturityDate(),
                 currentTime: block.timestamp
             });
 
-        (ITranche safeTranche, ) = bond().tranches(trancheIndex());
-        (ITranche riskTranche, ) = bond().tranches(bond().trancheCount() - 1);
-
         address safeSlipTokenAddress = s_safeSlipTokenAddress;
-        uint256 safeTrancheBalance = IERC20(address(safeTranche)).balanceOf(
+        uint256 safeTrancheBalance = IERC20(address(safeTranche())).balanceOf(
             address(this)
         );
 
@@ -305,18 +292,18 @@ contract LendingBox is
 
         //transfer safe-Tranche after maturity only
         TransferHelper.safeTransfer(
-            address(safeTranche),
+            address(safeTranche()),
             _msgSender(),
             (safeSlipAmount)
         );
 
-        uint256 zPenaltyTotal = IERC20(address(riskTranche)).balanceOf(
+        uint256 zPenaltyTotal = IERC20(address(riskTranche())).balanceOf(
             address(this)
         ) - IERC20(s_riskSlipTokenAddress).totalSupply();
 
         //transfer risk-Tranche penalty after maturity only
         TransferHelper.safeTransfer(
-            address(riskTranche),
+            address(riskTranche()),
             _msgSender(),
             (safeSlipAmount * zPenaltyTotal) / safeTrancheBalance
         );
@@ -335,13 +322,11 @@ contract LendingBox is
                 minStartDate: block.timestamp
             });
 
-        (ITranche safeTranche, ) = bond().tranches(trancheIndex());
-
         address safeSlipTokenAddress = s_safeSlipTokenAddress;
 
         uint256 stableBalance = stableToken().balanceOf(address(this));
         uint256 safeSlipSupply = IERC20(safeSlipTokenAddress).totalSupply();
-        uint256 safeTrancheBalance = IERC20(address(safeTranche)).balanceOf(
+        uint256 safeTrancheBalance = IERC20(address(safeTranche())).balanceOf(
             address(this)
         );
 
@@ -397,8 +382,8 @@ contract LendingBox is
         );
 
         // //Transfer unused tranches to borrower
-        for (uint256 i = 0; i < bond().trancheCount(); i++) {
-            if (i != trancheIndex() && i != bond().trancheCount() - 1) {
+        for (uint256 i = 0; i < trancheCount(); i++) {
+            if (i != trancheIndex() && i != trancheCount() - 1) {
                 (ITranche tranche, ) = bond().tranches(i);
                 TransferHelper.safeTransfer(
                     address(tranche),

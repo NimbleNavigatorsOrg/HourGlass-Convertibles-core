@@ -90,10 +90,7 @@ contract LendingBoxFactoryTest is Test {
             address(s_collateralToken),
             address(s_stableToken),
             s_price,
-            s_trancheIndex,
-            s_trancheGranularity,
-            s_penaltyGranularity,
-            s_priceGranularity
+            s_trancheIndex
         );
     }
 
@@ -144,10 +141,7 @@ contract LendingBoxFactoryTest is Test {
             address(s_collateralToken),
             address(s_stableToken),
             s_price,
-            s_trancheIndex,
-            s_trancheGranularity,
-            s_penaltyGranularity,
-            s_priceGranularity
+            s_trancheIndex
         );
     }
 }

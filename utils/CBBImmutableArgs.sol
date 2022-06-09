@@ -93,4 +93,28 @@ contract CBBImmutableArgs is Clone {
     function priceGranularity() public pure returns (uint256) {
         return _getArgUint256(240);
     }
+
+    function trancheCount() public pure returns (uint256) {
+        return _getArgUint256(272);
+    }
+
+    function maturityDate() public pure returns (uint256) {
+        return _getArgUint256(304);
+    }
+
+    function safeTranche() public pure returns (ITranche) {
+        return ITranche(_getArgAddress(336));
+    }
+
+    function safeRatio() public pure returns (uint256) {
+        return _getArgUint256(356);
+    }
+
+    function riskTranche() public pure returns (ITranche) {
+        return ITranche(_getArgAddress(388));
+    }
+
+    function riskRatio() public pure returns (uint256) {
+        return _getArgUint256(408);
+    }
 }

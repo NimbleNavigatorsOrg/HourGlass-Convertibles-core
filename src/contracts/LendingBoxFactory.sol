@@ -13,6 +13,13 @@ contract LendingBoxFactory is ILendingBoxFactory {
     using ClonesWithImmutableArgs for address;
 
     address public immutable implementation;
+    struct Granularities {
+        uint256 tranche;
+        uint256 penalty;
+        uint256 price;
+    }
+    bytes s_data;
+    // ButtonWoodBondController s_bond;
 
     constructor(address _implementation) {
         implementation = _implementation;
@@ -35,24 +42,44 @@ contract LendingBoxFactory is ILendingBoxFactory {
         address collateralToken,
         address stableToken,
         uint256 price,
-        uint256 trancheIndex,
-        uint256 trancheGranularity,
-        uint256 penaltyGranularity,
-        uint256 priceGranularity
+        uint256 trancheIndex
     ) public returns (address) {
-        bytes memory data = abi.encodePacked(
-            bond,
-            slipFactory,
-            penalty,
-            collateralToken,
-            stableToken,
-            price,
-            trancheIndex,
-            trancheGranularity,
-            penaltyGranularity,
-            priceGranularity
-        );
-        LendingBox clone = LendingBox(implementation.clone(data));
+        
+        LendingBox clone;
+        Granularities memory granularities = Granularities(1000, 1000, 1e9);
+        // s_bond = bond;
+
+        {
+            uint256 trancheCount = bond.trancheCount();
+            uint256 maturityDate = bond.maturityDate();
+            (ITranche safeTranche, uint256 safeRatio) = bond.tranches(trancheIndex);
+            (ITranche riskTranche, uint256 riskRatio) = bond.tranches(trancheCount - 1);
+            console2.log("address(safeTranche) LBF", address(safeTranche));
+            console2.log("address(riskTranche) LBF", address(riskTranche));
+
+            s_data = bytes.concat(
+                abi.encodePacked(
+                    bond,
+                    slipFactory,
+                    penalty,
+                    collateralToken,
+                    stableToken,
+                    price,
+                    trancheIndex,
+                    granularities.tranche,
+                    granularities.penalty,
+                    granularities.price,
+                    trancheCount,
+                    maturityDate,
+                    safeTranche
+                ),
+                abi.encodePacked(
+                    safeRatio,
+                    riskTranche,
+                    riskRatio
+                ));
+            clone = LendingBox(implementation.clone(s_data));
+        }
 
         emit LendingBoxCreated(
             collateralToken,
