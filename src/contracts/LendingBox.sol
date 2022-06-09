@@ -30,7 +30,6 @@ contract LendingBox is
 {
     address public s_safeSlipTokenAddress;
     address public s_riskSlipTokenAddress;
-    address public s_matcherAddress;
 
     uint256 public s_startDate = 0;
 
@@ -63,8 +62,6 @@ contract LendingBox is
                 _stableAmount: _stableAmount,
                 _collateralAmount: _collateralAmount
             });
-
-        s_matcherAddress = msg.sender;
 
         (ITranche safeTranche, ) = bond().tranches(trancheIndex());
         (ITranche riskTranche, ) = bond().tranches(bond().trancheCount() - 1);
@@ -206,7 +203,6 @@ contract LendingBox is
         external
         override
     {
-        console2.log("start repay()");
         if (s_startDate == 0)
             revert LendingBoxNotStarted({
                 given: 0,
@@ -215,7 +211,6 @@ contract LendingBox is
 
         //Load into memory
         uint256 price = this.currentPrice();
-        console2.log("before maturity date");
         uint256 maturityDate = bond().maturityDate();
 
         (ITranche safeTranche, uint256 safeRatio) = bond().tranches(
@@ -291,7 +286,6 @@ contract LendingBox is
      */
 
     function redeemTranche(uint256 safeSlipAmount) external override {
-        console2.log(block.timestamp, bond().maturityDate());
         if (block.timestamp < bond().maturityDate())
             revert BondNotMatureYet({
                 maturityDate: bond().maturityDate(),
@@ -316,12 +310,9 @@ contract LendingBox is
             (safeSlipAmount)
         );
 
-        console2.log("second Transfer");
         uint256 zPenaltyTotal = IERC20(address(riskTranche)).balanceOf(
             address(this)
         ) - IERC20(s_riskSlipTokenAddress).totalSupply();
-
-        console2.log("third Transfer");
 
         //transfer risk-Tranche penalty after maturity only
         TransferHelper.safeTransfer(
@@ -389,9 +380,7 @@ contract LendingBox is
 
         collateralToken().approve(address(bond()), 1e18);
         // // Tranche the collateral
-        console2.log(_collateralAmount, "ya");
         bond().deposit(_collateralAmount);
-        console2.log(_collateralAmount, "na");
 
         // //Mint safeSlips to the lender
         ISlip(s_safeSlipTokenAddress).mint(_lender, _safeSlipAmount);
