@@ -36,7 +36,7 @@ contract LendingBox is
     function initialize(
         address _borrower,
         address _lender,
-        uint256 _collateralAmount,
+        uint256 _safeTrancheAmount,
         uint256 _stableAmount
     ) external initializer {
         if (penalty() > trancheGranularity())
@@ -57,17 +57,17 @@ contract LendingBox is
                 given: initialPrice(),
                 maxPrice: priceGranularity()
             });
-        if (_stableAmount * _collateralAmount != 0)
+        if (_stableAmount * _safeTrancheAmount != 0)
             revert OnlyLendOrBorrow({
                 _stableAmount: _stableAmount,
-                _collateralAmount: _collateralAmount
+                _collateralAmount: _safeTrancheAmount
             });
 
-            ITranche safeTranche = safeTranche();
-            ITranche riskTranche = riskTranche();
+        ITranche safeTranche = safeTranche();
+        ITranche riskTranche = riskTranche();
 
-            console2.log("address(safeTranche)", address(safeTranche));
-            console2.log("address(riskTranche)", address(riskTranche));
+        console2.log("address(safeTranche)", address(safeTranche));
+        console2.log("address(riskTranche)", address(riskTranche));
 
         // clone deploy safe slip
         s_safeSlipTokenAddress = slipFactory().createSlip(
@@ -89,18 +89,30 @@ contract LendingBox is
         // initial borrow/lend at initialPrice, provided matching order is provided
 
         if (_stableAmount != 0) {
-            (bool success,) = address(this).delegatecall(
-            abi.encodeWithSignature("lend(address,address,uint256)", _borrower, _lender, _stableAmount));
+            (bool success, ) = address(this).delegatecall(
+                abi.encodeWithSignature(
+                    "lend(address,address,uint256)",
+                    _borrower,
+                    _lender,
+                    _stableAmount
+                )
+            );
             require(success);
         }
 
-        if (_collateralAmount != 0) {
-            (bool success,) = address(this).delegatecall(
-            abi.encodeWithSignature("borrow(address,address,uint256)", _borrower, _lender, _collateralAmount));
+        if (_safeTrancheAmount != 0) {
+            (bool success, ) = address(this).delegatecall(
+                abi.encodeWithSignature(
+                    "borrow(address,address,uint256)",
+                    _borrower,
+                    _lender,
+                    _safeTrancheAmount
+                )
+            );
             require(success);
         }
 
-        emit Initialized(_borrower, _lender, _stableAmount, _collateralAmount);
+        emit Initialized(_borrower, _lender, _stableAmount, _safeTrancheAmount);
     }
 
     /**
@@ -121,15 +133,12 @@ contract LendingBox is
         uint256 price = this.currentPrice();
 
         uint256 mintAmount = (_stableAmount * priceGranularity()) / price;
-        uint256 collateralAmount = (mintAmount * trancheGranularity()) /
-            safeRatio();
 
         uint256 zTrancheAmount = (mintAmount * riskRatio()) / safeRatio();
 
         _atomicDeposit(
             _borrower,
             _lender,
-            collateralAmount,
             _stableAmount,
             mintAmount,
             zTrancheAmount
@@ -145,7 +154,7 @@ contract LendingBox is
     function borrow(
         address _borrower,
         address _lender,
-        uint256 _collateralAmount
+        uint256 _safeTrancheAmount
     ) external override {
         if (s_startDate == 0)
             revert LendingBoxNotStarted({
@@ -155,22 +164,26 @@ contract LendingBox is
 
         uint256 price = this.currentPrice();
 
-        uint256 mintAmount = (_collateralAmount * safeRatio()) /
-            trancheGranularity();
-
-        uint256 zTrancheAmount = (mintAmount * riskRatio()) / safeRatio();
-        uint256 stableAmount = (mintAmount * price) / priceGranularity();
+        uint256 zTrancheAmount = (_safeTrancheAmount * riskRatio()) /
+            safeRatio();
+        uint256 stableAmount = (_safeTrancheAmount * price) /
+            priceGranularity();
 
         _atomicDeposit(
             _borrower,
             _lender,
-            _collateralAmount,
             stableAmount,
-            mintAmount,
+            _safeTrancheAmount,
             zTrancheAmount
         );
 
-        emit Borrow(_msgSender(), _borrower, _lender, _collateralAmount, price);
+        emit Borrow(
+            _msgSender(),
+            _borrower,
+            _lender,
+            _safeTrancheAmount,
+            price
+        );
     }
 
     /**
@@ -233,7 +246,8 @@ contract LendingBox is
         }
 
         //calculate Z-tranche payout
-        uint256 zTranchePaidFor = (safeTranchePayout * riskRatio()) / safeRatio();
+        uint256 zTranchePaidFor = (safeTranchePayout * riskRatio()) /
+            safeRatio();
         uint256 zTrancheUnpaid = _zSlipAmount - zTranchePaidFor;
 
         //Apply penalty to any Z-tranches that have not been repaid for after maturity
@@ -260,7 +274,6 @@ contract LendingBox is
             _msgSender(),
             zTranchePaidFor + zTrancheUnpaid
         );
-
 
         emit Repay(
             _msgSender(),
@@ -349,23 +362,25 @@ contract LendingBox is
     function _atomicDeposit(
         address _borrower,
         address _lender,
-        uint256 _collateralAmount,
         uint256 _stableAmount,
         uint256 _safeSlipAmount,
         uint256 _riskSlipAmount
     ) internal {
-
-        //Transfer collateral to ConvertibleBondBox
+        //Transfer safeTranche to ConvertibleBondBox
         TransferHelper.safeTransferFrom(
-            address(collateralToken()),
+            address(safeTranche()),
             _msgSender(),
             address(this),
-            _collateralAmount
+            _safeSlipAmount
         );
 
-        collateralToken().approve(address(bond()), 1e18);
-        // // Tranche the collateral
-        bond().deposit(_collateralAmount);
+        //Transfer riskTranche to ConvertibleBondBox
+        TransferHelper.safeTransferFrom(
+            address(riskTranche()),
+            _msgSender(),
+            address(this),
+            _riskSlipAmount
+        );
 
         // //Mint safeSlips to the lender
         ISlip(s_safeSlipTokenAddress).mint(_lender, _safeSlipAmount);
@@ -380,17 +395,5 @@ contract LendingBox is
             _borrower,
             _stableAmount
         );
-
-        // //Transfer unused tranches to borrower
-        for (uint256 i = 0; i < trancheCount(); i++) {
-            if (i != trancheIndex() && i != trancheCount() - 1) {
-                (ITranche tranche, ) = bond().tranches(i);
-                TransferHelper.safeTransfer(
-                    address(tranche),
-                    _borrower,
-                    tranche.balanceOf(address(this))
-                );
-            }
-        }
     }
 }
