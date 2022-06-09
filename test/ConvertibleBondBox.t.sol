@@ -94,7 +94,7 @@ contract ConvertibleBondBoxTest is Test {
             s_depositLimit
         );
 
-        s_deployedLendingBoxAddress = s_CBBFactory.createLendingBox(
+        s_deployedLendingBoxAddress = s_CBBFactory.createConvertibleBondBox(
             s_buttonWoodBondController,
             s_slipFactory,
             s_penalty,
@@ -147,7 +147,7 @@ contract ConvertibleBondBoxTest is Test {
 
     function testCannotInitializePenaltyTooHigh(uint256 penalty) public {
         vm.assume(penalty > s_penaltyGranularity);
-        s_deployedLendingBoxAddress = s_CBBFactory.createLendingBox(
+        s_deployedLendingBoxAddress = s_CBBFactory.createConvertibleBondBox(
             s_buttonWoodBondController,
             s_slipFactory,
             penalty,
@@ -175,7 +175,7 @@ contract ConvertibleBondBoxTest is Test {
 
     function testCannotInitializeBondIsMature() public {
         s_buttonWoodBondController.mature();
-        s_deployedLendingBoxAddress = s_CBBFactory.createLendingBox(
+        s_deployedLendingBoxAddress = s_CBBFactory.createConvertibleBondBox(
             s_buttonWoodBondController,
             s_slipFactory,
             s_penalty,
@@ -204,7 +204,7 @@ contract ConvertibleBondBoxTest is Test {
     //TODO reasses test later
     function testCannotInitializeTrancheIndexOutOfBounds() public {
         // vm.assume(trancheIndex == s_buttonWoodBondController.trancheCount() - 1);
-        s_deployedLendingBoxAddress = s_CBBFactory.createLendingBox(
+        s_deployedLendingBoxAddress = s_CBBFactory.createConvertibleBondBox(
             s_buttonWoodBondController,
             s_slipFactory,
             s_penalty,
@@ -233,7 +233,7 @@ contract ConvertibleBondBoxTest is Test {
 
     function testFailInitializeTrancheBW(uint256 trancheIndex) public {
         vm.assume(trancheIndex > s_buttonWoodBondController.trancheCount() - 1);
-        s_deployedLendingBoxAddress = s_CBBFactory.createLendingBox(
+        s_deployedLendingBoxAddress = s_CBBFactory.createConvertibleBondBox(
             s_buttonWoodBondController,
             s_slipFactory,
             s_penalty,
@@ -254,7 +254,7 @@ contract ConvertibleBondBoxTest is Test {
 
     function testCannotInitializeInitialPriceTooHigh(uint256 price) public {
         vm.assume(price > s_priceGranularity);
-        s_deployedLendingBoxAddress = s_CBBFactory.createLendingBox(
+        s_deployedLendingBoxAddress = s_CBBFactory.createConvertibleBondBox(
             s_buttonWoodBondController,
             s_slipFactory,
             s_penalty,
@@ -287,7 +287,7 @@ contract ConvertibleBondBoxTest is Test {
         vm.assume(collateralAmount < 10e12);
         vm.assume(stableAmount * collateralAmount != 0);
 
-        s_deployedLendingBoxAddress = s_CBBFactory.createLendingBox(
+        s_deployedLendingBoxAddress = s_CBBFactory.createConvertibleBondBox(
             s_buttonWoodBondController,
             s_slipFactory,
             s_penalty,

@@ -26,7 +26,7 @@ contract CBBFactory is ICBBFactory {
     }
 
     /**
-     * @dev Initializer for Lending Box
+     * @dev Initializer for Convertible Bond Box
      * @param bond The buttonTranche bond tied to this Convertible Bond Box
      * @param slipFactory The factory for the Slip-Tokens
      * @param penalty The penalty ratio for non-repayment of loan
@@ -35,7 +35,7 @@ contract CBBFactory is ICBBFactory {
      * @param trancheIndex The index of the safe-Tranche
      * @param price The initial price
      */
-    function createLendingBox(
+    function createConvertibleBondBox(
         IButtonWoodBondController bond,
         ICBBSlipFactory slipFactory,
         uint256 penalty,

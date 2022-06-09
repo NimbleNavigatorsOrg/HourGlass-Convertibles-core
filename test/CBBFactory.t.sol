@@ -83,7 +83,7 @@ contract CBBFactoryTest is Test {
             s_depositLimit
         );
 
-        s_deployedLendingBoxAddress = s_CBBFactory.createLendingBox(
+        s_deployedLendingBoxAddress = s_CBBFactory.createConvertibleBondBox(
             s_buttonWoodBondController,
             s_slipFactory,
             s_penalty,
@@ -134,7 +134,7 @@ contract CBBFactoryTest is Test {
             address(this)
         );
         // The event we get
-        s_CBBFactory.createLendingBox(
+        s_CBBFactory.createConvertibleBondBox(
             s_buttonWoodBondController,
             s_slipFactory,
             s_penalty,
