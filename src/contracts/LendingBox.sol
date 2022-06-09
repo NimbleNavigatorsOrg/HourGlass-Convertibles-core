@@ -34,20 +34,16 @@ contract LendingBox is
 
     uint256 public s_startDate = 0;
 
-    uint256 public constant s_tranche_granularity = 1000;
-    uint256 public constant s_penalty_granularity = 1000;
-    uint256 public constant s_price_granularity = 1000000000;
-
     function initialize(
         address _borrower,
         address _lender,
         uint256 _collateralAmount,
         uint256 _stableAmount
     ) external initializer {
-        if (penalty() > s_penalty_granularity)
+        if (penalty() > trancheGranularity())
             revert PenaltyTooHigh({
                 given: penalty(),
-                maxPenalty: s_penalty_granularity
+                maxPenalty: penaltyGranularity()
             });
         if (bond().isMature())
             revert BondIsMature({given: bond().isMature(), required: false});
@@ -57,12 +53,11 @@ contract LendingBox is
                 given: trancheIndex(),
                 maxIndex: bond().trancheCount() - 2
             });
-        if (initialPrice() > s_price_granularity)
+        if (initialPrice() > priceGranularity())
             revert InitialPriceTooHigh({
                 given: initialPrice(),
-                maxPrice: s_price_granularity
+                maxPrice: priceGranularity()
             });
-    // TODO G approve below revert
         if (_stableAmount * _collateralAmount != 0)
             revert OnlyLendOrBorrow({
                 _stableAmount: _stableAmount,
@@ -128,8 +123,8 @@ contract LendingBox is
 
         uint256 price = this.currentPrice();
 
-        uint256 mintAmount = (_stableAmount * s_price_granularity) / price;
-        uint256 collateralAmount = (mintAmount * s_tranche_granularity) /
+        uint256 mintAmount = (_stableAmount * priceGranularity()) / price;
+        uint256 collateralAmount = (mintAmount * trancheGranularity()) /
             safeRatio;
 
         uint256 zTrancheAmount = (mintAmount * riskRatio) / safeRatio;
@@ -167,10 +162,10 @@ contract LendingBox is
         (, uint256 riskRatio) = bond().tranches(bond().trancheCount() - 1);
 
         uint256 mintAmount = (_collateralAmount * safeRatio) /
-            s_tranche_granularity;
+            trancheGranularity();
 
         uint256 zTrancheAmount = (mintAmount * riskRatio) / safeRatio;
-        uint256 stableAmount = (mintAmount * price) / s_price_granularity;
+        uint256 stableAmount = (mintAmount * price) / priceGranularity();
 
         _atomicDeposit(
             _borrower,
@@ -190,7 +185,7 @@ contract LendingBox is
 
     function currentPrice() external view override returns (uint256) {
         //load storage variables into memory
-        uint256 price = s_price_granularity;
+        uint256 price = priceGranularity();
         uint256 maturityDate = bond().maturityDate();
 
         if (block.timestamp < maturityDate) {
@@ -232,7 +227,7 @@ contract LendingBox is
 
         // Calculate safeTranche payout
         //TODO: Decimals conversion?
-        uint256 safeTranchePayout = (_stableAmount * s_price_granularity) /
+        uint256 safeTranchePayout = (_stableAmount * priceGranularity()) /
             price;
 
         if (_stableAmount != 0) {
@@ -261,7 +256,7 @@ contract LendingBox is
             zTrancheUnpaid =
                 zTrancheUnpaid -
                 (zTrancheUnpaid * penalty()) /
-                s_penalty_granularity;
+                penaltyGranularity();
         }
 
         //Should not allow redeeming Z-tranches before maturity without repaying

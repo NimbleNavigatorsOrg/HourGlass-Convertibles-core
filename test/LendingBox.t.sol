@@ -34,6 +34,9 @@ contract LendingBoxTest is Test {
     uint256 constant s_depositLimit = 1000e10;
     uint256 constant s_safeSlipAmount = 10;
     uint256 constant s_endOfUnixTime = 2147483647;
+    uint256 constant s_trancheGranularity = 1000;
+    uint256 constant s_penaltyGranularity = 1000;
+    uint256 constant s_priceGranularity = 1000000000;
     address s_deployedLendingBoxAddress;
 
     event LendingBoxCreated(
@@ -96,7 +99,10 @@ contract LendingBoxTest is Test {
             address(s_collateralToken),
             address(s_stableToken),
             s_price,
-            s_trancheIndex
+            s_trancheIndex,
+            s_trancheGranularity,
+            s_penaltyGranularity,
+            s_priceGranularity
         );
 
         s_collateralToken.approve(s_deployedLendingBoxAddress, type(uint256).max);
@@ -117,7 +123,7 @@ contract LendingBoxTest is Test {
     }
 
     function testCannotInitializePenaltyTooHigh(uint256 penalty) public {
-        vm.assume(penalty > s_lendingBox.s_penalty_granularity());
+        vm.assume(penalty > s_penaltyGranularity);
         s_deployedLendingBoxAddress = s_lendingBoxFactory.createLendingBox(
             s_buttonWoodBondController,
             s_slipFactory,
@@ -125,12 +131,15 @@ contract LendingBoxTest is Test {
             address(s_collateralToken),
             address(s_stableToken),
             s_price,
-            s_trancheIndex
+            s_trancheIndex,
+            s_trancheGranularity,
+            s_penaltyGranularity,
+            s_priceGranularity
         );
 
         s_deployedLendingBox = LendingBox(s_deployedLendingBoxAddress);
 
-        bytes memory customError = abi.encodeWithSignature("PenaltyTooHigh(uint256,uint256)", penalty, s_lendingBox.s_penalty_granularity());
+        bytes memory customError = abi.encodeWithSignature("PenaltyTooHigh(uint256,uint256)", penalty, s_deployedLendingBox.penaltyGranularity());
         vm.expectRevert(customError);
         s_deployedLendingBox.initialize(address(1), address(2), s_depositLimit, 0);
     }
@@ -144,7 +153,10 @@ contract LendingBoxTest is Test {
             address(s_collateralToken),
             address(s_stableToken),
             1001,
-            s_trancheIndex
+            s_trancheIndex,
+            s_trancheGranularity,
+            s_penaltyGranularity,
+            s_priceGranularity
         );
 
         s_deployedLendingBox = LendingBox(s_deployedLendingBoxAddress);
@@ -163,7 +175,10 @@ contract LendingBoxTest is Test {
             address(s_collateralToken),
             address(s_stableToken),
             1001,
-            trancheIndex
+            trancheIndex,
+            s_trancheGranularity,
+            s_penaltyGranularity,
+            s_priceGranularity
         );
         s_deployedLendingBox = LendingBox(s_deployedLendingBoxAddress);
 
@@ -173,7 +188,7 @@ contract LendingBoxTest is Test {
     }
 
     function testCannotInitializeInitialPriceTooHigh(uint256 price) public {
-        vm.assume(price > s_lendingBox.s_price_granularity());
+        vm.assume(price > s_priceGranularity);
         s_deployedLendingBoxAddress = s_lendingBoxFactory.createLendingBox(
             s_buttonWoodBondController,
             s_slipFactory,
@@ -181,11 +196,14 @@ contract LendingBoxTest is Test {
             address(s_collateralToken),
             address(s_stableToken),
             price,
-            s_trancheIndex
+            s_trancheIndex,
+            s_trancheGranularity,
+            s_penaltyGranularity,
+            s_priceGranularity
         );
 
         s_deployedLendingBox = LendingBox(s_deployedLendingBoxAddress);
-        bytes memory customError = abi.encodeWithSignature("InitialPriceTooHigh(uint256,uint256)", price, s_lendingBox.s_price_granularity());
+        bytes memory customError = abi.encodeWithSignature("InitialPriceTooHigh(uint256,uint256)", price, s_priceGranularity);
         vm.expectRevert(customError);
         s_deployedLendingBox.initialize(address(1), address(2), s_depositLimit, 0);
     }
@@ -202,7 +220,10 @@ contract LendingBoxTest is Test {
             address(s_collateralToken),
             address(s_stableToken),
             s_price,
-            s_trancheIndex
+            s_trancheIndex,
+            s_trancheGranularity,
+            s_penaltyGranularity,
+            s_priceGranularity
         );
 
         s_deployedLendingBox = LendingBox(s_deployedLendingBoxAddress);
@@ -254,8 +275,7 @@ contract LendingBoxTest is Test {
         uint256 currentPrice = s_deployedLendingBox
             .currentPrice();
         uint256 price = s_deployedLendingBox.initialPrice();
-        uint256 priceGranularity = s_deployedLendingBox
-            .s_price_granularity();
+        uint256 priceGranularity = s_deployedLendingBox.priceGranularity();
         assertEq((priceGranularity - price) / 2 + price, currentPrice);
     }
 

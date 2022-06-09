@@ -32,6 +32,9 @@ contract LendingBoxFactoryTest is Test {
     uint256 constant s_trancheIndex = 0;
     uint256 constant s_maturityDate = 1656717949;
     uint256 constant s_depositLimit = 1000e9;
+    uint256 constant s_trancheGranularity = 1000;
+    uint256 constant s_penaltyGranularity = 1000;
+    uint256 constant s_priceGranularity = 1000000000;
     error PenaltyTooHigh(uint256 given, uint256 maxPenalty);
     address s_deployedLendingBoxAddress;
 
@@ -87,7 +90,10 @@ contract LendingBoxFactoryTest is Test {
             address(s_collateralToken),
             address(s_stableToken),
             s_price,
-            s_trancheIndex
+            s_trancheIndex,
+            s_trancheGranularity,
+            s_penaltyGranularity,
+            s_priceGranularity
         );
     }
 
@@ -138,7 +144,10 @@ contract LendingBoxFactoryTest is Test {
             address(s_collateralToken),
             address(s_stableToken),
             s_price,
-            s_trancheIndex
+            s_trancheIndex,
+            s_trancheGranularity,
+            s_penaltyGranularity,
+            s_priceGranularity
         );
     }
 }

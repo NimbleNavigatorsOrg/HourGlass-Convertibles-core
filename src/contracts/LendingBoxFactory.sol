@@ -35,7 +35,10 @@ contract LendingBoxFactory is ILendingBoxFactory {
         address collateralToken,
         address stableToken,
         uint256 price,
-        uint256 trancheIndex
+        uint256 trancheIndex,
+        uint256 trancheGranularity,
+        uint256 penaltyGranularity,
+        uint256 priceGranularity
     ) public returns (address) {
         bytes memory data = abi.encodePacked(
             bond,
@@ -44,7 +47,10 @@ contract LendingBoxFactory is ILendingBoxFactory {
             collateralToken,
             stableToken,
             price,
-            trancheIndex
+            trancheIndex,
+            trancheGranularity,
+            penaltyGranularity,
+            priceGranularity
         );
         LendingBox clone = LendingBox(implementation.clone(data));
 
