@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
-import "../src/contracts/LendingBox.sol";
+import "../src/contracts/ConvertibleBondBox.sol";
 import "../src/contracts/LendingBoxFactory.sol";
 import "../src/contracts/ButtonWoodBondController.sol";
 import "@buttonwood-protocol/tranche/contracts/Tranche.sol";
@@ -15,7 +15,7 @@ import "forge-std/console2.sol";
 
 contract LendingBoxFactoryTest is Test {
     ButtonWoodBondController s_buttonWoodBondController;
-    LendingBox s_lendingBox;
+    ConvertibleBondBox s_convertibleBondBox;
     LendingBoxFactory s_lendingBoxFactory;
 
     ERC20 s_collateralToken;
@@ -71,8 +71,8 @@ contract LendingBoxFactoryTest is Test {
         s_slipFactory = new SlipFactory(address(s_slip));
 
         s_buttonWoodBondController = new ButtonWoodBondController();
-        s_lendingBox = new LendingBox();
-        s_lendingBoxFactory = new LendingBoxFactory(address(s_lendingBox));
+        s_convertibleBondBox = new ConvertibleBondBox();
+        s_lendingBoxFactory = new LendingBoxFactory(address(s_convertibleBondBox));
 
         s_buttonWoodBondController.init(
             address(s_trancheFactory),
@@ -96,31 +96,31 @@ contract LendingBoxFactoryTest is Test {
 
     function testFactoryCreatesLendingBox() public {
         // wrap address in ILendingBox and make assertions on inital values
-        LendingBox deployedLendingBox = LendingBox(s_deployedLendingBoxAddress);
+        ConvertibleBondBox deployedConvertibleBondBox = ConvertibleBondBox(s_deployedLendingBoxAddress);
 
         // keep this assert
-        assertEq(s_lendingBoxFactory.implementation(), address(s_lendingBox));
+        assertEq(s_lendingBoxFactory.implementation(), address(s_convertibleBondBox));
 
         assertEq(
-            address(deployedLendingBox.bond()),
+            address(deployedConvertibleBondBox.bond()),
             address(s_buttonWoodBondController)
         );
         assertEq(
-            address(deployedLendingBox.slipFactory()),
+            address(deployedConvertibleBondBox.slipFactory()),
             address(s_slipFactory)
         );
-        assertEq(deployedLendingBox.penalty(), s_penalty);
+        assertEq(deployedConvertibleBondBox.penalty(), s_penalty);
         assertEq(
-            address(deployedLendingBox.collateralToken()),
+            address(deployedConvertibleBondBox.collateralToken()),
             address(s_collateralToken)
         );
         assertEq(
-            address(deployedLendingBox.stableToken()),
+            address(deployedConvertibleBondBox.stableToken()),
             address(s_stableToken)
         );
-        assertEq(deployedLendingBox.initialPrice(), s_price);
-        assertEq(deployedLendingBox.s_startDate(), 0);
-        assertEq(deployedLendingBox.trancheIndex(), s_trancheIndex);
+        assertEq(deployedConvertibleBondBox.initialPrice(), s_price);
+        assertEq(deployedConvertibleBondBox.s_startDate(), 0);
+        assertEq(deployedConvertibleBondBox.trancheIndex(), s_trancheIndex);
     }
 
     function testCreateLendingBoxEmitsExpectedEvent() public {

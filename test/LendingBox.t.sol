@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
-import "../src/contracts/LendingBox.sol";
+import "../src/contracts/ConvertibleBondBox.sol";
 import "../src/interfaces/ILendingBox.sol";
 import "../src/contracts/LendingBoxFactory.sol";
 import "../src/contracts/ButtonWoodBondController.sol";
@@ -16,8 +16,8 @@ import "../test/mocks/MockERC20.sol";
 
 contract LendingBoxTest is Test {
     ButtonWoodBondController s_buttonWoodBondController;
-    LendingBox s_lendingBox;
-    LendingBox s_deployedLendingBox;
+    ConvertibleBondBox s_convertibleBondBox;
+    ConvertibleBondBox s_deployedConvertibleBondBox;
     LendingBoxFactory s_lendingBoxFactory;
 
     MockERC20 s_collateralToken;
@@ -83,8 +83,8 @@ contract LendingBoxTest is Test {
         s_slipFactory = new SlipFactory(address(s_slip));
 
         s_buttonWoodBondController = new ButtonWoodBondController();
-        s_lendingBox = new LendingBox();
-        s_lendingBoxFactory = new LendingBoxFactory(address(s_lendingBox));
+        s_convertibleBondBox = new ConvertibleBondBox();
+        s_lendingBoxFactory = new LendingBoxFactory(address(s_convertibleBondBox));
 
         s_buttonWoodBondController.init(
             address(s_trancheFactory),
@@ -121,7 +121,7 @@ contract LendingBoxTest is Test {
         s_riskTranche.approve(s_deployedLendingBoxAddress, type(uint256).max);
         s_stableToken.approve(s_deployedLendingBoxAddress, type(uint256).max);
 
-        s_deployedLendingBox = LendingBox(s_deployedLendingBoxAddress);
+        s_deployedConvertibleBondBox = ConvertibleBondBox(s_deployedLendingBoxAddress);
 
         s_depositLimit =
             (s_safeTranche.balanceOf(address(this)) * s_price) /
@@ -138,7 +138,7 @@ contract LendingBoxTest is Test {
         vm.prank(address(this));
         vm.expectEmit(true, true, true, true);
         emit Initialized(address(1), address(2), 0, collateralAmount);
-        s_deployedLendingBox.initialize(
+        s_deployedConvertibleBondBox.initialize(
             address(1),
             address(2),
             collateralAmount,
@@ -158,15 +158,15 @@ contract LendingBoxTest is Test {
             s_trancheIndex
         );
 
-        s_deployedLendingBox = LendingBox(s_deployedLendingBoxAddress);
+        s_deployedConvertibleBondBox = ConvertibleBondBox(s_deployedLendingBoxAddress);
 
         bytes memory customError = abi.encodeWithSignature(
             "PenaltyTooHigh(uint256,uint256)",
             penalty,
-            s_deployedLendingBox.penaltyGranularity()
+            s_deployedConvertibleBondBox.penaltyGranularity()
         );
         vm.expectRevert(customError);
-        s_deployedLendingBox.initialize(
+        s_deployedConvertibleBondBox.initialize(
             address(1),
             address(2),
             s_depositLimit,
@@ -186,7 +186,7 @@ contract LendingBoxTest is Test {
             s_trancheIndex
         );
 
-        s_deployedLendingBox = LendingBox(s_deployedLendingBoxAddress);
+        s_deployedConvertibleBondBox = ConvertibleBondBox(s_deployedLendingBoxAddress);
 
         bytes memory customError = abi.encodeWithSignature(
             "BondIsMature(bool,bool)",
@@ -194,7 +194,7 @@ contract LendingBoxTest is Test {
             false
         );
         vm.expectRevert(customError);
-        s_deployedLendingBox.initialize(
+        s_deployedConvertibleBondBox.initialize(
             address(1),
             address(2),
             s_depositLimit,
@@ -214,7 +214,7 @@ contract LendingBoxTest is Test {
             1001,
             s_buttonWoodBondController.trancheCount() - 1
         );
-        s_deployedLendingBox = LendingBox(s_deployedLendingBoxAddress);
+        s_deployedConvertibleBondBox = ConvertibleBondBox(s_deployedLendingBoxAddress);
 
         bytes memory customError = abi.encodeWithSignature(
             "TrancheIndexOutOfBounds(uint256,uint256)",
@@ -222,7 +222,7 @@ contract LendingBoxTest is Test {
             s_buttonWoodBondController.trancheCount() - 2
         );
         vm.expectRevert(customError);
-        s_deployedLendingBox.initialize(
+        s_deployedConvertibleBondBox.initialize(
             address(1),
             address(2),
             s_depositLimit,
@@ -243,9 +243,9 @@ contract LendingBoxTest is Test {
             1001,
             trancheIndex
         );
-        s_deployedLendingBox = LendingBox(s_deployedLendingBoxAddress);
+        s_deployedConvertibleBondBox = ConvertibleBondBox(s_deployedLendingBoxAddress);
 
-        s_deployedLendingBox.initialize(
+        s_deployedConvertibleBondBox.initialize(
             address(1),
             address(2),
             s_depositLimit,
@@ -265,14 +265,14 @@ contract LendingBoxTest is Test {
             s_trancheIndex
         );
 
-        s_deployedLendingBox = LendingBox(s_deployedLendingBoxAddress);
+        s_deployedConvertibleBondBox = ConvertibleBondBox(s_deployedLendingBoxAddress);
         bytes memory customError = abi.encodeWithSignature(
             "InitialPriceTooHigh(uint256,uint256)",
             price,
             s_priceGranularity
         );
         vm.expectRevert(customError);
-        s_deployedLendingBox.initialize(
+        s_deployedConvertibleBondBox.initialize(
             address(1),
             address(2),
             s_depositLimit,
@@ -298,7 +298,7 @@ contract LendingBoxTest is Test {
             s_trancheIndex
         );
 
-        s_deployedLendingBox = LendingBox(s_deployedLendingBoxAddress);
+        s_deployedConvertibleBondBox = ConvertibleBondBox(s_deployedLendingBoxAddress);
 
         bytes memory customError = abi.encodeWithSignature(
             "OnlyLendOrBorrow(uint256,uint256)",
@@ -306,7 +306,7 @@ contract LendingBoxTest is Test {
             stableAmount
         );
         vm.expectRevert(customError);
-        s_deployedLendingBox.initialize(
+        s_deployedConvertibleBondBox.initialize(
             address(1),
             address(2),
             stableAmount,
@@ -327,7 +327,7 @@ contract LendingBoxTest is Test {
             collateralAmount,
             s_price
         );
-        s_deployedLendingBox.initialize(
+        s_deployedConvertibleBondBox.initialize(
             address(1),
             address(2),
             collateralAmount,
@@ -345,7 +345,7 @@ contract LendingBoxTest is Test {
 
         vm.expectEmit(true, true, true, true);
         emit Lend(address(this), address(1), address(2), stableAmount, s_price);
-        s_deployedLendingBox.initialize(
+        s_deployedConvertibleBondBox.initialize(
             address(1),
             address(2),
             0,
@@ -362,7 +362,7 @@ contract LendingBoxTest is Test {
             block.timestamp
         );
         vm.expectRevert(customError);
-        s_deployedLendingBox.lend(address(1), address(2), s_depositLimit);
+        s_deployedConvertibleBondBox.lend(address(1), address(2), s_depositLimit);
     }
 
     //borrow()
@@ -374,16 +374,16 @@ contract LendingBoxTest is Test {
             block.timestamp
         );
         vm.expectRevert(customError);
-        s_deployedLendingBox.borrow(address(1), address(2), s_depositLimit);
+        s_deployedConvertibleBondBox.borrow(address(1), address(2), s_depositLimit);
     }
 
     // currentPrice()
 
     function testCurrentPrice() public {
-        vm.warp((s_deployedLendingBox.s_startDate() + s_maturityDate) / 2);
-        uint256 currentPrice = s_deployedLendingBox.currentPrice();
-        uint256 price = s_deployedLendingBox.initialPrice();
-        uint256 priceGranularity = s_deployedLendingBox.priceGranularity();
+        vm.warp((s_deployedConvertibleBondBox.s_startDate() + s_maturityDate) / 2);
+        uint256 currentPrice = s_deployedConvertibleBondBox.currentPrice();
+        uint256 price = s_deployedConvertibleBondBox.initialPrice();
+        uint256 priceGranularity = s_deployedConvertibleBondBox.priceGranularity();
         assertEq((priceGranularity - price) / 2 + price, currentPrice);
     }
 
@@ -394,21 +394,21 @@ contract LendingBoxTest is Test {
         vm.assume(time < s_endOfUnixTime - s_maturityDate);
         vm.warp(s_maturityDate + time);
         vm.prank(address(this));
-        s_deployedLendingBox.initialize(
+        s_deployedConvertibleBondBox.initialize(
             address(1),
             address(2),
             s_depositLimit,
             0
         );
         vm.startPrank(s_deployedLendingBoxAddress);
-        CBBSlip(s_deployedLendingBox.s_riskSlipTokenAddress()).mint(
+        CBBSlip(s_deployedConvertibleBondBox.s_riskSlipTokenAddress()).mint(
             address(this),
             1e18
         );
         vm.stopPrank();
         vm.expectEmit(true, true, true, true);
         emit Repay(address(this), 100000, 250000, 187501, 1000000000);
-        s_deployedLendingBox.repay(100000, 625001);
+        s_deployedConvertibleBondBox.repay(100000, 625001);
     }
 
     function testCannotRepayLendingBoxNotStarted() public {
@@ -418,7 +418,7 @@ contract LendingBoxTest is Test {
             block.timestamp
         );
         vm.expectRevert(customError);
-        s_deployedLendingBox.repay(100000, 625001);
+        s_deployedConvertibleBondBox.repay(100000, 625001);
     }
 
     //redeemTranche()
@@ -439,7 +439,7 @@ contract LendingBoxTest is Test {
         vm.warp(s_maturityDate + time);
 
         vm.prank(address(this));
-        s_deployedLendingBox.initialize(
+        s_deployedConvertibleBondBox.initialize(
             address(1),
             address(2),
             s_depositLimit,
@@ -451,7 +451,7 @@ contract LendingBoxTest is Test {
         vm.stopPrank();
 
         vm.startPrank(s_deployedLendingBoxAddress);
-        CBBSlip(s_deployedLendingBox.s_safeSlipTokenAddress()).mint(
+        CBBSlip(s_deployedConvertibleBondBox.s_safeSlipTokenAddress()).mint(
             address(this),
             amount
         );
@@ -459,7 +459,7 @@ contract LendingBoxTest is Test {
 
         vm.expectEmit(true, true, true, true);
         emit RedeemTranche(address(this), amount);
-        s_deployedLendingBox.redeemTranche(amount);
+        s_deployedConvertibleBondBox.redeemTranche(amount);
     }
 
     function testCannotRedeemTrancheBondNotMatureYet(uint256 time) public {
@@ -468,14 +468,14 @@ contract LendingBoxTest is Test {
         vm.prank(address(this));
         emit Initialized(address(1), address(2), 0, s_depositLimit);
 
-        s_deployedLendingBox.initialize(
+        s_deployedConvertibleBondBox.initialize(
             address(1),
             address(2),
             s_depositLimit,
             0
         );
         vm.startPrank(s_deployedLendingBoxAddress);
-        CBBSlip(s_deployedLendingBox.s_safeSlipTokenAddress()).mint(
+        CBBSlip(s_deployedConvertibleBondBox.s_safeSlipTokenAddress()).mint(
             address(this),
             1e18
         );
@@ -486,7 +486,7 @@ contract LendingBoxTest is Test {
             block.timestamp
         );
         vm.expectRevert(customError);
-        s_deployedLendingBox.redeemTranche(s_safeSlipAmount);
+        s_deployedConvertibleBondBox.redeemTranche(s_safeSlipAmount);
     }
 
     // redeemStable()
@@ -495,14 +495,14 @@ contract LendingBoxTest is Test {
         vm.assume(safeSlipAmount <= 1e18);
         vm.prank(address(this));
         emit Initialized(address(1), address(2), 0, s_depositLimit);
-        s_deployedLendingBox.initialize(
+        s_deployedConvertibleBondBox.initialize(
             address(1),
             address(2),
             s_depositLimit,
             0
         );
         vm.startPrank(s_deployedLendingBoxAddress);
-        CBBSlip(s_deployedLendingBox.s_safeSlipTokenAddress()).mint(
+        CBBSlip(s_deployedConvertibleBondBox.s_safeSlipTokenAddress()).mint(
             address(this),
             1e18
         );
@@ -511,9 +511,9 @@ contract LendingBoxTest is Test {
         emit RedeemStable(
             address(this),
             safeSlipAmount,
-            s_deployedLendingBox.currentPrice()
+            s_deployedConvertibleBondBox.currentPrice()
         );
-        s_deployedLendingBox.redeemStable(safeSlipAmount);
+        s_deployedConvertibleBondBox.redeemStable(safeSlipAmount);
     }
 
     function testCannotRedeemStableLendingBoxNotStarted() public {
@@ -523,6 +523,6 @@ contract LendingBoxTest is Test {
             block.timestamp
         );
         vm.expectRevert(customError);
-        s_deployedLendingBox.redeemStable(s_safeSlipAmount);
+        s_deployedConvertibleBondBox.redeemStable(s_safeSlipAmount);
     }
 }

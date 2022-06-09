@@ -5,7 +5,7 @@ import "clones-with-immutable-args/ClonesWithImmutableArgs.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
-import "./LendingBox.sol";
+import "./ConvertibleBondBox.sol";
 import "../interfaces/ILendingBoxFactory.sol";
 
 contract LendingBoxFactory is ILendingBoxFactory {
@@ -45,7 +45,7 @@ contract LendingBoxFactory is ILendingBoxFactory {
         uint256 trancheIndex
     ) public returns (address) {
         
-        LendingBox clone;
+        ConvertibleBondBox clone;
         Granularities memory granularities = Granularities(1000, 1000, 1e9);
         // s_bond = bond;
 
@@ -78,7 +78,7 @@ contract LendingBoxFactory is ILendingBoxFactory {
                     riskTranche,
                     riskRatio
                 ));
-            clone = LendingBox(implementation.clone(s_data));
+            clone = ConvertibleBondBox(implementation.clone(s_data));
         }
 
         emit LendingBoxCreated(

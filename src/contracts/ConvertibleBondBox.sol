@@ -22,7 +22,7 @@ import "forge-std/console2.sol";
  *  - safeTranche index must not be Z-tranche
  */
 
-contract LendingBox is
+contract ConvertibleBondBox is
     OwnableUpgradeable,
     Clone,
     CBBImmutableArgs,
