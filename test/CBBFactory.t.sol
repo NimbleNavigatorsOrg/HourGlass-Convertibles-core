@@ -13,7 +13,7 @@ import "../src/contracts/SlipFactory.sol";
 
 import "forge-std/console2.sol";
 
-contract LendingBoxFactoryTest is Test {
+contract CBBFactoryTest is Test {
     ButtonWoodBondController s_buttonWoodBondController;
     ConvertibleBondBox s_convertibleBondBox;
     CBBFactory s_CBBFactory;
