@@ -3,7 +3,6 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
 import "../src/contracts/ConvertibleBondBox.sol";
-import "../src/interfaces/ILendingBox.sol";
 import "../src/contracts/CBBFactory.sol";
 import "../src/contracts/ButtonWoodBondController.sol";
 import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";

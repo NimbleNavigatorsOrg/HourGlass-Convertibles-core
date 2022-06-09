@@ -9,7 +9,7 @@ import "../interfaces/IButtonWoodBondController.sol";
 import "../interfaces/ISlipFactory.sol";
 import "../interfaces/ICBBSlip.sol";
 import "../../utils/CBBImmutableArgs.sol";
-import "../interfaces/ILendingBox.sol";
+import "../interfaces/IConvertibleBondBox.sol";
 
 import "forge-std/console2.sol";
 
@@ -26,7 +26,7 @@ contract ConvertibleBondBox is
     OwnableUpgradeable,
     Clone,
     CBBImmutableArgs,
-    ILendingBox
+    IConvertibleBondBox
 {
     address public s_safeSlipTokenAddress;
     address public s_riskSlipTokenAddress;
@@ -116,7 +116,7 @@ contract ConvertibleBondBox is
     }
 
     /**
-     * @inheritdoc ILendingBox
+     * @inheritdoc IConvertibleBondBox
      */
 
     function lend(
@@ -148,7 +148,7 @@ contract ConvertibleBondBox is
     }
 
     /**
-     * @inheritdoc ILendingBox
+     * @inheritdoc IConvertibleBondBox
      */
 
     function borrow(
@@ -206,7 +206,7 @@ contract ConvertibleBondBox is
     }
 
     /**
-     * @inheritdoc ILendingBox
+     * @inheritdoc IConvertibleBondBox
      */
 
     function repay(uint256 _stableAmount, uint256 _zSlipAmount)
@@ -285,7 +285,7 @@ contract ConvertibleBondBox is
     }
 
     /**
-     * @inheritdoc ILendingBox
+     * @inheritdoc IConvertibleBondBox
      */
 
     function redeemTranche(uint256 safeSlipAmount) external override {
@@ -325,7 +325,7 @@ contract ConvertibleBondBox is
     }
 
     /**
-     * @inheritdoc ILendingBox
+     * @inheritdoc IConvertibleBondBox
      */
 
     function redeemStable(uint256 safeSlipAmount) external override {

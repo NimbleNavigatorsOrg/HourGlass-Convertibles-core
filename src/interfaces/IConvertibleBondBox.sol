@@ -9,7 +9,7 @@ import "clones-with-immutable-args/Clone.sol";
  * @dev Convertible Bond Box for a ButtonTranche bond
  */
 
-interface ILendingBox {
+interface IConvertibleBondBox {
     event Lend(address, address, address, uint256, uint256);
     event Borrow(address, address, address, uint256, uint256);
     event RedeemStable(address, uint256, uint256);
