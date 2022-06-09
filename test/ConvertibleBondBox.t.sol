@@ -354,9 +354,9 @@ contract ConvertibleBondBoxTest is Test {
 
     // lend()
 
-    function testCannotLendLendingBoxNotStarted() public {
+    function testCannotLendConvertibleBondBoxNotStarted() public {
         bytes memory customError = abi.encodeWithSignature(
-            "LendingBoxNotStarted(uint256,uint256)",
+            "ConvertibleBondBoxNotStarted(uint256,uint256)",
             0,
             block.timestamp
         );
@@ -366,9 +366,9 @@ contract ConvertibleBondBoxTest is Test {
 
     //borrow()
 
-    function testCannotBorrowLendingBoxNotStarted() public {
+    function testCannotBorrowConvertibleBondBoxNotStarted() public {
         bytes memory customError = abi.encodeWithSignature(
-            "LendingBoxNotStarted(uint256,uint256)",
+            "ConvertibleBondBoxNotStarted(uint256,uint256)",
             0,
             block.timestamp
         );
@@ -410,9 +410,9 @@ contract ConvertibleBondBoxTest is Test {
         s_deployedConvertibleBondBox.repay(100000, 625001);
     }
 
-    function testCannotRepayLendingBoxNotStarted() public {
+    function testCannotRepayConvertibleBondBoxNotStarted() public {
         bytes memory customError = abi.encodeWithSignature(
-            "LendingBoxNotStarted(uint256,uint256)",
+            "ConvertibleBondBoxNotStarted(uint256,uint256)",
             0,
             block.timestamp
         );
@@ -515,9 +515,9 @@ contract ConvertibleBondBoxTest is Test {
         s_deployedConvertibleBondBox.redeemStable(safeSlipAmount);
     }
 
-    function testCannotRedeemStableLendingBoxNotStarted() public {
+    function testCannotRedeemStableConvertibleBondBoxNotStarted() public {
         bytes memory customError = abi.encodeWithSignature(
-            "LendingBoxNotStarted(uint256,uint256)",
+            "ConvertibleBondBoxNotStarted(uint256,uint256)",
             0,
             block.timestamp
         );

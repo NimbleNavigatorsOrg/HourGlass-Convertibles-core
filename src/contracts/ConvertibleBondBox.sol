@@ -83,7 +83,7 @@ contract ConvertibleBondBox is
             address(riskTranche)
         );
 
-        //set LendingBox Start Date to be time when init() is called
+        //set ConvertibleBondBox Start Date to be time when init() is called
         s_startDate = block.timestamp;
 
         // initial borrow/lend at initialPrice, provided matching order is provided
@@ -125,7 +125,7 @@ contract ConvertibleBondBox is
         uint256 _stableAmount
     ) external override {
         if (s_startDate == 0)
-            revert LendingBoxNotStarted({
+            revert ConvertibleBondBoxNotStarted({
                 given: 0,
                 minStartDate: block.timestamp
             });
@@ -157,7 +157,7 @@ contract ConvertibleBondBox is
         uint256 _safeTrancheAmount
     ) external override {
         if (s_startDate == 0)
-            revert LendingBoxNotStarted({
+            revert ConvertibleBondBoxNotStarted({
                 given: 0,
                 minStartDate: block.timestamp
             });
@@ -214,7 +214,7 @@ contract ConvertibleBondBox is
         override
     {
         if (s_startDate == 0)
-            revert LendingBoxNotStarted({
+            revert ConvertibleBondBoxNotStarted({
                 given: 0,
                 minStartDate: block.timestamp
             });
@@ -330,7 +330,7 @@ contract ConvertibleBondBox is
 
     function redeemStable(uint256 safeSlipAmount) external override {
         if (s_startDate == 0)
-            revert LendingBoxNotStarted({
+            revert ConvertibleBondBoxNotStarted({
                 given: 0,
                 minStartDate: block.timestamp
             });
