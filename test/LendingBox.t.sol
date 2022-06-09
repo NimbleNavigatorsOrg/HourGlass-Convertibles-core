@@ -192,7 +192,9 @@ contract LendingBoxTest is Test {
     }
 
     function testCannotInitializeOnlyLendOrBorrow(uint256 collateralAmount, uint256 stableAmount) public {
-        vm.assume((stableAmount != 0 && collateralAmount != 0) || (stableAmount == 0 && collateralAmount == 0));
+        vm.assume(stableAmount < 10e12);
+        vm.assume(collateralAmount < 10e12);
+        vm.assume(stableAmount * collateralAmount != 0);
 
         s_deployedLendingBoxAddress = s_lendingBoxFactory.createLendingBox(
             s_buttonWoodBondController,
