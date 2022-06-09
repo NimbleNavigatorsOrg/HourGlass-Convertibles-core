@@ -9,7 +9,7 @@ import "../interfaces/ICBBSlipFactory.sol";
 /**
  * @dev Factory for Iou minimal proxy contracts
  */
-contract SlipFactory is ICBBSlipFactory, Context {
+contract CBBSlipFactory is ICBBSlipFactory, Context {
     bytes32 public constant DEFAULT_ADMIN_ROLE = 0x00;
 
     address public target;
