@@ -94,8 +94,8 @@ contract CBBFactoryTest is Test {
         );
     }
 
-    function testFactoryCreatesLendingBox() public {
-        // wrap address in ILendingBox and make assertions on inital values
+    function testFactoryCreatesConvertibleBondBox() public {
+        // wrap address in IConvertibleBondBox and make assertions on inital values
         ConvertibleBondBox deployedConvertibleBondBox = ConvertibleBondBox(s_deployedCBBAddress);
 
         // keep this assert
@@ -123,7 +123,7 @@ contract CBBFactoryTest is Test {
         assertEq(deployedConvertibleBondBox.trancheIndex(), s_trancheIndex);
     }
 
-    function testCreateLendingBoxEmitsExpectedEvent() public {
+    function testCreateConvertibleBondBoxEmitsConvertibleBondBoxCreated() public {
         vm.expectEmit(true, true, true, true);
         // The event we expect
         emit ConvertibleBondBoxCreated(

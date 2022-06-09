@@ -39,7 +39,7 @@ contract ConvertibleBondBoxTest is Test {
     uint256 constant s_trancheGranularity = 1000;
     uint256 constant s_penaltyGranularity = 1000;
     uint256 constant s_priceGranularity = 1000000000;
-    address s_deployedLendingBoxAddress;
+    address s_deployedCBBAddress;
 
     event ConvertibleBondBoxCreated(
         address s_collateralToken,
@@ -94,7 +94,7 @@ contract ConvertibleBondBoxTest is Test {
             s_depositLimit
         );
 
-        s_deployedLendingBoxAddress = s_CBBFactory.createConvertibleBondBox(
+        s_deployedCBBAddress = s_CBBFactory.createConvertibleBondBox(
             s_buttonWoodBondController,
             s_slipFactory,
             s_penalty,
@@ -116,11 +116,11 @@ contract ConvertibleBondBoxTest is Test {
             s_buttonWoodBondController.trancheCount() - 1
         );
 
-        s_safeTranche.approve(s_deployedLendingBoxAddress, type(uint256).max);
-        s_riskTranche.approve(s_deployedLendingBoxAddress, type(uint256).max);
-        s_stableToken.approve(s_deployedLendingBoxAddress, type(uint256).max);
+        s_safeTranche.approve(s_deployedCBBAddress, type(uint256).max);
+        s_riskTranche.approve(s_deployedCBBAddress, type(uint256).max);
+        s_stableToken.approve(s_deployedCBBAddress, type(uint256).max);
 
-        s_deployedConvertibleBondBox = ConvertibleBondBox(s_deployedLendingBoxAddress);
+        s_deployedConvertibleBondBox = ConvertibleBondBox(s_deployedCBBAddress);
 
         s_depositLimit =
             (s_safeTranche.balanceOf(address(this)) * s_price) /
@@ -147,7 +147,7 @@ contract ConvertibleBondBoxTest is Test {
 
     function testCannotInitializePenaltyTooHigh(uint256 penalty) public {
         vm.assume(penalty > s_penaltyGranularity);
-        s_deployedLendingBoxAddress = s_CBBFactory.createConvertibleBondBox(
+        s_deployedCBBAddress = s_CBBFactory.createConvertibleBondBox(
             s_buttonWoodBondController,
             s_slipFactory,
             penalty,
@@ -157,7 +157,7 @@ contract ConvertibleBondBoxTest is Test {
             s_trancheIndex
         );
 
-        s_deployedConvertibleBondBox = ConvertibleBondBox(s_deployedLendingBoxAddress);
+        s_deployedConvertibleBondBox = ConvertibleBondBox(s_deployedCBBAddress);
 
         bytes memory customError = abi.encodeWithSignature(
             "PenaltyTooHigh(uint256,uint256)",
@@ -175,7 +175,7 @@ contract ConvertibleBondBoxTest is Test {
 
     function testCannotInitializeBondIsMature() public {
         s_buttonWoodBondController.mature();
-        s_deployedLendingBoxAddress = s_CBBFactory.createConvertibleBondBox(
+        s_deployedCBBAddress = s_CBBFactory.createConvertibleBondBox(
             s_buttonWoodBondController,
             s_slipFactory,
             s_penalty,
@@ -185,7 +185,7 @@ contract ConvertibleBondBoxTest is Test {
             s_trancheIndex
         );
 
-        s_deployedConvertibleBondBox = ConvertibleBondBox(s_deployedLendingBoxAddress);
+        s_deployedConvertibleBondBox = ConvertibleBondBox(s_deployedCBBAddress);
 
         bytes memory customError = abi.encodeWithSignature(
             "BondIsMature(bool,bool)",
@@ -204,7 +204,7 @@ contract ConvertibleBondBoxTest is Test {
     //TODO reasses test later
     function testCannotInitializeTrancheIndexOutOfBounds() public {
         // vm.assume(trancheIndex == s_buttonWoodBondController.trancheCount() - 1);
-        s_deployedLendingBoxAddress = s_CBBFactory.createConvertibleBondBox(
+        s_deployedCBBAddress = s_CBBFactory.createConvertibleBondBox(
             s_buttonWoodBondController,
             s_slipFactory,
             s_penalty,
@@ -213,7 +213,7 @@ contract ConvertibleBondBoxTest is Test {
             1001,
             s_buttonWoodBondController.trancheCount() - 1
         );
-        s_deployedConvertibleBondBox = ConvertibleBondBox(s_deployedLendingBoxAddress);
+        s_deployedConvertibleBondBox = ConvertibleBondBox(s_deployedCBBAddress);
 
         bytes memory customError = abi.encodeWithSignature(
             "TrancheIndexOutOfBounds(uint256,uint256)",
@@ -233,7 +233,7 @@ contract ConvertibleBondBoxTest is Test {
 
     function testFailInitializeTrancheBW(uint256 trancheIndex) public {
         vm.assume(trancheIndex > s_buttonWoodBondController.trancheCount() - 1);
-        s_deployedLendingBoxAddress = s_CBBFactory.createConvertibleBondBox(
+        s_deployedCBBAddress = s_CBBFactory.createConvertibleBondBox(
             s_buttonWoodBondController,
             s_slipFactory,
             s_penalty,
@@ -242,7 +242,7 @@ contract ConvertibleBondBoxTest is Test {
             1001,
             trancheIndex
         );
-        s_deployedConvertibleBondBox = ConvertibleBondBox(s_deployedLendingBoxAddress);
+        s_deployedConvertibleBondBox = ConvertibleBondBox(s_deployedCBBAddress);
 
         s_deployedConvertibleBondBox.initialize(
             address(1),
@@ -254,7 +254,7 @@ contract ConvertibleBondBoxTest is Test {
 
     function testCannotInitializeInitialPriceTooHigh(uint256 price) public {
         vm.assume(price > s_priceGranularity);
-        s_deployedLendingBoxAddress = s_CBBFactory.createConvertibleBondBox(
+        s_deployedCBBAddress = s_CBBFactory.createConvertibleBondBox(
             s_buttonWoodBondController,
             s_slipFactory,
             s_penalty,
@@ -264,7 +264,7 @@ contract ConvertibleBondBoxTest is Test {
             s_trancheIndex
         );
 
-        s_deployedConvertibleBondBox = ConvertibleBondBox(s_deployedLendingBoxAddress);
+        s_deployedConvertibleBondBox = ConvertibleBondBox(s_deployedCBBAddress);
         bytes memory customError = abi.encodeWithSignature(
             "InitialPriceTooHigh(uint256,uint256)",
             price,
@@ -287,7 +287,7 @@ contract ConvertibleBondBoxTest is Test {
         vm.assume(collateralAmount < 10e12);
         vm.assume(stableAmount * collateralAmount != 0);
 
-        s_deployedLendingBoxAddress = s_CBBFactory.createConvertibleBondBox(
+        s_deployedCBBAddress = s_CBBFactory.createConvertibleBondBox(
             s_buttonWoodBondController,
             s_slipFactory,
             s_penalty,
@@ -297,7 +297,7 @@ contract ConvertibleBondBoxTest is Test {
             s_trancheIndex
         );
 
-        s_deployedConvertibleBondBox = ConvertibleBondBox(s_deployedLendingBoxAddress);
+        s_deployedConvertibleBondBox = ConvertibleBondBox(s_deployedCBBAddress);
 
         bytes memory customError = abi.encodeWithSignature(
             "OnlyLendOrBorrow(uint256,uint256)",
@@ -399,7 +399,7 @@ contract ConvertibleBondBoxTest is Test {
             s_depositLimit,
             0
         );
-        vm.startPrank(s_deployedLendingBoxAddress);
+        vm.startPrank(s_deployedCBBAddress);
         CBBSlip(s_deployedConvertibleBondBox.s_riskSlipTokenAddress()).mint(
             address(this),
             1e18
@@ -446,10 +446,10 @@ contract ConvertibleBondBoxTest is Test {
         );
 
         vm.startPrank(address(s_buttonWoodBondController));
-        safeTranche.mint(s_deployedLendingBoxAddress, amount);
+        safeTranche.mint(s_deployedCBBAddress, amount);
         vm.stopPrank();
 
-        vm.startPrank(s_deployedLendingBoxAddress);
+        vm.startPrank(s_deployedCBBAddress);
         CBBSlip(s_deployedConvertibleBondBox.s_safeSlipTokenAddress()).mint(
             address(this),
             amount
@@ -473,7 +473,7 @@ contract ConvertibleBondBoxTest is Test {
             s_depositLimit,
             0
         );
-        vm.startPrank(s_deployedLendingBoxAddress);
+        vm.startPrank(s_deployedCBBAddress);
         CBBSlip(s_deployedConvertibleBondBox.s_safeSlipTokenAddress()).mint(
             address(this),
             1e18
@@ -500,7 +500,7 @@ contract ConvertibleBondBoxTest is Test {
             s_depositLimit,
             0
         );
-        vm.startPrank(s_deployedLendingBoxAddress);
+        vm.startPrank(s_deployedCBBAddress);
         CBBSlip(s_deployedConvertibleBondBox.s_safeSlipTokenAddress()).mint(
             address(this),
             1e18
