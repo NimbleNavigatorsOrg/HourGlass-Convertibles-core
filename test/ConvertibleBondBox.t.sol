@@ -13,7 +13,7 @@ import "../src/contracts/SlipFactory.sol";
 import "forge-std/console2.sol";
 import "../test/mocks/MockERC20.sol";
 
-contract LendingBoxTest is Test {
+contract ConvertibleBondBoxTest is Test {
     ButtonWoodBondController s_buttonWoodBondController;
     ConvertibleBondBox s_convertibleBondBox;
     ConvertibleBondBox s_deployedConvertibleBondBox;
