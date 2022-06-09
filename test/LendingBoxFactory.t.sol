@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
 import "../src/contracts/ConvertibleBondBox.sol";
-import "../src/contracts/LendingBoxFactory.sol";
+import "../src/contracts/CBBFactory.sol";
 import "../src/contracts/ButtonWoodBondController.sol";
 import "@buttonwood-protocol/tranche/contracts/Tranche.sol";
 import "@buttonwood-protocol/tranche/contracts/external/ERC20.sol";
@@ -16,7 +16,7 @@ import "forge-std/console2.sol";
 contract LendingBoxFactoryTest is Test {
     ButtonWoodBondController s_buttonWoodBondController;
     ConvertibleBondBox s_convertibleBondBox;
-    LendingBoxFactory s_lendingBoxFactory;
+    CBBFactory s_CBBFactory;
 
     ERC20 s_collateralToken;
 
@@ -72,7 +72,7 @@ contract LendingBoxFactoryTest is Test {
 
         s_buttonWoodBondController = new ButtonWoodBondController();
         s_convertibleBondBox = new ConvertibleBondBox();
-        s_lendingBoxFactory = new LendingBoxFactory(address(s_convertibleBondBox));
+        s_CBBFactory = new CBBFactory(address(s_convertibleBondBox));
 
         s_buttonWoodBondController.init(
             address(s_trancheFactory),
@@ -83,7 +83,7 @@ contract LendingBoxFactoryTest is Test {
             s_depositLimit
         );
 
-        s_deployedLendingBoxAddress = s_lendingBoxFactory.createLendingBox(
+        s_deployedLendingBoxAddress = s_CBBFactory.createLendingBox(
             s_buttonWoodBondController,
             s_slipFactory,
             s_penalty,
@@ -99,7 +99,7 @@ contract LendingBoxFactoryTest is Test {
         ConvertibleBondBox deployedConvertibleBondBox = ConvertibleBondBox(s_deployedLendingBoxAddress);
 
         // keep this assert
-        assertEq(s_lendingBoxFactory.implementation(), address(s_convertibleBondBox));
+        assertEq(s_CBBFactory.implementation(), address(s_convertibleBondBox));
 
         assertEq(
             address(deployedConvertibleBondBox.bond()),
@@ -134,7 +134,7 @@ contract LendingBoxFactoryTest is Test {
             address(this)
         );
         // The event we get
-        s_lendingBoxFactory.createLendingBox(
+        s_CBBFactory.createLendingBox(
             s_buttonWoodBondController,
             s_slipFactory,
             s_penalty,

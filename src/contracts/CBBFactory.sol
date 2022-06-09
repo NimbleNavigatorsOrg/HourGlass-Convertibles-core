@@ -8,7 +8,7 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeab
 import "./ConvertibleBondBox.sol";
 import "../interfaces/ILendingBoxFactory.sol";
 
-contract LendingBoxFactory is ILendingBoxFactory {
+contract CBBFactory is ILendingBoxFactory {
     using SafeERC20Upgradeable for IERC20Upgradeable;
     using ClonesWithImmutableArgs for address;
 

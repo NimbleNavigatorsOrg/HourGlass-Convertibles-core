@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 import "forge-std/Test.sol";
 import "../src/contracts/ConvertibleBondBox.sol";
 import "../src/interfaces/ILendingBox.sol";
-import "../src/contracts/LendingBoxFactory.sol";
+import "../src/contracts/CBBFactory.sol";
 import "../src/contracts/ButtonWoodBondController.sol";
 import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
 import "@buttonwood-protocol/tranche/contracts/Tranche.sol";
@@ -18,7 +18,7 @@ contract LendingBoxTest is Test {
     ButtonWoodBondController s_buttonWoodBondController;
     ConvertibleBondBox s_convertibleBondBox;
     ConvertibleBondBox s_deployedConvertibleBondBox;
-    LendingBoxFactory s_lendingBoxFactory;
+    CBBFactory s_CBBFactory;
 
     MockERC20 s_collateralToken;
 
@@ -84,7 +84,7 @@ contract LendingBoxTest is Test {
 
         s_buttonWoodBondController = new ButtonWoodBondController();
         s_convertibleBondBox = new ConvertibleBondBox();
-        s_lendingBoxFactory = new LendingBoxFactory(address(s_convertibleBondBox));
+        s_CBBFactory = new CBBFactory(address(s_convertibleBondBox));
 
         s_buttonWoodBondController.init(
             address(s_trancheFactory),
@@ -95,7 +95,7 @@ contract LendingBoxTest is Test {
             s_depositLimit
         );
 
-        s_deployedLendingBoxAddress = s_lendingBoxFactory.createLendingBox(
+        s_deployedLendingBoxAddress = s_CBBFactory.createLendingBox(
             s_buttonWoodBondController,
             s_slipFactory,
             s_penalty,
@@ -148,7 +148,7 @@ contract LendingBoxTest is Test {
 
     function testCannotInitializePenaltyTooHigh(uint256 penalty) public {
         vm.assume(penalty > s_penaltyGranularity);
-        s_deployedLendingBoxAddress = s_lendingBoxFactory.createLendingBox(
+        s_deployedLendingBoxAddress = s_CBBFactory.createLendingBox(
             s_buttonWoodBondController,
             s_slipFactory,
             penalty,
@@ -176,7 +176,7 @@ contract LendingBoxTest is Test {
 
     function testCannotInitializeBondIsMature() public {
         s_buttonWoodBondController.mature();
-        s_deployedLendingBoxAddress = s_lendingBoxFactory.createLendingBox(
+        s_deployedLendingBoxAddress = s_CBBFactory.createLendingBox(
             s_buttonWoodBondController,
             s_slipFactory,
             s_penalty,
@@ -205,7 +205,7 @@ contract LendingBoxTest is Test {
     //TODO reasses test later
     function testCannotInitializeTrancheIndexOutOfBounds() public {
         // vm.assume(trancheIndex == s_buttonWoodBondController.trancheCount() - 1);
-        s_deployedLendingBoxAddress = s_lendingBoxFactory.createLendingBox(
+        s_deployedLendingBoxAddress = s_CBBFactory.createLendingBox(
             s_buttonWoodBondController,
             s_slipFactory,
             s_penalty,
@@ -234,7 +234,7 @@ contract LendingBoxTest is Test {
 
     function testFailInitializeTrancheBW(uint256 trancheIndex) public {
         vm.assume(trancheIndex > s_buttonWoodBondController.trancheCount() - 1);
-        s_deployedLendingBoxAddress = s_lendingBoxFactory.createLendingBox(
+        s_deployedLendingBoxAddress = s_CBBFactory.createLendingBox(
             s_buttonWoodBondController,
             s_slipFactory,
             s_penalty,
@@ -255,7 +255,7 @@ contract LendingBoxTest is Test {
 
     function testCannotInitializeInitialPriceTooHigh(uint256 price) public {
         vm.assume(price > s_priceGranularity);
-        s_deployedLendingBoxAddress = s_lendingBoxFactory.createLendingBox(
+        s_deployedLendingBoxAddress = s_CBBFactory.createLendingBox(
             s_buttonWoodBondController,
             s_slipFactory,
             s_penalty,
@@ -288,7 +288,7 @@ contract LendingBoxTest is Test {
         vm.assume(collateralAmount < 10e12);
         vm.assume(stableAmount * collateralAmount != 0);
 
-        s_deployedLendingBoxAddress = s_lendingBoxFactory.createLendingBox(
+        s_deployedLendingBoxAddress = s_CBBFactory.createLendingBox(
             s_buttonWoodBondController,
             s_slipFactory,
             s_penalty,
