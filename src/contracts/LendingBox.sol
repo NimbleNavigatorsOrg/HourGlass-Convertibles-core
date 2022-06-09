@@ -7,7 +7,7 @@ import "@uniswap/lib/contracts/libraries/TransferHelper.sol";
 import "clones-with-immutable-args/Clone.sol";
 import "../interfaces/IButtonWoodBondController.sol";
 import "../interfaces/ISlipFactory.sol";
-import "../interfaces/ISlip.sol";
+import "../interfaces/ICBBSlip.sol";
 import "../../utils/CBBImmutableArgs.sol";
 import "../interfaces/ILendingBox.sol";
 
@@ -270,7 +270,7 @@ contract LendingBox is
             zTranchePaidFor + zTrancheUnpaid
         );
 
-        ISlip(s_riskSlipTokenAddress).burn(
+        ICBBSlip(s_riskSlipTokenAddress).burn(
             _msgSender(),
             zTranchePaidFor + zTrancheUnpaid
         );
@@ -301,7 +301,7 @@ contract LendingBox is
         );
 
         //burn safe-slips
-        ISlip(safeSlipTokenAddress).burn(_msgSender(), safeSlipAmount);
+        ICBBSlip(safeSlipTokenAddress).burn(_msgSender(), safeSlipAmount);
 
         //transfer safe-Tranche after maturity only
         TransferHelper.safeTransfer(
@@ -347,7 +347,7 @@ contract LendingBox is
         uint256 repaidSafeSlips = (safeSlipSupply - safeTrancheBalance);
 
         //burn safe-slips
-        ISlip(safeSlipTokenAddress).burn(_msgSender(), safeSlipAmount);
+        ICBBSlip(safeSlipTokenAddress).burn(_msgSender(), safeSlipAmount);
 
         //transfer stables
         TransferHelper.safeTransfer(
@@ -383,10 +383,10 @@ contract LendingBox is
         );
 
         // //Mint safeSlips to the lender
-        ISlip(s_safeSlipTokenAddress).mint(_lender, _safeSlipAmount);
+        ICBBSlip(s_safeSlipTokenAddress).mint(_lender, _safeSlipAmount);
 
         // //Mint riskSlips to the lender
-        ISlip(s_riskSlipTokenAddress).mint(_borrower, _riskSlipAmount);
+        ICBBSlip(s_riskSlipTokenAddress).mint(_borrower, _riskSlipAmount);
 
         // // Transfer stables to borrower
         TransferHelper.safeTransferFrom(

@@ -4,7 +4,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@uniswap/lib/contracts/libraries/TransferHelper.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "../interfaces/ISlip.sol";
+import "../interfaces/ICBBSlip.sol";
 import "@buttonwood-protocol/tranche/contracts/external/ERC20.sol";
 
 import "forge-std/console2.sol";
@@ -13,7 +13,7 @@ import "forge-std/console2.sol";
  * @dev ERC20 token to represent a single tranche for a ButtonTranche bond
  * Note: this contract has non-transferrable ownership given at init-time
  */
-contract CBBSlip is ISlip, ERC20, Initializable {
+contract CBBSlip is ICBBSlip, ERC20, Initializable {
     address public collateralTranche;
     address public override bondBox;
 
@@ -61,21 +61,21 @@ contract CBBSlip is ISlip, ERC20, Initializable {
     }
 
     /**
-     * @inheritdoc ISlip
+     * @inheritdoc ICBBSlip
      */
     function mint(address to, uint256 amount) external override onlyCBB {
         _mint(to, amount);
     }
 
     /**
-     * @inheritdoc ISlip
+     * @inheritdoc ICBBSlip
      */
     function burn(address from, uint256 amount) external override onlyCBB {
         _burn(from, amount);
     }
 
     /**
-     * @inheritdoc ISlip
+     * @inheritdoc ICBBSlip
      */
     function redeem(
         address from,
