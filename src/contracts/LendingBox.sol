@@ -53,7 +53,7 @@ contract LendingBox is
             revert BondIsMature({given: bond().isMature(), required: false});
         // Safe-Tranche cannot be the Z-Tranche
         if (trancheIndex() >= bond().trancheCount() - 1)
-            revert TrancheIndexOutOfBonds({
+            revert TrancheIndexOutOfBounds({
                 given: trancheIndex(),
                 maxIndex: bond().trancheCount() - 2
             });

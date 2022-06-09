@@ -34,7 +34,6 @@ contract LendingBoxTest is Test {
     uint256 constant s_depositLimit = 1000e10;
     uint256 constant s_safeSlipAmount = 10;
     uint256 constant s_endOfUnixTime = 2147483647;
-    // error PenaltyTooHigh(uint256 given, uint256 maxPenalty);
     address s_deployedLendingBoxAddress;
 
     event LendingBoxCreated(
@@ -155,7 +154,7 @@ contract LendingBoxTest is Test {
         s_deployedLendingBox.initialize(address(1), address(2), s_depositLimit, 0);
     }
 
-    function testCannotInitializeTrancheIndexOutOfBonds(uint256 trancheIndex) public {
+    function testCannotInitializeTrancheIndexOutOfBounds(uint256 trancheIndex) public {
         vm.assume(trancheIndex >= s_buttonWoodBondController.trancheCount() - 1);
         s_deployedLendingBoxAddress = s_lendingBoxFactory.createLendingBox(
             s_buttonWoodBondController,
@@ -168,7 +167,7 @@ contract LendingBoxTest is Test {
         );
         s_deployedLendingBox = LendingBox(s_deployedLendingBoxAddress);
 
-        bytes memory customError = abi.encodeWithSignature("TrancheIndexOutOfBonds(uint256,uint256)", trancheIndex, s_buttonWoodBondController.trancheCount() - 2);
+        bytes memory customError = abi.encodeWithSignature("TrancheIndexOutOfBounds(uint256,uint256)", trancheIndex, s_buttonWoodBondController.trancheCount() - 2);
         vm.expectRevert(customError);
         s_deployedLendingBox.initialize(address(1), address(2), s_depositLimit, 0);
     }

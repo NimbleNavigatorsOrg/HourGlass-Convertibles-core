@@ -19,7 +19,7 @@ interface ILendingBox {
 
     error PenaltyTooHigh(uint256 given, uint256 maxPenalty);
     error BondIsMature(bool given, bool required);
-    error TrancheIndexOutOfBonds(uint256 given, uint256 maxIndex);
+    error TrancheIndexOutOfBounds(uint256 given, uint256 maxIndex);
     error InitialPriceTooHigh(uint256 given, uint256 maxPrice);
     error LendingBoxNotStarted(uint256 given, uint256 minStartDate);
     error BondNotMatureYet(uint256 maturityDate, uint256 currentTime);
