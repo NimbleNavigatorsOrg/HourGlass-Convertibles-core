@@ -11,6 +11,8 @@ import "@buttonwood-protocol/tranche/contracts/TrancheFactory.sol";
 import "../src/contracts/Slip.sol";
 import "../src/contracts/SlipFactory.sol";
 
+import "forge-std/console2.sol";
+
 contract LendingBoxFactoryTest is Test {
     ButtonWoodBondController s_buttonWoodBondController;
     LendingBox s_lendingBox;
@@ -114,7 +116,7 @@ contract LendingBoxFactoryTest is Test {
             address(s_stableToken)
         );
         assertEq(deployedLendingBox.initialPrice(), s_price);
-        assertEq(deployedLendingBox.s_startDate(), block.timestamp);
+        assertEq(deployedLendingBox.s_startDate(), 0);
         assertEq(deployedLendingBox.trancheIndex(), s_trancheIndex);
     }
 
