@@ -3,7 +3,7 @@ pragma solidity ^0.8.7;
 
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
-import "./Slip.sol";
+import "./CBBSlip.sol";
 import "../interfaces/ISlipFactory.sol";
 
 /**
