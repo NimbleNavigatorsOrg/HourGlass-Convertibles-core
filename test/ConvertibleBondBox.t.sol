@@ -41,7 +41,7 @@ contract ConvertibleBondBoxTest is Test {
     uint256 constant s_priceGranularity = 1000000000;
     address s_deployedLendingBoxAddress;
 
-    event LendingBoxCreated(
+    event ConvertibleBondBoxCreated(
         address s_collateralToken,
         address s_stableToken,
         uint256 trancheIndex,

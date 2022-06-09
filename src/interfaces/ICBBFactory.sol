@@ -5,7 +5,7 @@ pragma solidity ^0.8.7;
  * @notice Interface for Auction factory contracts
  */
 interface ICBBFactory {
-    event LendingBoxCreated(
+    event ConvertibleBondBoxCreated(
         address collateralToken, 
         address stableToken, 
         uint256 trancheIndex,

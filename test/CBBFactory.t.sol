@@ -38,7 +38,7 @@ contract CBBFactoryTest is Test {
     error PenaltyTooHigh(uint256 given, uint256 maxPenalty);
     address s_deployedLendingBoxAddress;
 
-    event LendingBoxCreated(
+    event ConvertibleBondBoxCreated(
         address s_collateralToken,
         address s_stableToken,
         uint256 trancheIndex,
@@ -126,7 +126,7 @@ contract CBBFactoryTest is Test {
     function testCreateLendingBoxEmitsExpectedEvent() public {
         vm.expectEmit(true, true, true, true);
         // The event we expect
-        emit LendingBoxCreated(
+        emit ConvertibleBondBoxCreated(
             address(s_collateralToken),
             address(s_stableToken),
             s_trancheIndex,

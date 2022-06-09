@@ -81,7 +81,7 @@ contract CBBFactory is ICBBFactory {
             clone = ConvertibleBondBox(implementation.clone(s_data));
         }
 
-        emit LendingBoxCreated(
+        emit ConvertibleBondBoxCreated(
             collateralToken,
             stableToken,
             trancheIndex,
