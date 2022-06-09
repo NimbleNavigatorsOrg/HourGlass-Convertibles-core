@@ -12,7 +12,7 @@ import "../src/contracts/CBBSlip.sol";
 import "../src/contracts/SlipFactory.sol";
 import "forge-std/console2.sol";
 
-contract SlipFactoryTest is Test {
+contract CBBSlipFactoryTest is Test {
     ERC20 s_collateralToken;
     CBBSlip s_slip;
     SlipFactory s_slipFactory;
