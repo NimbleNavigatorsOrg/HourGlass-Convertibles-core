@@ -4,7 +4,7 @@ import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
- * @dev ERC20 token to represent a single slip for the lending box
+ * @dev ERC20 token to represent a single slip for the convertible bond box
  *
  */
 interface ICBBSlip is IERC20 {

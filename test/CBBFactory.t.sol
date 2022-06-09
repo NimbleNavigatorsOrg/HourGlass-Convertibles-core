@@ -36,7 +36,7 @@ contract CBBFactoryTest is Test {
     uint256 constant s_penaltyGranularity = 1000;
     uint256 constant s_priceGranularity = 1000000000;
     error PenaltyTooHigh(uint256 given, uint256 maxPenalty);
-    address s_deployedLendingBoxAddress;
+    address s_deployedCBBAddress;
 
     event ConvertibleBondBoxCreated(
         address s_collateralToken,
@@ -83,7 +83,7 @@ contract CBBFactoryTest is Test {
             s_depositLimit
         );
 
-        s_deployedLendingBoxAddress = s_CBBFactory.createConvertibleBondBox(
+        s_deployedCBBAddress = s_CBBFactory.createConvertibleBondBox(
             s_buttonWoodBondController,
             s_slipFactory,
             s_penalty,
@@ -96,7 +96,7 @@ contract CBBFactoryTest is Test {
 
     function testFactoryCreatesLendingBox() public {
         // wrap address in ILendingBox and make assertions on inital values
-        ConvertibleBondBox deployedConvertibleBondBox = ConvertibleBondBox(s_deployedLendingBoxAddress);
+        ConvertibleBondBox deployedConvertibleBondBox = ConvertibleBondBox(s_deployedCBBAddress);
 
         // keep this assert
         assertEq(s_CBBFactory.implementation(), address(s_convertibleBondBox));

@@ -43,14 +43,14 @@ interface IConvertibleBondBox {
 
     /**
      * @dev Borrows with collateralAmount of collateral-tokens when provided with a matching amount of stableTokens.
-     * Collateral tokens get tranched and any non-lending box tranches get sent back to borrower 
+     * Collateral tokens get tranched and any non-convertible bond box tranches get sent back to borrower 
      * @param _borrower The address to send the Z* and stableTokens to 
      * @param _lender The address to send the safeSlips to 
      * @param _collateralAmount The buttonTranche bond tied to this Convertible Bond Box
      * Requirements:
      *  - `msg.sender` must have `approved` `collateralAmount` collateral tokens to this contract
         - initial price of bond must be set
-        - must be enough stable tokens inside lending box to borrow 
+        - must be enough stable tokens inside convertible bond box to borrow 
      */
 
     function borrow(

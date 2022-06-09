@@ -229,7 +229,7 @@ contract ConvertibleBondBox is
             price;
 
         if (_stableAmount != 0) {
-            //Repay stables to LendingBox
+            //Repay stables to ConvertibleBondBox
             TransferHelper.safeTransferFrom(
                 address(stableToken()),
                 _msgSender(),
@@ -237,7 +237,7 @@ contract ConvertibleBondBox is
                 _stableAmount
             );
 
-            //transfer A-tranches from LendingBox to msg.sender
+            //transfer A-tranches from ConvertibleBondBox to msg.sender
             TransferHelper.safeTransfer(
                 address(safeTranche()),
                 _msgSender(),
@@ -263,7 +263,7 @@ contract ConvertibleBondBox is
             zTrancheUnpaid = 0;
         }
 
-        // //transfer Z-tranches from LendingBox to msg.sender
+        // //transfer Z-tranches from ConvertibleBondBox to msg.sender
         TransferHelper.safeTransfer(
             address(riskTranche()),
             _msgSender(),
