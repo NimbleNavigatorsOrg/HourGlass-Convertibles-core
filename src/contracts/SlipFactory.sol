@@ -4,12 +4,12 @@ pragma solidity ^0.8.7;
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "./CBBSlip.sol";
-import "../interfaces/ISlipFactory.sol";
+import "../interfaces/ICBBSlipFactory.sol";
 
 /**
  * @dev Factory for Iou minimal proxy contracts
  */
-contract SlipFactory is ISlipFactory, Context {
+contract SlipFactory is ICBBSlipFactory, Context {
     bytes32 public constant DEFAULT_ADMIN_ROLE = 0x00;
 
     address public target;
@@ -19,7 +19,7 @@ contract SlipFactory is ISlipFactory, Context {
     }
 
     /**
-     * @inheritdoc ISlipFactory
+     * @inheritdoc ICBBSlipFactory
      */
     function createSlip(
         string memory name,

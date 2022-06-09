@@ -4,7 +4,7 @@ pragma solidity ^0.8.7;
 /**
  * @dev Factory for Slip minimal proxy contracts
  */
-interface ISlipFactory {
+interface ICBBSlipFactory {
     event SlipCreated(address newSlipAddress);
 
     /**

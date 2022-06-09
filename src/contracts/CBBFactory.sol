@@ -37,7 +37,7 @@ contract CBBFactory is ICBBFactory {
      */
     function createLendingBox(
         IButtonWoodBondController bond,
-        ISlipFactory slipFactory,
+        ICBBSlipFactory slipFactory,
         uint256 penalty,
         address collateralToken,
         address stableToken,

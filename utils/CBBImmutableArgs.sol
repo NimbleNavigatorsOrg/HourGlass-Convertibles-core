@@ -3,7 +3,7 @@ pragma solidity ^0.8.7;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "clones-with-immutable-args/Clone.sol";
-import "../src/interfaces/ISlipFactory.sol";
+import "../src/interfaces/ICBBSlipFactory.sol";
 import "../src/interfaces/IButtonWoodBondController.sol";
 
 /**
@@ -28,8 +28,8 @@ contract CBBImmutableArgs is Clone {
      * @dev https://github.com/wighawag/clones-with-immutable-args
      * @return The asset being used to make bids
      */
-    function slipFactory() public pure returns (ISlipFactory) {
-        return ISlipFactory(_getArgAddress(20));
+    function slipFactory() public pure returns (ICBBSlipFactory) {
+        return ICBBSlipFactory(_getArgAddress(20));
     }
 
     /**
