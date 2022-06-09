@@ -4,7 +4,7 @@ pragma solidity ^0.8.7;
 /**
  * @notice Interface for Auction factory contracts
  */
-interface ILendingBoxFactory {
+interface ICBBFactory {
     event LendingBoxCreated(
         address collateralToken, 
         address stableToken, 
