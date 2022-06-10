@@ -24,6 +24,8 @@ interface IConvertibleBondBox {
     error ConvertibleBondBoxNotStarted(uint256 given, uint256 minStartDate);
     error BondNotMatureYet(uint256 maturityDate, uint256 currentTime);
     error OnlyLendOrBorrow(uint256 _stableAmount,  uint256 _collateralAmount);
+    error PayoutExceedsBalance(uint256 safeTranchePayout, uint256 balance);
+    error OverPayment(uint256 zTranchePaidFor, uint256 _zSlipAmount);
 
     /**
      * @dev Lends stableAmount of stable-tokens for safe-Tranche slips when provided with matching borrow collateral

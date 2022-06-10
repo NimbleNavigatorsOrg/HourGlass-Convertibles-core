@@ -352,7 +352,8 @@ contract ConvertibleBondBoxTest is Test {
         );
     }
 
-    // lend()
+    // lend() 
+    // Need to write a test that calls lend() without calling initialize()
 
     function testCannotLendConvertibleBondBoxNotStarted() public {
         bytes memory customError = abi.encodeWithSignature(
@@ -365,6 +366,7 @@ contract ConvertibleBondBoxTest is Test {
     }
 
     //borrow()
+    // Need to write a test that calls borrow() without calling initialize()
 
     function testCannotBorrowConvertibleBondBoxNotStarted() public {
         bytes memory customError = abi.encodeWithSignature(
@@ -387,6 +389,7 @@ contract ConvertibleBondBoxTest is Test {
     }
 
     // repay()
+    // Still need to test OverPayment() revert and PayoutExceedsBalance() revert
 
     function testRepay(uint256 time) public {
         //More parameters can be added to this test
@@ -523,5 +526,83 @@ contract ConvertibleBondBoxTest is Test {
         );
         vm.expectRevert(customError);
         s_deployedConvertibleBondBox.redeemStable(s_safeSlipAmount);
+    }
+
+    function testEndToEnd(uint256 collateralAmount, uint256 stableAmount, uint256 amount, uint256 lender, uint256 borrower) public {
+        vm.assume(lender < 11);
+        vm.assume(lender > 0);
+
+        vm.borrower(lender < 11);
+        vm.borrower(lender > 0);
+
+        address address1 = address(1);
+        address address2 = address(2);
+        address address3 = address(3);
+        address address4 = address(4);
+        address address5 = address(5);
+        address address6 = address(6);
+        address address7 = address(7);
+        address address8 = address(8);
+        address address9 = address(9);
+        address address10 = address(10);
+
+
+        // initialize lending box
+        vm.assume(collateralAmount <= s_safeTranche.balanceOf(address(this)));
+        vm.assume(collateralAmount != 0);
+                vm.assume(
+            stableAmount <=
+                (s_safeTranche.balanceOf(address(this)) * s_price) /
+                    s_priceGranularity
+        );
+        vm.assume(stableAmount != 0);
+        vm.assume(amount < 1e18);
+        vm.assume(amount > 0);
+
+        (ITranche safeTranche, uint256 ratio) = s_buttonWoodBondController
+            .tranches(0);
+        (ITranche riskTranche, uint256 riskRatio) = s_buttonWoodBondController
+            .tranches(2);
+        vm.startPrank(address(s_buttonWoodBondController));
+        safeTranche.mint(address(this), amount);
+        riskTranche.mint(address(this), amount);
+        // safeTranche.mint(address(s_deployedConvertibleBondBox), 1e18);
+        vm.stopPrank();
+
+        safeTranche.approve(address(s_deployedConvertibleBondBox), 1e18);
+
+        vm.prank(address(this));
+        vm.expectEmit(true, true, true, true);
+        emit Initialized(address(1), address(2), 0, collateralAmount);
+
+        s_deployedConvertibleBondBox.initialize(
+            address(1),
+            address(2),
+            collateralAmount,
+            0
+        );
+        // call lend
+        s_deployedConvertibleBondBox.lend(address(1), address(2), stableAmount);
+        // call borrow
+        s_deployedConvertibleBondBox.borrow(address(3), address(4), 100);
+        // call repays and redeems
+        s_stableToken.mint(address(3), 1e18);
+
+        vm.startPrank(address(3));
+                s_stableToken.approve(address(s_deployedConvertibleBondBox), 1e18);
+
+        uint riskSlipBalance = ICBBSlip(s_deployedConvertibleBondBox.s_riskSlipTokenAddress()).balanceOf(address(3));
+
+        s_deployedConvertibleBondBox.repay(10, riskSlipBalance);
+        vm.stopPrank();
+
+        vm.warp(s_maturityDate);
+        vm.startPrank(address(4));
+        s_deployedConvertibleBondBox.redeemTranche(5);
+        vm.stopPrank();
+
+        vm.startPrank(address(4));
+        s_deployedConvertibleBondBox.redeemStable(1);
+        vm.stopPrank();
     }
 }

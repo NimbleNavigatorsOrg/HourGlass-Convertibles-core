@@ -66,9 +66,6 @@ contract ConvertibleBondBox is
         ITranche safeTranche = safeTranche();
         ITranche riskTranche = riskTranche();
 
-        console2.log("address(safeTranche)", address(safeTranche));
-        console2.log("address(riskTranche)", address(riskTranche));
-
         // clone deploy safe slip
         s_safeSlipTokenAddress = slipFactory().createSlip(
             "ASSET-Tranche",
@@ -237,6 +234,17 @@ contract ConvertibleBondBox is
                 _stableAmount
             );
 
+            if(safeTranche().balanceOf(address(this)) < safeTranchePayout) {
+                revert PayoutExceedsBalance({
+                safeTranchePayout: safeTranchePayout,
+                balance: safeTranche().balanceOf(address(this))
+            });
+            }
+
+
+
+            console2.log("safeTranchePayout", safeTranchePayout);
+            console2.log("address(safeTranche()).balanceOf(address(this)", safeTranche().balanceOf(address(this)));
             //transfer A-tranches from ConvertibleBondBox to msg.sender
             TransferHelper.safeTransfer(
                 address(safeTranche()),
@@ -244,11 +252,23 @@ contract ConvertibleBondBox is
                 safeTranchePayout
             );
         }
-
+        console2.log("before zTranchePaid for safeTranchePayout", safeTranchePayout);
+                console2.log("before zTranchePaid for riskRatio", riskRatio());
+                console2.log("before zTranchePaid for safeRatio", safeRatio());
         //calculate Z-tranche payout
         uint256 zTranchePaidFor = (safeTranchePayout * riskRatio()) /
             safeRatio();
+
+            console2.log("zTranchePaidFor", zTranchePaidFor);
+            if(_zSlipAmount < zTranchePaidFor) {
+                revert OverPayment({
+                zTranchePaidFor: zTranchePaidFor,
+                _zSlipAmount: _zSlipAmount
+            });
+            }
+
         uint256 zTrancheUnpaid = _zSlipAmount - zTranchePaidFor;
+
 
         //Apply penalty to any Z-tranches that have not been repaid for after maturity
         if (block.timestamp >= maturityDate) {
@@ -263,7 +283,7 @@ contract ConvertibleBondBox is
             zTrancheUnpaid = 0;
         }
 
-        // //transfer Z-tranches from ConvertibleBondBox to msg.sender
+        //transfer Z-tranches from ConvertibleBondBox to msg.sender
         TransferHelper.safeTransfer(
             address(riskTranche()),
             _msgSender(),
@@ -367,6 +387,9 @@ contract ConvertibleBondBox is
         uint256 _riskSlipAmount
     ) internal {
         //Transfer safeTranche to ConvertibleBondBox
+        console2.log("address(safeTranche())", address(safeTranche()));
+
+            console2.log("_safeSlipAmount", _safeSlipAmount);
         TransferHelper.safeTransferFrom(
             address(safeTranche()),
             _msgSender(),
@@ -374,6 +397,7 @@ contract ConvertibleBondBox is
             _safeSlipAmount
         );
 
+        console2.log("_riskSlipAmount", _riskSlipAmount);
         //Transfer riskTranche to ConvertibleBondBox
         TransferHelper.safeTransferFrom(
             address(riskTranche()),
@@ -388,6 +412,7 @@ contract ConvertibleBondBox is
         // //Mint riskSlips to the lender
         ICBBSlip(s_riskSlipTokenAddress).mint(_borrower, _riskSlipAmount);
 
+    console2.log("_stableAmount", _stableAmount);
         // // Transfer stables to borrower
         TransferHelper.safeTransferFrom(
             address(stableToken()),
