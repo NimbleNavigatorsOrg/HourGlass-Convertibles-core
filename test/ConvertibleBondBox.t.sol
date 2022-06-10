@@ -352,7 +352,7 @@ contract ConvertibleBondBoxTest is Test {
         );
     }
 
-    // lend() 
+    // lend()
     // Need to write a test that calls lend() without calling initialize()
 
     function testCannotLendConvertibleBondBoxNotStarted() public {
@@ -362,7 +362,11 @@ contract ConvertibleBondBoxTest is Test {
             block.timestamp
         );
         vm.expectRevert(customError);
-        s_deployedConvertibleBondBox.lend(address(1), address(2), s_depositLimit);
+        s_deployedConvertibleBondBox.lend(
+            address(1),
+            address(2),
+            s_depositLimit
+        );
     }
 
     //borrow()
@@ -375,16 +379,23 @@ contract ConvertibleBondBoxTest is Test {
             block.timestamp
         );
         vm.expectRevert(customError);
-        s_deployedConvertibleBondBox.borrow(address(1), address(2), s_depositLimit);
+        s_deployedConvertibleBondBox.borrow(
+            address(1),
+            address(2),
+            s_depositLimit
+        );
     }
 
     // currentPrice()
 
     function testCurrentPrice() public {
-        vm.warp((s_deployedConvertibleBondBox.s_startDate() + s_maturityDate) / 2);
+        vm.warp(
+            (s_deployedConvertibleBondBox.s_startDate() + s_maturityDate) / 2
+        );
         uint256 currentPrice = s_deployedConvertibleBondBox.currentPrice();
         uint256 price = s_deployedConvertibleBondBox.initialPrice();
-        uint256 priceGranularity = s_deployedConvertibleBondBox.priceGranularity();
+        uint256 priceGranularity = s_deployedConvertibleBondBox
+            .priceGranularity();
         assertEq((priceGranularity - price) / 2 + price, currentPrice);
     }
 
@@ -528,81 +539,155 @@ contract ConvertibleBondBoxTest is Test {
         s_deployedConvertibleBondBox.redeemStable(s_safeSlipAmount);
     }
 
-    function testEndToEnd(uint256 collateralAmount, uint256 stableAmount, uint256 amount, uint256 lender, uint256 borrower) public {
-        vm.assume(lender < 11);
-        vm.assume(lender > 0);
+    function testFailOverflow() public {
+        uint256 test = uint256(4) / uint256(5);
+        console2.log(test, "test");
+    }
 
-        vm.borrower(lender < 11);
-        vm.borrower(lender > 0);
-
-        address address1 = address(1);
-        address address2 = address(2);
-        address address3 = address(3);
-        address address4 = address(4);
-        address address5 = address(5);
-        address address6 = address(6);
-        address address7 = address(7);
-        address address8 = address(8);
-        address address9 = address(9);
-        address address10 = address(10);
-
-
-        // initialize lending box
-        vm.assume(collateralAmount <= s_safeTranche.balanceOf(address(this)));
-        vm.assume(collateralAmount != 0);
-                vm.assume(
-            stableAmount <=
-                (s_safeTranche.balanceOf(address(this)) * s_price) /
-                    s_priceGranularity
+    function testEndToEnd(
+        uint256 collateralAmount,
+        uint256 stableAmount,
+        uint256 amount,
+        uint256 seed
+    ) public {
+        collateralAmount = bound(collateralAmount, 0, 1e20);
+        amount = bound(amount, s_trancheGranularity, 1e20);
+        stableAmount = bound(
+            stableAmount,
+            (amount * s_price) / s_priceGranularity,
+            1e20
         );
-        vm.assume(stableAmount != 0);
-        vm.assume(amount < 1e18);
-        vm.assume(amount > 0);
 
-        (ITranche safeTranche, uint256 ratio) = s_buttonWoodBondController
-            .tranches(0);
-        (ITranche riskTranche, uint256 riskRatio) = s_buttonWoodBondController
-            .tranches(2);
+        seed = bound(seed, 6, 1e20);
+
+        //matcher address between 1 - 5
+        uint160 initCaller = uint160((seed % 5) + 1);
+        uint160 matcher0 = uint160(((seed + 1) % 5) + 1);
+        uint160 matcher1 = uint160(((seed + 2) % 5) + 1);
+
+        //borrower and lender between 6 & 10
+        uint160 lender = uint160(((seed - 1) % 5) + 6);
+        uint160 borrower = uint160(((seed - 2) % 5) + 6);
+
+        uint160 lender0 = uint160(((seed - 3) % 5) + 6);
+        uint160 borrower0 = uint160(((seed - 4) % 5) + 6);
+
+        //Mint tranches & stables to matcher addresses
         vm.startPrank(address(s_buttonWoodBondController));
-        safeTranche.mint(address(this), amount);
-        riskTranche.mint(address(this), amount);
-        // safeTranche.mint(address(s_deployedConvertibleBondBox), 1e18);
+        for (uint160 i = 1; i < 11; i++) {
+            s_safeTranche.mint(address(i), amount);
+            s_riskTranche.mint(
+                address(i),
+                (amount * s_ratios[2]) / s_ratios[0]
+            );
+            s_stableToken.mint(address(i), stableAmount);
+        }
         vm.stopPrank();
 
-        safeTranche.approve(address(s_deployedConvertibleBondBox), 1e18);
+        //Get approvals for all addresses
+        //Is this realistic for max approvals?
+        for (uint160 i = 1; i < 11; i++) {
+            vm.startPrank(address(i));
+            s_safeTranche.approve(
+                address(s_deployedConvertibleBondBox),
+                type(uint256).max
+            );
+            s_riskTranche.approve(
+                address(s_deployedConvertibleBondBox),
+                type(uint256).max
+            );
+            s_stableToken.approve(
+                address(s_deployedConvertibleBondBox),
+                type(uint256).max
+            );
+            vm.stopPrank();
+        }
 
-        vm.prank(address(this));
+        //Initialize ConvertibleBondBox via initCaller
+        vm.startPrank(address(initCaller));
         vm.expectEmit(true, true, true, true);
-        emit Initialized(address(1), address(2), 0, collateralAmount);
-
+        emit Initialized(address(borrower), address(lender), 0, amount);
         s_deployedConvertibleBondBox.initialize(
-            address(1),
-            address(2),
-            collateralAmount,
+            address(borrower),
+            address(lender),
+            amount,
             0
         );
-        // call lend
-        s_deployedConvertibleBondBox.lend(address(1), address(2), stableAmount);
-        // call borrow
-        s_deployedConvertibleBondBox.borrow(address(3), address(4), 100);
-        // call repays and redeems
-        s_stableToken.mint(address(3), 1e18);
-
-        vm.startPrank(address(3));
-                s_stableToken.approve(address(s_deployedConvertibleBondBox), 1e18);
-
-        uint riskSlipBalance = ICBBSlip(s_deployedConvertibleBondBox.s_riskSlipTokenAddress()).balanceOf(address(3));
-
-        s_deployedConvertibleBondBox.repay(10, riskSlipBalance);
         vm.stopPrank();
 
+        //get slip approvals for all addresses
+        for (uint160 i = 1; i < 11; i++) {
+            vm.startPrank(address(i));
+            ICBBSlip(s_deployedConvertibleBondBox.s_riskSlipTokenAddress())
+                .approve(
+                    address(s_deployedConvertibleBondBox),
+                    type(uint256).max
+                );
+            ICBBSlip(s_deployedConvertibleBondBox.s_riskSlipTokenAddress())
+                .approve(
+                    address(s_deployedConvertibleBondBox),
+                    type(uint256).max
+                );
+            vm.stopPrank();
+        }
+
+        // Matcher makes a lend @ 1/4 the way to maturity
+        vm.warp(s_maturityDate / 4);
+        vm.startPrank(address(matcher0));
+        uint256 matcherSafeTrancheBalance = s_safeTranche.balanceOf(
+            address(matcher0)
+        ) / 2;
+        s_deployedConvertibleBondBox.lend(
+            address(borrower0),
+            address(lender0),
+            matcherSafeTrancheBalance
+        );
+        vm.stopPrank();
+
+        // Borrower repays half of riskSlips halfway to maturity @ currentPrice
+        vm.warp(s_maturityDate / 2);
+        vm.startPrank(address(borrower));
+        uint256 _currentPrice = s_deployedConvertibleBondBox.currentPrice();
+        uint256 riskSlipBalance = ICBBSlip(
+            s_deployedConvertibleBondBox.s_riskSlipTokenAddress()
+        ).balanceOf(address(borrower)) / 2;
+        s_deployedConvertibleBondBox.repay(
+            (((riskSlipBalance * s_ratios[0]) / s_ratios[2]) * _currentPrice) /
+                s_priceGranularity,
+            riskSlipBalance
+        );
+        vm.stopPrank();
+
+        // Matcher makes a borrow 3/4 to maturity
+        vm.warp((s_maturityDate * 3) / 4);
+        vm.startPrank(address(matcher1));
+        matcherSafeTrancheBalance =
+            s_safeTranche.balanceOf(address(matcher1)) /
+            2;
+        s_deployedConvertibleBondBox.borrow(
+            address(borrower0),
+            address(lender0),
+            matcherSafeTrancheBalance
+        );
+        vm.stopPrank();
+
+        // Lender redeems half of safeSlips for tranches @ maturity
         vm.warp(s_maturityDate);
-        vm.startPrank(address(4));
-        s_deployedConvertibleBondBox.redeemTranche(5);
+
+        vm.startPrank(address(lender));
+        uint256 safeSlipBalance = ICBBSlip(
+            s_deployedConvertibleBondBox.s_safeSlipTokenAddress()
+        ).balanceOf(address(lender)) / 2;
+        s_deployedConvertibleBondBox.redeemTranche(safeSlipBalance);
         vm.stopPrank();
 
-        vm.startPrank(address(4));
-        s_deployedConvertibleBondBox.redeemStable(1);
+        // Lender redeems half of remaining safeSlips for stables
+        vm.startPrank(address(lender));
+        safeSlipBalance =
+            ICBBSlip(s_deployedConvertibleBondBox.s_safeSlipTokenAddress())
+                .balanceOf(address(lender)) /
+            2;
+        s_deployedConvertibleBondBox.redeemStable(safeSlipBalance);
         vm.stopPrank();
     }
 }
