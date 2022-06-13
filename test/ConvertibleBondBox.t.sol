@@ -703,6 +703,13 @@ contract ConvertibleBondBoxTest is Test {
         uint256 matcherSafeTrancheBalance = s_safeTranche.balanceOf(
             address(matcher0)
         ) / 2;
+        vm.expectEmit(true, true, true, true);
+        emit Lend(address(matcher0), 
+        address(borrower0), 
+        address(lender0), 
+        matcherSafeTrancheBalance, 
+        s_deployedConvertibleBondBox.currentPrice());
+        
         s_deployedConvertibleBondBox.lend(
             address(borrower0),
             address(lender0),
