@@ -570,6 +570,8 @@ contract ConvertibleBondBoxTest is Test {
         vm.stopPrank();
 
         vm.startPrank(borrowerAddress);
+
+        //TODO Determine if the below approval needs to be moved to the CBB contract.
         s_deployedConvertibleBondBox.stableToken().approve(
             address(s_deployedConvertibleBondBox),
             type(uint256).max
@@ -709,11 +711,15 @@ contract ConvertibleBondBoxTest is Test {
         );
         vm.stopPrank();
 
+        uint256 safeSlipBalanceBeforeRedeem = CBBSlip(s_deployedConvertibleBondBox.s_safeSlipTokenAddress()).balanceOf(address(this));
+
         vm.expectEmit(true, true, true, true);
         emit RedeemTranche(address(this), amount);
         s_deployedConvertibleBondBox.redeemTranche(amount);
 
+        uint256 safeSlipBalanceAfterRedeem = CBBSlip(s_deployedConvertibleBondBox.s_safeSlipTokenAddress()).balanceOf(address(this));
 
+        assertEq(safeSlipBalanceBeforeRedeem - amount, safeSlipBalanceAfterRedeem);
     }
 
     function testCannotRedeemTrancheBondNotMatureYet(uint256 time) public {
