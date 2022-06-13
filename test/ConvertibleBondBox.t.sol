@@ -529,18 +529,26 @@ contract ConvertibleBondBoxTest is Test {
         //More parameters can be added to this test
         uint256 stableAmount = 100000;
         uint256 zSlipAmount = 625001;
+        address borrowerAddress = address(1);
         vm.assume(time < s_endOfUnixTime - s_maturityDate);
         vm.warp(s_maturityDate + time);
 
         vm.prank(address(this));
         s_deployedConvertibleBondBox.initialize(
-            address(1),
+            borrowerAddress,
             address(2),
             s_depositLimit,
             0
         );
 
-        uint256 userStableBalancedBeforeRepay = s_stableToken.balanceOf(address(this));
+        uint256 userStableBalancedBeforeRepay = s_stableToken.balanceOf(borrowerAddress);
+        uint256 userSafeTrancheBalanceBeforeRepay = s_deployedConvertibleBondBox.safeTranche().balanceOf(borrowerAddress);
+        uint256 userRiskTrancheBalancedBeforeRepay = s_deployedConvertibleBondBox.riskTranche().balanceOf(borrowerAddress);
+        uint256 userRiskSlipBalancedBeforeRepay = ICBBSlip(s_deployedConvertibleBondBox.s_riskSlipTokenAddress()).balanceOf(borrowerAddress);
+
+        uint256 CBBSafeTrancheBalancedBeforeRepay = s_deployedConvertibleBondBox.safeTranche().balanceOf(address(s_deployedConvertibleBondBox));
+        uint256 CBBRiskTrancheBalancedBeforeRepay = s_deployedConvertibleBondBox.riskTranche().balanceOf(address(s_deployedConvertibleBondBox));
+
         uint256 safeTranchePayout = (stableAmount * s_deployedConvertibleBondBox.priceGranularity()) /
             s_deployedConvertibleBondBox.currentPrice();
 
@@ -560,17 +568,99 @@ contract ConvertibleBondBoxTest is Test {
             1e18
         );
         vm.stopPrank();
+
+        vm.startPrank(borrowerAddress);
+        s_deployedConvertibleBondBox.stableToken().approve(
+            address(s_deployedConvertibleBondBox),
+            type(uint256).max
+        );
         vm.expectEmit(true, true, true, true);
-        emit Repay(address(this), stableAmount, zTranchePaidFor, zTrancheUnpaid, s_deployedConvertibleBondBox.currentPrice());
+        emit Repay(borrowerAddress, stableAmount, zTranchePaidFor, zTrancheUnpaid, s_deployedConvertibleBondBox.currentPrice());
         s_deployedConvertibleBondBox.repay(stableAmount, zSlipAmount);
+        vm.stopPrank();
+        
+        repayStableBalanceAssertions(
+        stableAmount, 
+        s_stableToken, 
+        s_deployedConvertibleBondBox,
+        userStableBalancedBeforeRepay,
+        borrowerAddress
+        );
 
+        repaySafeTrancheBalanceAssertions(
+            userSafeTrancheBalanceBeforeRepay,
+            safeTranchePayout,
+            CBBSafeTrancheBalancedBeforeRepay,
+            borrowerAddress
+            );
+
+        repayRiskTrancheBalanceAssertions(
+            userRiskTrancheBalancedBeforeRepay,
+            zTranchePaidFor,
+            zTrancheUnpaid,
+            CBBRiskTrancheBalancedBeforeRepay,
+            borrowerAddress
+        );
+
+        repayRiskSlipAssertions(
+            userRiskSlipBalancedBeforeRepay,
+            zTranchePaidFor,
+            zTrancheUnpaid,
+            borrowerAddress
+        );
+    }
+
+    function repayStableBalanceAssertions(
+            uint256 stableAmount, 
+            MockERC20 s_stableToken, 
+            ConvertibleBondBox s_deployedConvertibleBondBox,
+            uint256 userStableBalancedBeforeRepay,
+            address borrowerAddress
+        ) private {
         uint256 CBBStableBalance = s_stableToken.balanceOf(address(s_deployedConvertibleBondBox));
-
-        uint256 userStableBalancedAfterRepay = s_stableToken.balanceOf(address(this));
+        uint256 userStableBalancedAfterRepay = s_stableToken.balanceOf(borrowerAddress);
 
         assertEq(stableAmount, CBBStableBalance);
-
         assertEq(userStableBalancedBeforeRepay - stableAmount, userStableBalancedAfterRepay);
+    }
+
+    function repaySafeTrancheBalanceAssertions(
+        uint256 userSafeTrancheBalanceBeforeRepay,
+        uint256 safeTranchePayout,
+        uint256 CBBSafeTrancheBalancedBeforeRepay,
+        address borrowerAddress
+    ) private {
+        uint256 userSafeTrancheBalancedAfterRepay = s_deployedConvertibleBondBox.safeTranche().balanceOf(borrowerAddress);
+        uint256 CBBSafeTrancheBalancedAfterRepay = s_deployedConvertibleBondBox.safeTranche().balanceOf(address(s_deployedConvertibleBondBox));
+
+
+        assertEq(userSafeTrancheBalanceBeforeRepay + safeTranchePayout, userSafeTrancheBalancedAfterRepay);
+        assertEq(CBBSafeTrancheBalancedBeforeRepay - safeTranchePayout, CBBSafeTrancheBalancedAfterRepay);
+    }
+
+    function repayRiskTrancheBalanceAssertions(
+        uint256 userRiskTrancheBalancedBeforeRepay,
+        uint256 zTranchePaidFor,
+        uint256 zTrancheUnpaid,
+        uint256 CBBRiskTrancheBalancedBeforeRepay,
+        address borrowerAddress
+        ) private {
+        uint256 userRiskTrancheBalancedAfterRepay = s_deployedConvertibleBondBox.riskTranche().balanceOf(borrowerAddress);
+        uint256 CBBRiskTrancheBalanceAfterRepay = s_deployedConvertibleBondBox.riskTranche().balanceOf(address(s_deployedConvertibleBondBox));
+
+        assertEq(userRiskTrancheBalancedBeforeRepay + zTranchePaidFor + zTrancheUnpaid, userRiskTrancheBalancedAfterRepay);
+        assertEq(CBBRiskTrancheBalancedBeforeRepay - zTranchePaidFor - zTrancheUnpaid, CBBRiskTrancheBalanceAfterRepay);
+    }
+
+    function repayRiskSlipAssertions(
+        uint256 userRiskSlipBalancedBeforeRepay,
+        uint256 zTranchePaidFor,
+        uint256 zTrancheUnpaid,
+        address borrowerAddress
+    ) private {
+        uint256 userRiskSlipBalancedAfterRepay = ICBBSlip(s_deployedConvertibleBondBox.s_riskSlipTokenAddress()).balanceOf(borrowerAddress);
+
+        assertEq(userRiskSlipBalancedBeforeRepay - zTranchePaidFor - zTrancheUnpaid, userRiskSlipBalancedAfterRepay);
     }
 
     function testCannotRepayConvertibleBondBoxNotStarted() public {
@@ -622,6 +712,8 @@ contract ConvertibleBondBoxTest is Test {
         vm.expectEmit(true, true, true, true);
         emit RedeemTranche(address(this), amount);
         s_deployedConvertibleBondBox.redeemTranche(amount);
+
+
     }
 
     function testCannotRedeemTrancheBondNotMatureYet(uint256 time) public {

@@ -239,7 +239,7 @@ contract ConvertibleBondBox is
                     safeTranchePayout: safeTranchePayout,
                     balance: safeTranche().balanceOf(address(this))
                 });
-            }
+           }
 
             //transfer A-tranches from ConvertibleBondBox to msg.sender
             TransferHelper.safeTransfer(
