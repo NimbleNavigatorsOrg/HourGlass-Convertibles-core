@@ -709,7 +709,7 @@ contract ConvertibleBondBoxTest is Test {
         address(lender0), 
         matcherSafeTrancheBalance, 
         s_deployedConvertibleBondBox.currentPrice());
-        
+
         s_deployedConvertibleBondBox.lend(
             address(borrower0),
             address(lender0),
@@ -724,6 +724,19 @@ contract ConvertibleBondBoxTest is Test {
         uint256 riskSlipBalance = ICBBSlip(
             s_deployedConvertibleBondBox.s_riskSlipTokenAddress()
         ).balanceOf(address(borrower)) / 2;
+
+        uint256 _stableAmount = (((riskSlipBalance * s_ratios[0]) / s_ratios[2]) * _currentPrice) /
+                s_priceGranularity;
+
+        uint256 safeTranchePayout = (_stableAmount * s_deployedConvertibleBondBox.priceGranularity()) /
+            _currentPrice;
+
+        uint256 zTranchePaidFor = (safeTranchePayout * s_deployedConvertibleBondBox.riskRatio()) /
+            s_deployedConvertibleBondBox.safeRatio();
+
+        vm.expectEmit(true, true, true, true);
+        emit Repay(address(borrower), _stableAmount, zTranchePaidFor, 0, _currentPrice);
+
         s_deployedConvertibleBondBox.repay(
             (((riskSlipBalance * s_ratios[0]) / s_ratios[2]) * _currentPrice) /
                 s_priceGranularity,
@@ -737,6 +750,9 @@ contract ConvertibleBondBoxTest is Test {
         matcherSafeTrancheBalance =
             s_safeTranche.balanceOf(address(matcher1)) /
             2;
+
+        vm.expectEmit(true, true, true, true);
+        emit Borrow(address(matcher1), address(borrower0), address(lender0), matcherSafeTrancheBalance, s_deployedConvertibleBondBox.currentPrice());
         s_deployedConvertibleBondBox.borrow(
             address(borrower0),
             address(lender0),
@@ -751,6 +767,8 @@ contract ConvertibleBondBoxTest is Test {
         uint256 safeSlipBalance = ICBBSlip(
             s_deployedConvertibleBondBox.s_safeSlipTokenAddress()
         ).balanceOf(address(lender)) / 2;
+        vm.expectEmit(true, true, true, true);
+        emit RedeemTranche(address(lender), safeSlipBalance);
         s_deployedConvertibleBondBox.redeemTranche(safeSlipBalance);
         vm.stopPrank();
 
@@ -760,6 +778,8 @@ contract ConvertibleBondBoxTest is Test {
             ICBBSlip(s_deployedConvertibleBondBox.s_safeSlipTokenAddress())
                 .balanceOf(address(lender)) /
             2;
+        vm.expectEmit(true, true, true, true);
+        emit RedeemStable(address(lender), safeSlipBalance, s_deployedConvertibleBondBox.currentPrice());
         s_deployedConvertibleBondBox.redeemStable(safeSlipBalance);
         vm.stopPrank();
     }
