@@ -129,6 +129,13 @@ contract ConvertibleBondBox is
 
         uint256 price = this.currentPrice();
 
+        //Need to justify amounts
+        if (_stableAmount < (safeRatio() * price) / priceGranularity())
+            revert MinimumInput({
+                input: _stableAmount,
+                reqInput: (safeRatio() * price) / priceGranularity()
+            });
+
         uint256 mintAmount = (_stableAmount * priceGranularity()) / price;
 
         uint256 zTrancheAmount = (mintAmount * riskRatio()) / safeRatio();
@@ -157,6 +164,12 @@ contract ConvertibleBondBox is
             revert ConvertibleBondBoxNotStarted({
                 given: 0,
                 minStartDate: block.timestamp
+            });
+
+        if (_safeTrancheAmount < safeRatio())
+            revert MinimumInput({
+                input: _safeTrancheAmount,
+                reqInput: safeRatio()
             });
 
         uint256 price = this.currentPrice();
@@ -220,6 +233,15 @@ contract ConvertibleBondBox is
         uint256 price = this.currentPrice();
         uint256 maturityDate = maturityDate();
 
+        if (_stableAmount < (safeRatio() * price) / priceGranularity())
+            revert MinimumInput({
+                input: _stableAmount,
+                reqInput: (safeRatio() * price) / priceGranularity()
+            });
+
+        if (_zSlipAmount < riskRatio())
+            revert MinimumInput({input: _zSlipAmount, reqInput: riskRatio()});
+
         // Calculate safeTranche payout
         //TODO: Decimals conversion?
         uint256 safeTranchePayout = (_stableAmount * priceGranularity()) /
@@ -239,7 +261,7 @@ contract ConvertibleBondBox is
                     safeTranchePayout: safeTranchePayout,
                     balance: safeTranche().balanceOf(address(this))
                 });
-           }
+            }
 
             //transfer A-tranches from ConvertibleBondBox to msg.sender
             TransferHelper.safeTransfer(
@@ -306,6 +328,9 @@ contract ConvertibleBondBox is
                 currentTime: block.timestamp
             });
 
+        if (safeSlipAmount < safeRatio())
+            revert MinimumInput({input: safeSlipAmount, reqInput: safeRatio()});
+
         address safeSlipTokenAddress = s_safeSlipTokenAddress;
         uint256 safeTrancheBalance = IERC20(address(safeTranche())).balanceOf(
             address(this)
@@ -345,6 +370,9 @@ contract ConvertibleBondBox is
                 given: 0,
                 minStartDate: block.timestamp
             });
+
+        if (safeSlipAmount < safeRatio())
+            revert MinimumInput({input: safeSlipAmount, reqInput: safeRatio()});
 
         address safeSlipTokenAddress = s_safeSlipTokenAddress;
 
