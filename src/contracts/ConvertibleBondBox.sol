@@ -32,6 +32,7 @@ contract ConvertibleBondBox is
     address public s_riskSlipTokenAddress;
 
     uint256 public s_startDate = 0;
+    uint256 public s_repaidSafeSlips = 0;
 
     function initialize(
         address _borrower,
@@ -269,6 +270,8 @@ contract ConvertibleBondBox is
                 _msgSender(),
                 safeTranchePayout
             );
+
+            s_repaidSafeSlips += safeTranchePayout;
         }
         //calculate Z-tranche payout
         uint256 zTranchePaidFor = (safeTranchePayout * riskRatio()) /
@@ -332,9 +335,7 @@ contract ConvertibleBondBox is
             revert MinimumInput({input: safeSlipAmount, reqInput: safeRatio()});
 
         address safeSlipTokenAddress = s_safeSlipTokenAddress;
-        uint256 safeTrancheBalance = IERC20(address(safeTranche())).balanceOf(
-            address(this)
-        );
+        uint256 safeSlipSupply = ICBBSlip(safeSlipTokenAddress).totalSupply();
 
         //burn safe-slips
         ICBBSlip(safeSlipTokenAddress).burn(_msgSender(), safeSlipAmount);
@@ -354,7 +355,8 @@ contract ConvertibleBondBox is
         TransferHelper.safeTransfer(
             address(riskTranche()),
             _msgSender(),
-            (safeSlipAmount * zPenaltyTotal) / safeTrancheBalance
+            (safeSlipAmount * zPenaltyTotal) /
+                (safeSlipSupply - s_repaidSafeSlips)
         );
 
         emit RedeemTranche(_msgSender(), safeSlipAmount);
@@ -374,25 +376,16 @@ contract ConvertibleBondBox is
         if (safeSlipAmount < safeRatio())
             revert MinimumInput({input: safeSlipAmount, reqInput: safeRatio()});
 
-        address safeSlipTokenAddress = s_safeSlipTokenAddress;
-
         uint256 stableBalance = stableToken().balanceOf(address(this));
-        uint256 safeSlipSupply = IERC20(safeSlipTokenAddress).totalSupply();
-        uint256 safeTrancheBalance = IERC20(address(safeTranche())).balanceOf(
-            address(this)
-        );
-
-        //grief risk?
-        uint256 repaidSafeSlips = (safeSlipSupply - safeTrancheBalance);
 
         //burn safe-slips
-        ICBBSlip(safeSlipTokenAddress).burn(_msgSender(), safeSlipAmount);
+        ICBBSlip(s_safeSlipTokenAddress).burn(_msgSender(), safeSlipAmount);
 
         //transfer stables
         TransferHelper.safeTransfer(
             address(stableToken()),
             _msgSender(),
-            (safeSlipAmount * stableBalance) / (repaidSafeSlips)
+            (safeSlipAmount * stableBalance) / (s_repaidSafeSlips)
         );
 
         emit RedeemStable(_msgSender(), safeSlipAmount, this.currentPrice());
