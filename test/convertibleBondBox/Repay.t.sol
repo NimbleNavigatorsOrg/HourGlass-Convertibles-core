@@ -109,6 +109,110 @@ contract Repay is CBBSetup {
         );
     }
 
+        function testRepayWithFee(uint256 time, uint amount, uint stableAmount, uint fee) public {
+        //More parameters can be added to this test
+        address borrowerAddress = address(1);
+        time = bound(time, s_maturityDate, s_endOfUnixTime);
+        vm.warp(s_maturityDate + time);
+        uint minAmount = ((s_deployedConvertibleBondBox.safeRatio() * s_deployedConvertibleBondBox.currentPrice()) / s_priceGranularity) * 10000;
+        amount = bound(amount, minAmount, 1e17);
+        stableAmount = bound(stableAmount, minAmount, amount);
+        fee = bound(fee, 0, s_maxFeeBPS);
+
+        vm.prank(address(this));
+        s_deployedConvertibleBondBox.initialize(
+            borrowerAddress,
+            address(2),
+            amount, 
+            0,
+            address(100)
+        );
+
+        vm.prank(s_deployedConvertibleBondBox.owner());
+        s_deployedConvertibleBondBox.setFee(fee);
+
+
+        uint256 userStableBalancedBeforeRepay = s_stableToken.balanceOf(
+            borrowerAddress
+        );
+        uint256 userSafeTrancheBalanceBeforeRepay = s_deployedConvertibleBondBox
+            .safeTranche()
+            .balanceOf(borrowerAddress);
+        uint256 userRiskTrancheBalancedBeforeRepay = s_deployedConvertibleBondBox
+                .riskTranche()
+                .balanceOf(borrowerAddress);
+        uint256 userRiskSlipBalancedBeforeRepay = ICBBSlip(
+            s_deployedConvertibleBondBox.s_riskSlipTokenAddress()
+        ).balanceOf(borrowerAddress);
+
+        uint256 CBBSafeTrancheBalancedBeforeRepay = s_deployedConvertibleBondBox
+            .safeTranche()
+            .balanceOf(address(s_deployedConvertibleBondBox));
+        uint256 CBBRiskTrancheBalancedBeforeRepay = s_deployedConvertibleBondBox
+            .riskTranche()
+            .balanceOf(address(s_deployedConvertibleBondBox));
+
+        uint256 safeTranchePayout = (stableAmount * s_priceGranularity) /
+            s_deployedConvertibleBondBox.currentPrice();
+
+        uint256 zTranchePaidFor = (safeTranchePayout *
+            s_deployedConvertibleBondBox.riskRatio()) /
+            s_deployedConvertibleBondBox.safeRatio();
+
+        uint256 zTranchePaidForWithoutFees =  (zTranchePaidFor * fee) / s_BPS;
+
+        zTranchePaidForWithoutFees += (zTranchePaidFor * (s_BPS - fee)) / s_BPS;
+
+        vm.startPrank(borrowerAddress);
+
+        s_deployedConvertibleBondBox.stableToken().approve(
+            address(s_deployedConvertibleBondBox),
+            type(uint256).max
+        );
+        ICBBSlip(s_deployedConvertibleBondBox.s_riskSlipTokenAddress()).approve(            
+            address(s_deployedConvertibleBondBox),
+            type(uint256).max
+            );
+
+        vm.expectEmit(true, true, true, true);
+        emit Repay(
+            borrowerAddress,
+            stableAmount,
+            zTranchePaidFor,
+            s_deployedConvertibleBondBox.currentPrice()
+        );
+        s_deployedConvertibleBondBox.repay(stableAmount);
+        vm.stopPrank();
+
+        repayStableBalanceAssertions(
+            stableAmount,
+            s_stableToken,
+            s_deployedConvertibleBondBox,
+            userStableBalancedBeforeRepay,
+            borrowerAddress
+        );
+
+        repaySafeTrancheBalanceAssertions(
+            userSafeTrancheBalanceBeforeRepay,
+            safeTranchePayout,
+            CBBSafeTrancheBalancedBeforeRepay,
+            borrowerAddress
+        );
+
+        repayRiskTrancheBalanceAssertions(
+            userRiskTrancheBalancedBeforeRepay,
+            zTranchePaidFor,
+            CBBRiskTrancheBalancedBeforeRepay,
+            borrowerAddress
+        );
+
+        repayRiskSlipAssertions(
+            userRiskSlipBalancedBeforeRepay,
+            zTranchePaidForWithoutFees,
+            borrowerAddress
+        );
+    }
+
     function repayStableBalanceAssertions(
         uint256 stableAmount,
         MockERC20 s_stableToken,
@@ -179,7 +283,7 @@ contract Repay is CBBSetup {
 
     function repayRiskSlipAssertions(
         uint256 userRiskSlipBalancedBeforeRepay,
-        uint256 zTranchePaidFor,
+        uint256 zTranchePaidForWithoutFees,
         address borrowerAddress
     ) private {
         uint256 userRiskSlipBalancedAfterRepay = ICBBSlip(
@@ -187,7 +291,7 @@ contract Repay is CBBSetup {
         ).balanceOf(borrowerAddress);
 
         assertEq(
-            userRiskSlipBalancedBeforeRepay - zTranchePaidFor,
+            userRiskSlipBalancedBeforeRepay - zTranchePaidForWithoutFees,
             userRiskSlipBalancedAfterRepay
         );
     }

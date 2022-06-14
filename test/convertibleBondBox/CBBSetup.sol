@@ -42,7 +42,7 @@ abstract contract CBBSetup is Test {
     uint256 constant s_penaltyGranularity = 1000;
     uint256 constant s_priceGranularity = 1e9;
     uint256 constant s_BPS = 10_000;
-    uint256 internal constant s_maxFeeBPS = 50;
+    uint256 public constant s_maxFeeBPS = 50;
     address s_deployedCBBAddress;
 
     event ConvertibleBondBoxCreated(

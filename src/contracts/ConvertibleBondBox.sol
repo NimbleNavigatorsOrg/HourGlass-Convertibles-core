@@ -292,7 +292,7 @@ contract ConvertibleBondBox is
         );
 
         //calculate Z-tranche payout
-        zTranchePaidFor *= (BPS - feeBps) / BPS;
+        zTranchePaidFor = (zTranchePaidFor * (BPS - feeBps)) / BPS;
 
         //transfer Z-tranches from ConvertibleBondBox to msg.sender
         TransferHelper.safeTransfer(
