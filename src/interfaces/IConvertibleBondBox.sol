@@ -28,6 +28,7 @@ interface IConvertibleBondBox {
     error OnlyLendOrBorrow(uint256 _stableAmount, uint256 _collateralAmount);
     error PayoutExceedsBalance(uint256 safeTranchePayout, uint256 balance);
     error MinimumInput(uint256 input, uint256 reqInput);
+    error FeeTooLarge(uint256 input, uint256 maximum);
 
     //Need to add getters for state variables
 

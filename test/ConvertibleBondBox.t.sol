@@ -41,6 +41,8 @@ contract ConvertibleBondBoxTest is Test {
     uint256 constant s_trancheGranularity = 1000;
     uint256 constant s_penaltyGranularity = 1000;
     uint256 constant s_priceGranularity = 1e9;
+    uint256 constant s_BPS = 10_000;
+    uint256 private constant s_maxFeeBPS = 50;
     address s_deployedCBBAddress;
 
     event ConvertibleBondBoxCreated(
@@ -58,6 +60,7 @@ contract ConvertibleBondBoxTest is Test {
     event RedeemRiskTranche(address, uint256);
     event Repay(address, uint256, uint256, uint256);
     event Initialized(address, address, uint256, uint256);
+    event FeeUpdate(uint256);
 
     function setUp() public {
         //push numbers into array
@@ -271,10 +274,10 @@ contract ConvertibleBondBoxTest is Test {
     {
         stableAmount = bound(
             stableAmount,
-            (s_safeRatio * s_deployedConvertibleBondBox.currentPrice()) /
+            (s_safeRatio * s_price) /
                 s_priceGranularity,
             (s_safeTranche.balanceOf(address(this)) *
-                s_deployedConvertibleBondBox.currentPrice()) /
+                s_price) /
                 s_priceGranularity
         );
 
@@ -478,8 +481,8 @@ contract ConvertibleBondBoxTest is Test {
         uint256 collateralAmount,
         uint256 stableAmount
     ) public {
-        vm.assume(stableAmount < 10e12);
-        vm.assume(collateralAmount < 10e12);
+        stableAmount = bound(stableAmount, 0, 10e12);
+        collateralAmount = bound(collateralAmount, 0, 10e12);
         vm.assume(stableAmount * collateralAmount != 0);
 
         s_deployedCBBAddress = s_CBBFactory.createConvertibleBondBox(
@@ -584,10 +587,10 @@ contract ConvertibleBondBoxTest is Test {
     function testInitializeAndLendEmitsLend(uint256 stableAmount) public {
         stableAmount = bound(
             stableAmount,
-            (s_safeRatio * s_deployedConvertibleBondBox.currentPrice()) /
+            (s_safeRatio * s_price) /
                 s_priceGranularity,
             (s_safeTranche.balanceOf(address(this)) *
-                s_deployedConvertibleBondBox.currentPrice()) /
+                s_price) /
                 s_priceGranularity
         );
 
@@ -709,7 +712,7 @@ contract ConvertibleBondBoxTest is Test {
         s_deployedConvertibleBondBox.initialize(
             borrowerAddress,
             address(2),
-            amount, // was s_depositLimit
+            amount, 
             0,
             address(100)
         );
@@ -905,7 +908,7 @@ contract ConvertibleBondBoxTest is Test {
         s_deployedConvertibleBondBox.initialize(
             address(1),
             address(2),
-            amount,  //was s_depositLimit
+            amount, 
             0,
             address(100)
         );
@@ -1162,6 +1165,45 @@ contract ConvertibleBondBoxTest is Test {
         );
         vm.expectRevert(customError);
         s_deployedConvertibleBondBox.redeemStable(s_safeSlipAmount);
+    }
+
+    function testSetFee(uint newFee) public {
+        newFee = bound(newFee, 0, s_maxFeeBPS);
+        vm.prank(s_deployedConvertibleBondBox.owner());
+        vm.expectEmit(true, true, true, true);
+        emit FeeUpdate(newFee);
+        s_deployedConvertibleBondBox.setFee(newFee);
+        assertEq(s_deployedConvertibleBondBox.feeBps(), newFee);
+    }
+
+        function testFailSetFeeCalledByNonOwner(uint newFee) public {
+        newFee = bound(newFee, 0, s_BPS);
+        s_deployedConvertibleBondBox.setFee(newFee);
+    }
+
+    function testCannotSetFeeBondIsMature(uint newFee) public {
+        s_buttonWoodBondController.mature();
+        newFee = bound(newFee, 0, s_BPS);
+        vm.prank(s_deployedConvertibleBondBox.owner());
+        bytes memory customError = abi.encodeWithSignature(
+            "BondIsMature(bool,bool)",
+            true,
+            false
+        );
+        vm.expectRevert(customError);
+        s_deployedConvertibleBondBox.setFee(newFee);
+    }
+
+    function testCannotSetFeeFeeTooLarge(uint newFee) public {
+        newFee = bound(newFee, s_BPS, type(uint256).max);
+        vm.prank(s_deployedConvertibleBondBox.owner());
+        bytes memory customError = abi.encodeWithSignature(
+            "FeeTooLarge(uint256,uint256)",
+            newFee,
+            s_maxFeeBPS
+        );
+        vm.expectRevert(customError);
+        s_deployedConvertibleBondBox.setFee(newFee);
     }
 
     function testEndToEnd(

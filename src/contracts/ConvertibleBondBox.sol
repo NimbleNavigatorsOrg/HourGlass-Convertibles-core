@@ -39,6 +39,7 @@ contract ConvertibleBondBox is
 
     // Denominator for basis points. Used to calculate fees
     uint256 private constant BPS = 10_000;
+    uint256 private constant maxFeeBPS = 50;
 
     function initialize(
         address _borrower,
@@ -445,6 +446,8 @@ contract ConvertibleBondBox is
     function setFee(uint256 newFeeBps) external override onlyOwner {
         if (bond().isMature())
             revert BondIsMature({given: bond().isMature(), required: false});
+        if(newFeeBps > maxFeeBPS)
+            revert FeeTooLarge({input: newFeeBps, maximum: maxFeeBPS});
         feeBps = newFeeBps;
         emit FeeUpdate(newFeeBps);
     }
