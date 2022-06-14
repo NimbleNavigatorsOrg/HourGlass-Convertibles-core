@@ -36,6 +36,10 @@ contract ConvertibleBondBox is
     uint256 constant s_trancheGranularity = 1000;
     uint256 constant s_penaltyGranularity = 1000;
     uint256 constant s_priceGranularity = 1e9;
+    uint256 public feeBps = 0;
+
+    // Denominator for basis points. Used to calculate fees
+    uint256 private constant BPS = 10_000;
 
     function initialize(
         address _borrower,
@@ -171,6 +175,8 @@ contract ConvertibleBondBox is
                 minStartDate: block.timestamp
             });
 
+        //revert for bond already mature (move to atomic deposit)
+
         if (_safeTrancheAmount < safeRatio())
             revert MinimumInput({
                 input: _safeTrancheAmount,
@@ -273,6 +279,17 @@ contract ConvertibleBondBox is
         uint256 zTranchePaidFor = (safeTranchePayout * riskRatio()) /
             safeRatio();
 
+        //transfer fee to owner
+        TransferHelper.safeTransferFrom(
+            s_riskSlipTokenAddress,
+            _msgSender(),
+            address(this),
+            (zTranchePaidFor * feeBps) / BPS
+        );
+
+        //calculate Z-tranche payout
+        zTranchePaidFor *= (BPS - feeBps) / BPS;
+
         //transfer Z-tranches from ConvertibleBondBox to msg.sender
         TransferHelper.safeTransfer(
             address(riskTranche()),
@@ -298,6 +315,17 @@ contract ConvertibleBondBox is
 
         if (riskSlipAmount < riskRatio())
             revert MinimumInput({input: riskSlipAmount, reqInput: riskRatio()});
+
+        //transfer fee to owner
+
+        TransferHelper.safeTransferFrom(
+            s_riskSlipTokenAddress,
+            _msgSender(),
+            address(this),
+            (riskSlipAmount * feeBps) / BPS
+        );
+
+        riskSlipAmount *= (BPS - feeBps) / BPS;
 
         uint256 zTranchePayout = riskSlipAmount;
         zTranchePayout *=
@@ -331,6 +359,18 @@ contract ConvertibleBondBox is
             revert MinimumInput({input: safeSlipAmount, reqInput: safeRatio()});
 
         address safeSlipTokenAddress = s_safeSlipTokenAddress;
+
+        //transfer fee to owner
+
+        TransferHelper.safeTransferFrom(
+            safeSlipTokenAddress,
+            _msgSender(),
+            address(this),
+            (safeSlipAmount * feeBps) / BPS
+        );
+
+        safeSlipAmount *= (BPS - feeBps) / BPS;
+
         uint256 safeSlipSupply = ICBBSlip(safeSlipTokenAddress).totalSupply();
 
         //burn safe-slips
@@ -372,10 +412,22 @@ contract ConvertibleBondBox is
         if (safeSlipAmount < safeRatio())
             revert MinimumInput({input: safeSlipAmount, reqInput: safeRatio()});
 
+        address safeSlipTokenAddress = s_safeSlipTokenAddress;
+
+        //change to owner as recipient
+
+        TransferHelper.safeTransferFrom(
+            safeSlipTokenAddress,
+            _msgSender(),
+            address(this),
+            (safeSlipAmount * feeBps) / BPS
+        );
+
+        safeSlipAmount *= (BPS - feeBps) / BPS;
         uint256 stableBalance = stableToken().balanceOf(address(this));
 
         //burn safe-slips
-        ICBBSlip(s_safeSlipTokenAddress).burn(_msgSender(), safeSlipAmount);
+        ICBBSlip(safeSlipTokenAddress).burn(_msgSender(), safeSlipAmount);
 
         //transfer stables
         TransferHelper.safeTransfer(
@@ -385,6 +437,12 @@ contract ConvertibleBondBox is
         );
 
         emit RedeemStable(_msgSender(), safeSlipAmount, this.currentPrice());
+    }
+
+    function setFee(uint256 newFeeBps) external override onlyOwner {
+        //revert for bond already mature
+        feeBps = newFeeBps;
+        emit FeeUpdate(newFeeBps);
     }
 
     function _atomicDeposit(
