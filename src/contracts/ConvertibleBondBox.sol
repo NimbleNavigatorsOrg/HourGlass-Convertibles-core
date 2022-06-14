@@ -33,6 +33,10 @@ contract ConvertibleBondBox is
 
     uint256 public s_startDate = 0;
     uint256 public s_repaidSafeSlips = 0;
+    uint256 public feeBps = 0;
+
+    // Denominator for basis points. Used to calculate fees
+    uint256 private constant BPS = 10_000;
 
     function initialize(
         address _borrower,
@@ -167,6 +171,8 @@ contract ConvertibleBondBox is
                 minStartDate: block.timestamp
             });
 
+        //revert for bond already mature (move to atomic deposit)
+
         if (_safeTrancheAmount < safeRatio())
             revert MinimumInput({
                 input: _safeTrancheAmount,
@@ -219,6 +225,8 @@ contract ConvertibleBondBox is
     /**
      * @inheritdoc IConvertibleBondBox
      */
+
+    //Need to separate repay & redeem Z-tranche
 
     function repay(uint256 _stableAmount, uint256 _zSlipAmount)
         external
@@ -335,6 +343,18 @@ contract ConvertibleBondBox is
             revert MinimumInput({input: safeSlipAmount, reqInput: safeRatio()});
 
         address safeSlipTokenAddress = s_safeSlipTokenAddress;
+
+        //transfer fee to owner
+
+        TransferHelper.safeTransferFrom(
+            safeSlipTokenAddress,
+            _msgSender(),
+            address(this),
+            (safeSlipAmount * feeBps) / BPS
+        );
+
+        safeSlipAmount *= (BPS - feeBps) / BPS;
+
         uint256 safeSlipSupply = ICBBSlip(safeSlipTokenAddress).totalSupply();
 
         //burn safe-slips
@@ -376,10 +396,22 @@ contract ConvertibleBondBox is
         if (safeSlipAmount < safeRatio())
             revert MinimumInput({input: safeSlipAmount, reqInput: safeRatio()});
 
+        address safeSlipTokenAddress = s_safeSlipTokenAddress;
+
+        //change to owner as recipient
+
+        TransferHelper.safeTransferFrom(
+            safeSlipTokenAddress,
+            _msgSender(),
+            address(this),
+            (safeSlipAmount * feeBps) / BPS
+        );
+
+        safeSlipAmount *= (BPS - feeBps) / BPS;
         uint256 stableBalance = stableToken().balanceOf(address(this));
 
         //burn safe-slips
-        ICBBSlip(s_safeSlipTokenAddress).burn(_msgSender(), safeSlipAmount);
+        ICBBSlip(safeSlipTokenAddress).burn(_msgSender(), safeSlipAmount);
 
         //transfer stables
         TransferHelper.safeTransfer(
@@ -389,6 +421,12 @@ contract ConvertibleBondBox is
         );
 
         emit RedeemStable(_msgSender(), safeSlipAmount, this.currentPrice());
+    }
+
+    function setFee(uint256 newFeeBps) external override onlyOwner {
+        //revert for bond already mature
+        feeBps = newFeeBps;
+        emit FeeUpdate(newFeeBps);
     }
 
     function _atomicDeposit(

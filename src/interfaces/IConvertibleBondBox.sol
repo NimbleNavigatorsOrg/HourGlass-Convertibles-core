@@ -16,6 +16,7 @@ interface IConvertibleBondBox {
     event RedeemTranche(address, uint256);
     event Repay(address, uint256, uint256, uint256, uint256);
     event Initialized(address, address, uint256, uint256);
+    event FeeUpdate(uint256);
 
     error PenaltyTooHigh(uint256 given, uint256 maxPenalty);
     error BondIsMature(bool given, bool required);
@@ -27,6 +28,8 @@ interface IConvertibleBondBox {
     error PayoutExceedsBalance(uint256 safeTranchePayout, uint256 balance);
     error OverPayment(uint256 zTranchePaidFor, uint256 _zSlipAmount);
     error MinimumInput(uint256 input, uint256 reqInput);
+
+    //Need to add getters for state variables
 
     /**
      * @dev Lends stableAmount of stable-tokens for safe-Tranche slips when provided with matching borrow collateral
@@ -97,4 +100,14 @@ interface IConvertibleBondBox {
      */
 
     function redeemStable(uint256 safeSlipAmount) external;
+
+    /**
+     * @dev Updates the fee taken on deposit to the given new fee
+     *
+     * Requirements
+     * - `msg.sender` has admin role
+     * - `newFeeBps` is in range [0, 50]
+     */
+
+    function setFee(uint256 newFeeBps) external;
 }
