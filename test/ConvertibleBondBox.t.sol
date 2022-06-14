@@ -673,12 +673,12 @@ contract ConvertibleBondBoxTest is Test {
             (zTrancheUnpaid * s_deployedConvertibleBondBox.penalty()) /
             s_deployedConvertibleBondBox.penaltyGranularity();
 
-        vm.startPrank(s_deployedCBBAddress);
-        CBBSlip(s_deployedConvertibleBondBox.s_riskSlipTokenAddress()).mint(
-            address(this),
-            1e18
-        );
-        vm.stopPrank();
+        // vm.startPrank(s_deployedCBBAddress);
+        // CBBSlip(s_deployedConvertibleBondBox.s_riskSlipTokenAddress()).mint(
+        //     address(this),
+        //     1e18
+        // );
+        // vm.stopPrank();
 
         vm.startPrank(borrowerAddress);
 
