@@ -13,11 +13,6 @@ contract CBBFactory is ICBBFactory {
     using ClonesWithImmutableArgs for address;
 
     address public immutable implementation;
-    struct Granularities {
-        uint256 tranche;
-        uint256 penalty;
-        uint256 price;
-    }
     bytes s_data;
     // ButtonWoodBondController s_bond;
 
@@ -46,16 +41,12 @@ contract CBBFactory is ICBBFactory {
     ) public returns (address) {
         
         ConvertibleBondBox clone;
-        Granularities memory granularities = Granularities(1000, 1000, 1e9);
-        // s_bond = bond;
 
         {
             uint256 trancheCount = bond.trancheCount();
             uint256 maturityDate = bond.maturityDate();
             (ITranche safeTranche, uint256 safeRatio) = bond.tranches(trancheIndex);
             (ITranche riskTranche, uint256 riskRatio) = bond.tranches(trancheCount - 1);
-            console2.log("address(safeTranche) LBF", address(safeTranche));
-            console2.log("address(riskTranche) LBF", address(riskTranche));
 
             s_data = bytes.concat(
                 abi.encodePacked(
@@ -66,9 +57,6 @@ contract CBBFactory is ICBBFactory {
                     stableToken,
                     price,
                     trancheIndex,
-                    granularities.tranche,
-                    granularities.penalty,
-                    granularities.price,
                     trancheCount,
                     maturityDate,
                     safeTranche

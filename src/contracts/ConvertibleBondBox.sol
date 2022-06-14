@@ -33,6 +33,9 @@ contract ConvertibleBondBox is
 
     uint256 public s_startDate = 0;
     uint256 public s_repaidSafeSlips = 0;
+    uint256 constant s_trancheGranularity = 1000;
+    uint256 constant s_penaltyGranularity = 1000;
+    uint256 constant s_priceGranularity = 1e9;
 
     function initialize(
         address _borrower,
@@ -40,10 +43,11 @@ contract ConvertibleBondBox is
         uint256 _safeTrancheAmount,
         uint256 _stableAmount
     ) external initializer {
-        if (penalty() > trancheGranularity())
+        uint256 priceGranularity = s_priceGranularity;
+        if (penalty() > s_trancheGranularity)
             revert PenaltyTooHigh({
                 given: penalty(),
-                maxPenalty: penaltyGranularity()
+                maxPenalty: s_penaltyGranularity
             });
         if (bond().isMature())
             revert BondIsMature({given: bond().isMature(), required: false});
@@ -53,10 +57,10 @@ contract ConvertibleBondBox is
                 given: trancheIndex(),
                 maxIndex: trancheCount() - 2
             });
-        if (initialPrice() > priceGranularity())
+        if (initialPrice() > priceGranularity)
             revert InitialPriceTooHigh({
                 given: initialPrice(),
-                maxPrice: priceGranularity()
+                maxPrice: priceGranularity
             });
         if (_stableAmount * _safeTrancheAmount != 0)
             revert OnlyLendOrBorrow({
@@ -127,17 +131,17 @@ contract ConvertibleBondBox is
                 given: 0,
                 minStartDate: block.timestamp
             });
-
+        uint256 priceGranularity = s_priceGranularity;
         uint256 price = this.currentPrice();
 
         //Need to justify amounts
-        if (_stableAmount < (safeRatio() * price) / priceGranularity())
+        if (_stableAmount < (safeRatio() * price) / priceGranularity)
             revert MinimumInput({
                 input: _stableAmount,
-                reqInput: (safeRatio() * price) / priceGranularity()
+                reqInput: (safeRatio() * price) / priceGranularity
             });
 
-        uint256 mintAmount = (_stableAmount * priceGranularity()) / price;
+        uint256 mintAmount = (_stableAmount * priceGranularity) / price;
 
         uint256 zTrancheAmount = (mintAmount * riskRatio()) / safeRatio();
 
@@ -178,7 +182,7 @@ contract ConvertibleBondBox is
         uint256 zTrancheAmount = (_safeTrancheAmount * riskRatio()) /
             safeRatio();
         uint256 stableAmount = (_safeTrancheAmount * price) /
-            priceGranularity();
+            s_priceGranularity;
 
         _atomicDeposit(
             _borrower,
@@ -203,7 +207,7 @@ contract ConvertibleBondBox is
 
     function currentPrice() external view override returns (uint256) {
         //load storage variables into memory
-        uint256 price = priceGranularity();
+        uint256 price = s_priceGranularity;
         uint256 maturityDate = maturityDate();
 
         if (block.timestamp < maturityDate) {
@@ -233,11 +237,12 @@ contract ConvertibleBondBox is
         //Load into memory
         uint256 price = this.currentPrice();
         uint256 maturityDate = maturityDate();
+        uint256 priceGranularity = s_priceGranularity;
 
-        if (_stableAmount < (safeRatio() * price) / priceGranularity())
+        if (_stableAmount < (safeRatio() * price) / priceGranularity)
             revert MinimumInput({
                 input: _stableAmount,
-                reqInput: (safeRatio() * price) / priceGranularity()
+                reqInput: (safeRatio() * price) / priceGranularity
             });
 
         if (_zSlipAmount < riskRatio())
@@ -245,7 +250,7 @@ contract ConvertibleBondBox is
 
         // Calculate safeTranche payout
         //TODO: Decimals conversion?
-        uint256 safeTranchePayout = (_stableAmount * priceGranularity()) /
+        uint256 safeTranchePayout = (_stableAmount * priceGranularity) /
             price;
 
         if (_stableAmount != 0) {
@@ -291,7 +296,7 @@ contract ConvertibleBondBox is
             zTrancheUnpaid =
                 zTrancheUnpaid -
                 (zTrancheUnpaid * penalty()) /
-                penaltyGranularity();
+                s_penaltyGranularity;
         }
 
         //Should not allow redeeming Z-tranches before maturity without repaying

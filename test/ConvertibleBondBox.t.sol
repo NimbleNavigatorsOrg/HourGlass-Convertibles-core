@@ -40,7 +40,7 @@ contract ConvertibleBondBoxTest is Test {
     uint256 constant s_endOfUnixTime = 2147483647;
     uint256 constant s_trancheGranularity = 1000;
     uint256 constant s_penaltyGranularity = 1000;
-    uint256 constant s_priceGranularity = 1000000000;
+    uint256 constant s_priceGranularity = 1e9;
     address s_deployedCBBAddress;
 
     event ConvertibleBondBoxCreated(
@@ -285,7 +285,7 @@ contract ConvertibleBondBoxTest is Test {
         bytes memory customError = abi.encodeWithSignature(
             "PenaltyTooHigh(uint256,uint256)",
             penalty,
-            s_deployedConvertibleBondBox.penaltyGranularity()
+            s_penaltyGranularity
         );
         vm.expectRevert(customError);
         s_deployedConvertibleBondBox.initialize(
@@ -614,8 +614,7 @@ contract ConvertibleBondBoxTest is Test {
         );
         uint256 currentPrice = s_deployedConvertibleBondBox.currentPrice();
         uint256 price = s_deployedConvertibleBondBox.initialPrice();
-        uint256 priceGranularity = s_deployedConvertibleBondBox
-            .priceGranularity();
+        uint256 priceGranularity = s_priceGranularity;
         assertEq((priceGranularity - price) / 2 + price, currentPrice);
     }
 
@@ -659,7 +658,7 @@ contract ConvertibleBondBoxTest is Test {
             .balanceOf(address(s_deployedConvertibleBondBox));
 
         uint256 safeTranchePayout = (stableAmount *
-            s_deployedConvertibleBondBox.priceGranularity()) /
+            s_priceGranularity) /
             s_deployedConvertibleBondBox.currentPrice();
 
         uint256 zTranchePaidFor = (safeTranchePayout *
@@ -671,7 +670,7 @@ contract ConvertibleBondBoxTest is Test {
         zTrancheUnpaid =
             zTrancheUnpaid -
             (zTrancheUnpaid * s_deployedConvertibleBondBox.penalty()) /
-            s_deployedConvertibleBondBox.penaltyGranularity();
+            s_penaltyGranularity;
 
         vm.startPrank(borrowerAddress);
 
@@ -1220,7 +1219,7 @@ contract ConvertibleBondBoxTest is Test {
             s_ratios[2]) * _currentPrice) / s_priceGranularity;
 
         uint256 safeTranchePayout = (_stableAmount *
-            s_deployedConvertibleBondBox.priceGranularity()) / _currentPrice;
+            s_priceGranularity) / _currentPrice;
 
         uint256 zTranchePaidFor = (safeTranchePayout *
             s_deployedConvertibleBondBox.riskRatio()) /
