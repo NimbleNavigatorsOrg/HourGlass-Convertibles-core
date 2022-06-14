@@ -833,7 +833,7 @@ contract ConvertibleBondBoxTest is Test {
         time = bound(time, 0, s_endOfUnixTime - s_maturityDate);
 
         //TODO see if there is a way to increase s_depositLimit to 1e18 or close in this test.
-        amount = bound(amount, s_trancheGranularity, s_depositLimit);
+        amount = bound(amount, s_safeRatio, s_safeTranche.balanceOf(address(this)));
 
         vm.warp(s_maturityDate + time);
 
