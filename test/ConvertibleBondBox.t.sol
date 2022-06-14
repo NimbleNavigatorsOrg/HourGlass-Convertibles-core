@@ -622,19 +622,20 @@ contract ConvertibleBondBoxTest is Test {
     // repay()
     // Still need to test OverPayment() revert and PayoutExceedsBalance() revert
 
-    function testRepay(uint256 time) public {
+    function testRepay(uint256 time, uint amount, uint stableAmount) public {
         //More parameters can be added to this test
-        uint256 stableAmount = 100000;
-        uint256 zSlipAmount = 625001;
         address borrowerAddress = address(1);
-        vm.assume(time < s_endOfUnixTime - s_maturityDate);
+        time = bound(time, s_maturityDate, s_endOfUnixTime);
         vm.warp(s_maturityDate + time);
+        uint minAmount = (s_deployedConvertibleBondBox.safeRatio() * s_deployedConvertibleBondBox.currentPrice()) / s_priceGranularity;
+        amount = bound(amount, minAmount, 1e17);
+        stableAmount = bound(stableAmount, minAmount, amount);
 
         vm.prank(address(this));
         s_deployedConvertibleBondBox.initialize(
             borrowerAddress,
             address(2),
-            s_depositLimit,
+            amount,
             0
         );
 
@@ -665,20 +666,13 @@ contract ConvertibleBondBoxTest is Test {
             s_deployedConvertibleBondBox.riskRatio()) /
             s_deployedConvertibleBondBox.safeRatio();
 
-        uint256 zTrancheUnpaid = zSlipAmount - zTranchePaidFor;
-
-        zTrancheUnpaid =
-            zTrancheUnpaid -
-            (zTrancheUnpaid * s_deployedConvertibleBondBox.penalty()) /
-            s_penaltyGranularity;
-
         vm.startPrank(borrowerAddress);
 
-        //TODO Determine if the below approval needs to be moved to the CBB contract.
         s_deployedConvertibleBondBox.stableToken().approve(
             address(s_deployedConvertibleBondBox),
             type(uint256).max
         );
+
         vm.expectEmit(true, true, true, true);
         emit Repay(
             borrowerAddress,
@@ -707,7 +701,6 @@ contract ConvertibleBondBoxTest is Test {
         repayRiskTrancheBalanceAssertions(
             userRiskTrancheBalancedBeforeRepay,
             zTranchePaidFor,
-            zTrancheUnpaid,
             CBBRiskTrancheBalancedBeforeRepay,
             borrowerAddress
         );
@@ -715,7 +708,6 @@ contract ConvertibleBondBoxTest is Test {
         repayRiskSlipAssertions(
             userRiskSlipBalancedBeforeRepay,
             zTranchePaidFor,
-            zTrancheUnpaid,
             borrowerAddress
         );
     }
@@ -767,7 +759,6 @@ contract ConvertibleBondBoxTest is Test {
     function repayRiskTrancheBalanceAssertions(
         uint256 userRiskTrancheBalancedBeforeRepay,
         uint256 zTranchePaidFor,
-        uint256 zTrancheUnpaid,
         uint256 CBBRiskTrancheBalancedBeforeRepay,
         address borrowerAddress
     ) private {
@@ -777,17 +768,14 @@ contract ConvertibleBondBoxTest is Test {
         uint256 CBBRiskTrancheBalanceAfterRepay = s_deployedConvertibleBondBox
             .riskTranche()
             .balanceOf(address(s_deployedConvertibleBondBox));
-
         assertEq(
             userRiskTrancheBalancedBeforeRepay +
-                zTranchePaidFor +
-                zTrancheUnpaid,
+                zTranchePaidFor,
             userRiskTrancheBalancedAfterRepay
         );
         assertEq(
             CBBRiskTrancheBalancedBeforeRepay -
-                zTranchePaidFor -
-                zTrancheUnpaid,
+                zTranchePaidFor,
             CBBRiskTrancheBalanceAfterRepay
         );
     }
@@ -795,7 +783,6 @@ contract ConvertibleBondBoxTest is Test {
     function repayRiskSlipAssertions(
         uint256 userRiskSlipBalancedBeforeRepay,
         uint256 zTranchePaidFor,
-        uint256 zTrancheUnpaid,
         address borrowerAddress
     ) private {
         uint256 userRiskSlipBalancedAfterRepay = ICBBSlip(
@@ -803,7 +790,7 @@ contract ConvertibleBondBoxTest is Test {
         ).balanceOf(borrowerAddress);
 
         assertEq(
-            userRiskSlipBalancedBeforeRepay - zTranchePaidFor - zTrancheUnpaid,
+            userRiskSlipBalancedBeforeRepay - zTranchePaidFor,
             userRiskSlipBalancedAfterRepay
         );
     }
