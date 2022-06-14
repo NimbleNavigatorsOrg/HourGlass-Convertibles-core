@@ -621,13 +621,14 @@ contract ConvertibleBondBoxTest is Test {
     // repay()
     // Still need to test OverPayment() revert and PayoutExceedsBalance() revert
 
-    function testRepay(uint256 time, uint amount) public {
+    function testRepay(uint256 time, uint amount, uint stableAmount) public {
         //More parameters can be added to this test
         address borrowerAddress = address(1);
         time = bound(time, s_maturityDate, s_endOfUnixTime);
         vm.warp(s_maturityDate + time);
         uint minAmount = (s_deployedConvertibleBondBox.safeRatio() * s_deployedConvertibleBondBox.currentPrice()) / s_priceGranularity;
         amount = bound(amount, minAmount, 1e17);
+        stableAmount = bound(stableAmount, minAmount, amount);
 
         vm.prank(address(this));
         s_deployedConvertibleBondBox.initialize(
@@ -657,7 +658,7 @@ contract ConvertibleBondBoxTest is Test {
             .riskTranche()
             .balanceOf(address(s_deployedConvertibleBondBox));
 
-        uint256 safeTranchePayout = (amount * s_priceGranularity) /
+        uint256 safeTranchePayout = (stableAmount * s_priceGranularity) /
             s_deployedConvertibleBondBox.currentPrice();
 
         uint256 zTranchePaidFor = (safeTranchePayout *
@@ -674,15 +675,15 @@ contract ConvertibleBondBoxTest is Test {
         vm.expectEmit(true, true, true, true);
         emit Repay(
             borrowerAddress,
-            amount,
+            stableAmount,
             zTranchePaidFor,
             s_deployedConvertibleBondBox.currentPrice()
         );
-        s_deployedConvertibleBondBox.repay(amount);
+        s_deployedConvertibleBondBox.repay(stableAmount);
         vm.stopPrank();
 
         repayStableBalanceAssertions(
-            amount,
+            stableAmount,
             s_stableToken,
             s_deployedConvertibleBondBox,
             userStableBalancedBeforeRepay,
