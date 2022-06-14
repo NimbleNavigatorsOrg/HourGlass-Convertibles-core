@@ -49,7 +49,10 @@ contract ConvertibleBondBox is
         address _admin
     ) external initializer {
         uint256 priceGranularity = s_priceGranularity;
-        require(_admin != address(0), "ConvertibleBondBox: invalid admin address");
+        require(
+            _admin != address(0),
+            "ConvertibleBondBox: invalid admin address"
+        );
         if (penalty() > s_trancheGranularity)
             revert PenaltyTooHigh({
                 given: penalty(),
@@ -75,7 +78,7 @@ contract ConvertibleBondBox is
             });
         __Ownable_init();
         transferOwnership(_admin);
-        
+
         ITranche safeTranche = safeTranche();
         ITranche riskTranche = riskTranche();
 
@@ -284,15 +287,16 @@ contract ConvertibleBondBox is
             safeRatio();
 
         //transfer fee to owner
+        uint256 feeSlip = (zTranchePaidFor * feeBps) / BPS;
         TransferHelper.safeTransferFrom(
             s_riskSlipTokenAddress,
             _msgSender(),
             owner(),
-            (zTranchePaidFor * feeBps) / BPS
+            feeSlip
         );
 
         //calculate Z-tranche payout
-        zTranchePaidFor = (zTranchePaidFor * (BPS - feeBps)) / BPS;
+        zTranchePaidFor -= feeSlip;
 
         //transfer Z-tranches from ConvertibleBondBox to msg.sender
         TransferHelper.safeTransfer(
@@ -321,19 +325,19 @@ contract ConvertibleBondBox is
             revert MinimumInput({input: riskSlipAmount, reqInput: riskRatio()});
 
         //transfer fee to owner
-
+        uint256 feeSlip = (riskSlipAmount * feeBps) / BPS;
         TransferHelper.safeTransferFrom(
             s_riskSlipTokenAddress,
             _msgSender(),
             owner(),
-            (riskSlipAmount * feeBps) / BPS
+            feeSlip
         );
 
-        riskSlipAmount *= (BPS - feeBps) / BPS;
+        riskSlipAmount -= feeSlip;
 
         uint256 zTranchePayout = riskSlipAmount;
-        zTranchePayout *=
-            (s_penaltyGranularity - penalty()) /
+        zTranchePayout =
+            (zTranchePayout * (s_penaltyGranularity - penalty())) /
             (s_penaltyGranularity);
 
         //transfer Z-tranches from ConvertibleBondBox to msg.sender
@@ -365,15 +369,15 @@ contract ConvertibleBondBox is
         address safeSlipTokenAddress = s_safeSlipTokenAddress;
 
         //transfer fee to owner
-
+        uint256 feeSlip = (safeSlipAmount * feeBps) / BPS;
         TransferHelper.safeTransferFrom(
             safeSlipTokenAddress,
             _msgSender(),
             owner(),
-            (safeSlipAmount * feeBps) / BPS
+            feeSlip
         );
 
-        safeSlipAmount *= (BPS - feeBps) / BPS;
+        safeSlipAmount -= feeSlip;
 
         uint256 safeSlipSupply = ICBBSlip(safeSlipTokenAddress).totalSupply();
 
@@ -446,7 +450,7 @@ contract ConvertibleBondBox is
     function setFee(uint256 newFeeBps) external override onlyOwner {
         if (bond().isMature())
             revert BondIsMature({given: bond().isMature(), required: false});
-        if(newFeeBps > maxFeeBPS)
+        if (newFeeBps > maxFeeBPS)
             revert FeeTooLarge({input: newFeeBps, maximum: maxFeeBPS});
         feeBps = newFeeBps;
         emit FeeUpdate(newFeeBps);
