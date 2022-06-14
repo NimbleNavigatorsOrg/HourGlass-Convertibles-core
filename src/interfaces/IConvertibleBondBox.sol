@@ -14,7 +14,7 @@ interface IConvertibleBondBox {
     event Borrow(address, address, address, uint256, uint256);
     event RedeemStable(address, uint256, uint256);
     event RedeemTranche(address, uint256);
-    event Repay(address, uint256, uint256, uint256, uint256);
+    event Repay(address, uint256, uint256, uint256);
     event Initialized(address, address, uint256, uint256);
 
     error PenaltyTooHigh(uint256 given, uint256 maxPenalty);
@@ -72,13 +72,12 @@ interface IConvertibleBondBox {
      * @dev allows repayment of loan in exchange for proportional amount of safe-Tranche and Z-tranche
      * - any unpaid amount of Z-slips after maturity will be penalized upon redeeming
      * @param stableAmount The amount of stable-Tokens to repay with
-     * @param zSlipAmount The amount of Z-slips to redeem
      * Requirements:
      *  - `msg.sender` must have `approved` `zSlipAmount` z-Slip tokens to this contract
      *  - `msg.sender` must have `approved` `stableAmount` of stable tokens to this contract
      */
 
-    function repay(uint256 stableAmount, uint256 zSlipAmount) external;
+    function repay(uint256 stableAmount) external;
 
     /**
      * @dev allows lender to redeem safe-slip for tranches
@@ -87,7 +86,16 @@ interface IConvertibleBondBox {
      *  - `msg.sender` must have `approved` `safeSlipAmount` of safe-Slip tokens to this contract
      */
 
-    function redeemTranche(uint256 safeSlipAmount) external;
+    function redeemSafeTranche(uint256 safeSlipAmount) external;
+
+    /**
+     * @dev allows borrower to redeem risk-slip for tranches without repaying
+     * @param riskSlipAmount The amount of risk-slips to redeem
+     * Requirements:
+     *  - `msg.sender` must have `approved` `riskSlipAmount` of safe-Slip tokens to this contract
+     */
+
+    function redeemRiskTranche(uint256 riskSlipAmount) external;
 
     /**
      * @dev allows lender to redeem safe-slip for stables

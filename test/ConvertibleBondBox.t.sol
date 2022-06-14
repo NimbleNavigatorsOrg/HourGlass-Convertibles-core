@@ -55,7 +55,7 @@ contract ConvertibleBondBoxTest is Test {
     event Borrow(address, address, address, uint256, uint256);
     event RedeemStable(address, uint256, uint256);
     event RedeemTranche(address, uint256);
-    event Repay(address, uint256, uint256, uint256, uint256);
+    event Repay(address, uint256, uint256, uint256);
     event Initialized(address, address, uint256, uint256);
 
     function setUp() public {
@@ -657,8 +657,7 @@ contract ConvertibleBondBoxTest is Test {
             .riskTranche()
             .balanceOf(address(s_deployedConvertibleBondBox));
 
-        uint256 safeTranchePayout = (stableAmount *
-            s_priceGranularity) /
+        uint256 safeTranchePayout = (stableAmount * s_priceGranularity) /
             s_deployedConvertibleBondBox.currentPrice();
 
         uint256 zTranchePaidFor = (safeTranchePayout *
@@ -684,10 +683,9 @@ contract ConvertibleBondBoxTest is Test {
             borrowerAddress,
             stableAmount,
             zTranchePaidFor,
-            zTrancheUnpaid,
             s_deployedConvertibleBondBox.currentPrice()
         );
-        s_deployedConvertibleBondBox.repay(stableAmount, zSlipAmount);
+        s_deployedConvertibleBondBox.repay(stableAmount);
         vm.stopPrank();
 
         repayStableBalanceAssertions(
@@ -816,12 +814,12 @@ contract ConvertibleBondBoxTest is Test {
             block.timestamp
         );
         vm.expectRevert(customError);
-        s_deployedConvertibleBondBox.repay(100000, 625001);
+        s_deployedConvertibleBondBox.repay(100000);
     }
 
-    //redeemTranche()
+    //redeemSafeTranche()
 
-    function testRedeemTranche(
+    function testRedeemSafeTranche(
         uint256 amount,
         uint256 time,
         uint256 collateralAmount
@@ -832,7 +830,11 @@ contract ConvertibleBondBoxTest is Test {
         time = bound(time, 0, s_endOfUnixTime - s_maturityDate);
 
         //TODO see if there is a way to increase s_depositLimit to 1e18 or close in this test.
-        amount = bound(amount, s_safeRatio, s_safeTranche.balanceOf(address(this)));
+        amount = bound(
+            amount,
+            s_safeRatio,
+            s_safeTranche.balanceOf(address(this))
+        );
 
         vm.warp(s_maturityDate + time);
 
@@ -865,21 +867,24 @@ contract ConvertibleBondBoxTest is Test {
             address(s_deployedConvertibleBondBox.safeTranche())
         ).balanceOf(address(2));
 
-        uint256 zPenaltyTotal = IERC20(address(s_deployedConvertibleBondBox.riskTranche())).balanceOf(
-            address(s_deployedConvertibleBondBox)
-        ) - IERC20(s_deployedConvertibleBondBox.s_riskSlipTokenAddress()).totalSupply();
+        uint256 zPenaltyTotal = IERC20(
+            address(s_deployedConvertibleBondBox.riskTranche())
+        ).balanceOf(address(s_deployedConvertibleBondBox)) -
+            IERC20(s_deployedConvertibleBondBox.s_riskSlipTokenAddress())
+                .totalSupply();
 
-        uint256 safeSlipSupply = ICBBSlip(s_deployedConvertibleBondBox.s_safeSlipTokenAddress()).totalSupply();
+        uint256 safeSlipSupply = ICBBSlip(
+            s_deployedConvertibleBondBox.s_safeSlipTokenAddress()
+        ).totalSupply();
 
         uint256 riskTranchePayout = (amount * zPenaltyTotal) /
-                (safeSlipSupply - s_deployedConvertibleBondBox.s_repaidSafeSlips());
+            (safeSlipSupply - s_deployedConvertibleBondBox.s_repaidSafeSlips());
         vm.startPrank(address(2));
         vm.expectEmit(true, true, true, true);
         emit RedeemTranche(address(2), amount);
-        s_deployedConvertibleBondBox.redeemTranche(amount);
-        vm.stopPrank();
+        s_deployedConvertibleBondBox.redeemSafeTranche(amount);
 
-        redeemTrancheAsserts(
+        redeemSafeTrancheAsserts(
             safeSlipBalanceBeforeRedeem,
             amount,
             safeTrancheUserBalanceBeforeRedeem,
@@ -890,7 +895,7 @@ contract ConvertibleBondBoxTest is Test {
         );
     }
 
-    function redeemTrancheAsserts(
+    function redeemSafeTrancheAsserts(
         uint256 safeSlipBalanceBeforeRedeem,
         uint256 amount,
         uint256 safeTrancheUserBalanceBeforeRedeem,
@@ -964,7 +969,7 @@ contract ConvertibleBondBoxTest is Test {
             block.timestamp
         );
         vm.expectRevert(customError);
-        s_deployedConvertibleBondBox.redeemTranche(s_safeSlipAmount);
+        s_deployedConvertibleBondBox.redeemSafeTranche(s_safeSlipAmount);
     }
 
     // testFail for redeemStable before any repay function
@@ -1005,12 +1010,7 @@ contract ConvertibleBondBoxTest is Test {
             address(s_deployedConvertibleBondBox),
             type(uint256).max
         );
-        s_deployedConvertibleBondBox.repay(
-            repayAmount,
-            (repayAmount * s_priceGranularity * s_riskRatio) /
-                s_safeRatio /
-                s_deployedConvertibleBondBox.currentPrice()
-        );
+        s_deployedConvertibleBondBox.repay(repayAmount);
         vm.stopPrank();
 
         safeSlipAmount = bound(
@@ -1218,8 +1218,8 @@ contract ConvertibleBondBoxTest is Test {
         uint256 _stableAmount = (((riskSlipBalance * s_ratios[0]) /
             s_ratios[2]) * _currentPrice) / s_priceGranularity;
 
-        uint256 safeTranchePayout = (_stableAmount *
-            s_priceGranularity) / _currentPrice;
+        uint256 safeTranchePayout = (_stableAmount * s_priceGranularity) /
+            _currentPrice;
 
         uint256 zTranchePaidFor = (safeTranchePayout *
             s_deployedConvertibleBondBox.riskRatio()) /
@@ -1230,14 +1230,12 @@ contract ConvertibleBondBoxTest is Test {
             address(borrower),
             _stableAmount,
             zTranchePaidFor,
-            0,
             _currentPrice
         );
 
         s_deployedConvertibleBondBox.repay(
             (((riskSlipBalance * s_ratios[0]) / s_ratios[2]) * _currentPrice) /
-                s_priceGranularity,
-            riskSlipBalance
+                s_priceGranularity
         );
         vm.stopPrank();
 
@@ -1272,7 +1270,7 @@ contract ConvertibleBondBoxTest is Test {
         ).balanceOf(address(lender)) / 2;
         vm.expectEmit(true, true, true, true);
         emit RedeemTranche(address(lender), safeSlipBalance);
-        s_deployedConvertibleBondBox.redeemTranche(safeSlipBalance);
+        s_deployedConvertibleBondBox.redeemSafeTranche(safeSlipBalance);
         vm.stopPrank();
 
         // Lender redeems half of remaining safeSlips for stables

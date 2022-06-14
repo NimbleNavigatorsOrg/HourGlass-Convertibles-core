@@ -224,10 +224,7 @@ contract ConvertibleBondBox is
      * @inheritdoc IConvertibleBondBox
      */
 
-    function repay(uint256 _stableAmount, uint256 _zSlipAmount)
-        external
-        override
-    {
+    function repay(uint256 _stableAmount) external override {
         if (s_startDate == 0)
             revert ConvertibleBondBoxNotStarted({
                 given: 0,
@@ -236,7 +233,6 @@ contract ConvertibleBondBox is
 
         //Load into memory
         uint256 price = this.currentPrice();
-        uint256 maturityDate = maturityDate();
         uint256 priceGranularity = s_priceGranularity;
 
         if (_stableAmount < (safeRatio() * price) / priceGranularity)
@@ -245,91 +241,77 @@ contract ConvertibleBondBox is
                 reqInput: (safeRatio() * price) / priceGranularity
             });
 
-        if (_zSlipAmount < riskRatio())
-            revert MinimumInput({input: _zSlipAmount, reqInput: riskRatio()});
-
         // Calculate safeTranche payout
         //TODO: Decimals conversion?
-        uint256 safeTranchePayout = (_stableAmount * priceGranularity) /
-            price;
+        uint256 safeTranchePayout = (_stableAmount * priceGranularity) / price;
 
-        if (_stableAmount != 0) {
-            //Repay stables to ConvertibleBondBox
-            TransferHelper.safeTransferFrom(
-                address(stableToken()),
-                _msgSender(),
-                address(this),
-                _stableAmount
-            );
+        //Repay stables to ConvertibleBondBox
+        TransferHelper.safeTransferFrom(
+            address(stableToken()),
+            _msgSender(),
+            address(this),
+            _stableAmount
+        );
 
-            if (safeTranche().balanceOf(address(this)) < safeTranchePayout) {
-                revert PayoutExceedsBalance({
-                    safeTranchePayout: safeTranchePayout,
-                    balance: safeTranche().balanceOf(address(this))
-                });
-            }
-
-            //transfer A-tranches from ConvertibleBondBox to msg.sender
-            TransferHelper.safeTransfer(
-                address(safeTranche()),
-                _msgSender(),
-                safeTranchePayout
-            );
-
-            s_repaidSafeSlips += safeTranchePayout;
-        }
-        //calculate Z-tranche payout
-        uint256 zTranchePaidFor = (safeTranchePayout * riskRatio()) /
-            safeRatio();
-
-        if (_zSlipAmount < zTranchePaidFor) {
-            revert OverPayment({
-                zTranchePaidFor: zTranchePaidFor,
-                _zSlipAmount: _zSlipAmount
+        if (safeTranche().balanceOf(address(this)) < safeTranchePayout) {
+            revert PayoutExceedsBalance({
+                safeTranchePayout: safeTranchePayout,
+                balance: safeTranche().balanceOf(address(this))
             });
         }
 
-        uint256 zTrancheUnpaid = _zSlipAmount - zTranchePaidFor;
+        //transfer A-tranches from ConvertibleBondBox to msg.sender
+        TransferHelper.safeTransfer(
+            address(safeTranche()),
+            _msgSender(),
+            safeTranchePayout
+        );
 
-        //Apply penalty to any Z-tranches that have not been repaid for after maturity
-        if (block.timestamp >= maturityDate) {
-            zTrancheUnpaid =
-                zTrancheUnpaid -
-                (zTrancheUnpaid * penalty()) /
-                s_penaltyGranularity;
-        }
+        s_repaidSafeSlips += safeTranchePayout;
 
-        //Should not allow redeeming Z-tranches before maturity without repaying
-        if (block.timestamp < maturityDate) {
-            zTrancheUnpaid = 0;
-        }
+        //calculate Z-tranche payout
+        uint256 zTranchePaidFor = (safeTranchePayout * riskRatio()) /
+            safeRatio();
 
         //transfer Z-tranches from ConvertibleBondBox to msg.sender
         TransferHelper.safeTransfer(
             address(riskTranche()),
             _msgSender(),
-            zTranchePaidFor + zTrancheUnpaid
+            zTranchePaidFor
         );
 
-        ICBBSlip(s_riskSlipTokenAddress).burn(
-            _msgSender(),
-            zTranchePaidFor + zTrancheUnpaid
-        );
+        ICBBSlip(s_riskSlipTokenAddress).burn(_msgSender(), zTranchePaidFor);
 
-        emit Repay(
-            _msgSender(),
-            _stableAmount,
-            zTranchePaidFor,
-            zTrancheUnpaid,
-            price
-        );
+        emit Repay(_msgSender(), _stableAmount, zTranchePaidFor, price);
     }
 
     /**
      * @inheritdoc IConvertibleBondBox
      */
 
-    function redeemTranche(uint256 safeSlipAmount) external override {
+    function redeemRiskTranche(uint256 riskSlipAmount) external override {
+        //require only after maturity
+
+        uint256 zTranchePayout = riskSlipAmount;
+        zTranchePayout *=
+            (s_penaltyGranularity - penalty()) /
+            (s_penaltyGranularity);
+
+        //transfer Z-tranches from ConvertibleBondBox to msg.sender
+        TransferHelper.safeTransfer(
+            address(riskTranche()),
+            _msgSender(),
+            zTranchePayout
+        );
+
+        ICBBSlip(s_riskSlipTokenAddress).burn(_msgSender(), riskSlipAmount);
+    }
+
+    /**
+     * @inheritdoc IConvertibleBondBox
+     */
+
+    function redeemSafeTranche(uint256 safeSlipAmount) external override {
         if (block.timestamp < maturityDate())
             revert BondNotMatureYet({
                 maturityDate: maturityDate(),
