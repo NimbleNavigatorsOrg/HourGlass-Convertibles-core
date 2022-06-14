@@ -14,7 +14,7 @@ import "forge-std/console2.sol";
 import "../../test/mocks/MockERC20.sol";
 import "./CBBSetup.sol";
 
-contract CBBSetFee is CBBSetup {
+contract SetFee is CBBSetup {
 
     function testSetFee(uint newFee) public {
         console2.log(s_ratios[0], "s_ratios");

@@ -14,7 +14,7 @@ import "forge-std/console2.sol";
 import "../../test/mocks/MockERC20.sol";
 import "./CBBSetup.sol";
 
-contract CBBInitialize is CBBSetup {
+contract Initialize is CBBSetup {
 
     // initialize()
     function testInitializeOwnerTransfer(uint256 collateralAmount)
