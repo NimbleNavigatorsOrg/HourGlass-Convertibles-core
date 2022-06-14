@@ -832,16 +832,16 @@ contract ConvertibleBondBoxTest is Test {
         // If the below line is commented out, we get an arithmatic underflow/overflow error. Why?
         time = bound(time, 0, s_endOfUnixTime - s_maturityDate);
 
+        //TODO see if there is a way to increase s_depositLimit to 1e18 or close in this test.
         amount = bound(amount, s_trancheGranularity, s_depositLimit);
 
         vm.warp(s_maturityDate + time);
 
-        //TODO verify that it is ok to use s_depositLimit in this test as opposed to 1e18
         vm.prank(address(this));
         s_deployedConvertibleBondBox.initialize(
             address(1),
             address(2),
-            s_depositLimit,
+            amount,
             0
         );
 
