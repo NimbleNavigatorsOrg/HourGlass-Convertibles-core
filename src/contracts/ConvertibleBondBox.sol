@@ -66,7 +66,7 @@ contract ConvertibleBondBox is
             });
         __Ownable_init();
         transferOwnership(_admin);
-
+        
         ITranche safeTranche = safeTranche();
         ITranche riskTranche = riskTranche();
 

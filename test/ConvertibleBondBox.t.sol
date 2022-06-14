@@ -132,6 +132,40 @@ contract ConvertibleBondBoxTest is Test {
     }
 
     // initialize()
+    function testInitializeOwnerTransfer(uint256 collateralAmount)
+        public
+    {
+        address ownerBefore = s_deployedConvertibleBondBox.owner();
+        collateralAmount = bound(
+            collateralAmount,
+            s_safeRatio,
+            s_safeTranche.balanceOf(address(this))
+        );
+
+        uint256 stableAmount = 0;
+
+        uint256 matcherSafeTrancheBalanceBefore = s_safeTranche.balanceOf(
+            address(this)
+        );
+        uint256 matcherRiskTrancheBalanceBefore = s_riskTranche.balanceOf(
+            address(this)
+        );
+
+        vm.prank(address(this));
+        vm.expectEmit(true, true, true, true);
+        emit Initialized(address(1), address(2), 0, collateralAmount);
+        s_deployedConvertibleBondBox.initialize(
+            address(1),
+            address(2),
+            collateralAmount,
+            stableAmount,
+            address(100)
+        );
+        address ownerAfter = s_deployedConvertibleBondBox.owner();
+
+        assertEq(false, ownerBefore == ownerAfter);
+        assertEq(ownerAfter, address(100));
+    }
 
     function testInitializeAndBorrowEmitsInitialized(uint256 collateralAmount)
         public
