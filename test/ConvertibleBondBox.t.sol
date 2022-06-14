@@ -158,7 +158,8 @@ contract ConvertibleBondBoxTest is Test {
             address(1),
             address(2),
             collateralAmount,
-            stableAmount
+            stableAmount,
+            address(100)
         );
 
         uint256 matcherSafeTrancheBalanceAfter = s_safeTranche.balanceOf(
@@ -228,7 +229,8 @@ contract ConvertibleBondBoxTest is Test {
             address(1),
             address(2),
             collateralAmount,
-            stableAmount
+            stableAmount,
+            address(100)
         );
 
         uint256 matcherSafeTrancheBalanceAfter = s_safeTranche.balanceOf(
@@ -292,7 +294,8 @@ contract ConvertibleBondBoxTest is Test {
             address(1),
             address(2),
             s_depositLimit,
-            0
+            0,
+            address(100)
         );
     }
 
@@ -320,7 +323,8 @@ contract ConvertibleBondBoxTest is Test {
             address(1),
             address(2),
             s_depositLimit,
-            0
+            0,
+            address(100)
         );
     }
 
@@ -348,7 +352,8 @@ contract ConvertibleBondBoxTest is Test {
             address(1),
             address(2),
             s_depositLimit,
-            0
+            0,
+            address(100)
         );
     }
 
@@ -371,7 +376,8 @@ contract ConvertibleBondBoxTest is Test {
             address(1),
             address(2),
             s_depositLimit,
-            0
+            0,
+            address(100)
         );
     }
 
@@ -398,7 +404,8 @@ contract ConvertibleBondBoxTest is Test {
             address(1),
             address(2),
             s_depositLimit,
-            0
+            0,
+            address(100)
         );
     }
 
@@ -432,7 +439,8 @@ contract ConvertibleBondBoxTest is Test {
             address(1),
             address(2),
             stableAmount,
-            collateralAmount
+            collateralAmount,
+            address(100)
         );
     }
 
@@ -466,7 +474,8 @@ contract ConvertibleBondBoxTest is Test {
             address(1),
             address(2),
             collateralAmount,
-            0
+            0,
+            address(100)
         );
 
         uint256 matcherSafeTrancheBalanceAfter = s_safeTranche.balanceOf(
@@ -532,7 +541,8 @@ contract ConvertibleBondBoxTest is Test {
             address(1),
             address(2),
             0,
-            stableAmount
+            stableAmount,
+            address(100)
         );
 
         uint256 matcherSafeTrancheBalanceAfter = s_safeTranche.balanceOf(
@@ -635,7 +645,8 @@ contract ConvertibleBondBoxTest is Test {
             borrowerAddress,
             address(2),
             s_depositLimit,
-            0
+            0,
+            address(100)
         );
 
         uint256 userStableBalancedBeforeRepay = s_stableToken.balanceOf(
@@ -842,7 +853,8 @@ contract ConvertibleBondBoxTest is Test {
             address(1),
             address(2),
             s_depositLimit,
-            0
+            0,
+            address(100)
         );
 
         uint256 safeSlipBalanceBeforeRedeem = CBBSlip(
@@ -951,7 +963,8 @@ contract ConvertibleBondBoxTest is Test {
             address(1),
             address(2),
             s_depositLimit,
-            0
+            0,
+            address(100)
         );
         vm.startPrank(s_deployedCBBAddress);
         CBBSlip(s_deployedConvertibleBondBox.s_safeSlipTokenAddress()).mint(
@@ -980,7 +993,8 @@ contract ConvertibleBondBoxTest is Test {
             address(1),
             address(2),
             s_depositLimit,
-            0
+            0,
+            address(100)
         );
 
         //getting lender + borrower balances after initialization deposit
@@ -1166,7 +1180,8 @@ contract ConvertibleBondBoxTest is Test {
             address(borrower),
             address(lender),
             amount,
-            0
+            0,
+            address(100)
         );
         vm.stopPrank();
 

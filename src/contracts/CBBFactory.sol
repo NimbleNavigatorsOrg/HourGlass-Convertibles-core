@@ -19,7 +19,6 @@ contract CBBFactory is ICBBFactory {
         uint256 price;
     }
     bytes s_data;
-    // ButtonWoodBondController s_bond;
 
     constructor(address _implementation) {
         implementation = _implementation;
@@ -47,15 +46,12 @@ contract CBBFactory is ICBBFactory {
         
         ConvertibleBondBox clone;
         Granularities memory granularities = Granularities(1000, 1000, 1e9);
-        // s_bond = bond;
 
         {
             uint256 trancheCount = bond.trancheCount();
             uint256 maturityDate = bond.maturityDate();
             (ITranche safeTranche, uint256 safeRatio) = bond.tranches(trancheIndex);
             (ITranche riskTranche, uint256 riskRatio) = bond.tranches(trancheCount - 1);
-            console2.log("address(safeTranche) LBF", address(safeTranche));
-            console2.log("address(riskTranche) LBF", address(riskTranche));
 
             s_data = bytes.concat(
                 abi.encodePacked(
