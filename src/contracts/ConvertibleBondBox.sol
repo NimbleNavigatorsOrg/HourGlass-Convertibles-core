@@ -30,7 +30,6 @@ contract ConvertibleBondBox is
 {
     address public s_safeSlipTokenAddress;
     address public s_riskSlipTokenAddress;
-
     uint256 public s_startDate = 0;
     uint256 public s_repaidSafeSlips = 0;
     uint256 constant s_trancheGranularity = 1000;
@@ -45,9 +44,11 @@ contract ConvertibleBondBox is
         address _borrower,
         address _lender,
         uint256 _safeTrancheAmount,
-        uint256 _stableAmount
+        uint256 _stableAmount,
+        address _admin
     ) external initializer {
         uint256 priceGranularity = s_priceGranularity;
+        require(_admin != address(0), "ConvertibleBondBox: invalid admin address");
         if (penalty() > s_trancheGranularity)
             revert PenaltyTooHigh({
                 given: penalty(),
@@ -71,7 +72,9 @@ contract ConvertibleBondBox is
                 _stableAmount: _stableAmount,
                 _collateralAmount: _safeTrancheAmount
             });
-
+        __Ownable_init();
+        transferOwnership(_admin);
+        
         ITranche safeTranche = safeTranche();
         ITranche riskTranche = riskTranche();
 
@@ -283,7 +286,7 @@ contract ConvertibleBondBox is
         TransferHelper.safeTransferFrom(
             s_riskSlipTokenAddress,
             _msgSender(),
-            address(this),
+            owner(),
             (zTranchePaidFor * feeBps) / BPS
         );
 
@@ -321,7 +324,7 @@ contract ConvertibleBondBox is
         TransferHelper.safeTransferFrom(
             s_riskSlipTokenAddress,
             _msgSender(),
-            address(this),
+            owner(),
             (riskSlipAmount * feeBps) / BPS
         );
 
@@ -365,7 +368,7 @@ contract ConvertibleBondBox is
         TransferHelper.safeTransferFrom(
             safeSlipTokenAddress,
             _msgSender(),
-            address(this),
+            owner(),
             (safeSlipAmount * feeBps) / BPS
         );
 
@@ -419,7 +422,7 @@ contract ConvertibleBondBox is
         TransferHelper.safeTransferFrom(
             safeSlipTokenAddress,
             _msgSender(),
-            address(this),
+            owner(),
             (safeSlipAmount * feeBps) / BPS
         );
 
@@ -440,7 +443,8 @@ contract ConvertibleBondBox is
     }
 
     function setFee(uint256 newFeeBps) external override onlyOwner {
-        //revert for bond already mature
+        if (bond().isMature())
+            revert BondIsMature({given: bond().isMature(), required: false});
         feeBps = newFeeBps;
         emit FeeUpdate(newFeeBps);
     }

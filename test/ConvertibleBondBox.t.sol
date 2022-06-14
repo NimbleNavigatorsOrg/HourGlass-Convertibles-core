@@ -133,6 +133,70 @@ contract ConvertibleBondBoxTest is Test {
     }
 
     // initialize()
+    function testInitializeOwnerTransfer(uint256 collateralAmount)
+        public
+    {
+        address ownerBefore = s_deployedConvertibleBondBox.owner();
+        collateralAmount = bound(
+            collateralAmount,
+            s_safeRatio,
+            s_safeTranche.balanceOf(address(this))
+        );
+
+        uint256 stableAmount = 0;
+
+        uint256 matcherSafeTrancheBalanceBefore = s_safeTranche.balanceOf(
+            address(this)
+        );
+        uint256 matcherRiskTrancheBalanceBefore = s_riskTranche.balanceOf(
+            address(this)
+        );
+
+        vm.prank(address(this));
+        vm.expectEmit(true, true, true, true);
+        emit Initialized(address(1), address(2), 0, collateralAmount);
+        s_deployedConvertibleBondBox.initialize(
+            address(1),
+            address(2),
+            collateralAmount,
+            stableAmount,
+            address(100)
+        );
+        address ownerAfter = s_deployedConvertibleBondBox.owner();
+
+        assertEq(false, ownerBefore == ownerAfter);
+        assertEq(ownerAfter, address(100));
+    }
+
+    function testFailInitializeOwnerTransfer(uint256 collateralAmount)
+        public
+    {
+        address ownerBefore = s_deployedConvertibleBondBox.owner();
+        collateralAmount = bound(
+            collateralAmount,
+            s_safeRatio,
+            s_safeTranche.balanceOf(address(this))
+        );
+
+        uint256 stableAmount = 0;
+
+        uint256 matcherSafeTrancheBalanceBefore = s_safeTranche.balanceOf(
+            address(this)
+        );
+        uint256 matcherRiskTrancheBalanceBefore = s_riskTranche.balanceOf(
+            address(this)
+        );
+
+        vm.prank(address(this));
+        s_deployedConvertibleBondBox.initialize(
+            address(1),
+            address(2),
+            collateralAmount,
+            stableAmount,
+            address(0)
+        );
+        address ownerAfter = s_deployedConvertibleBondBox.owner();
+    }
 
     function testInitializeAndBorrowEmitsInitialized(uint256 collateralAmount)
         public
@@ -159,7 +223,8 @@ contract ConvertibleBondBoxTest is Test {
             address(1),
             address(2),
             collateralAmount,
-            stableAmount
+            stableAmount,
+            address(100)
         );
 
         uint256 matcherSafeTrancheBalanceAfter = s_safeTranche.balanceOf(
@@ -229,7 +294,8 @@ contract ConvertibleBondBoxTest is Test {
             address(1),
             address(2),
             collateralAmount,
-            stableAmount
+            stableAmount,
+            address(100)
         );
 
         uint256 matcherSafeTrancheBalanceAfter = s_safeTranche.balanceOf(
@@ -293,7 +359,8 @@ contract ConvertibleBondBoxTest is Test {
             address(1),
             address(2),
             s_depositLimit,
-            0
+            0,
+            address(100)
         );
     }
 
@@ -321,7 +388,8 @@ contract ConvertibleBondBoxTest is Test {
             address(1),
             address(2),
             s_depositLimit,
-            0
+            0,
+            address(100)
         );
     }
 
@@ -349,7 +417,8 @@ contract ConvertibleBondBoxTest is Test {
             address(1),
             address(2),
             s_depositLimit,
-            0
+            0,
+            address(100)
         );
     }
 
@@ -372,7 +441,8 @@ contract ConvertibleBondBoxTest is Test {
             address(1),
             address(2),
             s_depositLimit,
-            0
+            0,
+            address(100)
         );
     }
 
@@ -399,7 +469,8 @@ contract ConvertibleBondBoxTest is Test {
             address(1),
             address(2),
             s_depositLimit,
-            0
+            0,
+            address(100)
         );
     }
 
@@ -433,7 +504,8 @@ contract ConvertibleBondBoxTest is Test {
             address(1),
             address(2),
             stableAmount,
-            collateralAmount
+            collateralAmount,
+            address(100)
         );
     }
 
@@ -467,7 +539,8 @@ contract ConvertibleBondBoxTest is Test {
             address(1),
             address(2),
             collateralAmount,
-            0
+            0,
+            address(100)
         );
 
         uint256 matcherSafeTrancheBalanceAfter = s_safeTranche.balanceOf(
@@ -533,7 +606,8 @@ contract ConvertibleBondBoxTest is Test {
             address(1),
             address(2),
             0,
-            stableAmount
+            stableAmount,
+            address(100)
         );
 
         uint256 matcherSafeTrancheBalanceAfter = s_safeTranche.balanceOf(
@@ -635,8 +709,9 @@ contract ConvertibleBondBoxTest is Test {
         s_deployedConvertibleBondBox.initialize(
             borrowerAddress,
             address(2),
-            amount,
-            0
+            amount, // was s_depositLimit
+            0,
+            address(100)
         );
 
         uint256 userStableBalancedBeforeRepay = s_stableToken.balanceOf(
@@ -830,8 +905,9 @@ contract ConvertibleBondBoxTest is Test {
         s_deployedConvertibleBondBox.initialize(
             address(1),
             address(2),
-            amount,
-            0
+            amount,  //was s_depositLimit
+            0,
+            address(100)
         );
 
         uint256 safeSlipBalanceBeforeRedeem = CBBSlip(
@@ -943,7 +1019,8 @@ contract ConvertibleBondBoxTest is Test {
             address(1),
             address(2),
             s_depositLimit,
-            0
+            0,
+            address(100)
         );
         vm.startPrank(s_deployedCBBAddress);
         CBBSlip(s_deployedConvertibleBondBox.s_safeSlipTokenAddress()).mint(
@@ -972,7 +1049,8 @@ contract ConvertibleBondBoxTest is Test {
             address(1),
             address(2),
             s_depositLimit,
-            0
+            0,
+            address(100)
         );
 
         //getting lender + borrower balances after initialization deposit
@@ -1153,7 +1231,8 @@ contract ConvertibleBondBoxTest is Test {
             address(borrower),
             address(lender),
             amount,
-            0
+            0,
+            address(100)
         );
         vm.stopPrank();
 

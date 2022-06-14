@@ -14,7 +14,6 @@ contract CBBFactory is ICBBFactory {
 
     address public immutable implementation;
     bytes s_data;
-    // ButtonWoodBondController s_bond;
 
     constructor(address _implementation) {
         implementation = _implementation;
