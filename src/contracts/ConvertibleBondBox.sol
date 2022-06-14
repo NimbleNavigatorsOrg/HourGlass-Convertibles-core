@@ -290,7 +290,14 @@ contract ConvertibleBondBox is
      */
 
     function redeemRiskTranche(uint256 riskSlipAmount) external override {
-        //require only after maturity
+        if (block.timestamp < maturityDate())
+            revert BondNotMatureYet({
+                maturityDate: maturityDate(),
+                currentTime: block.timestamp
+            });
+
+        if (riskSlipAmount < riskRatio())
+            revert MinimumInput({input: riskSlipAmount, reqInput: riskRatio()});
 
         uint256 zTranchePayout = riskSlipAmount;
         zTranchePayout *=
@@ -305,6 +312,8 @@ contract ConvertibleBondBox is
         );
 
         ICBBSlip(s_riskSlipTokenAddress).burn(_msgSender(), riskSlipAmount);
+
+        emit RedeemRiskTranche(_msgSender(), riskSlipAmount);
     }
 
     /**
@@ -346,7 +355,7 @@ contract ConvertibleBondBox is
                 (safeSlipSupply - s_repaidSafeSlips)
         );
 
-        emit RedeemTranche(_msgSender(), safeSlipAmount);
+        emit RedeemSafeTranche(_msgSender(), safeSlipAmount);
     }
 
     /**
@@ -385,6 +394,9 @@ contract ConvertibleBondBox is
         uint256 _safeSlipAmount,
         uint256 _riskSlipAmount
     ) internal {
+        if (bond().isMature())
+            revert BondIsMature({given: bond().isMature(), required: false});
+
         //Transfer safeTranche to ConvertibleBondBox
         TransferHelper.safeTransferFrom(
             address(safeTranche()),

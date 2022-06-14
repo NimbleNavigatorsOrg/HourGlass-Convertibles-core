@@ -54,7 +54,8 @@ contract ConvertibleBondBoxTest is Test {
     event Lend(address, address, address, uint256, uint256);
     event Borrow(address, address, address, uint256, uint256);
     event RedeemStable(address, uint256, uint256);
-    event RedeemTranche(address, uint256);
+    event RedeemSafeTranche(address, uint256);
+    event RedeemRiskTranche(address, uint256);
     event Repay(address, uint256, uint256, uint256);
     event Initialized(address, address, uint256, uint256);
 
@@ -881,7 +882,7 @@ contract ConvertibleBondBoxTest is Test {
             (safeSlipSupply - s_deployedConvertibleBondBox.s_repaidSafeSlips());
         vm.startPrank(address(2));
         vm.expectEmit(true, true, true, true);
-        emit RedeemTranche(address(2), amount);
+        emit RedeemSafeTranche(address(2), amount);
         s_deployedConvertibleBondBox.redeemSafeTranche(amount);
 
         redeemSafeTrancheAsserts(
@@ -945,7 +946,7 @@ contract ConvertibleBondBoxTest is Test {
         );
     }
 
-    function testCannotRedeemTrancheBondNotMatureYet(uint256 time) public {
+    function testCannotRedeemSafeTrancheBondNotMatureYet(uint256 time) public {
         vm.assume(time <= s_maturityDate && time != 0);
         vm.warp(s_maturityDate - time);
         vm.prank(address(this));
@@ -1269,7 +1270,7 @@ contract ConvertibleBondBoxTest is Test {
             s_deployedConvertibleBondBox.s_safeSlipTokenAddress()
         ).balanceOf(address(lender)) / 2;
         vm.expectEmit(true, true, true, true);
-        emit RedeemTranche(address(lender), safeSlipBalance);
+        emit RedeemSafeTranche(address(lender), safeSlipBalance);
         s_deployedConvertibleBondBox.redeemSafeTranche(safeSlipBalance);
         vm.stopPrank();
 

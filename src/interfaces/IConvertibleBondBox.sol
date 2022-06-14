@@ -13,7 +13,8 @@ interface IConvertibleBondBox {
     event Lend(address, address, address, uint256, uint256);
     event Borrow(address, address, address, uint256, uint256);
     event RedeemStable(address, uint256, uint256);
-    event RedeemTranche(address, uint256);
+    event RedeemSafeTranche(address, uint256);
+    event RedeemRiskTranche(address, uint256);
     event Repay(address, uint256, uint256, uint256);
     event Initialized(address, address, uint256, uint256);
 
@@ -25,7 +26,6 @@ interface IConvertibleBondBox {
     error BondNotMatureYet(uint256 maturityDate, uint256 currentTime);
     error OnlyLendOrBorrow(uint256 _stableAmount, uint256 _collateralAmount);
     error PayoutExceedsBalance(uint256 safeTranchePayout, uint256 balance);
-    error OverPayment(uint256 zTranchePaidFor, uint256 _zSlipAmount);
     error MinimumInput(uint256 input, uint256 reqInput);
 
     /**
