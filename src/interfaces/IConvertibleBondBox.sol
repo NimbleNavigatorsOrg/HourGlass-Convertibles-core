@@ -119,4 +119,54 @@ interface IConvertibleBondBox {
      */
 
     function setFee(uint256 newFeeBps) external;
+
+    /**
+     * @dev Gets the safe slip token Address
+     */
+    function s_safeSlipTokenAddress() external view returns(address);
+
+    /**
+     * @dev Gets the risk slip token Address
+     */
+    function s_riskSlipTokenAddress() external view returns(address);
+
+    /**
+     * @dev Gets the start date
+     */
+    function s_startDate() external view returns(uint256);
+
+    /**
+     * @dev Gets the total repaid safe slips to date
+     */
+    function s_repaidSafeSlips() external view returns(uint256);
+
+    /**
+     * @dev Gets the tranche granularity constant
+     */
+    function s_trancheGranularity() external view returns(uint256);
+
+    /**
+     * @dev Gets the penalty granularity constant
+     */
+    function s_penaltyGranularity() external view returns(uint256);
+
+    /**
+     * @dev Gets the price granularity constant
+     */
+    function s_priceGranularity() external view returns(uint256);
+
+    /**
+     * @dev Gets the fee basis points
+     */
+    function feeBps() external view returns(uint256);
+
+    /**
+     * @dev Gets the basis points denominator constant. AKA a fee granularity constant
+     */
+    function BPS() external view returns(uint256);
+
+    /**
+     * @dev Gets the max fee basis points constant. 
+     */
+    function maxFeeBPS() external view returns(uint256);
 }
