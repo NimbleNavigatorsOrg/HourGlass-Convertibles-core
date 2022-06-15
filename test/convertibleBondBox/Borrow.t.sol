@@ -135,21 +135,19 @@ contract Borrow is CBBSetup {
         assertEq(CBBRiskTrancheBalanceBeforeBorrow + zTrancheAmount, CBBRiskTrancheBalanceAfterBorrow);
     }
 
-    // function testBorrowMintsSafeSlipsToBorrower(uint256 safeTrancheAmount) public {
-                // address s_borrower = address(3);
-        // address s_lender = address(4);
-    //     safeTrancheAmount = initializeCBBAndBoundSafeTrancheAmount(safeTrancheAmount);
+    function testBorrowMintsSafeSlipsToBorrower(uint256 safeTrancheAmount) public {
+        address s_borrower = address(3);
+        address s_lender = address(4);
+        safeTrancheAmount = initializeCBBAndBoundSafeTrancheAmount(safeTrancheAmount);
 
-    //     uint256 mintAmount = (safeTrancheAmount * s_deployedConvertibleBondBox.s_priceGranularity()) / s_deployedConvertibleBondBox.currentPrice();
+        uint256 LenderSafeSlipBalanceBeforeBorrow = ICBBSlip(s_deployedConvertibleBondBox.s_safeSlipTokenAddress()).balanceOf(address(s_lender));
 
-    //     uint256 BorrowerSafeSlipBalanceBeforeBorrow = ICBBSlip(s_deployedConvertibleBondBox.s_safeSlipTokenAddress()).balanceOf(address(s_lender));
+        s_deployedConvertibleBondBox.borrow(s_borrower, s_lender, safeTrancheAmount);
 
-    //     s_deployedConvertibleBondBox.borrow(s_borrower, s_lender, safeTrancheAmount);
+        uint256 LenderSafeSlipBalanceAfterBorrow = ICBBSlip(s_deployedConvertibleBondBox.s_safeSlipTokenAddress()).balanceOf(address(s_lender));
 
-    //     uint256 BorrowerSafeSlipBalanceAfterBorrow = ICBBSlip(s_deployedConvertibleBondBox.s_safeSlipTokenAddress()).balanceOf(address(s_lender));
-
-    //     assertEq(BorrowerSafeSlipBalanceBeforeBorrow + mintAmount, BorrowerSafeSlipBalanceAfterBorrow);
-    // }
+        assertEq(LenderSafeSlipBalanceBeforeBorrow + safeTrancheAmount, LenderSafeSlipBalanceAfterBorrow);
+    }
 
     // function testBorrowMintsRiskSlipsToBorrower(uint256 safeTrancheAmount) public {
         //         address s_borrower = address(3);
