@@ -45,7 +45,6 @@ contract Lend is CBBSetup {
                 s_priceGranularity
         );
 
-        vm.prank(address(this));
         s_deployedConvertibleBondBox.initialize(
             s_borrower,
             s_lender,
