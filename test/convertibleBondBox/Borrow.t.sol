@@ -149,22 +149,24 @@ contract Borrow is CBBSetup {
         assertEq(LenderSafeSlipBalanceBeforeBorrow + safeTrancheAmount, LenderSafeSlipBalanceAfterBorrow);
     }
 
-    // function testBorrowMintsRiskSlipsToBorrower(uint256 safeTrancheAmount) public {
-        //         address s_borrower = address(3);
-        // address s_lender = address(4);
-    //     safeTrancheAmount = initializeCBBAndBoundSafeTrancheAmount(safeTrancheAmount);
+    function testBorrowMintsRiskSlipsToBorrower(uint256 safeTrancheAmount) public {
+        address s_borrower = address(3);
+        address s_lender = address(4);
+        safeTrancheAmount = initializeCBBAndBoundSafeTrancheAmount(safeTrancheAmount);
 
-    //     uint256 mintAmount = (safeTrancheAmount * s_deployedConvertibleBondBox.s_priceGranularity()) / s_deployedConvertibleBondBox.currentPrice();
-    //     uint256 zTrancheAmount = (mintAmount * s_deployedConvertibleBondBox.riskRatio()) / s_deployedConvertibleBondBox.safeRatio();
+        uint256 mintAmount = (safeTrancheAmount * s_deployedConvertibleBondBox.currentPrice()) /
+            s_deployedConvertibleBondBox.s_priceGranularity();
+        uint256 zTrancheAmount = (safeTrancheAmount * s_deployedConvertibleBondBox.riskRatio()) /
+            s_deployedConvertibleBondBox.safeRatio();
 
-    //     uint256 borrowerSafeSlipBalanceBeforeBorrow = ICBBSlip(s_deployedConvertibleBondBox.s_riskSlipTokenAddress()).balanceOf(address(s_borrower));
+        uint256 borrowerSafeSlipBalanceBeforeBorrow = ICBBSlip(s_deployedConvertibleBondBox.s_riskSlipTokenAddress()).balanceOf(address(s_borrower));
 
-    //     s_deployedConvertibleBondBox.borrow(s_borrower, s_lender, safeTrancheAmount);
+        s_deployedConvertibleBondBox.borrow(s_borrower, s_lender, safeTrancheAmount);
 
-    //     uint256 borrowerSafeSlipBalanceAfterBorrow = ICBBSlip(s_deployedConvertibleBondBox.s_riskSlipTokenAddress()).balanceOf(address(s_borrower));
+        uint256 borrowerSafeSlipBalanceAfterBorrow = ICBBSlip(s_deployedConvertibleBondBox.s_riskSlipTokenAddress()).balanceOf(address(s_borrower));
 
-    //     assertEq(borrowerSafeSlipBalanceBeforeBorrow + zTrancheAmount, borrowerSafeSlipBalanceAfterBorrow);
-    // }
+        assertEq(borrowerSafeSlipBalanceBeforeBorrow + zTrancheAmount, borrowerSafeSlipBalanceAfterBorrow);
+    }
 
     // function testBorrowTransfersStablesToBorrower(uint256 safeTrancheAmount) public {
         //         address s_borrower = address(3);
