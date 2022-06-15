@@ -113,25 +113,27 @@ contract Borrow is CBBSetup {
         assertEq(CBBSafeTrancheBalanceBeforeBorrow + safeTrancheAmount, CBBSafeTrancheBalanceAfterBorrow);
     }
 
-    // function testBorrowTransfersRiskTranchesToCBB(uint256 safeTrancheAmount) public {
-        //         address s_borrower = address(3);
-        // address s_lender = address(4);
-    //     safeTrancheAmount = initializeCBBAndBoundSafeTrancheAmount(safeTrancheAmount);
+    function testBorrowTransfersRiskTranchesToCBB(uint256 safeTrancheAmount) public {
+        address s_borrower = address(3);
+        address s_lender = address(4);
+        safeTrancheAmount = initializeCBBAndBoundSafeTrancheAmount(safeTrancheAmount);
 
-    //     uint256 mintAmount = (safeTrancheAmount * s_deployedConvertibleBondBox.s_priceGranularity()) / s_deployedConvertibleBondBox.currentPrice();
-    //     uint256 zTrancheAmount = (mintAmount * s_deployedConvertibleBondBox.riskRatio()) / s_deployedConvertibleBondBox.safeRatio();
+        uint256 mintAmount = (safeTrancheAmount * s_deployedConvertibleBondBox.currentPrice()) /
+            s_deployedConvertibleBondBox.s_priceGranularity();
+        uint256 zTrancheAmount = (safeTrancheAmount * s_deployedConvertibleBondBox.riskRatio()) /
+            s_deployedConvertibleBondBox.safeRatio();
 
-    //     uint256 matcherContractRiskTrancheBalanceBeforeBorrow = s_riskTranche.balanceOf(address(this));
-    //     uint256 CBBRiskTrancheBalanceBeforeBorrow = s_riskTranche.balanceOf(address(s_deployedConvertibleBondBox));
+        uint256 matcherContractRiskTrancheBalanceBeforeBorrow = s_riskTranche.balanceOf(address(this));
+        uint256 CBBRiskTrancheBalanceBeforeBorrow = s_riskTranche.balanceOf(address(s_deployedConvertibleBondBox));
 
-    //     s_deployedConvertibleBondBox.lend(s_borrower, s_lender, safeTrancheAmount);
+        s_deployedConvertibleBondBox.borrow(s_borrower, s_lender, safeTrancheAmount);
 
-    //     uint256 matcherContractRiskTrancheBalanceAfterBorrow = s_riskTranche.balanceOf(address(this));
-    //     uint256 CBBRiskTrancheBalanceAfterBorrow = s_riskTranche.balanceOf(address(s_deployedConvertibleBondBox));
+        uint256 matcherContractRiskTrancheBalanceAfterBorrow = s_riskTranche.balanceOf(address(this));
+        uint256 CBBRiskTrancheBalanceAfterBorrow = s_riskTranche.balanceOf(address(s_deployedConvertibleBondBox));
 
-    //     assertEq(matcherContractRiskTrancheBalanceBeforeBorrow - zTrancheAmount, matcherContractRiskTrancheBalanceAfterBorrow);
-    //     assertEq(CBBRiskTrancheBalanceBeforeBorrow + zTrancheAmount, CBBRiskTrancheBalanceAfterBorrow);
-    // }
+        assertEq(matcherContractRiskTrancheBalanceBeforeBorrow - zTrancheAmount, matcherContractRiskTrancheBalanceAfterBorrow);
+        assertEq(CBBRiskTrancheBalanceBeforeBorrow + zTrancheAmount, CBBRiskTrancheBalanceAfterBorrow);
+    }
 
     // function testBorrowMintsSafeSlipsToBorrower(uint256 safeTrancheAmount) public {
                 // address s_borrower = address(3);
@@ -142,7 +144,7 @@ contract Borrow is CBBSetup {
 
     //     uint256 BorrowerSafeSlipBalanceBeforeBorrow = ICBBSlip(s_deployedConvertibleBondBox.s_safeSlipTokenAddress()).balanceOf(address(s_lender));
 
-    //     s_deployedConvertibleBondBox.lend(s_borrower, s_lender, safeTrancheAmount);
+    //     s_deployedConvertibleBondBox.borrow(s_borrower, s_lender, safeTrancheAmount);
 
     //     uint256 BorrowerSafeSlipBalanceAfterBorrow = ICBBSlip(s_deployedConvertibleBondBox.s_safeSlipTokenAddress()).balanceOf(address(s_lender));
 
@@ -159,7 +161,7 @@ contract Borrow is CBBSetup {
 
     //     uint256 borrowerSafeSlipBalanceBeforeBorrow = ICBBSlip(s_deployedConvertibleBondBox.s_riskSlipTokenAddress()).balanceOf(address(s_borrower));
 
-    //     s_deployedConvertibleBondBox.lend(s_borrower, s_lender, safeTrancheAmount);
+    //     s_deployedConvertibleBondBox.borrow(s_borrower, s_lender, safeTrancheAmount);
 
     //     uint256 borrowerSafeSlipBalanceAfterBorrow = ICBBSlip(s_deployedConvertibleBondBox.s_riskSlipTokenAddress()).balanceOf(address(s_borrower));
 
@@ -174,7 +176,7 @@ contract Borrow is CBBSetup {
     //     uint256 borrowerStableBalanceBeforeBorrow = IERC20(s_deployedConvertibleBondBox.stableToken()).balanceOf(address(s_borrower));
     //     uint256 CBBStableBalanceBeforeBorrow = IERC20(s_deployedConvertibleBondBox.stableToken()).balanceOf(address(this));
 
-    //     s_deployedConvertibleBondBox.lend(s_borrower, s_lender, safeTrancheAmount);
+    //     s_deployedConvertibleBondBox.borrow(s_borrower, s_lender, safeTrancheAmount);
 
     //     uint256 borrowerStableBalanceAfterBorrow = IERC20(s_deployedConvertibleBondBox.stableToken()).balanceOf(address(s_borrower));
     //     uint256 CBBStableBalanceAfterBorrow = IERC20(s_deployedConvertibleBondBox.stableToken()).balanceOf(address(this));
