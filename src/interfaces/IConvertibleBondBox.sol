@@ -4,12 +4,13 @@ pragma solidity ^0.8.7;
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@uniswap/lib/contracts/libraries/TransferHelper.sol";
 import "clones-with-immutable-args/Clone.sol";
+import "../../utils/ICBBImmutableArgs.sol";
 
 /**
  * @dev Convertible Bond Box for a ButtonTranche bond
  */
 
-interface IConvertibleBondBox {
+interface IConvertibleBondBox is ICBBImmutableArgs {
     event Lend(address, address, address, uint256, uint256);
     event Borrow(address, address, address, uint256, uint256);
     event RedeemStable(address, uint256, uint256);
