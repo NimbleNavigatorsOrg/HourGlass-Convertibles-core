@@ -15,7 +15,6 @@ import "../../test/mocks/MockERC20.sol";
 import "./CBBSetup.sol";
 
 contract Frankenstein is CBBSetup {
-
     function testEndToEnd(
         uint256 collateralAmount,
         uint256 stableAmount,
@@ -57,7 +56,6 @@ contract Frankenstein is CBBSetup {
         vm.stopPrank();
 
         //Get approvals for all addresses
-        //Is this realistic for max approvals?
         for (uint160 i = 1; i < 11; i++) {
             vm.startPrank(address(i));
             s_safeTranche.approve(

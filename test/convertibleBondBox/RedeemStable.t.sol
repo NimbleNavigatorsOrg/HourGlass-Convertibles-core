@@ -15,8 +15,6 @@ import "../../test/mocks/MockERC20.sol";
 import "./CBBSetup.sol";
 
 contract ConvertibleBondBoxTest is CBBSetup {
-    // testFail for redeemStable before any repay function
-
     // redeemStable()
 
     function testRedeemStable(uint256 safeSlipAmount) public {

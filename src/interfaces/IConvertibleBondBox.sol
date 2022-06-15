@@ -27,7 +27,6 @@ interface IConvertibleBondBox is ICBBImmutableArgs {
     error ConvertibleBondBoxNotStarted(uint256 given, uint256 minStartDate);
     error BondNotMatureYet(uint256 maturityDate, uint256 currentTime);
     error OnlyLendOrBorrow(uint256 _stableAmount, uint256 _collateralAmount);
-    error PayoutExceedsBalance(uint256 safeTranchePayout, uint256 balance);
     error MinimumInput(uint256 input, uint256 reqInput);
     error FeeTooLarge(uint256 input, uint256 maximum);
 
@@ -124,50 +123,50 @@ interface IConvertibleBondBox is ICBBImmutableArgs {
     /**
      * @dev Gets the safe slip token Address
      */
-    function s_safeSlipTokenAddress() external view returns(address);
+    function s_safeSlipTokenAddress() external view returns (address);
 
     /**
      * @dev Gets the risk slip token Address
      */
-    function s_riskSlipTokenAddress() external view returns(address);
+    function s_riskSlipTokenAddress() external view returns (address);
 
     /**
      * @dev Gets the start date
      */
-    function s_startDate() external view returns(uint256);
+    function s_startDate() external view returns (uint256);
 
     /**
      * @dev Gets the total repaid safe slips to date
      */
-    function s_repaidSafeSlips() external view returns(uint256);
+    function s_repaidSafeSlips() external view returns (uint256);
 
     /**
      * @dev Gets the tranche granularity constant
      */
-    function s_trancheGranularity() external view returns(uint256);
+    function s_trancheGranularity() external view returns (uint256);
 
     /**
      * @dev Gets the penalty granularity constant
      */
-    function s_penaltyGranularity() external view returns(uint256);
+    function s_penaltyGranularity() external view returns (uint256);
 
     /**
      * @dev Gets the price granularity constant
      */
-    function s_priceGranularity() external view returns(uint256);
+    function s_priceGranularity() external view returns (uint256);
 
     /**
      * @dev Gets the fee basis points
      */
-    function feeBps() external view returns(uint256);
+    function feeBps() external view returns (uint256);
 
     /**
      * @dev Gets the basis points denominator constant. AKA a fee granularity constant
      */
-    function BPS() external view returns(uint256);
+    function BPS() external view returns (uint256);
 
     /**
-     * @dev Gets the max fee basis points constant. 
+     * @dev Gets the max fee basis points constant.
      */
-    function maxFeeBPS() external view returns(uint256);
+    function maxFeeBPS() external view returns (uint256);
 }

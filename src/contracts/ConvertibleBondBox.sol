@@ -266,13 +266,6 @@ contract ConvertibleBondBox is
             _stableAmount
         );
 
-        if (safeTranche().balanceOf(address(this)) < safeTranchePayout) {
-            revert PayoutExceedsBalance({
-                safeTranchePayout: safeTranchePayout,
-                balance: safeTranche().balanceOf(address(this))
-            });
-        }
-
         //transfer A-tranches from ConvertibleBondBox to msg.sender
         TransferHelper.safeTransfer(
             address(safeTranche()),
