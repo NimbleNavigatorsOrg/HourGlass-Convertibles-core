@@ -28,18 +28,18 @@ contract ConvertibleBondBox is
     CBBImmutableArgs,
     IConvertibleBondBox
 {
-    address public s_safeSlipTokenAddress;
-    address public s_riskSlipTokenAddress;
-    uint256 public s_startDate = 0;
-    uint256 public s_repaidSafeSlips = 0;
-    uint256 constant s_trancheGranularity = 1000;
-    uint256 constant s_penaltyGranularity = 1000;
-    uint256 constant s_priceGranularity = 1e9;
-    uint256 public feeBps = 0;
+    address public override s_safeSlipTokenAddress;
+    address public override s_riskSlipTokenAddress;
+    uint256 public override s_startDate = 0;
+    uint256 public override s_repaidSafeSlips = 0;
+    uint256 public constant override s_trancheGranularity = 1000;
+    uint256 public constant override s_penaltyGranularity = 1000;
+    uint256 public constant override s_priceGranularity = 1e9;
+    uint256 public override feeBps = 0;
 
     // Denominator for basis points. Used to calculate fees
-    uint256 private constant BPS = 10_000;
-    uint256 private constant maxFeeBPS = 50;
+    uint256 public constant override BPS = 10_000;
+    uint256 public constant override maxFeeBPS = 50;
 
     function initialize(
         address _borrower,
