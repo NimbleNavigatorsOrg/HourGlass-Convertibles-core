@@ -96,83 +96,91 @@ contract Borrow is CBBSetup {
         s_deployedConvertibleBondBox.borrow(s_borrower, s_lender, safeTrancheAmount);
     }
 
-    // function testLendTransfersSafeTranchesToCBB(uint256 safeTrancheAmount) public {
-    //     safeTrancheAmount = initializeCBBAndBoundStableLendAmount(safeTrancheAmount);
+    function testBorrowTransfersSafeTranchesToCBB(uint256 safeTrancheAmount) public {
+        address s_borrower = address(3);
+        address s_lender = address(4);
+        safeTrancheAmount = initializeCBBAndBoundSafeTrancheAmount(safeTrancheAmount);
 
-    //     uint256 mintAmount = (safeTrancheAmount * s_deployedConvertibleBondBox.s_priceGranularity()) / s_deployedConvertibleBondBox.currentPrice();
+        uint256 matcherContractSafeTrancheBalanceBeforeBorrow = s_safeTranche.balanceOf(address(this));
+        uint256 CBBSafeTrancheBalanceBeforeBorrow = s_safeTranche.balanceOf(address(s_deployedConvertibleBondBox));
 
-    //     uint256 matcherContractSafeTrancheBalanceBeforeLend = s_safeTranche.balanceOf(address(this));
-    //     uint256 CBBSafeTrancheBalanceBeforeLend = s_safeTranche.balanceOf(address(s_deployedConvertibleBondBox));
+        s_deployedConvertibleBondBox.borrow(s_borrower, s_lender, safeTrancheAmount);
 
-    //     s_deployedConvertibleBondBox.lend(s_borrower, s_lender, safeTrancheAmount);
+        uint256 matcherContractSafeTrancheBalanceAfterBorrow = s_safeTranche.balanceOf(address(this));
+        uint256 CBBSafeTrancheBalanceAfterBorrow = s_safeTranche.balanceOf(address(s_deployedConvertibleBondBox));
 
-    //     uint256 matcherContractSafeTrancheBalanceAfterLend = s_safeTranche.balanceOf(address(this));
-    //     uint256 CBBSafeTrancheBalanceAfterLend = s_safeTranche.balanceOf(address(s_deployedConvertibleBondBox));
+        assertEq(matcherContractSafeTrancheBalanceBeforeBorrow - safeTrancheAmount, matcherContractSafeTrancheBalanceAfterBorrow);
+        assertEq(CBBSafeTrancheBalanceBeforeBorrow + safeTrancheAmount, CBBSafeTrancheBalanceAfterBorrow);
+    }
 
-    //     assertEq(matcherContractSafeTrancheBalanceBeforeLend - mintAmount, matcherContractSafeTrancheBalanceAfterLend);
-    //     assertEq(CBBSafeTrancheBalanceBeforeLend + mintAmount, CBBSafeTrancheBalanceAfterLend);
-    // }
-
-    // function testLendTransfersRiskTranchesToCBB(uint256 safeTrancheAmount) public {
-    //     safeTrancheAmount = initializeCBBAndBoundStableLendAmount(safeTrancheAmount);
-
-    //     uint256 mintAmount = (safeTrancheAmount * s_deployedConvertibleBondBox.s_priceGranularity()) / s_deployedConvertibleBondBox.currentPrice();
-    //     uint256 zTrancheAmount = (mintAmount * s_deployedConvertibleBondBox.riskRatio()) / s_deployedConvertibleBondBox.safeRatio();
-
-    //     uint256 matcherContractRiskTrancheBalanceBeforeLend = s_riskTranche.balanceOf(address(this));
-    //     uint256 CBBRiskTrancheBalanceBeforeLend = s_riskTranche.balanceOf(address(s_deployedConvertibleBondBox));
-
-    //     s_deployedConvertibleBondBox.lend(s_borrower, s_lender, safeTrancheAmount);
-
-    //     uint256 matcherContractRiskTrancheBalanceAfterLend = s_riskTranche.balanceOf(address(this));
-    //     uint256 CBBRiskTrancheBalanceAfterLend = s_riskTranche.balanceOf(address(s_deployedConvertibleBondBox));
-
-    //     assertEq(matcherContractRiskTrancheBalanceBeforeLend - zTrancheAmount, matcherContractRiskTrancheBalanceAfterLend);
-    //     assertEq(CBBRiskTrancheBalanceBeforeLend + zTrancheAmount, CBBRiskTrancheBalanceAfterLend);
-    // }
-
-    // function testLendMintsSafeSlipsToLender(uint256 safeTrancheAmount) public {
-    //     safeTrancheAmount = initializeCBBAndBoundStableLendAmount(safeTrancheAmount);
-
-    //     uint256 mintAmount = (safeTrancheAmount * s_deployedConvertibleBondBox.s_priceGranularity()) / s_deployedConvertibleBondBox.currentPrice();
-
-    //     uint256 LenderSafeSlipBalanceBeforeLend = ICBBSlip(s_deployedConvertibleBondBox.s_safeSlipTokenAddress()).balanceOf(address(s_lender));
-
-    //     s_deployedConvertibleBondBox.lend(s_borrower, s_lender, safeTrancheAmount);
-
-    //     uint256 LenderSafeSlipBalanceAfterLend = ICBBSlip(s_deployedConvertibleBondBox.s_safeSlipTokenAddress()).balanceOf(address(s_lender));
-
-    //     assertEq(LenderSafeSlipBalanceBeforeLend + mintAmount, LenderSafeSlipBalanceAfterLend);
-    // }
-
-    // function testLendMintsRiskSlipsToBorrower(uint256 safeTrancheAmount) public {
-    //     safeTrancheAmount = initializeCBBAndBoundStableLendAmount(safeTrancheAmount);
+    // function testBorrowTransfersRiskTranchesToCBB(uint256 safeTrancheAmount) public {
+        //         address s_borrower = address(3);
+        // address s_lender = address(4);
+    //     safeTrancheAmount = initializeCBBAndBoundSafeTrancheAmount(safeTrancheAmount);
 
     //     uint256 mintAmount = (safeTrancheAmount * s_deployedConvertibleBondBox.s_priceGranularity()) / s_deployedConvertibleBondBox.currentPrice();
     //     uint256 zTrancheAmount = (mintAmount * s_deployedConvertibleBondBox.riskRatio()) / s_deployedConvertibleBondBox.safeRatio();
 
-    //     uint256 borrowerSafeSlipBalanceBeforeLend = ICBBSlip(s_deployedConvertibleBondBox.s_riskSlipTokenAddress()).balanceOf(address(s_borrower));
+    //     uint256 matcherContractRiskTrancheBalanceBeforeBorrow = s_riskTranche.balanceOf(address(this));
+    //     uint256 CBBRiskTrancheBalanceBeforeBorrow = s_riskTranche.balanceOf(address(s_deployedConvertibleBondBox));
 
     //     s_deployedConvertibleBondBox.lend(s_borrower, s_lender, safeTrancheAmount);
 
-    //     uint256 borrowerSafeSlipBalanceAfterLend = ICBBSlip(s_deployedConvertibleBondBox.s_riskSlipTokenAddress()).balanceOf(address(s_borrower));
+    //     uint256 matcherContractRiskTrancheBalanceAfterBorrow = s_riskTranche.balanceOf(address(this));
+    //     uint256 CBBRiskTrancheBalanceAfterBorrow = s_riskTranche.balanceOf(address(s_deployedConvertibleBondBox));
 
-    //     assertEq(borrowerSafeSlipBalanceBeforeLend + zTrancheAmount, borrowerSafeSlipBalanceAfterLend);
+    //     assertEq(matcherContractRiskTrancheBalanceBeforeBorrow - zTrancheAmount, matcherContractRiskTrancheBalanceAfterBorrow);
+    //     assertEq(CBBRiskTrancheBalanceBeforeBorrow + zTrancheAmount, CBBRiskTrancheBalanceAfterBorrow);
     // }
 
-    // function testLendTransfersStablesToBorrower(uint256 safeTrancheAmount) public {
-    //     safeTrancheAmount = initializeCBBAndBoundStableLendAmount(safeTrancheAmount);
+    // function testBorrowMintsSafeSlipsToBorrower(uint256 safeTrancheAmount) public {
+                // address s_borrower = address(3);
+        // address s_lender = address(4);
+    //     safeTrancheAmount = initializeCBBAndBoundSafeTrancheAmount(safeTrancheAmount);
 
-    //     uint256 borrowerStableBalanceBeforeLend = IERC20(s_deployedConvertibleBondBox.stableToken()).balanceOf(address(s_borrower));
-    //     uint256 CBBStableBalanceBeforeLend = IERC20(s_deployedConvertibleBondBox.stableToken()).balanceOf(address(this));
+    //     uint256 mintAmount = (safeTrancheAmount * s_deployedConvertibleBondBox.s_priceGranularity()) / s_deployedConvertibleBondBox.currentPrice();
+
+    //     uint256 BorrowerSafeSlipBalanceBeforeBorrow = ICBBSlip(s_deployedConvertibleBondBox.s_safeSlipTokenAddress()).balanceOf(address(s_lender));
 
     //     s_deployedConvertibleBondBox.lend(s_borrower, s_lender, safeTrancheAmount);
 
-    //     uint256 borrowerStableBalanceAfterLend = IERC20(s_deployedConvertibleBondBox.stableToken()).balanceOf(address(s_borrower));
-    //     uint256 CBBStableBalanceAfterLend = IERC20(s_deployedConvertibleBondBox.stableToken()).balanceOf(address(this));
+    //     uint256 BorrowerSafeSlipBalanceAfterBorrow = ICBBSlip(s_deployedConvertibleBondBox.s_safeSlipTokenAddress()).balanceOf(address(s_lender));
 
-    //     assertEq(borrowerStableBalanceBeforeLend + safeTrancheAmount, borrowerStableBalanceAfterLend);
-    //     assertEq(CBBStableBalanceBeforeLend - safeTrancheAmount, CBBStableBalanceAfterLend);
+    //     assertEq(BorrowerSafeSlipBalanceBeforeBorrow + mintAmount, BorrowerSafeSlipBalanceAfterBorrow);
+    // }
+
+    // function testBorrowMintsRiskSlipsToBorrower(uint256 safeTrancheAmount) public {
+        //         address s_borrower = address(3);
+        // address s_lender = address(4);
+    //     safeTrancheAmount = initializeCBBAndBoundSafeTrancheAmount(safeTrancheAmount);
+
+    //     uint256 mintAmount = (safeTrancheAmount * s_deployedConvertibleBondBox.s_priceGranularity()) / s_deployedConvertibleBondBox.currentPrice();
+    //     uint256 zTrancheAmount = (mintAmount * s_deployedConvertibleBondBox.riskRatio()) / s_deployedConvertibleBondBox.safeRatio();
+
+    //     uint256 borrowerSafeSlipBalanceBeforeBorrow = ICBBSlip(s_deployedConvertibleBondBox.s_riskSlipTokenAddress()).balanceOf(address(s_borrower));
+
+    //     s_deployedConvertibleBondBox.lend(s_borrower, s_lender, safeTrancheAmount);
+
+    //     uint256 borrowerSafeSlipBalanceAfterBorrow = ICBBSlip(s_deployedConvertibleBondBox.s_riskSlipTokenAddress()).balanceOf(address(s_borrower));
+
+    //     assertEq(borrowerSafeSlipBalanceBeforeBorrow + zTrancheAmount, borrowerSafeSlipBalanceAfterBorrow);
+    // }
+
+    // function testBorrowTransfersStablesToBorrower(uint256 safeTrancheAmount) public {
+        //         address s_borrower = address(3);
+        // address s_lender = address(4);
+    //     safeTrancheAmount = initializeCBBAndBoundSafeTrancheAmount(safeTrancheAmount);
+
+    //     uint256 borrowerStableBalanceBeforeBorrow = IERC20(s_deployedConvertibleBondBox.stableToken()).balanceOf(address(s_borrower));
+    //     uint256 CBBStableBalanceBeforeBorrow = IERC20(s_deployedConvertibleBondBox.stableToken()).balanceOf(address(this));
+
+    //     s_deployedConvertibleBondBox.lend(s_borrower, s_lender, safeTrancheAmount);
+
+    //     uint256 borrowerStableBalanceAfterBorrow = IERC20(s_deployedConvertibleBondBox.stableToken()).balanceOf(address(s_borrower));
+    //     uint256 CBBStableBalanceAfterBorrow = IERC20(s_deployedConvertibleBondBox.stableToken()).balanceOf(address(this));
+
+    //     assertEq(borrowerStableBalanceBeforeBorrow + safeTrancheAmount, borrowerStableBalanceAfterBorrow);
+    //     assertEq(CBBStableBalanceBeforeBorrow - safeTrancheAmount, CBBStableBalanceAfterBorrow);
     // }
     
 }
