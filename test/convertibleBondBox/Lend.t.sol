@@ -18,6 +18,7 @@ contract Lend is CBBSetup {
 
     // lend()
     // Need to write a test that calls lend() without calling initialize()
+    // call initialize(0) and then call lend()
 
     function testCannotLendConvertibleBondBoxNotStarted() public {
         bytes memory customError = abi.encodeWithSignature(
