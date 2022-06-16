@@ -170,4 +170,9 @@ interface IConvertibleBondBox is ICBBImmutableArgs {
      * @dev Gets the max fee basis points constant. 
      */
     function maxFeeBPS() external view returns(uint256);
+
+    /**
+     * @dev Transfers ownership. 
+     */
+    function cbbTransferOwnership(address newOwner) external;
 }

@@ -34,12 +34,11 @@ contract RedeemSafeTranche is CBBSetup {
         vm.warp(s_maturityDate + time);
 
         vm.prank(address(this));
-        s_deployedConvertibleBondBox.initialize(
+        s_deployedConvertibleBondBox.reinitialize(
             address(1),
             address(2),
             amount, 
-            0,
-            address(100)
+            0
         );
 
         uint256 safeSlipBalanceBeforeRedeem = CBBSlip(
@@ -141,12 +140,11 @@ contract RedeemSafeTranche is CBBSetup {
         time = bound(time, 1, s_maturityDate);
         vm.warp(s_maturityDate - time);
 
-        s_deployedConvertibleBondBox.initialize(
+        s_deployedConvertibleBondBox.reinitialize(
             address(1),
             address(2),
             s_depositLimit,
-            0,
-            address(100)
+            0
         );
 
         bytes memory customError = abi.encodeWithSignature(
@@ -162,12 +160,11 @@ contract RedeemSafeTranche is CBBSetup {
         safeSlipAmount = bound(safeSlipAmount, 0, s_deployedConvertibleBondBox.safeRatio() - 1);
 
         vm.warp(s_maturityDate);
-        s_deployedConvertibleBondBox.initialize(
+        s_deployedConvertibleBondBox.reinitialize(
             address(1),
             address(2),
             s_depositLimit,
-            0,
-            address(100)
+            0
         );
 
         bytes memory customError = abi.encodeWithSignature(
@@ -192,12 +189,11 @@ contract RedeemSafeTranche is CBBSetup {
         );
 
         vm.warp(s_maturityDate);
-        s_deployedConvertibleBondBox.initialize(
+        s_deployedConvertibleBondBox.reinitialize(
             borrower,
             lender,
             depositAmount,
-            0,
-            owner
+            0
         );
 
         vm.prank(s_deployedConvertibleBondBox.owner());
@@ -234,12 +230,11 @@ contract RedeemSafeTranche is CBBSetup {
         );
 
         vm.warp(s_maturityDate);
-        s_deployedConvertibleBondBox.initialize(
+        s_deployedConvertibleBondBox.reinitialize(
             borrower,
             lender,
             depositAmount,
-            0,
-            owner
+            0
         );
 
         vm.prank(s_deployedConvertibleBondBox.owner());
@@ -274,12 +269,11 @@ contract RedeemSafeTranche is CBBSetup {
         );
 
         vm.warp(s_maturityDate);
-        s_deployedConvertibleBondBox.initialize(
+        s_deployedConvertibleBondBox.reinitialize(
             borrower,
             lender,
             depositAmount,
-            0,
-            owner
+            0
         );
 
         vm.prank(s_deployedConvertibleBondBox.owner());
@@ -320,12 +314,11 @@ contract RedeemSafeTranche is CBBSetup {
         );
 
         vm.warp(s_maturityDate);
-        s_deployedConvertibleBondBox.initialize(
+        s_deployedConvertibleBondBox.reinitialize(
             borrower,
             lender,
             depositAmount,
-            0,
-            owner
+            0
         );
 
         vm.prank(s_deployedConvertibleBondBox.owner());
@@ -378,12 +371,11 @@ contract RedeemSafeTranche is CBBSetup {
         );
 
         vm.warp(s_maturityDate);
-        s_deployedConvertibleBondBox.initialize(
+        s_deployedConvertibleBondBox.reinitialize(
             borrower,
             lender,
             depositAmount,
-            0,
-            owner
+            0
         );
 
         vm.prank(s_deployedConvertibleBondBox.owner());

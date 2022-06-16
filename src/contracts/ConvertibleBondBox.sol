@@ -41,18 +41,22 @@ contract ConvertibleBondBox is
     uint256 public constant override BPS = 10_000;
     uint256 public constant override maxFeeBPS = 50;
 
-    function initialize(
+    function initialize(address _owner) external initializer {
+        require(
+            _owner != address(0),
+            "ConvertibleBondBox: invalid owner address"
+        );
+        __Ownable_init();
+        transferOwnership(_owner);
+    }
+
+    function reinitialize(
         address _borrower,
         address _lender,
         uint256 _safeTrancheAmount,
-        uint256 _stableAmount,
-        address _admin
-    ) external initializer {
+        uint256 _stableAmount
+    ) external reinitializer(2) onlyOwner() {
         uint256 priceGranularity = s_priceGranularity;
-        require(
-            _admin != address(0),
-            "ConvertibleBondBox: invalid admin address"
-        );
         if (penalty() > s_trancheGranularity)
             revert PenaltyTooHigh({
                 given: penalty(),
@@ -76,8 +80,6 @@ contract ConvertibleBondBox is
                 _stableAmount: _stableAmount,
                 _collateralAmount: _safeTrancheAmount
             });
-        __Ownable_init();
-        transferOwnership(_admin);
 
         ITranche safeTranche = safeTranche();
         ITranche riskTranche = riskTranche();
@@ -447,7 +449,7 @@ contract ConvertibleBondBox is
         emit RedeemStable(_msgSender(), safeSlipAmount, this.currentPrice());
     }
 
-    function setFee(uint256 newFeeBps) external override onlyOwner {
+    function setFee(uint256 newFeeBps) external override onlyOwner() {
         if (bond().isMature())
             revert BondIsMature({given: bond().isMature(), required: false});
         if (newFeeBps > maxFeeBPS)
@@ -495,5 +497,9 @@ contract ConvertibleBondBox is
             _borrower,
             _stableAmount
         );
+    }
+
+    function cbbTransferOwnership(address owner) override external {
+        transferOwnership(owner);
     }
 }

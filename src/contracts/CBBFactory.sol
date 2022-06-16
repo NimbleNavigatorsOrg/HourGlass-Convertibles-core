@@ -28,6 +28,7 @@ contract CBBFactory is ICBBFactory {
      * @param stableToken The address of the stable-token being lent for the safe-Tranche
      * @param trancheIndex The index of the safe-Tranche
      * @param price The initial price
+     * @param owner The initial owner
      */
     function createConvertibleBondBox(
         IButtonWoodBondController bond,
@@ -36,7 +37,8 @@ contract CBBFactory is ICBBFactory {
         address collateralToken,
         address stableToken,
         uint256 price,
-        uint256 trancheIndex
+        uint256 trancheIndex,
+        address owner
     ) public returns (address) {
         
         ConvertibleBondBox clone;
@@ -66,6 +68,7 @@ contract CBBFactory is ICBBFactory {
                     riskRatio
                 ));
             clone = ConvertibleBondBox(implementation.clone(s_data));
+            ConvertibleBondBox(clone).initialize(owner);
         }
 
         emit ConvertibleBondBoxCreated(

@@ -107,7 +107,8 @@ abstract contract CBBSetup is Test {
             address(s_collateralToken),
             address(s_stableToken),
             s_price,
-            s_trancheIndex
+            s_trancheIndex,
+            address(this)
         );
 
         s_collateralToken.approve(

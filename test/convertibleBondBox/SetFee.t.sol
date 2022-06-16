@@ -16,7 +16,7 @@ import "./CBBSetup.sol";
 
 contract SetFee is CBBSetup {
 
-    function testSetFee(uint newFee) public {
+    function testSetFee(uint256 newFee) public {
         console2.log(s_ratios[0], "s_ratios");
         console.log(newFee, "newFee");
         newFee = bound(newFee, 0, s_maxFeeBPS);
@@ -28,12 +28,13 @@ contract SetFee is CBBSetup {
         assertEq(s_deployedConvertibleBondBox.feeBps(), newFee);
     }
 
-        function testFailSetFeeCalledByNonOwner(uint newFee) public {
+    function testFailSetFeeCalledByNonOwner(uint256 newFee) public {
         newFee = bound(newFee, 0, s_BPS);
+        vm.prank(address(1));
         s_deployedConvertibleBondBox.setFee(newFee);
     }
 
-    function testCannotSetFeeBondIsMature(uint newFee) public {
+    function testCannotSetFeeBondIsMature(uint256 newFee) public {
         s_buttonWoodBondController.mature();
         newFee = bound(newFee, 0, s_BPS);
         vm.prank(s_deployedConvertibleBondBox.owner());
@@ -46,7 +47,7 @@ contract SetFee is CBBSetup {
         s_deployedConvertibleBondBox.setFee(newFee);
     }
 
-    function testCannotSetFeeFeeTooLarge(uint newFee) public {
+    function testCannotSetFeeFeeTooLarge(uint256 newFee) public {
         newFee = bound(newFee, s_BPS, type(uint256).max);
         vm.prank(s_deployedConvertibleBondBox.owner());
         bytes memory customError = abi.encodeWithSignature(

@@ -14,7 +14,7 @@ import "forge-std/console2.sol";
 import "../../test/mocks/MockERC20.sol";
 import "./CBBSetup.sol";
 
-contract ConvertibleBondBoxTest is CBBSetup {
+contract RedeemStable is CBBSetup {
     // testFail for redeemStable before any repay function
 
     // redeemStable()
@@ -23,12 +23,11 @@ contract ConvertibleBondBoxTest is CBBSetup {
         // initializing the CBB
         vm.prank(address(this));
         emit Initialized(address(1), address(2), 0, s_depositLimit);
-        s_deployedConvertibleBondBox.initialize(
+        s_deployedConvertibleBondBox.reinitialize(
             address(1),
             address(2),
             s_depositLimit,
-            0,
-            address(100)
+            0
         );
 
         //getting lender + borrower balances after initialization deposit

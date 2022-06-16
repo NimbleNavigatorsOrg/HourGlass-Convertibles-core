@@ -33,12 +33,11 @@ contract Repay is CBBSetup {
         stableAmount = bound(stableAmount, minAmount, amount);
 
         vm.prank(address(this));
-        s_deployedConvertibleBondBox.initialize(
+        s_deployedConvertibleBondBox.reinitialize(
             borrowerAddress,
             address(2),
             amount,
-            0,
-            address(100)
+            0
         );
 
         uint256 userStableBalancedBeforeRepay = s_stableToken.balanceOf(
@@ -132,12 +131,11 @@ contract Repay is CBBSetup {
         fee = bound(fee, 0, s_maxFeeBPS);
 
         vm.prank(address(this));
-        s_deployedConvertibleBondBox.initialize(
+        s_deployedConvertibleBondBox.reinitialize(
             borrowerAddress,
             address(2),
             amount,
-            0,
-            address(100)
+            0
         );
 
         vm.prank(s_deployedConvertibleBondBox.owner());

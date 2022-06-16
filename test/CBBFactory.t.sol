@@ -90,7 +90,8 @@ contract CBBFactoryTest is Test {
             address(s_collateralToken),
             address(s_stableToken),
             s_price,
-            s_trancheIndex
+            s_trancheIndex,
+            address(this)
         );
     }
 
@@ -141,7 +142,8 @@ contract CBBFactoryTest is Test {
             address(s_collateralToken),
             address(s_stableToken),
             s_price,
-            s_trancheIndex
+            s_trancheIndex,
+            address(this)
         );
     }
 }

@@ -46,12 +46,11 @@ contract Lend is CBBSetup {
         );
 
         vm.prank(address(this));
-        s_deployedConvertibleBondBox.initialize(
+        s_deployedConvertibleBondBox.reinitialize(
             s_borrower,
             s_lender,
             0,
-            0,
-            s_owner
+            0
         );
 
         return stableLendAmount;
@@ -76,12 +75,11 @@ contract Lend is CBBSetup {
         );
 
         vm.prank(address(this));
-        s_deployedConvertibleBondBox.initialize(
+        s_deployedConvertibleBondBox.reinitialize(
             s_borrower,
             s_lender,
             0,
-            stableInitialAmount,
-            s_owner
+            stableInitialAmount
         );
 
         bytes memory customError = abi.encodeWithSignature(

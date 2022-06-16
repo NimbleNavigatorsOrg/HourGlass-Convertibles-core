@@ -55,7 +55,7 @@ contract RedeemRiskTranche is CBBSetup {
         address lenderAddress = address(2);
         address adminAddress = address(100);
 
-        s_deployedConvertibleBondBox.initialize(borrowerAddress, lenderAddress, depositAmount, 0, adminAddress);
+        s_deployedConvertibleBondBox.reinitialize(borrowerAddress, lenderAddress, depositAmount, 0);
 
         vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.setFee(fee);
@@ -86,7 +86,7 @@ contract RedeemRiskTranche is CBBSetup {
         address lenderAddress = address(2);
         address adminAddress = address(100);
 
-        s_deployedConvertibleBondBox.initialize(borrowerAddress, lenderAddress, depositAmount, 0, adminAddress);
+        s_deployedConvertibleBondBox.reinitialize(borrowerAddress, lenderAddress, depositAmount, 0);
 
         vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.setFee(fee);
@@ -128,7 +128,7 @@ contract RedeemRiskTranche is CBBSetup {
         address lenderAddress = address(2);
         address adminAddress = address(100);
 
-        s_deployedConvertibleBondBox.initialize(borrowerAddress, lenderAddress, depositAmount, 0, adminAddress);
+        s_deployedConvertibleBondBox.reinitialize(borrowerAddress, lenderAddress, depositAmount, 0);
 
         vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.setFee(fee);
@@ -158,7 +158,7 @@ contract RedeemRiskTranche is CBBSetup {
         address lenderAddress = address(2);
         address adminAddress = address(100);
 
-        s_deployedConvertibleBondBox.initialize(borrowerAddress, lenderAddress, depositAmount, 0, adminAddress);
+        s_deployedConvertibleBondBox.reinitialize(borrowerAddress, lenderAddress, depositAmount, 0);
 
         vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.setFee(fee);

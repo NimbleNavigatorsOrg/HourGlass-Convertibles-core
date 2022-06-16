@@ -17,7 +17,7 @@ import "./CBBSetup.sol";
 contract Initialize is CBBSetup {
 
     // initialize()
-    function testInitializeOwnerTransfer(uint256 collateralAmount)
+    function testFailInitializeNotOwner(uint256 collateralAmount)
         public
     {
         address ownerBefore = s_deployedConvertibleBondBox.owner();
@@ -36,48 +36,12 @@ contract Initialize is CBBSetup {
             address(this)
         );
 
-        vm.prank(address(this));
-        vm.expectEmit(true, true, true, true);
-        emit Initialized(address(1), address(2), 0, collateralAmount);
-        s_deployedConvertibleBondBox.initialize(
+        vm.prank(address(1));
+        s_deployedConvertibleBondBox.reinitialize(
             address(1),
             address(2),
             collateralAmount,
-            stableAmount,
-            address(100)
-        );
-        address ownerAfter = s_deployedConvertibleBondBox.owner();
-
-        assertEq(false, ownerBefore == ownerAfter);
-        assertEq(ownerAfter, address(100));
-    }
-
-    function testFailInitializeOwnerTransfer(uint256 collateralAmount)
-        public
-    {
-        address ownerBefore = s_deployedConvertibleBondBox.owner();
-        collateralAmount = bound(
-            collateralAmount,
-            s_safeRatio,
-            s_safeTranche.balanceOf(address(this))
-        );
-
-        uint256 stableAmount = 0;
-
-        uint256 matcherSafeTrancheBalanceBefore = s_safeTranche.balanceOf(
-            address(this)
-        );
-        uint256 matcherRiskTrancheBalanceBefore = s_riskTranche.balanceOf(
-            address(this)
-        );
-
-        vm.prank(address(this));
-        s_deployedConvertibleBondBox.initialize(
-            address(1),
-            address(2),
-            collateralAmount,
-            stableAmount,
-            address(0)
+            stableAmount
         );
         address ownerAfter = s_deployedConvertibleBondBox.owner();
     }
@@ -103,12 +67,11 @@ contract Initialize is CBBSetup {
         vm.prank(address(this));
         vm.expectEmit(true, true, true, true);
         emit Initialized(address(1), address(2), 0, collateralAmount);
-        s_deployedConvertibleBondBox.initialize(
+        s_deployedConvertibleBondBox.reinitialize(
             address(1),
             address(2),
             collateralAmount,
-            stableAmount,
-            address(100)
+            stableAmount
         );
 
         uint256 matcherSafeTrancheBalanceAfter = s_safeTranche.balanceOf(
@@ -174,12 +137,11 @@ contract Initialize is CBBSetup {
         vm.prank(address(this));
         vm.expectEmit(true, true, true, true);
         emit Initialized(address(1), address(2), stableAmount, 0);
-        s_deployedConvertibleBondBox.initialize(
+        s_deployedConvertibleBondBox.reinitialize(
             address(1),
             address(2),
             collateralAmount,
-            stableAmount,
-            address(100)
+            stableAmount
         );
 
         uint256 matcherSafeTrancheBalanceAfter = s_safeTranche.balanceOf(
@@ -228,7 +190,8 @@ contract Initialize is CBBSetup {
             address(s_collateralToken),
             address(s_stableToken),
             s_price,
-            s_trancheIndex
+            s_trancheIndex,
+            address(this)
         );
 
         s_deployedConvertibleBondBox = ConvertibleBondBox(s_deployedCBBAddress);
@@ -239,12 +202,11 @@ contract Initialize is CBBSetup {
             s_penaltyGranularity
         );
         vm.expectRevert(customError);
-        s_deployedConvertibleBondBox.initialize(
+        s_deployedConvertibleBondBox.reinitialize(
             address(1),
             address(2),
             s_depositLimit,
-            0,
-            address(100)
+            0
         );
     }
 
@@ -257,7 +219,8 @@ contract Initialize is CBBSetup {
             address(s_collateralToken),
             address(s_stableToken),
             1001,
-            s_trancheIndex
+            s_trancheIndex,
+            address(this)
         );
 
         s_deployedConvertibleBondBox = ConvertibleBondBox(s_deployedCBBAddress);
@@ -268,12 +231,11 @@ contract Initialize is CBBSetup {
             false
         );
         vm.expectRevert(customError);
-        s_deployedConvertibleBondBox.initialize(
+        s_deployedConvertibleBondBox.reinitialize(
             address(1),
             address(2),
             s_depositLimit,
-            0,
-            address(100)
+            0
         );
     }
 
@@ -287,7 +249,8 @@ contract Initialize is CBBSetup {
             address(s_collateralToken),
             address(s_stableToken),
             1001,
-            s_buttonWoodBondController.trancheCount() - 1
+            s_buttonWoodBondController.trancheCount() - 1,
+            address(this)
         );
         s_deployedConvertibleBondBox = ConvertibleBondBox(s_deployedCBBAddress);
 
@@ -297,12 +260,11 @@ contract Initialize is CBBSetup {
             s_buttonWoodBondController.trancheCount() - 2
         );
         vm.expectRevert(customError);
-        s_deployedConvertibleBondBox.initialize(
+        s_deployedConvertibleBondBox.reinitialize(
             address(1),
             address(2),
             s_depositLimit,
-            0,
-            address(100)
+            0
         );
     }
 
@@ -317,16 +279,16 @@ contract Initialize is CBBSetup {
             address(s_collateralToken),
             address(s_stableToken),
             1001,
-            trancheIndex
+            trancheIndex,
+            address(this)
         );
         s_deployedConvertibleBondBox = ConvertibleBondBox(s_deployedCBBAddress);
 
-        s_deployedConvertibleBondBox.initialize(
+        s_deployedConvertibleBondBox.reinitialize(
             address(1),
             address(2),
             s_depositLimit,
-            0,
-            address(100)
+            0
         );
     }
 
@@ -339,7 +301,8 @@ contract Initialize is CBBSetup {
             address(s_collateralToken),
             address(s_stableToken),
             price,
-            s_trancheIndex
+            s_trancheIndex,
+            address(this)
         );
 
         s_deployedConvertibleBondBox = ConvertibleBondBox(s_deployedCBBAddress);
@@ -349,12 +312,11 @@ contract Initialize is CBBSetup {
             s_priceGranularity
         );
         vm.expectRevert(customError);
-        s_deployedConvertibleBondBox.initialize(
+        s_deployedConvertibleBondBox.reinitialize(
             address(1),
             address(2),
             s_depositLimit,
-            0,
-            address(100)
+            0
         );
     }
 
@@ -373,7 +335,8 @@ contract Initialize is CBBSetup {
             address(s_collateralToken),
             address(s_stableToken),
             s_price,
-            s_trancheIndex
+            s_trancheIndex,
+            address(this)
         );
 
         s_deployedConvertibleBondBox = ConvertibleBondBox(s_deployedCBBAddress);
@@ -384,12 +347,11 @@ contract Initialize is CBBSetup {
             stableAmount
         );
         vm.expectRevert(customError);
-        s_deployedConvertibleBondBox.initialize(
+        s_deployedConvertibleBondBox.reinitialize(
             address(1),
             address(2),
             stableAmount,
-            collateralAmount,
-            address(100)
+            collateralAmount
         );
     }
 
@@ -419,12 +381,11 @@ contract Initialize is CBBSetup {
             collateralAmount,
             s_price
         );
-        s_deployedConvertibleBondBox.initialize(
+        s_deployedConvertibleBondBox.reinitialize(
             address(1),
             address(2),
             collateralAmount,
-            0,
-            address(100)
+            0
         );
 
         uint256 matcherSafeTrancheBalanceAfter = s_safeTranche.balanceOf(
@@ -486,12 +447,11 @@ contract Initialize is CBBSetup {
 
         vm.expectEmit(true, true, true, true);
         emit Lend(address(this), address(1), address(2), stableAmount, s_price);
-        s_deployedConvertibleBondBox.initialize(
+        s_deployedConvertibleBondBox.reinitialize(
             address(1),
             address(2),
             0,
-            stableAmount,
-            address(100)
+            stableAmount
         );
 
         uint256 matcherSafeTrancheBalanceAfter = s_safeTranche.balanceOf(
