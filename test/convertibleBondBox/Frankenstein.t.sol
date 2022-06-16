@@ -22,7 +22,8 @@ contract Frankenstein is CBBSetup {
         uint256 seed
     ) public {
         collateralAmount = bound(collateralAmount, 0, 1e20);
-        amount = bound(amount, s_trancheGranularity, 1e20);
+        // used to be 1e20, is this change correct?
+        amount = bound(amount, s_trancheGranularity, s_safeTranche.balanceOf(address(this)));
         stableAmount = bound(
             stableAmount,
             (amount * s_price) / s_priceGranularity,
@@ -32,7 +33,6 @@ contract Frankenstein is CBBSetup {
         seed = bound(seed, 6, 1e20);
 
         //matcher address between 1 - 5
-        uint160 initCaller = uint160((seed % 5) + 1);
         uint160 matcher0 = uint160(((seed + 1) % 5) + 1);
         uint160 matcher1 = uint160(((seed + 2) % 5) + 1);
 
@@ -73,8 +73,6 @@ contract Frankenstein is CBBSetup {
             vm.stopPrank();
         }
 
-        //Initialize ConvertibleBondBox via initCaller
-        vm.startPrank(address(s_deployedConvertibleBondBox.owner()));
         vm.expectEmit(true, true, true, true);
         emit Initialized(address(borrower), address(lender), 0, amount);
         s_deployedConvertibleBondBox.reinitialize(
@@ -83,7 +81,6 @@ contract Frankenstein is CBBSetup {
             amount,
             0
         );
-        vm.stopPrank();
 
         //get slip approvals for all addresses
         for (uint160 i = 1; i < 11; i++) {

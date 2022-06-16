@@ -17,7 +17,6 @@ import "./CBBSetup.sol";
 contract Borrow is CBBSetup {
     address s_initial_borrower = address(1);
     address s_initial_lender = address(2);
-    address s_owner = address(100);
 
     //borrow()
 
@@ -48,12 +47,11 @@ contract Borrow is CBBSetup {
             s_deployedConvertibleBondBox.safeRatio() - 1
         );
 
-        s_deployedConvertibleBondBox.initialize(
+        s_deployedConvertibleBondBox.reinitialize(
             s_initial_borrower,
             s_initial_lender,
             0,
-            0,
-            s_owner
+            0
         );
 
         bytes memory customError = abi.encodeWithSignature(
@@ -79,12 +77,11 @@ contract Borrow is CBBSetup {
             s_safeTranche.balanceOf(address(this))
         );
 
-        s_deployedConvertibleBondBox.initialize(
+        s_deployedConvertibleBondBox.reinitialize(
             s_initial_borrower,
             s_initial_lender,
             0,
-            0,
-            s_owner
+            0
         );
 
         return safeTrancheAmount;
