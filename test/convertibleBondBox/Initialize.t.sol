@@ -15,7 +15,6 @@ import "../../test/mocks/MockERC20.sol";
 import "./CBBSetup.sol";
 
 contract Initialize is CBBSetup {
-
     // initialize()
     function testFailInitializeNotOwner(uint256 collateralAmount)
         public
@@ -112,16 +111,13 @@ contract Initialize is CBBSetup {
         assertEq(lenderSafeSlipsAfter, collateralAmount);
     }
 
-    // are these assumes right? possible lend overflow error?
     function testInitializeAndLendEmitsInitialized(uint256 stableAmount)
         public
     {
         stableAmount = bound(
             stableAmount,
-            (s_safeRatio * s_price) /
-                s_priceGranularity,
-            (s_safeTranche.balanceOf(address(this)) *
-                s_price) /
+            (s_safeRatio * s_price) / s_priceGranularity,
+            (s_safeTranche.balanceOf(address(this)) * s_price) /
                 s_priceGranularity
         );
 
@@ -239,9 +235,7 @@ contract Initialize is CBBSetup {
         );
     }
 
-    //TODO reasses test later
     function testCannotInitializeTrancheIndexOutOfBounds() public {
-        // vm.assume(trancheIndex == s_buttonWoodBondController.trancheCount() - 1);
         s_deployedCBBAddress = s_CBBFactory.createConvertibleBondBox(
             s_buttonWoodBondController,
             s_slipFactory,
@@ -267,8 +261,6 @@ contract Initialize is CBBSetup {
             0
         );
     }
-
-    //TODO reasses test later
 
     function testFailInitializeTrancheBW(uint256 trancheIndex) public {
         vm.assume(trancheIndex > s_buttonWoodBondController.trancheCount() - 1);
@@ -429,10 +421,8 @@ contract Initialize is CBBSetup {
     function testInitializeAndLendEmitsLend(uint256 stableAmount) public {
         stableAmount = bound(
             stableAmount,
-            (s_safeRatio * s_price) /
-                s_priceGranularity,
-            (s_safeTranche.balanceOf(address(this)) *
-                s_price) /
+            (s_safeRatio * s_price) / s_priceGranularity,
+            (s_safeTranche.balanceOf(address(this)) * s_price) /
                 s_priceGranularity
         );
 

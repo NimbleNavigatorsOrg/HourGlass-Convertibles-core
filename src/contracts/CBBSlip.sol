@@ -75,25 +75,6 @@ contract CBBSlip is ICBBSlip, ERC20, Initializable {
     }
 
     /**
-     * @inheritdoc ICBBSlip
-     */
-    function redeem(
-        address from,
-        address to,
-        uint256 amount
-    ) external override onlyCBB {
-        // NEEDS TO BE UPDATED:
-        // calculate collateral return value as the proportion of total supply redeemed
-        // NOTE: solidity 0.8 has built-in overflow checking so SafeMath is not necessary
-        uint256 collateralAmount = (IERC20(collateralTranche).balanceOf(
-            address(this)
-        ) * amount) / totalSupply();
-
-        _burn(from, amount);
-        TransferHelper.safeTransfer(collateralTranche, to, collateralAmount);
-    }
-
-    /**
      * @dev Returns the number of decimals used to get its user representation.
      * For example, if `decimals` equals `2`, a balance of `505` tokens should
      * be displayed to a user as `5,05` (`505 / 10 ** 2`).

@@ -16,14 +16,12 @@ import "./CBBSetup.sol";
 
 contract Repay is CBBSetup {
     // repay()
-    // Still need to test OverPayment() revert and PayoutExceedsBalance() revert
 
     function testRepay(
         uint256 time,
         uint256 amount,
         uint256 stableAmount
     ) public {
-        //More parameters can be added to this test
         address borrowerAddress = address(1);
         time = bound(time, s_maturityDate, s_endOfUnixTime);
         vm.warp(s_maturityDate + time);
@@ -119,7 +117,6 @@ contract Repay is CBBSetup {
         uint256 stableAmount,
         uint256 fee
     ) public {
-        //More parameters can be added to this test
         address borrowerAddress = address(1);
         time = bound(time, s_maturityDate, s_endOfUnixTime);
         vm.warp(s_maturityDate + time);

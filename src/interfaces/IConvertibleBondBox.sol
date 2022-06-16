@@ -27,7 +27,6 @@ interface IConvertibleBondBox is ICBBImmutableArgs {
     error ConvertibleBondBoxNotStarted(uint256 given, uint256 minStartDate);
     error BondNotMatureYet(uint256 maturityDate, uint256 currentTime);
     error OnlyLendOrBorrow(uint256 _stableAmount, uint256 _collateralAmount);
-    error PayoutExceedsBalance(uint256 safeTranchePayout, uint256 balance);
     error MinimumInput(uint256 input, uint256 reqInput);
     error FeeTooLarge(uint256 input, uint256 maximum);
 
@@ -76,40 +75,40 @@ interface IConvertibleBondBox is ICBBImmutableArgs {
     /**
      * @dev allows repayment of loan in exchange for proportional amount of safe-Tranche and Z-tranche
      * - any unpaid amount of Z-slips after maturity will be penalized upon redeeming
-     * @param stableAmount The amount of stable-Tokens to repay with
+     * @param _stableAmount The amount of stable-Tokens to repay with
      * Requirements:
      *  - `msg.sender` must have `approved` `zSlipAmount` z-Slip tokens to this contract
      *  - `msg.sender` must have `approved` `stableAmount` of stable tokens to this contract
      */
 
-    function repay(uint256 stableAmount) external;
+    function repay(uint256 _stableAmount) external;
 
     /**
      * @dev allows lender to redeem safe-slip for tranches
-     * @param safeSlipAmount The amount of safe-slips to redeem
+     * @param _safeSlipAmount The amount of safe-slips to redeem
      * Requirements:
      *  - `msg.sender` must have `approved` `safeSlipAmount` of safe-Slip tokens to this contract
      */
 
-    function redeemSafeTranche(uint256 safeSlipAmount) external;
+    function redeemSafeTranche(uint256 _safeSlipAmount) external;
 
     /**
      * @dev allows borrower to redeem risk-slip for tranches without repaying
-     * @param riskSlipAmount The amount of risk-slips to redeem
+     * @param _riskSlipAmount The amount of risk-slips to redeem
      * Requirements:
      *  - `msg.sender` must have `approved` `riskSlipAmount` of safe-Slip tokens to this contract
      */
 
-    function redeemRiskTranche(uint256 riskSlipAmount) external;
+    function redeemRiskTranche(uint256 _riskSlipAmount) external;
 
     /**
      * @dev allows lender to redeem safe-slip for stables
-     * @param safeSlipAmount The amount of safe-slips to redeem
+     * @param _safeSlipAmount The amount of safe-slips to redeem
      * Requirements:
      *  - `msg.sender` must have `approved` `safeSlipAmount` of safe-Slip tokens to this contract
      */
 
-    function redeemStable(uint256 safeSlipAmount) external;
+    function redeemStable(uint256 _safeSlipAmount) external;
 
     /**
      * @dev Updates the fee taken on deposit to the given new fee
@@ -124,50 +123,50 @@ interface IConvertibleBondBox is ICBBImmutableArgs {
     /**
      * @dev Gets the safe slip token Address
      */
-    function s_safeSlipTokenAddress() external view returns(address);
+    function s_safeSlipTokenAddress() external view returns (address);
 
     /**
      * @dev Gets the risk slip token Address
      */
-    function s_riskSlipTokenAddress() external view returns(address);
+    function s_riskSlipTokenAddress() external view returns (address);
 
     /**
      * @dev Gets the start date
      */
-    function s_startDate() external view returns(uint256);
+    function s_startDate() external view returns (uint256);
 
     /**
      * @dev Gets the total repaid safe slips to date
      */
-    function s_repaidSafeSlips() external view returns(uint256);
+    function s_repaidSafeSlips() external view returns (uint256);
 
     /**
      * @dev Gets the tranche granularity constant
      */
-    function s_trancheGranularity() external view returns(uint256);
+    function s_trancheGranularity() external view returns (uint256);
 
     /**
      * @dev Gets the penalty granularity constant
      */
-    function s_penaltyGranularity() external view returns(uint256);
+    function s_penaltyGranularity() external view returns (uint256);
 
     /**
      * @dev Gets the price granularity constant
      */
-    function s_priceGranularity() external view returns(uint256);
+    function s_priceGranularity() external view returns (uint256);
 
     /**
      * @dev Gets the fee basis points
      */
-    function feeBps() external view returns(uint256);
+    function feeBps() external view returns (uint256);
 
     /**
      * @dev Gets the basis points denominator constant. AKA a fee granularity constant
      */
-    function BPS() external view returns(uint256);
+    function BPS() external view returns (uint256);
 
     /**
-     * @dev Gets the max fee basis points constant. 
+     * @dev Gets the max fee basis points constant.
      */
     function maxFeeBPS() external view returns(uint256);
 
