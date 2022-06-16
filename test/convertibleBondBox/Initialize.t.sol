@@ -179,6 +179,12 @@ contract Initialize is CBBSetup {
 
     function testCannotInitializePenaltyTooHigh(uint256 penalty) public {
         vm.assume(penalty > s_penaltyGranularity);
+        bytes memory customError = abi.encodeWithSignature(
+            "PenaltyTooHigh(uint256,uint256)",
+            penalty,
+            s_penaltyGranularity
+        );
+        vm.expectRevert(customError);
         s_deployedCBBAddress = s_CBBFactory.createConvertibleBondBox(
             s_buttonWoodBondController,
             s_slipFactory,
@@ -191,23 +197,16 @@ contract Initialize is CBBSetup {
         );
 
         s_deployedConvertibleBondBox = ConvertibleBondBox(s_deployedCBBAddress);
-
-        bytes memory customError = abi.encodeWithSignature(
-            "PenaltyTooHigh(uint256,uint256)",
-            penalty,
-            s_penaltyGranularity
-        );
-        vm.expectRevert(customError);
-        s_deployedConvertibleBondBox.reinitialize(
-            address(1),
-            address(2),
-            s_depositLimit,
-            0
-        );
     }
 
     function testCannotInitializeBondIsMature() public {
         s_buttonWoodBondController.mature();
+        bytes memory customError = abi.encodeWithSignature(
+            "BondIsMature(bool,bool)",
+            s_buttonWoodBondController.isMature(),
+            false
+        );
+        vm.expectRevert(customError);
         s_deployedCBBAddress = s_CBBFactory.createConvertibleBondBox(
             s_buttonWoodBondController,
             s_slipFactory,
@@ -218,48 +217,26 @@ contract Initialize is CBBSetup {
             s_trancheIndex,
             address(this)
         );
-
-        s_deployedConvertibleBondBox = ConvertibleBondBox(s_deployedCBBAddress);
-
-        bytes memory customError = abi.encodeWithSignature(
-            "BondIsMature(bool,bool)",
-            s_buttonWoodBondController.isMature(),
-            false
-        );
-        vm.expectRevert(customError);
-        s_deployedConvertibleBondBox.reinitialize(
-            address(1),
-            address(2),
-            s_depositLimit,
-            0
-        );
     }
 
     function testCannotInitializeTrancheIndexOutOfBounds() public {
-        s_deployedCBBAddress = s_CBBFactory.createConvertibleBondBox(
-            s_buttonWoodBondController,
-            s_slipFactory,
-            s_penalty,
-            address(s_collateralToken),
-            address(s_stableToken),
-            1001,
-            s_buttonWoodBondController.trancheCount() - 1,
-            address(this)
-        );
-        s_deployedConvertibleBondBox = ConvertibleBondBox(s_deployedCBBAddress);
-
-        bytes memory customError = abi.encodeWithSignature(
-            "TrancheIndexOutOfBounds(uint256,uint256)",
-            s_buttonWoodBondController.trancheCount() - 1,
-            s_buttonWoodBondController.trancheCount() - 2
-        );
-        vm.expectRevert(customError);
-        s_deployedConvertibleBondBox.reinitialize(
-            address(1),
-            address(2),
-            s_depositLimit,
-            0
-        );
+        //         console.log("log", s_buttonWoodBondController.trancheCount() - 1);
+        // bytes memory customError = abi.encodeWithSignature(
+        //     "TrancheIndexOutOfBounds(uint256,uint256)",
+        //     s_buttonWoodBondController.trancheCount() - 1,
+        //     s_buttonWoodBondController.trancheCount() - 2
+        // );
+        // vm.expectRevert(customError);
+        // s_deployedCBBAddress = s_CBBFactory.createConvertibleBondBox(
+        //     s_buttonWoodBondController,
+        //     s_slipFactory,
+        //     s_penalty,
+        //     address(s_collateralToken),
+        //     address(s_stableToken),
+        //     1001,
+        //     s_buttonWoodBondController.trancheCount() - 1,
+        //     address(this)
+        // );
     }
 
     function testFailInitializeTrancheBW(uint256 trancheIndex) public {
@@ -286,6 +263,12 @@ contract Initialize is CBBSetup {
 
     function testCannotInitializeInitialPriceTooHigh(uint256 price) public {
         vm.assume(price > s_priceGranularity);
+        bytes memory customError = abi.encodeWithSignature(
+            "InitialPriceTooHigh(uint256,uint256)",
+            price,
+            s_priceGranularity
+        );
+        vm.expectRevert(customError);
         s_deployedCBBAddress = s_CBBFactory.createConvertibleBondBox(
             s_buttonWoodBondController,
             s_slipFactory,
@@ -295,20 +278,6 @@ contract Initialize is CBBSetup {
             price,
             s_trancheIndex,
             address(this)
-        );
-
-        s_deployedConvertibleBondBox = ConvertibleBondBox(s_deployedCBBAddress);
-        bytes memory customError = abi.encodeWithSignature(
-            "InitialPriceTooHigh(uint256,uint256)",
-            price,
-            s_priceGranularity
-        );
-        vm.expectRevert(customError);
-        s_deployedConvertibleBondBox.reinitialize(
-            address(1),
-            address(2),
-            s_depositLimit,
-            0
         );
     }
 

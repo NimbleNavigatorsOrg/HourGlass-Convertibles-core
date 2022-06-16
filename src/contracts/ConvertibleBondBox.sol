@@ -48,14 +48,7 @@ contract ConvertibleBondBox is
         );
         __Ownable_init();
         transferOwnership(_owner);
-    }
 
-    function reinitialize(
-        address _borrower,
-        address _lender,
-        uint256 _safeTrancheAmount,
-        uint256 _stableAmount
-    ) external reinitializer(2) onlyOwner() {
         uint256 priceGranularity = s_priceGranularity;
         if (penalty() > s_trancheGranularity)
             revert PenaltyTooHigh({
@@ -65,6 +58,7 @@ contract ConvertibleBondBox is
         if (bond().isMature())
             revert BondIsMature({given: bond().isMature(), required: false});
         // Safe-Tranche cannot be the Z-Tranche
+        console2.log(trancheIndex(), "index");
         if (trancheIndex() >= trancheCount() - 1)
             revert TrancheIndexOutOfBounds({
                 given: trancheIndex(),
@@ -74,11 +68,6 @@ contract ConvertibleBondBox is
             revert InitialPriceTooHigh({
                 given: initialPrice(),
                 maxPrice: priceGranularity
-            });
-        if (_stableAmount * _safeTrancheAmount != 0)
-            revert OnlyLendOrBorrow({
-                _stableAmount: _stableAmount,
-                _collateralAmount: _safeTrancheAmount
             });
 
         ITranche safeTranche = safeTranche();
@@ -97,8 +86,21 @@ contract ConvertibleBondBox is
             "Risk-CBB-Slip",
             address(riskTranche)
         );
+    }
 
-        //set ConvertibleBondBox Start Date to be time when init() is called
+    function reinitialize(
+        address _borrower,
+        address _lender,
+        uint256 _safeTrancheAmount,
+        uint256 _stableAmount
+    ) external reinitializer(2) onlyOwner() {
+         if (_stableAmount * _safeTrancheAmount != 0)
+            revert OnlyLendOrBorrow({
+                _stableAmount: _stableAmount,
+                _collateralAmount: _safeTrancheAmount
+            });
+
+         //set ConvertibleBondBox Start Date to be time when init() is called
         s_startDate = block.timestamp;
 
         // initial borrow/lend at initialPrice, provided matching order is provided
@@ -493,8 +495,7 @@ contract ConvertibleBondBox is
         );
     }
 
-// TODO: can this be removed?
-    function cbbTransferOwnership(address owner) override external {
+    function cbbTransferOwnership(address owner) onlyOwner() override external {
         transferOwnership(owner);
     }
 }
