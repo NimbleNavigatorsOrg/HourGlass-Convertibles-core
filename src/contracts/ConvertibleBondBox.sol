@@ -416,15 +416,15 @@ contract ConvertibleBondBox is
         address safeSlipTokenAddress = s_safeSlipTokenAddress;
 
         //change to owner as recipient
-
+        uint256 feeSlip = (safeSlipAmount * feeBps) / BPS;
         TransferHelper.safeTransferFrom(
             safeSlipTokenAddress,
             _msgSender(),
             owner(),
-            (safeSlipAmount * feeBps) / BPS
+            feeSlip
         );
 
-        safeSlipAmount *= (BPS - feeBps) / BPS;
+        safeSlipAmount -= feeSlip;
         uint256 stableBalance = stableToken().balanceOf(address(this));
 
         //burn safe-slips
