@@ -63,14 +63,6 @@ contract RedeemStable is CBBSetup {
                 .balanceOf(address(2))
         );
 
-        console2.log(
-            IERC20(s_deployedConvertibleBondBox.s_safeSlipTokenAddress())
-                .balanceOf(address(2)),
-            "upperBound"
-        );
-
-        console2.log(safeSlipAmount, "afterBound");
-
         uint256 CBBStableBalanceBeforeRedeem = s_deployedConvertibleBondBox
             .stableToken()
             .balanceOf(address(s_deployedConvertibleBondBox));
