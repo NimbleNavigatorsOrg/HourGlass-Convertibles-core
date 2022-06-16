@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity 0.8.13;
 
 import "forge-std/Test.sol";
 import "../../src/contracts/ConvertibleBondBox.sol";
@@ -53,7 +53,6 @@ contract RedeemRiskTranche is CBBSetup {
 
         address borrowerAddress = address(1);
         address lenderAddress = address(2);
-        address adminAddress = address(100);
 
         s_deployedConvertibleBondBox.reinitialize(borrowerAddress, lenderAddress, depositAmount, 0);
 
@@ -84,7 +83,6 @@ contract RedeemRiskTranche is CBBSetup {
 
         address borrowerAddress = address(1);
         address lenderAddress = address(2);
-        address adminAddress = address(100);
 
         s_deployedConvertibleBondBox.reinitialize(borrowerAddress, lenderAddress, depositAmount, 0);
 
@@ -126,7 +124,6 @@ contract RedeemRiskTranche is CBBSetup {
 
         address borrowerAddress = address(1);
         address lenderAddress = address(2);
-        address adminAddress = address(100);
 
         s_deployedConvertibleBondBox.reinitialize(borrowerAddress, lenderAddress, depositAmount, 0);
 
@@ -156,7 +153,6 @@ contract RedeemRiskTranche is CBBSetup {
 
         address borrowerAddress = address(1);
         address lenderAddress = address(2);
-        address adminAddress = address(100);
 
         s_deployedConvertibleBondBox.reinitialize(borrowerAddress, lenderAddress, depositAmount, 0);
 

@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: Unlicense
-pragma solidity ^0.8.7;
+pragma solidity 0.8.13;
 
 import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";

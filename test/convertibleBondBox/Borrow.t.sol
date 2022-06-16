@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity 0.8.13;
 
 import "forge-std/Test.sol";
 import "../../src/contracts/ConvertibleBondBox.sol";
@@ -21,9 +21,6 @@ contract Borrow is CBBSetup {
     //borrow()
 
     function testCannotBorrowConvertibleBondBoxNotStarted() public {
-        address s_initial_borrower = address(1);
-        address s_initial_lender = address(2);
-
         bytes memory customError = abi.encodeWithSignature(
             "ConvertibleBondBoxNotStarted(uint256,uint256)",
             0,

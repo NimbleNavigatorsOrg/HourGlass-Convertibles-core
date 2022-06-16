@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity 0.8.13;
 
 import "forge-std/Test.sol";
 import "../../src/contracts/ConvertibleBondBox.sol";
@@ -19,7 +19,6 @@ contract Initialize is CBBSetup {
     function testFailInitializeNotOwner(uint256 collateralAmount)
         public
     {
-        address ownerBefore = s_deployedConvertibleBondBox.owner();
         collateralAmount = bound(
             collateralAmount,
             s_safeRatio,
@@ -28,13 +27,6 @@ contract Initialize is CBBSetup {
 
         uint256 stableAmount = 0;
 
-        uint256 matcherSafeTrancheBalanceBefore = s_safeTranche.balanceOf(
-            address(this)
-        );
-        uint256 matcherRiskTrancheBalanceBefore = s_riskTranche.balanceOf(
-            address(this)
-        );
-
         vm.prank(address(1));
         s_deployedConvertibleBondBox.reinitialize(
             address(1),
@@ -42,7 +34,6 @@ contract Initialize is CBBSetup {
             collateralAmount,
             stableAmount
         );
-        address ownerAfter = s_deployedConvertibleBondBox.owner();
     }
 
     function testInitializeAndBorrowEmitsInitialized(uint256 collateralAmount)
@@ -324,8 +315,6 @@ contract Initialize is CBBSetup {
             s_safeTranche.balanceOf(address(this))
         );
 
-        uint256 stableAmount = 0;
-
         uint256 matcherSafeTrancheBalanceBefore = s_safeTranche.balanceOf(
             address(this)
         );
@@ -393,8 +382,6 @@ contract Initialize is CBBSetup {
             (s_safeTranche.balanceOf(address(this)) * s_price) /
                 s_priceGranularity
         );
-
-        uint256 collateralAmount = 0;
 
         uint256 matcherSafeTrancheBalanceBefore = s_safeTranche.balanceOf(
             address(this)
