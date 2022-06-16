@@ -17,10 +17,7 @@ import "./CBBSetup.sol";
 contract SetFee is CBBSetup {
 
     function testSetFee(uint256 newFee) public {
-        console2.log(s_ratios[0], "s_ratios");
-        console.log(newFee, "newFee");
         newFee = bound(newFee, 0, s_maxFeeBPS);
-        console.log(s_deployedConvertibleBondBox.owner(), "s_deployedConvertibleBondBox.owner()");
         vm.prank(s_deployedConvertibleBondBox.owner());
         vm.expectEmit(true, true, true, true);
         emit FeeUpdate(newFee);

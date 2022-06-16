@@ -220,23 +220,22 @@ contract Initialize is CBBSetup {
     }
 
     function testCannotInitializeTrancheIndexOutOfBounds() public {
-        //         console.log("log", s_buttonWoodBondController.trancheCount() - 1);
-        // bytes memory customError = abi.encodeWithSignature(
-        //     "TrancheIndexOutOfBounds(uint256,uint256)",
-        //     s_buttonWoodBondController.trancheCount() - 1,
-        //     s_buttonWoodBondController.trancheCount() - 2
-        // );
-        // vm.expectRevert(customError);
-        // s_deployedCBBAddress = s_CBBFactory.createConvertibleBondBox(
-        //     s_buttonWoodBondController,
-        //     s_slipFactory,
-        //     s_penalty,
-        //     address(s_collateralToken),
-        //     address(s_stableToken),
-        //     1001,
-        //     s_buttonWoodBondController.trancheCount() - 1,
-        //     address(this)
-        // );
+        bytes memory customError = abi.encodeWithSignature(
+            "TrancheIndexOutOfBounds(uint256,uint256)",
+            s_buttonWoodBondController.trancheCount() - 1,
+            s_buttonWoodBondController.trancheCount() - 2
+        );
+        vm.expectRevert(customError);
+        s_deployedCBBAddress = s_CBBFactory.createConvertibleBondBox(
+            s_buttonWoodBondController,
+            s_slipFactory,
+            s_penalty,
+            address(s_collateralToken),
+            address(s_stableToken),
+            1001,
+            2,
+            address(this)
+        );
     }
 
     function testFailInitializeTrancheBW(uint256 trancheIndex) public {

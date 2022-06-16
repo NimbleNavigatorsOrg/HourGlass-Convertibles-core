@@ -58,7 +58,6 @@ contract ConvertibleBondBox is
         if (bond().isMature())
             revert BondIsMature({given: bond().isMature(), required: false});
         // Safe-Tranche cannot be the Z-Tranche
-        console2.log(trancheIndex(), "index");
         if (trancheIndex() >= trancheCount() - 1)
             revert TrancheIndexOutOfBounds({
                 given: trancheIndex(),

@@ -71,8 +71,6 @@ contract CBBFactory is ICBBFactory {
             ConvertibleBondBox(clone).initialize(owner);
         }
 
-        console2.log("fac", trancheIndex);
-
         emit ConvertibleBondBoxCreated(
             collateralToken,
             stableToken,
