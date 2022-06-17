@@ -4,12 +4,11 @@ pragma solidity 0.8.13;
 /**
  * @notice Interface for Convertible Bond Box factory contracts
  */
-interface ICBBFactory {
+
+interface IStagingBoxFactory {
     event ConvertibleBondBoxCreated(
-        address collateralToken,
-        address stableToken,
-        uint256 trancheIndex,
-        uint256 penalty,
+        address convertibleBondBox,
+        uint256 initialPrice,
         address creator
     );
 
