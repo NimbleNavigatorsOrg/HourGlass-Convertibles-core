@@ -27,7 +27,6 @@ contract CBBFactory is ICBBFactory {
      * @param collateralToken The base asset collateral token (a btn-Token)
      * @param stableToken The address of the stable-token being lent for the safe-Tranche
      * @param trancheIndex The index of the safe-Tranche
-     * @param price The initial price
      * @param owner The initial owner
      */
     function createConvertibleBondBox(
@@ -36,7 +35,6 @@ contract CBBFactory is ICBBFactory {
         uint256 penalty,
         address collateralToken,
         address stableToken,
-        uint256 price,
         uint256 trancheIndex,
         address owner
     ) public returns (address) {
@@ -56,7 +54,6 @@ contract CBBFactory is ICBBFactory {
                     penalty,
                     collateralToken,
                     stableToken,
-                    price,
                     trancheIndex,
                     trancheCount,
                     maturityDate,

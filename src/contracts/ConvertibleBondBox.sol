@@ -37,6 +37,8 @@ contract ConvertibleBondBox is
     uint256 public constant override s_priceGranularity = 1e9;
     uint256 public override feeBps = 0;
 
+    uint256 public s_initalPrice = 0;
+
     // Denominator for basis points. Used to calculate fees
     uint256 public constant override BPS = 10_000;
     uint256 public constant override maxFeeBPS = 50;
@@ -63,11 +65,6 @@ contract ConvertibleBondBox is
                 given: trancheIndex(),
                 maxIndex: trancheCount() - 2
             });
-        if (initialPrice() > priceGranularity)
-            revert InitialPriceTooHigh({
-                given: initialPrice(),
-                maxPrice: priceGranularity
-            });
 
         ITranche safeTranche = safeTranche();
         ITranche riskTranche = riskTranche();
@@ -91,13 +88,20 @@ contract ConvertibleBondBox is
         address _borrower,
         address _lender,
         uint256 _safeTrancheAmount,
-        uint256 _stableAmount
+        uint256 _stableAmount,
+        uint256 initialPrice
     ) external reinitializer(2) onlyOwner() {
          if (_stableAmount * _safeTrancheAmount != 0)
             revert OnlyLendOrBorrow({
                 _stableAmount: _stableAmount,
                 _collateralAmount: _safeTrancheAmount
             });
+        if (initialPrice > priceGranularity)
+            revert InitialPriceTooHigh({
+                given: initialPrice,
+                maxPrice: priceGranularity
+            });
+        s_initalPrice = initialPrice;
 
          //set ConvertibleBondBox Start Date to be time when init() is called
         s_startDate = block.timestamp;
@@ -216,7 +220,7 @@ contract ConvertibleBondBox is
         if (block.timestamp < maturityDate) {
             price =
                 price -
-                ((price - initialPrice()) * (maturityDate - block.timestamp)) /
+                ((price - s_initalPrice) * (maturityDate - block.timestamp)) /
                 (maturityDate - s_startDate);
         }
 
