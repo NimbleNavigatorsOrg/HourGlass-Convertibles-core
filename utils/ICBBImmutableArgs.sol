@@ -48,14 +48,6 @@ interface ICBBImmutableArgs {
     function stableToken() external pure returns (IERC20);
 
     /**
-     * @notice The initial price
-     * @dev using ClonesWithImmutableArgs pattern here to save gas
-     * @dev https://github.com/wighawag/clones-with-immutable-args
-     * @return The asset being used to make bids
-     */
-    function initialPrice() external pure returns (uint256);
-
-    /**
      * @notice The tranche index used to pick a safe tranche
      * @dev using ClonesWithImmutableArgs pattern here to save gas
      * @dev https://github.com/wighawag/clones-with-immutable-args

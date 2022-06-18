@@ -27,7 +27,8 @@ contract RedeemStable is CBBSetup {
             address(1),
             address(2),
             s_depositLimit,
-            0
+            0,
+            s_price
         );
 
         //getting lender + borrower balances after initialization deposit
@@ -132,7 +133,8 @@ contract RedeemStable is CBBSetup {
             address(1),
             address(2),
             0,
-            0
+            0,
+            s_price
         );
 
         safeSlipAmount = bound(safeSlipAmount, 0, s_deployedConvertibleBondBox.safeRatio() - 1);
@@ -166,7 +168,8 @@ contract RedeemStable is CBBSetup {
             borrower,
             lender,
             depositAmount,
-            0
+            0,
+            s_price
         );
 
         vm.prank(s_deployedConvertibleBondBox.owner());

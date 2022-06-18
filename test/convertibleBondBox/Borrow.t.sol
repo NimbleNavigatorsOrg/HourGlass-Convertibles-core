@@ -48,7 +48,8 @@ contract Borrow is CBBSetup {
             s_initial_borrower,
             s_initial_lender,
             0,
-            0
+            0,
+            s_price
         );
 
         bytes memory customError = abi.encodeWithSignature(
@@ -78,7 +79,8 @@ contract Borrow is CBBSetup {
             s_initial_borrower,
             s_initial_lender,
             0,
-            0
+            0,
+            s_price
         );
 
         return safeTrancheAmount;

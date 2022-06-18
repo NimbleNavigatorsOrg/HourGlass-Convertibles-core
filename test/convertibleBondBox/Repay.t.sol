@@ -35,7 +35,8 @@ contract Repay is CBBSetup {
             borrowerAddress,
             address(2),
             amount,
-            0
+            0,
+            s_price
         );
 
         uint256 userStableBalancedBeforeRepay = s_stableToken.balanceOf(
@@ -132,7 +133,8 @@ contract Repay is CBBSetup {
             borrowerAddress,
             address(2),
             amount,
-            0
+            0,
+            s_price
         );
 
         vm.prank(s_deployedConvertibleBondBox.owner());

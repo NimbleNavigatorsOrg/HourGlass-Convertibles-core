@@ -64,46 +64,36 @@ contract CBBImmutableArgs is Clone, ICBBImmutableArgs {
     }
 
     /**
-     * @notice The initial price
-     * @dev using ClonesWithImmutableArgs pattern here to save gas
-     * @dev https://github.com/wighawag/clones-with-immutable-args
-     * @return The asset being used to make bids
-     */
-    function initialPrice() public override pure returns (uint256) {
-        return _getArgUint256(112);
-    }
-
-    /**
      * @notice The tranche index used to pick a safe tranche
      * @dev using ClonesWithImmutableArgs pattern here to save gas
      * @dev https://github.com/wighawag/clones-with-immutable-args
      * @return The asset being used to make bids
      */
     function trancheIndex() public override pure returns (uint256) {
-        return _getArgUint256(144);
+        return _getArgUint256(112);
     }
 
     function trancheCount() public override pure returns (uint256) {
-        return _getArgUint256(176);
+        return _getArgUint256(144);
     }
 
     function maturityDate() public override pure returns (uint256) {
-        return _getArgUint256(208);
+        return _getArgUint256(176);
     }
 
     function safeTranche() public override pure returns (ITranche) {
-        return ITranche(_getArgAddress(240));
+        return ITranche(_getArgAddress(208));
     }
 
     function safeRatio() public override pure returns (uint256) {
-        return _getArgUint256(260);
+        return _getArgUint256(228);
     }
 
     function riskTranche() public override pure returns (ITranche) {
-        return ITranche(_getArgAddress(292));
+        return ITranche(_getArgAddress(260));
     }
 
     function riskRatio() public override pure returns (uint256) {
-        return _getArgUint256(312);
+        return _getArgUint256(280);
     }
 }

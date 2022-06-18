@@ -33,7 +33,8 @@ contract RedeemSafeTranche is CBBSetup {
             address(1),
             address(2),
             amount, 
-            0
+            0,
+            s_price
         );
 
         uint256 safeSlipBalanceBeforeRedeem = CBBSlip(
@@ -139,7 +140,8 @@ contract RedeemSafeTranche is CBBSetup {
             address(1),
             address(2),
             s_depositLimit,
-            0
+            0,
+            s_price
         );
 
         bytes memory customError = abi.encodeWithSignature(
@@ -165,7 +167,8 @@ contract RedeemSafeTranche is CBBSetup {
             address(1),
             address(2),
             s_depositLimit,
-            0
+            0,
+            s_price
         );
 
         bytes memory customError = abi.encodeWithSignature(
@@ -197,7 +200,8 @@ contract RedeemSafeTranche is CBBSetup {
             borrower,
             lender,
             depositAmount,
-            0
+            0,
+            s_price
         );
 
         vm.prank(s_deployedConvertibleBondBox.owner());
@@ -255,7 +259,8 @@ contract RedeemSafeTranche is CBBSetup {
             borrower,
             lender,
             depositAmount,
-            0
+            0,
+            s_price
         );
 
         vm.prank(s_deployedConvertibleBondBox.owner());
@@ -310,7 +315,8 @@ contract RedeemSafeTranche is CBBSetup {
             borrower,
             lender,
             depositAmount,
-            0
+            0,
+            s_price
         );
 
         vm.prank(s_deployedConvertibleBondBox.owner());
@@ -380,7 +386,8 @@ contract RedeemSafeTranche is CBBSetup {
             borrower,
             lender,
             depositAmount,
-            0
+            0,
+            s_price
         );
 
         vm.prank(s_deployedConvertibleBondBox.owner());
@@ -464,7 +471,8 @@ contract RedeemSafeTranche is CBBSetup {
             borrower,
             lender,
             depositAmount,
-            0
+            0,
+            s_price
         );
 
         vm.prank(s_deployedConvertibleBondBox.owner());

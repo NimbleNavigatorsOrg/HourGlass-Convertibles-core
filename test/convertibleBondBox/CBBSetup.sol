@@ -106,7 +106,6 @@ abstract contract CBBSetup is Test {
             s_penalty,
             address(s_collateralToken),
             address(s_stableToken),
-            s_price,
             s_trancheIndex,
             address(this)
         );
