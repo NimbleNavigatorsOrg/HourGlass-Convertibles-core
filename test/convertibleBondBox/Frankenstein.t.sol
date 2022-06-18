@@ -79,7 +79,8 @@ contract Frankenstein is CBBSetup {
             address(borrower),
             address(lender),
             amount,
-            0
+            0,
+            s_price
         );
 
         //get slip approvals for all addresses

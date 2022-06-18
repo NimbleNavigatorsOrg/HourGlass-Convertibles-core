@@ -34,7 +34,7 @@ contract Lend is CBBSetup {
     }
 
     function initializeCBBAndBoundStableLendAmount(uint256 stableLendAmount) private returns(uint256) {
-        uint256 minimumInput = (s_deployedConvertibleBondBox.safeRatio() * s_deployedConvertibleBondBox.currentPrice()) /
+        uint256 minimumInput = (s_deployedConvertibleBondBox.safeRatio() * s_price) /
                 s_deployedConvertibleBondBox.s_priceGranularity();
 
         stableLendAmount = bound(
@@ -50,14 +50,15 @@ contract Lend is CBBSetup {
             s_borrower,
             s_lender,
             0,
-            0
+            0,
+            s_price
         );
 
         return stableLendAmount;
     }
 
     function testCannotLendMinimumInput(uint256 stableInitialAmount, uint256 stableLendAmount) public {
-        uint256 minimumInput = (s_deployedConvertibleBondBox.safeRatio() * s_deployedConvertibleBondBox.currentPrice()) /
+        uint256 minimumInput = (s_deployedConvertibleBondBox.safeRatio() * s_price) /
                 s_deployedConvertibleBondBox.s_priceGranularity();
 
         stableInitialAmount = bound(
@@ -79,7 +80,8 @@ contract Lend is CBBSetup {
             s_borrower,
             s_lender,
             0,
-            stableInitialAmount
+            stableInitialAmount,
+            s_price
         );
 
         bytes memory customError = abi.encodeWithSignature(

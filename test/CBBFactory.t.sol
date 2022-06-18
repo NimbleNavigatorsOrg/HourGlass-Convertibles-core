@@ -89,7 +89,6 @@ contract CBBFactoryTest is Test {
             s_penalty,
             address(s_collateralToken),
             address(s_stableToken),
-            s_price,
             s_trancheIndex,
             address(this)
         );
@@ -119,7 +118,6 @@ contract CBBFactoryTest is Test {
             address(deployedConvertibleBondBox.stableToken()),
             address(s_stableToken)
         );
-        assertEq(deployedConvertibleBondBox.initialPrice(), s_price);
         assertEq(deployedConvertibleBondBox.s_startDate(), 0);
         assertEq(deployedConvertibleBondBox.trancheIndex(), s_trancheIndex);
     }
@@ -141,7 +139,6 @@ contract CBBFactoryTest is Test {
             s_penalty,
             address(s_collateralToken),
             address(s_stableToken),
-            s_price,
             s_trancheIndex,
             address(this)
         );

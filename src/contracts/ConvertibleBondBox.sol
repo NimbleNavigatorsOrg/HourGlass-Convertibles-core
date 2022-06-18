@@ -89,19 +89,20 @@ contract ConvertibleBondBox is
         address _lender,
         uint256 _safeTrancheAmount,
         uint256 _stableAmount,
-        uint256 initialPrice
+        uint256 _initialPrice
     ) external reinitializer(2) onlyOwner() {
+        uint256 priceGranularity = s_priceGranularity;
          if (_stableAmount * _safeTrancheAmount != 0)
             revert OnlyLendOrBorrow({
                 _stableAmount: _stableAmount,
                 _collateralAmount: _safeTrancheAmount
             });
-        if (initialPrice > priceGranularity)
+        if (_initialPrice > priceGranularity)
             revert InitialPriceTooHigh({
-                given: initialPrice,
+                given: _initialPrice,
                 maxPrice: priceGranularity
             });
-        s_initalPrice = initialPrice;
+        s_initalPrice = _initialPrice;
 
          //set ConvertibleBondBox Start Date to be time when init() is called
         s_startDate = block.timestamp;

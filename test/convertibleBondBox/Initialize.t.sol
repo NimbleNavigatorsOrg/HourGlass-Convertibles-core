@@ -32,7 +32,8 @@ contract Initialize is CBBSetup {
             address(1),
             address(2),
             collateralAmount,
-            stableAmount
+            stableAmount,
+            s_price
         );
     }
 
@@ -61,7 +62,8 @@ contract Initialize is CBBSetup {
             address(1),
             address(2),
             collateralAmount,
-            stableAmount
+            stableAmount,
+            s_price
         );
 
         uint256 matcherSafeTrancheBalanceAfter = s_safeTranche.balanceOf(
@@ -128,7 +130,8 @@ contract Initialize is CBBSetup {
             address(1),
             address(2),
             collateralAmount,
-            stableAmount
+            stableAmount,
+            s_price
         );
 
         uint256 matcherSafeTrancheBalanceAfter = s_safeTranche.balanceOf(
@@ -182,7 +185,6 @@ contract Initialize is CBBSetup {
             penalty,
             address(s_collateralToken),
             address(s_stableToken),
-            s_price,
             s_trancheIndex,
             address(this)
         );
@@ -204,7 +206,6 @@ contract Initialize is CBBSetup {
             s_penalty,
             address(s_collateralToken),
             address(s_stableToken),
-            1001,
             s_trancheIndex,
             address(this)
         );
@@ -223,7 +224,6 @@ contract Initialize is CBBSetup {
             s_penalty,
             address(s_collateralToken),
             address(s_stableToken),
-            1001,
             2,
             address(this)
         );
@@ -237,7 +237,6 @@ contract Initialize is CBBSetup {
             s_penalty,
             address(s_collateralToken),
             address(s_stableToken),
-            1001,
             trancheIndex,
             address(this)
         );
@@ -247,27 +246,34 @@ contract Initialize is CBBSetup {
             address(1),
             address(2),
             s_depositLimit,
-            0
+            0,
+            s_price
         );
     }
 
-    function testCannotInitializeInitialPriceTooHigh(uint256 price) public {
+    function testCannotReInitializeInitialPriceTooHigh(uint256 price) public {
         vm.assume(price > s_priceGranularity);
-        bytes memory customError = abi.encodeWithSignature(
-            "InitialPriceTooHigh(uint256,uint256)",
-            price,
-            s_priceGranularity
-        );
-        vm.expectRevert(customError);
         s_deployedCBBAddress = s_CBBFactory.createConvertibleBondBox(
             s_buttonWoodBondController,
             s_slipFactory,
             s_penalty,
             address(s_collateralToken),
             address(s_stableToken),
-            price,
             s_trancheIndex,
             address(this)
+        );
+        bytes memory customError = abi.encodeWithSignature(
+            "InitialPriceTooHigh(uint256,uint256)",
+            price,
+            s_priceGranularity
+        );
+        vm.expectRevert(customError);
+        s_deployedConvertibleBondBox.reinitialize(
+            address(1),
+            address(2),
+            0,
+            0,
+            price
         );
     }
 
@@ -285,7 +291,6 @@ contract Initialize is CBBSetup {
             s_penalty,
             address(s_collateralToken),
             address(s_stableToken),
-            s_price,
             s_trancheIndex,
             address(this)
         );
@@ -302,7 +307,8 @@ contract Initialize is CBBSetup {
             address(1),
             address(2),
             stableAmount,
-            collateralAmount
+            collateralAmount,
+            s_price
         );
     }
 
@@ -334,7 +340,8 @@ contract Initialize is CBBSetup {
             address(1),
             address(2),
             collateralAmount,
-            0
+            0,
+            s_price
         );
 
         uint256 matcherSafeTrancheBalanceAfter = s_safeTranche.balanceOf(
@@ -396,7 +403,8 @@ contract Initialize is CBBSetup {
             address(1),
             address(2),
             0,
-            stableAmount
+            stableAmount,
+            s_price
         );
 
         uint256 matcherSafeTrancheBalanceAfter = s_safeTranche.balanceOf(
