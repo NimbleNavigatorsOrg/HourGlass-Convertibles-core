@@ -15,6 +15,14 @@ interface IStagingBox is ISBImmutableArgs {
 
     event TrasmitReint(bool, uint256);
 
+    error InitialPriceTooHigh(uint256 given, uint256 maxPrice);
+
+    //Getters
+
+    function s_lendSlipTokenAddress() external view returns (address);
+
+    function s_borrowSlipTokenAddress() external view returns (address);
+
     /**
      * @dev Deposits collateral for BorrowSlips
      * @param _borrower The recipent address of the BorrowSlips

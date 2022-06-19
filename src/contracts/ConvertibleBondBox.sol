@@ -51,7 +51,6 @@ contract ConvertibleBondBox is
         __Ownable_init();
         transferOwnership(_owner);
 
-        uint256 priceGranularity = s_priceGranularity;
         if (penalty() > s_trancheGranularity)
             revert PenaltyTooHigh({
                 given: penalty(),
@@ -66,21 +65,18 @@ contract ConvertibleBondBox is
                 maxIndex: trancheCount() - 2
             });
 
-        ITranche safeTranche = safeTranche();
-        ITranche riskTranche = riskTranche();
-
         // clone deploy safe slip
         s_safeSlipTokenAddress = slipFactory().createSlip(
             "ASSET-Tranche",
             "Safe-CBB-Slip",
-            address(safeTranche)
+            address(safeTranche())
         );
 
         //clone deploy z slip
         s_riskSlipTokenAddress = slipFactory().createSlip(
             "ASSET-Tranche",
             "Risk-CBB-Slip",
-            address(riskTranche)
+            address(riskTranche())
         );
     }
 
@@ -90,9 +86,9 @@ contract ConvertibleBondBox is
         uint256 _safeTrancheAmount,
         uint256 _stableAmount,
         uint256 _initialPrice
-    ) external reinitializer(2) onlyOwner() {
+    ) external reinitializer(2) onlyOwner {
         uint256 priceGranularity = s_priceGranularity;
-         if (_stableAmount * _safeTrancheAmount != 0)
+        if (_stableAmount * _safeTrancheAmount != 0)
             revert OnlyLendOrBorrow({
                 _stableAmount: _stableAmount,
                 _collateralAmount: _safeTrancheAmount
@@ -104,7 +100,7 @@ contract ConvertibleBondBox is
             });
         s_initalPrice = _initialPrice;
 
-         //set ConvertibleBondBox Start Date to be time when init() is called
+        //set ConvertibleBondBox Start Date to be time when init() is called
         s_startDate = block.timestamp;
 
         // initial borrow/lend at initialPrice, provided matching order is provided
@@ -443,7 +439,7 @@ contract ConvertibleBondBox is
         emit RedeemStable(_msgSender(), _safeSlipAmount, this.currentPrice());
     }
 
-    function setFee(uint256 newFeeBps) external override onlyOwner() {
+    function setFee(uint256 newFeeBps) external override onlyOwner {
         if (bond().isMature())
             revert BondIsMature({given: bond().isMature(), required: false});
         if (newFeeBps > maxFeeBPS)
@@ -499,7 +495,7 @@ contract ConvertibleBondBox is
         );
     }
 
-    function cbbTransferOwnership(address owner) onlyOwner() override external {
+    function cbbTransferOwnership(address owner) external override onlyOwner {
         transferOwnership(owner);
     }
 }

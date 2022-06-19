@@ -38,14 +38,17 @@ contract CBBFactory is ICBBFactory {
         uint256 trancheIndex,
         address owner
     ) public returns (address) {
-        
         ConvertibleBondBox clone;
 
         {
             uint256 trancheCount = bond.trancheCount();
             uint256 maturityDate = bond.maturityDate();
-            (ITranche safeTranche, uint256 safeRatio) = bond.tranches(trancheIndex);
-            (ITranche riskTranche, uint256 riskRatio) = bond.tranches(trancheCount - 1);
+            (ITranche safeTranche, uint256 safeRatio) = bond.tranches(
+                trancheIndex
+            );
+            (ITranche riskTranche, uint256 riskRatio) = bond.tranches(
+                trancheCount - 1
+            );
 
             s_data = bytes.concat(
                 abi.encodePacked(
@@ -59,15 +62,13 @@ contract CBBFactory is ICBBFactory {
                     maturityDate,
                     safeTranche
                 ),
-                abi.encodePacked(
-                    safeRatio,
-                    riskTranche,
-                    riskRatio
-                ));
+                abi.encodePacked(safeRatio, riskTranche, riskRatio)
+            );
             clone = ConvertibleBondBox(implementation.clone(s_data));
             ConvertibleBondBox(clone).initialize(owner);
         }
 
+        //TODO: Need to update this event
         emit ConvertibleBondBoxCreated(
             collateralToken,
             stableToken,

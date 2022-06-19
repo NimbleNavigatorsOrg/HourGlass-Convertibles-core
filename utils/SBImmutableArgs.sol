@@ -17,7 +17,7 @@ contract SBImmutableArgs is Clone, ISBImmutableArgs {
      * @inheritdoc ISBImmutableArgs
      */
 
-    function slipFactory() external pure returns (ICBBSlipFactory) {
+    function slipFactory() public pure returns (ICBBSlipFactory) {
         return ICBBSlipFactory(_getArgAddress(0));
     }
 
@@ -25,7 +25,7 @@ contract SBImmutableArgs is Clone, ISBImmutableArgs {
      * @inheritdoc ISBImmutableArgs
      */
 
-    function convertibleBondBox() external pure returns (IConvertibleBondBox) {
+    function convertibleBondBox() public pure returns (IConvertibleBondBox) {
         return IConvertibleBondBox(_getArgAddress(20));
     }
 
@@ -33,7 +33,7 @@ contract SBImmutableArgs is Clone, ISBImmutableArgs {
      * @inheritdoc ISBImmutableArgs
      */
 
-    function initialPrice() external pure returns (uint256) {
+    function initialPrice() public pure returns (uint256) {
         return _getArgUint256(40);
     }
 
@@ -41,7 +41,7 @@ contract SBImmutableArgs is Clone, ISBImmutableArgs {
      * @inheritdoc ISBImmutableArgs
      */
 
-    function stableToken() external pure returns (IERC20) {
+    function stableToken() public pure returns (IERC20) {
         return IERC20(_getArgAddress(72));
     }
 
@@ -49,7 +49,7 @@ contract SBImmutableArgs is Clone, ISBImmutableArgs {
      * @inheritdoc ISBImmutableArgs
      */
 
-    function safeTranche() external pure returns (ITranche) {
+    function safeTranche() public pure returns (ITranche) {
         return ITranche(_getArgAddress(92));
     }
 
@@ -57,7 +57,7 @@ contract SBImmutableArgs is Clone, ISBImmutableArgs {
      * @inheritdoc ISBImmutableArgs
      */
 
-    function safeSlipAddress() external pure returns (address) {
+    function safeSlipAddress() public pure returns (address) {
         return (_getArgAddress(112));
     }
 
@@ -65,7 +65,7 @@ contract SBImmutableArgs is Clone, ISBImmutableArgs {
      * @inheritdoc ISBImmutableArgs
      */
 
-    function safeRatio() external pure returns (uint256) {
+    function safeRatio() public pure returns (uint256) {
         return _getArgUint256(132);
     }
 
@@ -73,7 +73,7 @@ contract SBImmutableArgs is Clone, ISBImmutableArgs {
      * @inheritdoc ISBImmutableArgs
      */
 
-    function riskTranche() external pure returns (ITranche) {
+    function riskTranche() public pure returns (ITranche) {
         return ITranche(_getArgAddress(164));
     }
 
@@ -81,7 +81,7 @@ contract SBImmutableArgs is Clone, ISBImmutableArgs {
      * @inheritdoc ISBImmutableArgs
      */
 
-    function riskSlipAddress() external pure returns (address) {
+    function riskSlipAddress() public pure returns (address) {
         return (_getArgAddress(184));
     }
 
@@ -89,7 +89,7 @@ contract SBImmutableArgs is Clone, ISBImmutableArgs {
      * @inheritdoc ISBImmutableArgs
      */
 
-    function riskRatio() external pure returns (uint256) {
+    function riskRatio() public pure returns (uint256) {
         return _getArgUint256(204);
     }
 
@@ -97,7 +97,7 @@ contract SBImmutableArgs is Clone, ISBImmutableArgs {
      * @inheritdoc ISBImmutableArgs
      */
 
-    function priceGranularity() external pure returns (uint256) {
+    function priceGranularity() public pure returns (uint256) {
         return _getArgUint256(236);
     }
 }

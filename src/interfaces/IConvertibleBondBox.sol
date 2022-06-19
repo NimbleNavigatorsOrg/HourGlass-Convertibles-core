@@ -33,6 +33,27 @@ interface IConvertibleBondBox is ICBBImmutableArgs {
     //Need to add getters for state variables
 
     /**
+     * @dev Sets startdate to be block.timestamp, sets initialPrice, and takes initial atomic deposit
+     * @param _borrower The address to send the Z* and stableTokens to
+     * @param _lender The address to send the safeSlips to
+     * @param _safeTrancheAmount The amount of SafeTranches to borrow against for initial deposit
+     * @param _stableAmount The amount of stable tokens to lend against for initial deposit
+     * @param _initialPrice the initial price of SafeTranche
+     * Requirements:
+     *  - `msg.sender` must have `approved` `_stableAmount` stable tokens to this contract
+     *  - `msg.sender` must have `approved` `_safeTrancheAmount` SafeTranches to this contract
+     *  - `msg.sender` must have `approved` `_safeTrancheAmount * riskRato()/safeRatio()` RiskTranches to this contract
+     */
+
+    function reinitialize(
+        address _borrower,
+        address _lender,
+        uint256 _safeTrancheAmount,
+        uint256 _stableAmount,
+        uint256 _initialPrice
+    ) external;
+
+    /**
      * @dev Lends stableAmount of stable-tokens for safe-Tranche slips when provided with matching borrow collateral
      * @param _borrower The address to send the Z* and stableTokens to 
      * @param _lender The address to send the safeSlips to 
