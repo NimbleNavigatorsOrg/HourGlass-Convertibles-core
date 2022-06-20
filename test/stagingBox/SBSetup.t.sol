@@ -5,25 +5,21 @@ import "../../src/contracts/StagingBox.sol";
 import "../../src/contracts/StagingBoxFactory.sol";
 import "../../src/contracts/CBBFactory.sol";
 import "../../src/contracts/ConvertibleBondBox.sol";
-
+import "../convertibleBondBox/CBBSetup.sol";
 
 contract SBSetup is CBBSetup {
 
     address s_owner; 
+    StagingBoxFactory stagingBoxFactory;
     StagingBox s_deployedSB;
 
-    function stagingSetup() public {
+    function setUp() public override {
+        super.setUp();
+
         s_owner = address(this);
 
-        StagingBox stagingBox = new StagingBox(s_owner);
+        StagingBox stagingBox = new StagingBox();
         
-        StagingBoxFactory stagingBoxFactory = new StagingBoxFactory(stagingBox);
-
-        s_deployedSB = stagingBoxFactory.createStagingBox(
-            s_deployedConvertibleBondBox,
-            s_slipFactory,
-            s_price,
-            s_owner
-        );
+        stagingBoxFactory = new StagingBoxFactory(address(stagingBox));
     }
 }

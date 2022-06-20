@@ -62,7 +62,7 @@ abstract contract CBBSetup is Test {
     event Initialized(address, address, uint256, uint256);
     event FeeUpdate(uint256);
 
-    function setUp() public {
+    function setUp() public virtual {
         //push numbers into array
         s_ratios.push(200);
         s_ratios.push(300);
