@@ -33,7 +33,6 @@ contract StagingBoxFactory is IStagingBoxFactory {
         uint256 initialPrice,
         address owner
     ) public returns (address) {
-        //FactoryStuff
         bytes memory data = abi.encodePacked(
             slipFactory, 
             convertibleBondBox, 
