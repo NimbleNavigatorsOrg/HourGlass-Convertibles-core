@@ -35,17 +35,9 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
                 maxPrice: priceGranularity()
             });
 
-            console2.log("What?");
-
         //Setup ownership
         __Ownable_init();
-
-                    console2.log("Huh?");
-
         transferOwnership(_owner);
-
-                            console2.log("Kapow?");
-
 
         //Deploy Borrow Lend Slips
         //TODO: Need to use ERC20 meta-data and revise slip factory inputs
@@ -56,17 +48,12 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
             address(this)
         );
 
-                                    console2.log("shbabm?");
-
-
         //clone deploy z slip
         s_borrowSlipTokenAddress = slipFactory().createSlip(
             "ASSET-Tranche",
             "Staging-Borrower-Slip",
             address(this)
         );
-
-                                    console2.log("dfage?");
 
         //Check if valid ICBB immutable arg?
 
