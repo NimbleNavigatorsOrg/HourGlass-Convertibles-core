@@ -14,7 +14,6 @@ contract StagingBoxFactory is IStagingBoxFactory {
     using ClonesWithImmutableArgs for address;
 
     address public immutable implementation;
-    bytes s_data;
 
     constructor(address _implementation) {
         implementation = _implementation;
@@ -35,5 +34,32 @@ contract StagingBoxFactory is IStagingBoxFactory {
         address owner
     ) public returns (address) {
         //FactoryStuff
+        bytes memory data = abi.encodePacked(
+            slipFactory, 
+            convertibleBondBox, 
+            initialPrice, 
+            convertibleBondBox.stableToken(),
+            convertibleBondBox.safeTranche(),
+            convertibleBondBox.s_safeSlipTokenAddress(),
+            convertibleBondBox.safeRatio(),
+            convertibleBondBox.riskTranche(),
+            convertibleBondBox.s_riskSlipTokenAddress(),
+            convertibleBondBox.riskRatio(),
+            convertibleBondBox.s_priceGranularity(),
+            owner
+            );
+        StagingBox clone = StagingBox(implementation.clone(data));
+
+        clone.initialize(owner);
+
+        emit StagingBoxCreated(
+            convertibleBondBox,
+            slipFactory,
+            initialPrice,
+            owner,
+            msg.sender
+        );
+
+        return address(clone);
     }
 }

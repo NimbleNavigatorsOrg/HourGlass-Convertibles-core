@@ -189,7 +189,7 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
         //event stuff
     }
 
-    function transmitReInit(bool _lendOrBorrow) external override onlyOwner {
+    function transmitReInit(bool _isLend) external override onlyOwner {
         /*
         - calls `CBB.reinitialize(…)`
             - `Address(this)` as borrower + lender
@@ -197,7 +197,7 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
             - if `_lendOrBorrow` is false: calls CBB with balance of SafeTrancheAmount
         */
 
-        if (_lendOrBorrow) {
+        if (_isLend) {
             uint256 stableAmount = stableToken().balanceOf(address(this));
             convertibleBondBox().reinitialize(
                 address(this),
@@ -208,7 +208,7 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
             );
         }
 
-        if (!_lendOrBorrow) {
+        if (!_isLend) {
             uint256 safeTrancheBalance = safeTranche().balanceOf(address(this));
             convertibleBondBox().reinitialize(
                 address(this),
