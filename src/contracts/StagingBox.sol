@@ -192,7 +192,7 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
         //- burns `_lendSlipAmount` of msg.sender’s LendSlips
         ICBBSlip(s_lendSlipTokenAddress).burn(_msgSender(), _lendSlipAmount);
 
-        //event stuff
+        emit RedeemLendSlip(_msgSender(), _lendSlipAmount);
     }
 
     function transmitReInit(bool _isLend) external override onlyOwner {
