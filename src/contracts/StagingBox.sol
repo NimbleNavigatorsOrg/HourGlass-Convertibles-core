@@ -58,6 +58,7 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
         //Check if valid ICBB immutable arg?
 
         //Add event stuff
+        emit Initialized(_owner,  s_borrowSlipTokenAddress, s_lendSlipTokenAddress);
     }
 
     function depositBorrow(address _borrower, uint256 _safeTrancheAmount)
@@ -65,7 +66,6 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
         override
     {
         //- Ensure CBB not reinitialized
-
         //- transfers `_safeTrancheAmount` of SafeTranche Tokens from msg.sender to SB
         TransferHelper.safeTransferFrom(
             address(safeTranche()),
@@ -74,7 +74,7 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
             _safeTrancheAmount
         );
 
-        //- transfers `_safeTrancheAmount * riskRatio() / safeRatio()`  of RiskTranches from msg.sender to CBB
+        //- transfers `_safeTrancheAmount * riskRatio() / safeRatio()`  of RiskTranches from msg.sender to SB
         TransferHelper.safeTransferFrom(
             address(riskTranche()),
             _msgSender(),
@@ -83,9 +83,11 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
         );
 
         //- mints `_safeTrancheAmount` of BorrowerSlips to `_borrower`
+        // TODO shouldn't we be minting to the same address that the SB took tranches from. ie. _msgSender()
         ICBBSlip(s_borrowSlipTokenAddress).mint(_borrower, _safeTrancheAmount);
 
         //add event stuff
+        emit BorrowDeposit(_borrower, _safeTrancheAmount);
     }
 
     function depositLend(address _lender, uint256 _lendAmount)
@@ -106,20 +108,21 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
         ICBBSlip(s_lendSlipTokenAddress).mint(_lender, _lendAmount);
 
         //add event stuff
+        emit LendDeposit(_lender, _lendAmount);
     }
 
     function withdrawBorrow(uint256 _borrowSlipAmount) external override {
         //- Reverse of depositBorrow() function
-        //- transfers `_borrowSlipAmount` of SafeTranche Tokens from CB to msg.sender
+        //- transfers `_borrowSlipAmount` of SafeTranche Tokens from SB to msg.sender
         TransferHelper.safeTransfer(
             address(safeTranche()),
             _msgSender(),
             (_borrowSlipAmount)
         );
 
-        //- transfers `_borrowSlipAmount*riskRatio()/safeRatio()` of RiskTranche Tokens from CB to msg.sender
+        //- transfers `_borrowSlipAmount*riskRatio()/safeRatio()` of RiskTranche Tokens from SB to msg.sender
         TransferHelper.safeTransfer(
-            address(safeTranche()),
+            address(riskTranche()),
             _msgSender(),
             (_borrowSlipAmount * riskRatio()) / safeRatio()
         );
@@ -131,6 +134,7 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
         );
 
         //event stuff
+        emit BorrowWithdrawal(_msgSender(), _borrowSlipAmount);
     }
 
     function withdrawLend(uint256 _lendSlipAmount) external override {

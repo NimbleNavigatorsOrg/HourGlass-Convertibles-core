@@ -38,4 +38,15 @@ contract sbInitialize is SBSetup {
             s_owner
         ));
     }
+
+    function testEmitsInitialized(uint256 price) public {
+        vm.expectEmit(true, false, false, false);
+        emit Initialized(s_owner, address(1), address(2));
+        s_deployedSB = StagingBox(stagingBoxFactory.createStagingBox(
+            s_deployedConvertibleBondBox,
+            s_slipFactory,
+            s_price,
+            s_owner
+        ));
+    }
 }
