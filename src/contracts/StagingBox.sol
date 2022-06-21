@@ -23,6 +23,9 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
     address public override s_lendSlipTokenAddress;
     address public override s_borrowSlipTokenAddress;
 
+    uint256 public s_reinitLendAmount = 0;
+    bool public s_hasReinitialized = false;
+
     function initialize(address _owner) external initializer {
         require(
             _owner != address(0),
@@ -65,6 +68,13 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
         override
     {
         //- Ensure CBB not reinitialized
+        bool hasReinitialized = s_hasReinitialized;
+        if (hasReinitialized) {
+            revert CBBReinitialized({
+                state: hasReinitialized,
+                requiredState: false
+            });
+        }
 
         //- transfers `_safeTrancheAmount` of SafeTranche Tokens from msg.sender to SB
         TransferHelper.safeTransferFrom(
@@ -93,6 +103,13 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
         override
     {
         //- Ensure CBB not reinitialized
+        bool hasReinitialized = s_hasReinitialized;
+        if (hasReinitialized) {
+            revert CBBReinitialized({
+                state: hasReinitialized,
+                requiredState: false
+            });
+        }
 
         //- transfers `_lendAmount`of Stable Tokens from msg.sender to SB
         TransferHelper.safeTransferFrom(
@@ -135,6 +152,18 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
 
     function withdrawLend(uint256 _lendSlipAmount) external override {
         //- Reverse of depositBorrow() function
+
+        //revert check for _lendSlipAmount after CBB reinitialized
+        if (s_hasReinitialized) {
+            uint256 reinitAmount = s_reinitLendAmount;
+            if (_lendSlipAmount < reinitAmount) {
+                revert WithdrawAmountTooHigh({
+                    requestAmount: _lendSlipAmount,
+                    maxAmount: reinitAmount
+                });
+            }
+        }
+
         //- transfers `_lendSlipAmount` of Stable Tokens from SB to msg.sender
         TransferHelper.safeTransfer(
             address(stableToken()),
@@ -206,6 +235,8 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
                 stableAmount,
                 initialPrice()
             );
+            s_reinitLendAmount = stableAmount;
+            s_hasReinitialized = true;
         }
 
         if (!_isLend) {
@@ -217,6 +248,10 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
                 0,
                 initialPrice()
             );
+            s_reinitLendAmount =
+                (safeTrancheBalance * initialPrice()) /
+                priceGranularity();
+            s_hasReinitialized = true;
         }
 
         //- calls `CBB.transferOwner(owner())` to transfer ownership of CBB back to Owner()

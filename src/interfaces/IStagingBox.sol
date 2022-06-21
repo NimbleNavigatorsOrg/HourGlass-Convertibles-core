@@ -16,6 +16,8 @@ interface IStagingBox is ISBImmutableArgs {
     event TrasmitReint(bool, uint256);
 
     error InitialPriceTooHigh(uint256 given, uint256 maxPrice);
+    error WithdrawAmountTooHigh(uint256 requestAmount, uint256 maxAmount);
+    error CBBReinitialized(bool state, bool requiredState);
 
     //Getters
 
