@@ -37,7 +37,7 @@ contract RedeemLendSlip is SBSetup {
         assertEq(stagingBoxSafeSlipBalanceBeforeRedeem - lendSlipTransferAmount, stagingBoxSafeSlipBalanceAfterRedeem);
     }
 
-    function testRedeemLendBurnsMsgSenderLendSlip(uint256 price, uint256 _lendSlipAmount) public {
+    function testRedeemLendSlipBurnsMsgSenderLendSlip(uint256 price, uint256 _lendSlipAmount) public {
 
         price = bound(price, 0, s_deployedConvertibleBondBox.s_priceGranularity());
 
@@ -59,7 +59,7 @@ contract RedeemLendSlip is SBSetup {
         assertEq(msgSenderLendSlipBalanceBeforeRedeem - _lendSlipAmount, msgSenderSafeSlipBalanceAfterRedeem);
     }
 
-    function testRedeemLendEmits(uint256 price, uint256 _lendSlipAmount) public {
+    function testRedeemLendSlipEmits(uint256 price, uint256 _lendSlipAmount) public {
 
         price = bound(price, 0, s_deployedConvertibleBondBox.s_priceGranularity());
 
