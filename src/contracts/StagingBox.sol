@@ -235,51 +235,45 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
     }
 
     function transmitReInit(bool _isLend) external override onlyOwner {
+
+        console2.log(owner(), "owner");
         /*
         - calls `CBB.reinitialize(…)`
             - `Address(this)` as borrower + lender
-            - if `_lendOrBorrow` is true: calls CBB with balance of StableAmount
-            - if `_lendOrBorrow` is false: calls CBB with balance of SafeTrancheAmount
+            - if `_isLend` is true: calls CBB with balance of StableAmount
+            - if `_isLend` is false: calls CBB with balance of SafeTrancheAmount
         */
 
         if (_isLend) {
             uint256 stableAmount = stableToken().balanceOf(address(this));
-            convertibleBondBox().reinitialize(
+            s_reinitLendAmount = stableAmount;
+            s_hasReinitialized = convertibleBondBox().reinitialize(
                 address(this),
                 address(this),
                 0,
                 stableAmount,
                 initialPrice()
             );
-            s_reinitLendAmount = stableAmount;
-            s_hasReinitialized = true;
         }
 
         if (!_isLend) {
             uint256 safeTrancheBalance = safeTranche().balanceOf(address(this));
-            convertibleBondBox().reinitialize(
+            s_reinitLendAmount = (safeTrancheBalance * initialPrice()) / priceGranularity();
+
+            s_hasReinitialized = convertibleBondBox().reinitialize(
                 address(this),
                 address(this),
                 safeTrancheBalance,
                 0,
                 initialPrice()
             );
-            s_reinitLendAmount =
-                (safeTrancheBalance * initialPrice()) /
-                priceGranularity();
-            s_hasReinitialized = true;
         }
 
         //- calls `CBB.transferOwner(owner())` to transfer ownership of CBB back to Owner()
-
         convertibleBondBox().cbbTransferOwnership(owner());
     }
 
-    function sbTransferOwnership(address _newOwner)
-        external
-        override
-        onlyOwner
-    {
+    function sbTransferOwnership(address _newOwner) external override onlyOwner {
         transferOwnership(_newOwner);
     }
 }

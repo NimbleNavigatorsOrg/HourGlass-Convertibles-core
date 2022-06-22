@@ -52,7 +52,7 @@ interface IConvertibleBondBox is ICBBImmutableArgs {
         uint256 _safeTrancheAmount,
         uint256 _stableAmount,
         uint256 _initialPrice
-    ) external;
+    ) external returns(bool);
 
     /**
      * @dev Lends stableAmount of stable-tokens for safe-Tranche slips when provided with matching borrow collateral

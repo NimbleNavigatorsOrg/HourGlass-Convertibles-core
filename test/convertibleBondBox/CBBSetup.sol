@@ -19,6 +19,7 @@ abstract contract CBBSetup is Test {
     ConvertibleBondBox s_deployedConvertibleBondBox;
     CBBFactory s_CBBFactory;
 
+    //TODO use a different address other than address(this)
     address s_cbb_owner = address(this);
 
     MockERC20 s_collateralToken;
@@ -109,7 +110,7 @@ abstract contract CBBSetup is Test {
             address(s_collateralToken),
             address(s_stableToken),
             s_trancheIndex,
-            address(this)
+            s_cbb_owner
         );
 
         s_collateralToken.approve(
