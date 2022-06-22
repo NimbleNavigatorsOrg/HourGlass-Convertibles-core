@@ -277,6 +277,32 @@ contract Initialize is CBBSetup {
         );
     }
 
+    function testCannotReInitializeInitialPriceIsZero() public {
+        uint256 price = 0;
+        s_deployedCBBAddress = s_CBBFactory.createConvertibleBondBox(
+            s_buttonWoodBondController,
+            s_slipFactory,
+            s_penalty,
+            address(s_collateralToken),
+            address(s_stableToken),
+            s_trancheIndex,
+            address(this)
+        );
+        bytes memory customError = abi.encodeWithSignature(
+            "InitialPriceIsZero(uint256,uint256)",
+            price,
+            s_priceGranularity
+        );
+        vm.expectRevert(customError);
+        s_deployedConvertibleBondBox.reinitialize(
+            address(1),
+            address(2),
+            0,
+            0,
+            price
+        );
+    }
+
     function testCannotInitializeOnlyLendOrBorrow(
         uint256 collateralAmount,
         uint256 stableAmount
