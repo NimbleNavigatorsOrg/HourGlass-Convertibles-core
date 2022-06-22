@@ -6,14 +6,12 @@ import "../../utils/ISBImmutableArgs.sol";
 interface IStagingBox is ISBImmutableArgs {
     event LendDeposit(address, uint256);
     event BorrowDeposit(address, uint256);
-
     event LendWithdrawal(address, uint256);
     event BorrowWithdrawal(address, uint256);
-
     event RedeemBorrowSlip(address, uint256);
     event RedeemLendSlip(address, uint256);
-
     event TrasmitReint(bool, uint256);
+    event Initialized(address index, address, address);
 
     error InitialPriceTooHigh(uint256 given, uint256 maxPrice);
     error WithdrawAmountTooHigh(uint256 requestAmount, uint256 maxAmount);

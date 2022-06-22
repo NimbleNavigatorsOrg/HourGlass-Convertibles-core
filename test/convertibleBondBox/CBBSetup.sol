@@ -19,6 +19,8 @@ abstract contract CBBSetup is Test {
     ConvertibleBondBox s_deployedConvertibleBondBox;
     CBBFactory s_CBBFactory;
 
+    address s_cbb_owner = address(this);
+
     MockERC20 s_collateralToken;
 
     MockERC20 s_stableToken;
