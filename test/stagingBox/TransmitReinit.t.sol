@@ -10,7 +10,7 @@ import "./SBSetup.t.sol";
 contract TransmitReinit is SBSetup {
 
     function testTransmitReInit(uint256 price, uint256 _borrowSlipAmount, bool _isLend) public {
-        price = bound(price, 0, s_deployedConvertibleBondBox.s_priceGranularity());
+        price = bound(price, 1, s_deployedConvertibleBondBox.s_priceGranularity());
 
         s_deployedSB = StagingBox(stagingBoxFactory.createStagingBox(
             s_deployedConvertibleBondBox,

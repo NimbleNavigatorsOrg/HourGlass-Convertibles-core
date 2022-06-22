@@ -10,7 +10,7 @@ import "./SBSetup.t.sol";
 contract RedeemBorrowSlip is SBSetup {
 
     function testRedeemBorrowSlipTransfersRiskSlipsFromStagingBoxToMsgSender(uint256 price, uint256 _borrowSlipAmount) public {
-        price = bound(price, 0, s_deployedConvertibleBondBox.s_priceGranularity());
+        price = bound(price, 1, s_deployedConvertibleBondBox.s_priceGranularity());
 
         s_deployedSB = StagingBox(stagingBoxFactory.createStagingBox(
             s_deployedConvertibleBondBox,
@@ -38,7 +38,7 @@ contract RedeemBorrowSlip is SBSetup {
     }
 
     function testRedeemBorrowSlipTransfersStableTokensFromStagingBoxToMsgSender(uint256 price, uint256 _borrowSlipAmount) public {
-        price = bound(price, 0, s_deployedConvertibleBondBox.s_priceGranularity());
+        price = bound(price, 1, s_deployedConvertibleBondBox.s_priceGranularity());
 
         s_deployedSB = StagingBox(stagingBoxFactory.createStagingBox(
             s_deployedConvertibleBondBox,
@@ -66,7 +66,7 @@ contract RedeemBorrowSlip is SBSetup {
     }
 
     function testRedeemBorrowBurnsMsgSenderBorrowSlips(uint256 price, uint256 _borrowSlipAmount) public {
-        price = bound(price, 0, s_deployedConvertibleBondBox.s_priceGranularity());
+        price = bound(price, 1, s_deployedConvertibleBondBox.s_priceGranularity());
 
         s_deployedSB = StagingBox(stagingBoxFactory.createStagingBox(
             s_deployedConvertibleBondBox,
@@ -89,7 +89,7 @@ contract RedeemBorrowSlip is SBSetup {
     }
 
     function testRedeemBorrowEmitsRedeemBorrowSlip(uint256 price, uint256 _borrowSlipAmount) public {
-        price = bound(price, 0, s_deployedConvertibleBondBox.s_priceGranularity());
+        price = bound(price, 1, s_deployedConvertibleBondBox.s_priceGranularity());
 
         s_deployedSB = StagingBox(stagingBoxFactory.createStagingBox(
             s_deployedConvertibleBondBox,

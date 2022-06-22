@@ -10,7 +10,7 @@ import "./SBSetup.t.sol";
 contract WithdrawLend is SBSetup {
 
     function testWithdrawLendTransfersStableTokensFromStagingBoxToMsgSender(uint256 price, uint256 _lendSlipAmount) public {
-        price = bound(price, 0, s_deployedConvertibleBondBox.s_priceGranularity());
+        price = bound(price, 1, s_deployedConvertibleBondBox.s_priceGranularity());
 
         s_deployedSB = StagingBox(stagingBoxFactory.createStagingBox(
             s_deployedConvertibleBondBox,
@@ -33,7 +33,7 @@ contract WithdrawLend is SBSetup {
     }
 
     function testWithdrawLendBurnsMsgSenderLenderSlips(uint256 price, uint256 _lendSlipAmount) public {
-        price = bound(price, 0, s_deployedConvertibleBondBox.s_priceGranularity());
+        price = bound(price, 1, s_deployedConvertibleBondBox.s_priceGranularity());
 
         s_deployedSB = StagingBox(stagingBoxFactory.createStagingBox(
             s_deployedConvertibleBondBox,
@@ -55,7 +55,7 @@ contract WithdrawLend is SBSetup {
     }
 
     function testWithdrawLendEmitsLendWithdraw(uint256 price, uint256 _lendSlipAmount) public {
-        price = bound(price, 0, s_deployedConvertibleBondBox.s_priceGranularity());
+        price = bound(price, 1, s_deployedConvertibleBondBox.s_priceGranularity());
 
         s_deployedSB = StagingBox(stagingBoxFactory.createStagingBox(
             s_deployedConvertibleBondBox,

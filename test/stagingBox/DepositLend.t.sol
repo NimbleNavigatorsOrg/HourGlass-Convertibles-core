@@ -9,7 +9,7 @@ import "./SBSetup.t.sol";
 
 contract DepositBorrow is SBSetup {
     function testTransfersStableTokensFromMsgSenderToStagingBox(uint256 price, uint256 lendAmount) public {
-        price = bound(price, 0, s_deployedConvertibleBondBox.s_priceGranularity());
+        price = bound(price, 1, s_deployedConvertibleBondBox.s_priceGranularity());
 
         s_deployedSB = StagingBox(stagingBoxFactory.createStagingBox(
             s_deployedConvertibleBondBox,
@@ -35,7 +35,7 @@ contract DepositBorrow is SBSetup {
     }
 
     function testMintsLendSlipsToLender(uint256 _price, uint256 _lendAmount) public {
-        _price = bound(_price, 0, s_deployedConvertibleBondBox.s_priceGranularity());
+        _price = bound(_price, 1, s_deployedConvertibleBondBox.s_priceGranularity());
 
         s_deployedSB = StagingBox(stagingBoxFactory.createStagingBox(
             s_deployedConvertibleBondBox,
@@ -58,7 +58,7 @@ contract DepositBorrow is SBSetup {
     }
 
     function testEmitsLendDeposit(uint256 _price, uint256 _lendAmount) public {
-        _price = bound(_price, 0, s_deployedConvertibleBondBox.s_priceGranularity());
+        _price = bound(_price, 1, s_deployedConvertibleBondBox.s_priceGranularity());
 
         s_deployedSB = StagingBox(stagingBoxFactory.createStagingBox(
             s_deployedConvertibleBondBox,

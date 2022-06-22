@@ -37,6 +37,11 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
                 given: initialPrice(),
                 maxPrice: priceGranularity()
             });
+        if (initialPrice() == 0)
+            revert InitialPriceIsZero({
+                given: 0,
+                maxPrice: priceGranularity()
+            });
 
         //Setup ownership
         __Ownable_init();

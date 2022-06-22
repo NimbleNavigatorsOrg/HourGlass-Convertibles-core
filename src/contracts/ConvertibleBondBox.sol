@@ -98,6 +98,11 @@ contract ConvertibleBondBox is
                 given: _initialPrice,
                 maxPrice: priceGranularity
             });
+        if (_initialPrice == 0)
+            revert InitialPriceIsZero({
+                given: 0,
+                maxPrice: priceGranularity
+            });
         s_initalPrice = _initialPrice;
 
         //set ConvertibleBondBox Start Date to be time when init() is called

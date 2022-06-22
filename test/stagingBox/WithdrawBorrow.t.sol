@@ -10,7 +10,7 @@ import "./SBSetup.t.sol";
 contract WithdrawBorrow is SBSetup {
 
     function testTransfersSafeTrancheFromStagingBoxToMsgSender(uint256 price, uint256 _borrowSlipAmount) public {
-        price = bound(price, 0, s_deployedConvertibleBondBox.s_priceGranularity());
+        price = bound(price, 1, s_deployedConvertibleBondBox.s_priceGranularity());
 
         s_deployedSB = StagingBox(stagingBoxFactory.createStagingBox(
             s_deployedConvertibleBondBox,
@@ -34,7 +34,7 @@ contract WithdrawBorrow is SBSetup {
     }
 
     function testTransfersRiskTrancheFromStagingBoxToMsgSender(uint256 price, uint256 _borrowSlipAmount) public {
-        price = bound(price, 0, s_deployedConvertibleBondBox.s_priceGranularity());
+        price = bound(price, 1, s_deployedConvertibleBondBox.s_priceGranularity());
 
         s_deployedSB = StagingBox(stagingBoxFactory.createStagingBox(
             s_deployedConvertibleBondBox,
@@ -62,7 +62,7 @@ contract WithdrawBorrow is SBSetup {
     }
 
     function testEmitsBorrowWithdrawal(uint256 price, uint256 _borrowSlipAmount) public {
-        price = bound(price, 0, s_deployedConvertibleBondBox.s_priceGranularity());
+        price = bound(price, 1, s_deployedConvertibleBondBox.s_priceGranularity());
 
         s_deployedSB = StagingBox(stagingBoxFactory.createStagingBox(
             s_deployedConvertibleBondBox,

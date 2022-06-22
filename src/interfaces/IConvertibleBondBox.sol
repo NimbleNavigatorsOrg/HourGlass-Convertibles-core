@@ -24,6 +24,7 @@ interface IConvertibleBondBox is ICBBImmutableArgs {
     error BondIsMature(bool given, bool required);
     error TrancheIndexOutOfBounds(uint256 given, uint256 maxIndex);
     error InitialPriceTooHigh(uint256 given, uint256 maxPrice);
+    error InitialPriceIsZero(uint256 given, uint256 maxPrice);
     error ConvertibleBondBoxNotStarted(uint256 given, uint256 minStartDate);
     error BondNotMatureYet(uint256 maturityDate, uint256 currentTime);
     error OnlyLendOrBorrow(uint256 _stableAmount, uint256 _collateralAmount);
