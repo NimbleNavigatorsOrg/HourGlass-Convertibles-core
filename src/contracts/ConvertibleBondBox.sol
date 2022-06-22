@@ -86,7 +86,7 @@ contract ConvertibleBondBox is
         uint256 _safeTrancheAmount,
         uint256 _stableAmount,
         uint256 _initialPrice
-    ) external reinitializer(2) onlyOwner {
+    ) external reinitializer(2) onlyOwner returns(bool) {
         uint256 priceGranularity = s_priceGranularity;
         if (_stableAmount * _safeTrancheAmount != 0)
             revert OnlyLendOrBorrow({
@@ -135,6 +135,7 @@ contract ConvertibleBondBox is
         }
 
         emit Initialized(_borrower, _lender, _stableAmount, _safeTrancheAmount);
+        return true;
     }
 
     /**
@@ -500,7 +501,7 @@ contract ConvertibleBondBox is
         );
     }
 
-    function cbbTransferOwnership(address owner) external override onlyOwner {
-        transferOwnership(owner);
+    function cbbTransferOwnership(address newOwner) external override onlyOwner {
+        transferOwnership(newOwner);
     }
 }
