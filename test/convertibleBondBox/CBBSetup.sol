@@ -8,8 +8,8 @@ import "../../src/contracts/ButtonWoodBondController.sol";
 import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
 import "@buttonwood-protocol/tranche/contracts/Tranche.sol";
 import "@buttonwood-protocol/tranche/contracts/TrancheFactory.sol";
-import "../../src/contracts/CBBSlip.sol";
-import "../../src/contracts/CBBSlipFactory.sol";
+import "../../src/contracts/Slip.sol";
+import "../../src/contracts/SlipFactory.sol";
 import "forge-std/console2.sol";
 import "../../test/mocks/MockERC20.sol";
 
@@ -19,16 +19,15 @@ abstract contract CBBSetup is Test {
     ConvertibleBondBox s_deployedConvertibleBondBox;
     CBBFactory s_CBBFactory;
 
-    //TODO use a different address other than address(this)
-    address s_cbb_owner = address(this);
+    address s_cbb_owner = address(55);
 
     MockERC20 s_collateralToken;
 
     MockERC20 s_stableToken;
     TrancheFactory s_trancheFactory;
     Tranche s_tranche;
-    CBBSlip s_slip;
-    CBBSlipFactory s_slipFactory;
+    Slip s_slip;
+    SlipFactory s_slipFactory;
     ITranche s_safeTranche;
     ITranche s_riskTranche;
     uint256[] s_ratios;
@@ -73,11 +72,11 @@ abstract contract CBBSetup is Test {
 
         // create buttonwood bond collateral token
         s_collateralToken = new MockERC20("CollateralToken", "CT");
-        s_collateralToken.mint(address(this), 1e18);
+        s_collateralToken.mint(s_cbb_owner, 1e18);
 
         // // create stable token
         s_stableToken = new MockERC20("StableToken", "ST");
-        s_stableToken.mint(address(this), 10e18);
+        s_stableToken.mint(s_cbb_owner, 10e18);
         // // create tranche
         s_tranche = new Tranche();
 
@@ -85,10 +84,10 @@ abstract contract CBBSetup is Test {
         s_trancheFactory = new TrancheFactory(address(s_tranche));
 
         // // create s_slip
-        s_slip = new CBBSlip();
+        s_slip = new Slip();
 
         // // create s_slip factory
-        s_slipFactory = new CBBSlipFactory(address(s_slip));
+        s_slipFactory = new SlipFactory(address(s_slip));
 
         s_buttonWoodBondController = new ButtonWoodBondController();
         s_convertibleBondBox = new ConvertibleBondBox();
@@ -97,7 +96,7 @@ abstract contract CBBSetup is Test {
         s_buttonWoodBondController.init(
             address(s_trancheFactory),
             address(s_collateralToken),
-            address(this),
+            s_cbb_owner,
             s_ratios,
             s_maturityDate,
             s_depositLimit
@@ -113,13 +112,14 @@ abstract contract CBBSetup is Test {
             s_cbb_owner
         );
 
+        vm.prank(s_cbb_owner);
         s_collateralToken.approve(
             address(s_buttonWoodBondController),
             type(uint256).max
         );
 
+        vm.prank(s_cbb_owner);
         s_buttonWoodBondController.deposit(1e18);
-
         (s_safeTranche, s_safeRatio) = s_buttonWoodBondController.tranches(
             s_trancheIndex
         );
@@ -127,14 +127,16 @@ abstract contract CBBSetup is Test {
             s_buttonWoodBondController.trancheCount() - 1
         );
 
+        vm.startPrank(s_cbb_owner);
         s_safeTranche.approve(s_deployedCBBAddress, type(uint256).max);
         s_riskTranche.approve(s_deployedCBBAddress, type(uint256).max);
         s_stableToken.approve(s_deployedCBBAddress, type(uint256).max);
+        vm.stopPrank();
 
         s_deployedConvertibleBondBox = ConvertibleBondBox(s_deployedCBBAddress);
 
         s_depositLimit =
-            (s_safeTranche.balanceOf(address(this)) * s_price) /
+            (s_safeTranche.balanceOf(s_cbb_owner) * s_price) /
             s_priceGranularity;
     }
 }

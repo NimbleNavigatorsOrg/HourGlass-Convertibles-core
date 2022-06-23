@@ -44,7 +44,7 @@ contract DepositBorrow is SBSetup {
             s_owner
         ));
         uint256 userStableTokenBalanceBeforeLend = IERC20(s_deployedConvertibleBondBox.stableToken()).balanceOf(address(this));
-        uint256 lenderLendSlipBalanceBeforeLend = ICBBSlip(s_deployedSB.s_lendSlipTokenAddress()).balanceOf(address(s_lender));
+        uint256 lenderLendSlipBalanceBeforeLend = ISlip(s_deployedSB.s_lendSlipTokenAddress()).balanceOf(address(s_lender));
 
         _lendAmount = bound(_lendAmount, 0, userStableTokenBalanceBeforeLend);
 
@@ -52,7 +52,7 @@ contract DepositBorrow is SBSetup {
 
         s_deployedSB.depositLend(s_lender, _lendAmount);
 
-        uint256 lenderLendSlipBalanceAfterLend = ICBBSlip(s_deployedSB.s_lendSlipTokenAddress()).balanceOf(address(s_lender));
+        uint256 lenderLendSlipBalanceAfterLend = ISlip(s_deployedSB.s_lendSlipTokenAddress()).balanceOf(address(s_lender));
 
         assertEq(lenderLendSlipBalanceBeforeLend + _lendAmount, lenderLendSlipBalanceAfterLend);
     }

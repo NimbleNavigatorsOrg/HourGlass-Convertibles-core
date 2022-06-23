@@ -8,8 +8,8 @@ import "../../src/contracts/ButtonWoodBondController.sol";
 import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
 import "@buttonwood-protocol/tranche/contracts/Tranche.sol";
 import "@buttonwood-protocol/tranche/contracts/TrancheFactory.sol";
-import "../../src/contracts/CBBSlip.sol";
-import "../../src/contracts/CBBSlipFactory.sol";
+import "../../src/contracts/Slip.sol";
+import "../../src/contracts/SlipFactory.sol";
 import "forge-std/console2.sol";
 import "../../test/mocks/MockERC20.sol";
 import "./CBBSetup.sol";
@@ -43,7 +43,7 @@ contract Borrow is CBBSetup {
             0,
             s_deployedConvertibleBondBox.safeRatio() - 1
         );
-
+        vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.reinitialize(
             s_initial_borrower,
             s_initial_lender,
@@ -72,9 +72,10 @@ contract Borrow is CBBSetup {
         safeTrancheAmount = bound(
             safeTrancheAmount,
             s_deployedConvertibleBondBox.safeRatio(),
-            s_safeTranche.balanceOf(address(this))
+            s_safeTranche.balanceOf(s_deployedConvertibleBondBox.owner())
         );
 
+        vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.reinitialize(
             s_initial_borrower,
             s_initial_lender,
@@ -93,10 +94,10 @@ contract Borrow is CBBSetup {
         safeTrancheAmount = initializeCBBAndBoundSafeTrancheAmount(
             safeTrancheAmount
         );
-
+        vm.startPrank(s_deployedConvertibleBondBox.owner());
         vm.expectEmit(true, true, true, true);
         emit Borrow(
-            address(this),
+            s_deployedConvertibleBondBox.owner(),
             s_borrower,
             s_lender,
             safeTrancheAmount,
@@ -107,6 +108,7 @@ contract Borrow is CBBSetup {
             s_lender,
             safeTrancheAmount
         );
+        vm.stopPrank();
     }
 
     function testBorrowTransfersSafeTranchesToCBB(uint256 safeTrancheAmount)
@@ -119,11 +121,12 @@ contract Borrow is CBBSetup {
         );
 
         uint256 matcherContractSafeTrancheBalanceBeforeBorrow = s_safeTranche
-            .balanceOf(address(this));
+            .balanceOf(s_deployedConvertibleBondBox.owner());
         uint256 CBBSafeTrancheBalanceBeforeBorrow = s_safeTranche.balanceOf(
             address(s_deployedConvertibleBondBox)
         );
 
+        vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.borrow(
             s_borrower,
             s_lender,
@@ -131,7 +134,7 @@ contract Borrow is CBBSetup {
         );
 
         uint256 matcherContractSafeTrancheBalanceAfterBorrow = s_safeTranche
-            .balanceOf(address(this));
+            .balanceOf(s_deployedConvertibleBondBox.owner());
         uint256 CBBSafeTrancheBalanceAfterBorrow = s_safeTranche.balanceOf(
             address(s_deployedConvertibleBondBox)
         );
@@ -160,11 +163,12 @@ contract Borrow is CBBSetup {
             s_deployedConvertibleBondBox.safeRatio();
 
         uint256 matcherContractRiskTrancheBalanceBeforeBorrow = s_riskTranche
-            .balanceOf(address(this));
+            .balanceOf(s_deployedConvertibleBondBox.owner());
         uint256 CBBRiskTrancheBalanceBeforeBorrow = s_riskTranche.balanceOf(
             address(s_deployedConvertibleBondBox)
         );
 
+        vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.borrow(
             s_borrower,
             s_lender,
@@ -172,7 +176,7 @@ contract Borrow is CBBSetup {
         );
 
         uint256 matcherContractRiskTrancheBalanceAfterBorrow = s_riskTranche
-            .balanceOf(address(this));
+            .balanceOf(s_deployedConvertibleBondBox.owner());
         uint256 CBBRiskTrancheBalanceAfterBorrow = s_riskTranche.balanceOf(
             address(s_deployedConvertibleBondBox)
         );
@@ -196,17 +200,18 @@ contract Borrow is CBBSetup {
             safeTrancheAmount
         );
 
-        uint256 LenderSafeSlipBalanceBeforeBorrow = ICBBSlip(
+        uint256 LenderSafeSlipBalanceBeforeBorrow = ISlip(
             s_deployedConvertibleBondBox.s_safeSlipTokenAddress()
         ).balanceOf(address(s_lender));
 
+        vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.borrow(
             s_borrower,
             s_lender,
             safeTrancheAmount
         );
 
-        uint256 LenderSafeSlipBalanceAfterBorrow = ICBBSlip(
+        uint256 LenderSafeSlipBalanceAfterBorrow = ISlip(
             s_deployedConvertibleBondBox.s_safeSlipTokenAddress()
         ).balanceOf(address(s_lender));
 
@@ -229,17 +234,18 @@ contract Borrow is CBBSetup {
             s_deployedConvertibleBondBox.riskRatio()) /
             s_deployedConvertibleBondBox.safeRatio();
 
-        uint256 borrowerSafeSlipBalanceBeforeBorrow = ICBBSlip(
+        uint256 borrowerSafeSlipBalanceBeforeBorrow = ISlip(
             s_deployedConvertibleBondBox.s_riskSlipTokenAddress()
         ).balanceOf(address(s_borrower));
 
+        vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.borrow(
             s_borrower,
             s_lender,
             safeTrancheAmount
         );
 
-        uint256 borrowerSafeSlipBalanceAfterBorrow = ICBBSlip(
+        uint256 borrowerSafeSlipBalanceAfterBorrow = ISlip(
             s_deployedConvertibleBondBox.s_riskSlipTokenAddress()
         ).balanceOf(address(s_borrower));
 
@@ -263,12 +269,14 @@ contract Borrow is CBBSetup {
         ).balanceOf(address(s_borrower));
         uint256 CBBStableBalanceBeforeBorrow = IERC20(
             s_deployedConvertibleBondBox.stableToken()
-        ).balanceOf(address(this));
+        ).balanceOf(s_deployedConvertibleBondBox.owner());
 
         uint256 stableAmount = (safeTrancheAmount *
             s_deployedConvertibleBondBox.currentPrice()) /
             s_deployedConvertibleBondBox.s_priceGranularity();
 
+        //TODO see if we should expect this prank in all tests in this file.
+        vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.borrow(
             s_borrower,
             s_lender,
@@ -280,7 +288,7 @@ contract Borrow is CBBSetup {
         ).balanceOf(address(s_borrower));
         uint256 CBBStableBalanceAfterBorrow = IERC20(
             s_deployedConvertibleBondBox.stableToken()
-        ).balanceOf(address(this));
+        ).balanceOf(s_deployedConvertibleBondBox.owner());
 
         assertEq(
             borrowerStableBalanceBeforeBorrow + stableAmount,

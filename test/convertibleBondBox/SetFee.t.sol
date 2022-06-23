@@ -8,8 +8,8 @@ import "../../src/contracts/ButtonWoodBondController.sol";
 import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
 import "@buttonwood-protocol/tranche/contracts/Tranche.sol";
 import "@buttonwood-protocol/tranche/contracts/TrancheFactory.sol";
-import "../../src/contracts/CBBSlip.sol";
-import "../../src/contracts/CBBSlipFactory.sol";
+import "../../src/contracts/Slip.sol";
+import "../../src/contracts/SlipFactory.sol";
 import "forge-std/console2.sol";
 import "../../test/mocks/MockERC20.sol";
 import "./CBBSetup.sol";
@@ -32,9 +32,10 @@ contract SetFee is CBBSetup {
     }
 
     function testCannotSetFeeBondIsMature(uint256 newFee) public {
-        s_buttonWoodBondController.mature();
         newFee = bound(newFee, 0, s_BPS);
-        vm.prank(s_deployedConvertibleBondBox.owner());
+
+        vm.startPrank(s_deployedConvertibleBondBox.owner());
+        s_buttonWoodBondController.mature();
         bytes memory customError = abi.encodeWithSignature(
             "BondIsMature(bool,bool)",
             true,
@@ -42,6 +43,7 @@ contract SetFee is CBBSetup {
         );
         vm.expectRevert(customError);
         s_deployedConvertibleBondBox.setFee(newFee);
+        vm.stopPrank();
     }
 
     function testCannotSetFeeFeeTooLarge(uint256 newFee) public {

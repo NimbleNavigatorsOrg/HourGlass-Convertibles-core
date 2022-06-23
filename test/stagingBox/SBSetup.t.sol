@@ -28,7 +28,7 @@ contract SBSetup is CBBSetup {
     function setUp() public override {
         super.setUp();
 
-        s_owner = address(this);
+        s_owner = address(55);
         s_borrower = address(1);
         s_lender = address(2);
 

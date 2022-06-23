@@ -20,9 +20,9 @@ contract RedeemLendSlip is SBSetup {
             s_owner
         ));
 
-        uint256 msgSenderLendSlipBalanceBeforeRedeem = ICBBSlip(s_deployedSB.s_lendSlipTokenAddress()).balanceOf(address(this));
-        uint256 msgSenderSafeSlipBalanceBeforeRedeem = ICBBSlip(s_deployedSB.safeSlipAddress()).balanceOf(address(this));
-        uint256 stagingBoxSafeSlipBalanceBeforeRedeem = ICBBSlip(s_deployedSB.safeSlipAddress()).balanceOf(address(s_deployedSB));
+        uint256 msgSenderLendSlipBalanceBeforeRedeem = ISlip(s_deployedSB.s_lendSlipTokenAddress()).balanceOf(address(this));
+        uint256 msgSenderSafeSlipBalanceBeforeRedeem = ISlip(s_deployedSB.safeSlipAddress()).balanceOf(address(this));
+        uint256 stagingBoxSafeSlipBalanceBeforeRedeem = ISlip(s_deployedSB.safeSlipAddress()).balanceOf(address(s_deployedSB));
 
         _lendSlipAmount = bound(_lendSlipAmount, 0, msgSenderLendSlipBalanceBeforeRedeem);
 
@@ -30,8 +30,8 @@ contract RedeemLendSlip is SBSetup {
 
         s_deployedSB.redeemLendSlip(_lendSlipAmount);
 
-        uint256 msgSenderSafeSlipBalanceAfterRedeem = ICBBSlip(s_deployedSB.safeSlipAddress()).balanceOf(address(this));
-        uint256 stagingBoxSafeSlipBalanceAfterRedeem = ICBBSlip(s_deployedSB.safeSlipAddress()).balanceOf(address(s_deployedSB));
+        uint256 msgSenderSafeSlipBalanceAfterRedeem = ISlip(s_deployedSB.safeSlipAddress()).balanceOf(address(this));
+        uint256 stagingBoxSafeSlipBalanceAfterRedeem = ISlip(s_deployedSB.safeSlipAddress()).balanceOf(address(s_deployedSB));
 
         assertEq(msgSenderSafeSlipBalanceBeforeRedeem + lendSlipTransferAmount, msgSenderSafeSlipBalanceAfterRedeem);
         assertEq(stagingBoxSafeSlipBalanceBeforeRedeem - lendSlipTransferAmount, stagingBoxSafeSlipBalanceAfterRedeem);
@@ -48,13 +48,13 @@ contract RedeemLendSlip is SBSetup {
             s_owner
         ));
 
-        uint256 msgSenderLendSlipBalanceBeforeRedeem = ICBBSlip(s_deployedSB.s_lendSlipTokenAddress()).balanceOf(address(this));
+        uint256 msgSenderLendSlipBalanceBeforeRedeem = ISlip(s_deployedSB.s_lendSlipTokenAddress()).balanceOf(address(this));
 
         _lendSlipAmount = bound(_lendSlipAmount, 0, msgSenderLendSlipBalanceBeforeRedeem);
 
         s_deployedSB.redeemLendSlip(_lendSlipAmount);
 
-        uint256 msgSenderSafeSlipBalanceAfterRedeem = ICBBSlip(s_deployedSB.s_lendSlipTokenAddress()).balanceOf(address(this));
+        uint256 msgSenderSafeSlipBalanceAfterRedeem = ISlip(s_deployedSB.s_lendSlipTokenAddress()).balanceOf(address(this));
 
         assertEq(msgSenderLendSlipBalanceBeforeRedeem - _lendSlipAmount, msgSenderSafeSlipBalanceAfterRedeem);
     }
@@ -70,7 +70,7 @@ contract RedeemLendSlip is SBSetup {
             s_owner
         ));
 
-        uint256 msgSenderLendSlipBalanceBeforeRedeem = ICBBSlip(s_deployedSB.s_lendSlipTokenAddress()).balanceOf(address(this));
+        uint256 msgSenderLendSlipBalanceBeforeRedeem = ISlip(s_deployedSB.s_lendSlipTokenAddress()).balanceOf(address(this));
 
         _lendSlipAmount = bound(_lendSlipAmount, 0, msgSenderLendSlipBalanceBeforeRedeem);
 

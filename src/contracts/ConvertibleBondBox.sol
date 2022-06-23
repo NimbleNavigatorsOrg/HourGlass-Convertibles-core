@@ -6,8 +6,8 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@uniswap/lib/contracts/libraries/TransferHelper.sol";
 import "clones-with-immutable-args/Clone.sol";
 import "../interfaces/IButtonWoodBondController.sol";
-import "../interfaces/ICBBSlipFactory.sol";
-import "../interfaces/ICBBSlip.sol";
+import "../interfaces/ISlipFactory.sol";
+import "../interfaces/ISlip.sol";
 import "../../utils/CBBImmutableArgs.sol";
 import "../interfaces/IConvertibleBondBox.sol";
 
@@ -294,7 +294,7 @@ contract ConvertibleBondBox is
             zTranchePaidFor
         );
 
-        ICBBSlip(s_riskSlipTokenAddress).burn(_msgSender(), zTranchePaidFor);
+        ISlip(s_riskSlipTokenAddress).burn(_msgSender(), zTranchePaidFor);
 
         emit Repay(_msgSender(), _stableAmount, zTranchePaidFor, price);
     }
@@ -339,7 +339,7 @@ contract ConvertibleBondBox is
             zTranchePayout
         );
 
-        ICBBSlip(s_riskSlipTokenAddress).burn(_msgSender(), _riskSlipAmount);
+        ISlip(s_riskSlipTokenAddress).burn(_msgSender(), _riskSlipAmount);
 
         emit RedeemRiskTranche(_msgSender(), _riskSlipAmount);
     }
@@ -374,10 +374,10 @@ contract ConvertibleBondBox is
 
         _safeSlipAmount -= feeSlip;
 
-        uint256 safeSlipSupply = ICBBSlip(safeSlipTokenAddress).totalSupply();
+        uint256 safeSlipSupply = ISlip(safeSlipTokenAddress).totalSupply();
 
         //burn safe-slips
-        ICBBSlip(safeSlipTokenAddress).burn(_msgSender(), _safeSlipAmount);
+        ISlip(safeSlipTokenAddress).burn(_msgSender(), _safeSlipAmount);
 
         //transfer safe-Tranche after maturity only
         TransferHelper.safeTransfer(
@@ -433,7 +433,7 @@ contract ConvertibleBondBox is
         uint256 stableBalance = stableToken().balanceOf(address(this));
 
         //burn safe-slips
-        ICBBSlip(safeSlipTokenAddress).burn(_msgSender(), _safeSlipAmount);
+        ISlip(safeSlipTokenAddress).burn(_msgSender(), _safeSlipAmount);
 
         //transfer stables
         TransferHelper.safeTransfer(
@@ -487,10 +487,10 @@ contract ConvertibleBondBox is
         );
 
         // //Mint safeSlips to the lender
-        ICBBSlip(s_safeSlipTokenAddress).mint(_lender, _safeSlipAmount);
+        ISlip(s_safeSlipTokenAddress).mint(_lender, _safeSlipAmount);
 
         // //Mint riskSlips to the borrower
-        ICBBSlip(s_riskSlipTokenAddress).mint(_borrower, _riskSlipAmount);
+        ISlip(s_riskSlipTokenAddress).mint(_borrower, _riskSlipAmount);
 
         // // Transfer stables to borrower
         TransferHelper.safeTransferFrom(

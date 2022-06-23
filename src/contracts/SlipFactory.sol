@@ -3,13 +3,13 @@ pragma solidity 0.8.13;
 
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
-import "./CBBSlip.sol";
-import "../interfaces/ICBBSlipFactory.sol";
+import "./Slip.sol";
+import "../interfaces/ISlipFactory.sol";
 
 /**
  * @dev Factory for Iou minimal proxy contracts
  */
-contract CBBSlipFactory is ICBBSlipFactory, Context {
+contract SlipFactory is ISlipFactory, Context {
     bytes32 public constant DEFAULT_ADMIN_ROLE = 0x00;
 
     address public target;
@@ -19,7 +19,7 @@ contract CBBSlipFactory is ICBBSlipFactory, Context {
     }
 
     /**
-     * @inheritdoc ICBBSlipFactory
+     * @inheritdoc ISlipFactory
      */
     function createSlip(
         string memory name,
@@ -27,7 +27,7 @@ contract CBBSlipFactory is ICBBSlipFactory, Context {
         address _collateralToken
     ) external override returns (address) {
         address clone = Clones.clone(target);
-        CBBSlip(clone).init(name, symbol, _msgSender(), _collateralToken);
+        Slip(clone).init(name, symbol, _msgSender(), _collateralToken);
         emit SlipCreated(clone);
         return clone;
     }

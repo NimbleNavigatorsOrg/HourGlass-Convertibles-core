@@ -3,7 +3,7 @@ pragma solidity ^0.8.7;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "clones-with-immutable-args/Clone.sol";
-import "../src/interfaces/ICBBSlipFactory.sol";
+import "../src/interfaces/ISlipFactory.sol";
 import "../src/interfaces/IButtonWoodBondController.sol";
 
 interface ICBBImmutableArgs {
@@ -21,7 +21,7 @@ interface ICBBImmutableArgs {
      * @dev https://github.com/wighawag/clones-with-immutable-args
      * @return The asset being used to make bids
      */
-    function slipFactory() external pure returns (ICBBSlipFactory);
+    function slipFactory() external pure returns (ISlipFactory);
 
     /**
      * @notice penalty for zslips

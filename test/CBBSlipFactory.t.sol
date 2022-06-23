@@ -8,21 +8,21 @@ import "../src/contracts/ButtonWoodBondController.sol";
 import "@buttonwood-protocol/tranche/contracts/Tranche.sol";
 import "@buttonwood-protocol/tranche/contracts/external/ERC20.sol";
 import "@buttonwood-protocol/tranche/contracts/TrancheFactory.sol";
-import "../src/contracts/CBBSlip.sol";
-import "../src/contracts/CBBSlipFactory.sol";
+import "../src/contracts/Slip.sol";
+import "../src/contracts/SlipFactory.sol";
 import "forge-std/console2.sol";
 
-contract CBBSlipFactoryTest is Test {
+contract SlipFactoryTest is Test {
     ERC20 s_collateralToken;
-    CBBSlip s_slip;
-    CBBSlipFactory s_slipFactory;
+    Slip s_slip;
+    SlipFactory s_slipFactory;
     address s_deployedSlip;
     event SlipCreated(address newSlipAddress);
 
     function setUp() public {
         s_collateralToken = new ERC20("CollateralToken", "CT");
-        s_slip = new CBBSlip();
-        s_slipFactory = new CBBSlipFactory(address(s_slip));
+        s_slip = new Slip();
+        s_slipFactory = new SlipFactory(address(s_slip));
         s_deployedSlip = s_slipFactory.createSlip("slip", "SLP", address(s_collateralToken));
     }
 

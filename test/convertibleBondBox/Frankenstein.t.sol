@@ -8,8 +8,8 @@ import "../../src/contracts/ButtonWoodBondController.sol";
 import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
 import "@buttonwood-protocol/tranche/contracts/Tranche.sol";
 import "@buttonwood-protocol/tranche/contracts/TrancheFactory.sol";
-import "../../src/contracts/CBBSlip.sol";
-import "../../src/contracts/CBBSlipFactory.sol";
+import "../../src/contracts/Slip.sol";
+import "../../src/contracts/SlipFactory.sol";
 import "forge-std/console2.sol";
 import "../../test/mocks/MockERC20.sol";
 import "./CBBSetup.sol";
@@ -23,7 +23,7 @@ contract Frankenstein is CBBSetup {
     ) public {
         collateralAmount = bound(collateralAmount, 0, 1e20);
         // used to be 1e20, is this change correct?
-        amount = bound(amount, s_trancheGranularity, s_safeTranche.balanceOf(address(this)));
+        amount = bound(amount, s_trancheGranularity, s_safeTranche.balanceOf(s_cbb_owner));
         stableAmount = bound(
             stableAmount,
             (amount * s_price) / s_priceGranularity,
@@ -73,6 +73,7 @@ contract Frankenstein is CBBSetup {
             vm.stopPrank();
         }
 
+        vm.startPrank(s_deployedConvertibleBondBox.owner());
         vm.expectEmit(true, true, true, true);
         emit Initialized(address(borrower), address(lender), 0, amount);
         s_deployedConvertibleBondBox.reinitialize(
@@ -82,16 +83,17 @@ contract Frankenstein is CBBSetup {
             0,
             s_price
         );
+        vm.stopPrank();
 
         //get slip approvals for all addresses
         for (uint160 i = 1; i < 11; i++) {
             vm.startPrank(address(i));
-            ICBBSlip(s_deployedConvertibleBondBox.s_riskSlipTokenAddress())
+            ISlip(s_deployedConvertibleBondBox.s_riskSlipTokenAddress())
                 .approve(
                     address(s_deployedConvertibleBondBox),
                     type(uint256).max
                 );
-            ICBBSlip(s_deployedConvertibleBondBox.s_riskSlipTokenAddress())
+            ISlip(s_deployedConvertibleBondBox.s_riskSlipTokenAddress())
                 .approve(
                     address(s_deployedConvertibleBondBox),
                     type(uint256).max
@@ -125,7 +127,7 @@ contract Frankenstein is CBBSetup {
         vm.warp(s_maturityDate / 2);
         vm.startPrank(address(borrower));
         uint256 _currentPrice = s_deployedConvertibleBondBox.currentPrice();
-        uint256 riskSlipBalance = ICBBSlip(
+        uint256 riskSlipBalance = ISlip(
             s_deployedConvertibleBondBox.s_riskSlipTokenAddress()
         ).balanceOf(address(borrower)) / 2;
 
@@ -179,7 +181,7 @@ contract Frankenstein is CBBSetup {
         vm.warp(s_maturityDate);
 
         vm.startPrank(address(lender));
-        uint256 safeSlipBalance = ICBBSlip(
+        uint256 safeSlipBalance = ISlip(
             s_deployedConvertibleBondBox.s_safeSlipTokenAddress()
         ).balanceOf(address(lender)) / 2;
         vm.expectEmit(true, true, true, true);
@@ -190,7 +192,7 @@ contract Frankenstein is CBBSetup {
         // Lender redeems half of remaining safeSlips for stables
         vm.startPrank(address(lender));
         safeSlipBalance =
-            ICBBSlip(s_deployedConvertibleBondBox.s_safeSlipTokenAddress())
+            ISlip(s_deployedConvertibleBondBox.s_safeSlipTokenAddress())
                 .balanceOf(address(lender)) /
             2;
         vm.expectEmit(true, true, true, true);
