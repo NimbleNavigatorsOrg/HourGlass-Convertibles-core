@@ -46,7 +46,7 @@ contract RedeemRiskTranche is CBBSetup {
 
     function testRedeemRiskTrancheSendsRiskSlipTokenFeeToOwner(uint256 time, uint256 depositAmount, uint256 riskSlipAmountToRedeem, uint256 fee) public {
         time = bound(time, s_maturityDate, s_endOfUnixTime);
-        depositAmount = bound(depositAmount, s_deployedConvertibleBondBox.safeRatio(), s_safeTranche.balanceOf(address(this)));
+        depositAmount = bound(depositAmount, s_deployedConvertibleBondBox.safeRatio(), s_safeTranche.balanceOf(s_deployedConvertibleBondBox.owner()));
         fee = bound(fee, 0, s_maxFeeBPS);
 
         vm.warp(time);
@@ -54,6 +54,7 @@ contract RedeemRiskTranche is CBBSetup {
         address borrowerAddress = address(1);
         address lenderAddress = address(2);
 
+        vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.reinitialize(borrowerAddress, lenderAddress, depositAmount, 0, s_price);
 
         vm.prank(s_deployedConvertibleBondBox.owner());
@@ -76,7 +77,7 @@ contract RedeemRiskTranche is CBBSetup {
 
         function testRedeemRiskTrancheSendsRiskTrancheFromCBBToMsgSender(uint256 time, uint256 depositAmount, uint256 riskSlipAmountToRedeem, uint256 fee) public {
         time = bound(time, s_maturityDate, s_endOfUnixTime);
-        depositAmount = bound(depositAmount, s_deployedConvertibleBondBox.safeRatio(), s_safeTranche.balanceOf(address(this)));
+        depositAmount = bound(depositAmount, s_deployedConvertibleBondBox.safeRatio(), s_safeTranche.balanceOf(s_cbb_owner));
         fee = bound(fee, 0, s_maxFeeBPS);
 
         vm.warp(time);
@@ -84,6 +85,7 @@ contract RedeemRiskTranche is CBBSetup {
         address borrowerAddress = address(1);
         address lenderAddress = address(2);
 
+        vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.reinitialize(borrowerAddress, lenderAddress, depositAmount, 0, s_price);
 
         vm.prank(s_deployedConvertibleBondBox.owner());
@@ -117,7 +119,7 @@ contract RedeemRiskTranche is CBBSetup {
 
         function testRedeemRiskTrancheBurnsRiskTrancheFromMsgSender(uint256 time, uint256 depositAmount, uint256 riskSlipAmountToRedeem, uint256 fee) public {
         time = bound(time, s_maturityDate, s_endOfUnixTime);
-        depositAmount = bound(depositAmount, s_deployedConvertibleBondBox.safeRatio(), s_safeTranche.balanceOf(address(this)));
+        depositAmount = bound(depositAmount, s_deployedConvertibleBondBox.safeRatio(), s_safeTranche.balanceOf(s_deployedConvertibleBondBox.owner()));
         fee = bound(fee, 0, s_maxFeeBPS);
 
         vm.warp(time);
@@ -125,6 +127,7 @@ contract RedeemRiskTranche is CBBSetup {
         address borrowerAddress = address(1);
         address lenderAddress = address(2);
 
+        vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.reinitialize(borrowerAddress, lenderAddress, depositAmount, 0, s_price);
 
         vm.prank(s_deployedConvertibleBondBox.owner());
@@ -146,7 +149,7 @@ contract RedeemRiskTranche is CBBSetup {
 
     function testRedeemRiskTrancheEmitsRedeemRiskTranche(uint256 time, uint256 depositAmount, uint256 riskSlipAmountToRedeem, uint256 fee) public {
         time = bound(time, s_maturityDate, s_endOfUnixTime);
-        depositAmount = bound(depositAmount, s_deployedConvertibleBondBox.safeRatio(), s_safeTranche.balanceOf(address(this)));
+        depositAmount = bound(depositAmount, s_deployedConvertibleBondBox.safeRatio(), s_safeTranche.balanceOf(s_deployedConvertibleBondBox.owner()));
         fee = bound(fee, 0, s_maxFeeBPS);
 
         vm.warp(time);
@@ -154,6 +157,7 @@ contract RedeemRiskTranche is CBBSetup {
         address borrowerAddress = address(1);
         address lenderAddress = address(2);
 
+        vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.reinitialize(borrowerAddress, lenderAddress, depositAmount, 0, s_price);
 
         vm.prank(s_deployedConvertibleBondBox.owner());
