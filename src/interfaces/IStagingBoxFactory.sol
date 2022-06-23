@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.13;
 import "./IConvertibleBondBox.sol";
-import "./ICBBFactory.sol";
+import "./ISlipFactory.sol";
 
 
 /**
@@ -11,7 +11,7 @@ import "./ICBBFactory.sol";
 interface IStagingBoxFactory {
     event StagingBoxCreated(
         IConvertibleBondBox convertibleBondBox,
-        ICBBSlipFactory slipFactory,
+        ISlipFactory slipFactory,
         uint256 initialPrice,
         address owner,
         address msgSender

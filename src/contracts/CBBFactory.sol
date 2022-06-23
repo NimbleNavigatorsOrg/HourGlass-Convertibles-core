@@ -7,6 +7,7 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import "./ConvertibleBondBox.sol";
 import "../interfaces/ICBBFactory.sol";
+import "../interfaces/ISlipFactory.sol";
 
 contract CBBFactory is ICBBFactory {
     using SafeERC20Upgradeable for IERC20Upgradeable;
@@ -31,7 +32,7 @@ contract CBBFactory is ICBBFactory {
      */
     function createConvertibleBondBox(
         IButtonWoodBondController bond,
-        ICBBSlipFactory slipFactory,
+        ISlipFactory slipFactory,
         uint256 penalty,
         address collateralToken,
         address stableToken,

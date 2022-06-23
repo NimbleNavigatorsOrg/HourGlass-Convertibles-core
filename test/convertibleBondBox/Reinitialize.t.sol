@@ -8,8 +8,8 @@ import "../../src/contracts/ButtonWoodBondController.sol";
 import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
 import "@buttonwood-protocol/tranche/contracts/Tranche.sol";
 import "@buttonwood-protocol/tranche/contracts/TrancheFactory.sol";
-import "../../src/contracts/CBBSlip.sol";
-import "../../src/contracts/CBBSlipFactory.sol";
+import "../../src/contracts/Slip.sol";
+import "../../src/contracts/SlipFactory.sol";
 import "forge-std/console2.sol";
 import "../../test/mocks/MockERC20.sol";
 import "./CBBSetup.sol";
@@ -64,11 +64,11 @@ contract Reinitialize is CBBSetup {
         uint256 borrowerStableBalanceAfter = s_stableToken.balanceOf(
             address(1)
         );
-        uint256 borrowerRiskSlipsAfter = ICBBSlip(
+        uint256 borrowerRiskSlipsAfter = ISlip(
             s_deployedConvertibleBondBox.s_riskSlipTokenAddress()
         ).balanceOf(address(1));
 
-        uint256 lenderSafeSlipsAfter = ICBBSlip(
+        uint256 lenderSafeSlipsAfter = ISlip(
             s_deployedConvertibleBondBox.s_safeSlipTokenAddress()
         ).balanceOf(address(2));
 
@@ -122,11 +122,11 @@ contract Reinitialize is CBBSetup {
         uint256 borrowerStableBalanceAfter = s_stableToken.balanceOf(
             address(1)
         );
-        uint256 borrowerRiskSlipsAfter = ICBBSlip(
+        uint256 borrowerRiskSlipsAfter = ISlip(
             s_deployedConvertibleBondBox.s_riskSlipTokenAddress()
         ).balanceOf(address(1));
 
-        uint256 lenderSafeSlipsAfter = ICBBSlip(
+        uint256 lenderSafeSlipsAfter = ISlip(
             s_deployedConvertibleBondBox.s_safeSlipTokenAddress()
         ).balanceOf(address(2));
 
@@ -295,11 +295,11 @@ contract Reinitialize is CBBSetup {
         uint256 borrowerStableBalanceAfter = s_stableToken.balanceOf(
             address(1)
         );
-        uint256 borrowerRiskSlipsAfter = ICBBSlip(
+        uint256 borrowerRiskSlipsAfter = ISlip(
             s_deployedConvertibleBondBox.s_riskSlipTokenAddress()
         ).balanceOf(address(1));
 
-        uint256 lenderSafeSlipsAfter = ICBBSlip(
+        uint256 lenderSafeSlipsAfter = ISlip(
             s_deployedConvertibleBondBox.s_safeSlipTokenAddress()
         ).balanceOf(address(2));
 
@@ -350,11 +350,11 @@ contract Reinitialize is CBBSetup {
         uint256 borrowerStableBalanceAfter = s_stableToken.balanceOf(
             address(1)
         );
-        uint256 borrowerRiskSlipsAfter = ICBBSlip(
+        uint256 borrowerRiskSlipsAfter = ISlip(
             s_deployedConvertibleBondBox.s_riskSlipTokenAddress()
         ).balanceOf(address(1));
 
-        uint256 lenderSafeSlipsAfter = ICBBSlip(
+        uint256 lenderSafeSlipsAfter = ISlip(
             s_deployedConvertibleBondBox.s_safeSlipTokenAddress()
         ).balanceOf(address(2));
 

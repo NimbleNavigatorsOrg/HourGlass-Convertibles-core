@@ -4,8 +4,8 @@ pragma solidity 0.8.13;
 import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@uniswap/lib/contracts/libraries/TransferHelper.sol";
-import "../interfaces/ICBBSlipFactory.sol";
-import "../interfaces/ICBBSlip.sol";
+import "../interfaces/ISlipFactory.sol";
+import "../interfaces/ISlip.sol";
 import "../../utils/SBImmutableArgs.sol";
 import "../interfaces/IConvertibleBondBox.sol";
 import "../interfaces/IStagingBox.sol";
@@ -104,7 +104,7 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
 
         //- mints `_safeTrancheAmount` of BorrowerSlips to `_borrower`
         // TODO shouldn't we be minting to the same address that the SB took tranches from. ie. _msgSender()
-        ICBBSlip(s_borrowSlipTokenAddress).mint(_borrower, _safeTrancheAmount);
+        ISlip(s_borrowSlipTokenAddress).mint(_borrower, _safeTrancheAmount);
 
         //add event stuff
         emit BorrowDeposit(_borrower, _safeTrancheAmount);
@@ -132,7 +132,7 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
         );
 
         //- mints `_lendAmount`of LenderSlips to `_lender`
-        ICBBSlip(s_lendSlipTokenAddress).mint(_lender, _lendAmount);
+        ISlip(s_lendSlipTokenAddress).mint(_lender, _lendAmount);
 
         //add event stuff
         emit LendDeposit(_lender, _lendAmount);
@@ -155,7 +155,7 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
         );
 
         //- burns `_borrowSlipAmount` of msg.sender’s BorrowSlips
-        ICBBSlip(s_borrowSlipTokenAddress).burn(
+        ISlip(s_borrowSlipTokenAddress).burn(
             _msgSender(),
             _borrowSlipAmount
         );
@@ -186,7 +186,7 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
         );
 
         //- burns `_lendSlipAmount` of msg.sender’s LenderSlips
-        ICBBSlip(s_lendSlipTokenAddress).burn(_msgSender(), _lendSlipAmount);
+        ISlip(s_lendSlipTokenAddress).burn(_msgSender(), _lendSlipAmount);
 
         //event stuff
         emit LendWithdrawal(_msgSender(), _lendSlipAmount);
@@ -209,7 +209,7 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
         );
 
         // burns `_borrowSlipAmount` of msg.sender’s BorrowSlips
-        ICBBSlip(s_borrowSlipTokenAddress).burn(
+        ISlip(s_borrowSlipTokenAddress).burn(
             _msgSender(),
             _borrowSlipAmount
         );
@@ -229,7 +229,7 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
         );
 
         //- burns `_lendSlipAmount` of msg.sender’s LendSlips
-        ICBBSlip(s_lendSlipTokenAddress).burn(_msgSender(), _lendSlipAmount);
+        ISlip(s_lendSlipTokenAddress).burn(_msgSender(), _lendSlipAmount);
 
         emit RedeemLendSlip(_msgSender(), _lendSlipAmount);
     }

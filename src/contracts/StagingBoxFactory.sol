@@ -29,7 +29,7 @@ contract StagingBoxFactory is IStagingBoxFactory {
 
     function createStagingBox(
         IConvertibleBondBox convertibleBondBox,
-        ICBBSlipFactory slipFactory,
+        ISlipFactory slipFactory,
         uint256 initialPrice,
         address owner
     ) public returns (address) {

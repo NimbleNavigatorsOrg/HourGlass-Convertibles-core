@@ -77,7 +77,7 @@ contract DepositBorrow is SBSetup {
         ));
 
         uint256 userSafeTrancheBalanceBeforeDeposit = s_deployedConvertibleBondBox.safeTranche().balanceOf(address(this));
-        uint256 borrowerBorrowSlipBalanceBeforeDeposit = ICBBSlip(s_deployedSB.s_borrowSlipTokenAddress()).balanceOf(s_borrower);
+        uint256 borrowerBorrowSlipBalanceBeforeDeposit = ISlip(s_deployedSB.s_borrowSlipTokenAddress()).balanceOf(s_borrower);
 
         safeTrancheAmount = bound(safeTrancheAmount, 0, userSafeTrancheBalanceBeforeDeposit);
 
@@ -86,7 +86,7 @@ contract DepositBorrow is SBSetup {
 
         s_deployedSB.depositBorrow(s_borrower, safeTrancheAmount);
 
-        uint256 borrowerBorrowSlipBalanceAfterDeposit = ICBBSlip(s_deployedSB.s_borrowSlipTokenAddress()).balanceOf(s_borrower);
+        uint256 borrowerBorrowSlipBalanceAfterDeposit = ISlip(s_deployedSB.s_borrowSlipTokenAddress()).balanceOf(s_borrower);
 
         assertEq(borrowerBorrowSlipBalanceBeforeDeposit + safeTrancheAmount, borrowerBorrowSlipBalanceAfterDeposit);
     }

@@ -8,8 +8,8 @@ import "../../src/contracts/ButtonWoodBondController.sol";
 import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
 import "@buttonwood-protocol/tranche/contracts/Tranche.sol";
 import "@buttonwood-protocol/tranche/contracts/TrancheFactory.sol";
-import "../../src/contracts/CBBSlip.sol";
-import "../../src/contracts/CBBSlipFactory.sol";
+import "../../src/contracts/Slip.sol";
+import "../../src/contracts/SlipFactory.sol";
 import "forge-std/console2.sol";
 import "../../test/mocks/MockERC20.sol";
 import "./CBBSetup.sol";
@@ -48,7 +48,7 @@ contract Repay is CBBSetup {
         uint256 userRiskTrancheBalancedBeforeRepay = s_deployedConvertibleBondBox
                 .riskTranche()
                 .balanceOf(borrowerAddress);
-        uint256 userRiskSlipBalancedBeforeRepay = ICBBSlip(
+        uint256 userRiskSlipBalancedBeforeRepay = ISlip(
             s_deployedConvertibleBondBox.s_riskSlipTokenAddress()
         ).balanceOf(borrowerAddress);
 
@@ -149,7 +149,7 @@ contract Repay is CBBSetup {
         uint256 userRiskTrancheBalancedBeforeRepay = s_deployedConvertibleBondBox
                 .riskTranche()
                 .balanceOf(borrowerAddress);
-        uint256 userRiskSlipBalancedBeforeRepay = ICBBSlip(
+        uint256 userRiskSlipBalancedBeforeRepay = ISlip(
             s_deployedConvertibleBondBox.s_riskSlipTokenAddress()
         ).balanceOf(borrowerAddress);
 
@@ -176,7 +176,7 @@ contract Repay is CBBSetup {
             address(s_deployedConvertibleBondBox),
             type(uint256).max
         );
-        ICBBSlip(s_deployedConvertibleBondBox.s_riskSlipTokenAddress()).approve(
+        ISlip(s_deployedConvertibleBondBox.s_riskSlipTokenAddress()).approve(
                 address(s_deployedConvertibleBondBox),
                 type(uint256).max
             );
@@ -290,7 +290,7 @@ contract Repay is CBBSetup {
         uint256 zTranchePaidForWithoutFees,
         address borrowerAddress
     ) private {
-        uint256 userRiskSlipBalancedAfterRepay = ICBBSlip(
+        uint256 userRiskSlipBalancedAfterRepay = ISlip(
             s_deployedConvertibleBondBox.s_riskSlipTokenAddress()
         ).balanceOf(borrowerAddress);
 

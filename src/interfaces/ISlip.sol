@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * @dev ERC20 token to represent a single slip for the convertible bond box
  *
  */
-interface ICBBSlip is IERC20 {
+interface ISlip is IERC20 {
     /**
      * @dev returns the bond box address which owns this slip contract
      *  It should have admin permissions to call mint, burn, and redeem functions

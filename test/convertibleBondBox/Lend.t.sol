@@ -8,8 +8,8 @@ import "../../src/contracts/ButtonWoodBondController.sol";
 import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
 import "@buttonwood-protocol/tranche/contracts/Tranche.sol";
 import "@buttonwood-protocol/tranche/contracts/TrancheFactory.sol";
-import "../../src/contracts/CBBSlip.sol";
-import "../../src/contracts/CBBSlipFactory.sol";
+import "../../src/contracts/Slip.sol";
+import "../../src/contracts/SlipFactory.sol";
 import "forge-std/console2.sol";
 import "../../test/mocks/MockERC20.sol";
 import "./CBBSetup.sol";
@@ -144,11 +144,11 @@ contract Lend is CBBSetup {
 
         uint256 mintAmount = (stableLendAmount * s_deployedConvertibleBondBox.s_priceGranularity()) / s_deployedConvertibleBondBox.currentPrice();
 
-        uint256 LenderSafeSlipBalanceBeforeLend = ICBBSlip(s_deployedConvertibleBondBox.s_safeSlipTokenAddress()).balanceOf(address(s_lender));
+        uint256 LenderSafeSlipBalanceBeforeLend = ISlip(s_deployedConvertibleBondBox.s_safeSlipTokenAddress()).balanceOf(address(s_lender));
         vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.lend(s_borrower, s_lender, stableLendAmount);
 
-        uint256 LenderSafeSlipBalanceAfterLend = ICBBSlip(s_deployedConvertibleBondBox.s_safeSlipTokenAddress()).balanceOf(address(s_lender));
+        uint256 LenderSafeSlipBalanceAfterLend = ISlip(s_deployedConvertibleBondBox.s_safeSlipTokenAddress()).balanceOf(address(s_lender));
 
         assertEq(LenderSafeSlipBalanceBeforeLend + mintAmount, LenderSafeSlipBalanceAfterLend);
     }
@@ -159,11 +159,11 @@ contract Lend is CBBSetup {
         uint256 mintAmount = (stableLendAmount * s_deployedConvertibleBondBox.s_priceGranularity()) / s_deployedConvertibleBondBox.currentPrice();
         uint256 zTrancheAmount = (mintAmount * s_deployedConvertibleBondBox.riskRatio()) / s_deployedConvertibleBondBox.safeRatio();
 
-        uint256 borrowerSafeSlipBalanceBeforeLend = ICBBSlip(s_deployedConvertibleBondBox.s_riskSlipTokenAddress()).balanceOf(address(s_borrower));
+        uint256 borrowerSafeSlipBalanceBeforeLend = ISlip(s_deployedConvertibleBondBox.s_riskSlipTokenAddress()).balanceOf(address(s_borrower));
         vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.lend(s_borrower, s_lender, stableLendAmount);
 
-        uint256 borrowerSafeSlipBalanceAfterLend = ICBBSlip(s_deployedConvertibleBondBox.s_riskSlipTokenAddress()).balanceOf(address(s_borrower));
+        uint256 borrowerSafeSlipBalanceAfterLend = ISlip(s_deployedConvertibleBondBox.s_riskSlipTokenAddress()).balanceOf(address(s_borrower));
 
         assertEq(borrowerSafeSlipBalanceBeforeLend + zTrancheAmount, borrowerSafeSlipBalanceAfterLend);
     }

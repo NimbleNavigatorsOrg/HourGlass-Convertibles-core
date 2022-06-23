@@ -8,8 +8,8 @@ import "../../src/contracts/ButtonWoodBondController.sol";
 import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
 import "@buttonwood-protocol/tranche/contracts/Tranche.sol";
 import "@buttonwood-protocol/tranche/contracts/TrancheFactory.sol";
-import "../../src/contracts/CBBSlip.sol";
-import "../../src/contracts/CBBSlipFactory.sol";
+import "../../src/contracts/Slip.sol";
+import "../../src/contracts/SlipFactory.sol";
 import "forge-std/console2.sol";
 import "../../test/mocks/MockERC20.sol";
 
@@ -26,8 +26,8 @@ abstract contract CBBSetup is Test {
     MockERC20 s_stableToken;
     TrancheFactory s_trancheFactory;
     Tranche s_tranche;
-    CBBSlip s_slip;
-    CBBSlipFactory s_slipFactory;
+    Slip s_slip;
+    SlipFactory s_slipFactory;
     ITranche s_safeTranche;
     ITranche s_riskTranche;
     uint256[] s_ratios;
@@ -84,10 +84,10 @@ abstract contract CBBSetup is Test {
         s_trancheFactory = new TrancheFactory(address(s_tranche));
 
         // // create s_slip
-        s_slip = new CBBSlip();
+        s_slip = new Slip();
 
         // // create s_slip factory
-        s_slipFactory = new CBBSlipFactory(address(s_slip));
+        s_slipFactory = new SlipFactory(address(s_slip));
 
         s_buttonWoodBondController = new ButtonWoodBondController();
         s_convertibleBondBox = new ConvertibleBondBox();

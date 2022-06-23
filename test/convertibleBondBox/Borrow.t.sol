@@ -8,8 +8,8 @@ import "../../src/contracts/ButtonWoodBondController.sol";
 import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
 import "@buttonwood-protocol/tranche/contracts/Tranche.sol";
 import "@buttonwood-protocol/tranche/contracts/TrancheFactory.sol";
-import "../../src/contracts/CBBSlip.sol";
-import "../../src/contracts/CBBSlipFactory.sol";
+import "../../src/contracts/Slip.sol";
+import "../../src/contracts/SlipFactory.sol";
 import "forge-std/console2.sol";
 import "../../test/mocks/MockERC20.sol";
 import "./CBBSetup.sol";
@@ -200,7 +200,7 @@ contract Borrow is CBBSetup {
             safeTrancheAmount
         );
 
-        uint256 LenderSafeSlipBalanceBeforeBorrow = ICBBSlip(
+        uint256 LenderSafeSlipBalanceBeforeBorrow = ISlip(
             s_deployedConvertibleBondBox.s_safeSlipTokenAddress()
         ).balanceOf(address(s_lender));
 
@@ -211,7 +211,7 @@ contract Borrow is CBBSetup {
             safeTrancheAmount
         );
 
-        uint256 LenderSafeSlipBalanceAfterBorrow = ICBBSlip(
+        uint256 LenderSafeSlipBalanceAfterBorrow = ISlip(
             s_deployedConvertibleBondBox.s_safeSlipTokenAddress()
         ).balanceOf(address(s_lender));
 
@@ -234,7 +234,7 @@ contract Borrow is CBBSetup {
             s_deployedConvertibleBondBox.riskRatio()) /
             s_deployedConvertibleBondBox.safeRatio();
 
-        uint256 borrowerSafeSlipBalanceBeforeBorrow = ICBBSlip(
+        uint256 borrowerSafeSlipBalanceBeforeBorrow = ISlip(
             s_deployedConvertibleBondBox.s_riskSlipTokenAddress()
         ).balanceOf(address(s_borrower));
 
@@ -245,7 +245,7 @@ contract Borrow is CBBSetup {
             safeTrancheAmount
         );
 
-        uint256 borrowerSafeSlipBalanceAfterBorrow = ICBBSlip(
+        uint256 borrowerSafeSlipBalanceAfterBorrow = ISlip(
             s_deployedConvertibleBondBox.s_riskSlipTokenAddress()
         ).balanceOf(address(s_borrower));
 
