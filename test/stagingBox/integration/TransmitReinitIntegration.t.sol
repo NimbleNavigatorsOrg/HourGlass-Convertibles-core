@@ -86,6 +86,6 @@ contract TransmitReinitIntegration is SBSetup {
 
         uint256 msgSenderSafeTrancheBalanceAfterReInit = s_deployedConvertibleBondBox.safeTranche().balanceOf(s_cbb_owner);
 
-        assertEq(msgSenderSafeTrancheBalanceBeforeReInit - 1 - safeTrancheTransferAmount, msgSenderSafeTrancheBalanceAfterReInit);
+        assertEq(msgSenderSafeTrancheBalanceBeforeReInit - safeTrancheTransferAmount, msgSenderSafeTrancheBalanceAfterReInit);
     }
 }
