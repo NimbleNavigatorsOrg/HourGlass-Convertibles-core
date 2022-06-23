@@ -128,9 +128,11 @@ abstract contract CBBSetup is Test {
             s_buttonWoodBondController.trancheCount() - 1
         );
 
+        vm.startPrank(s_cbb_owner);
         s_safeTranche.approve(s_deployedCBBAddress, type(uint256).max);
         s_riskTranche.approve(s_deployedCBBAddress, type(uint256).max);
         s_stableToken.approve(s_deployedCBBAddress, type(uint256).max);
+        vm.stopPrank();
 
         s_deployedConvertibleBondBox = ConvertibleBondBox(s_deployedCBBAddress);
 
