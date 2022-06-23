@@ -20,6 +20,7 @@ contract Lend is CBBSetup {
     address s_owner = address(100);
 
     function testCannotLendConvertibleBondBoxNotStarted() public {
+        vm.prank(s_deployedConvertibleBondBox.owner());
         bytes memory customError = abi.encodeWithSignature(
             "ConvertibleBondBoxNotStarted(uint256,uint256)",
             0,
@@ -40,12 +41,12 @@ contract Lend is CBBSetup {
         stableLendAmount = bound(
             stableLendAmount,
             minimumInput,
-            (s_safeTranche.balanceOf(address(this)) *
+            (s_safeTranche.balanceOf(s_deployedConvertibleBondBox.owner()) *
                 s_price) /
                 s_priceGranularity
         );
 
-        vm.prank(address(this));
+        vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.reinitialize(
             s_borrower,
             s_lender,
@@ -64,7 +65,7 @@ contract Lend is CBBSetup {
         stableInitialAmount = bound(
             stableInitialAmount,
             minimumInput,
-            (s_safeTranche.balanceOf(address(this)) *
+            (s_safeTranche.balanceOf(s_deployedConvertibleBondBox.owner()) *
                 s_price) /
                 s_priceGranularity
         );
@@ -75,7 +76,7 @@ contract Lend is CBBSetup {
             minimumInput - 1
         );
 
-        vm.prank(address(this));
+        vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.reinitialize(
             s_borrower,
             s_lender,
@@ -83,7 +84,7 @@ contract Lend is CBBSetup {
             stableInitialAmount,
             s_price
         );
-
+        vm.prank(s_deployedConvertibleBondBox.owner());
         bytes memory customError = abi.encodeWithSignature(
             "MinimumInput(uint256,uint256)",
             stableLendAmount,
@@ -95,10 +96,11 @@ contract Lend is CBBSetup {
 
     function testLendEmitsLends(uint256 stableLendAmount) public {
         stableLendAmount = initializeCBBAndBoundStableLendAmount(stableLendAmount);
-
+        vm.startPrank(s_deployedConvertibleBondBox.owner());
         vm.expectEmit(true, true, true, true);
-        emit Lend(address(this), s_borrower, s_lender, stableLendAmount, s_deployedConvertibleBondBox.currentPrice());
+        emit Lend(s_deployedConvertibleBondBox.owner(), s_borrower, s_lender, stableLendAmount, s_deployedConvertibleBondBox.currentPrice());
         s_deployedConvertibleBondBox.lend(s_borrower, s_lender, stableLendAmount);
+        vm.stopPrank();
     }
 
     function testLendTransfersSafeTranchesToCBB(uint256 stableLendAmount) public {
@@ -106,12 +108,13 @@ contract Lend is CBBSetup {
 
         uint256 mintAmount = (stableLendAmount * s_deployedConvertibleBondBox.s_priceGranularity()) / s_deployedConvertibleBondBox.currentPrice();
 
-        uint256 matcherContractSafeTrancheBalanceBeforeLend = s_safeTranche.balanceOf(address(this));
+        uint256 matcherContractSafeTrancheBalanceBeforeLend = s_safeTranche.balanceOf(s_deployedConvertibleBondBox.owner());
         uint256 CBBSafeTrancheBalanceBeforeLend = s_safeTranche.balanceOf(address(s_deployedConvertibleBondBox));
 
+        vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.lend(s_borrower, s_lender, stableLendAmount);
 
-        uint256 matcherContractSafeTrancheBalanceAfterLend = s_safeTranche.balanceOf(address(this));
+        uint256 matcherContractSafeTrancheBalanceAfterLend = s_safeTranche.balanceOf(s_deployedConvertibleBondBox.owner());
         uint256 CBBSafeTrancheBalanceAfterLend = s_safeTranche.balanceOf(address(s_deployedConvertibleBondBox));
 
         assertEq(matcherContractSafeTrancheBalanceBeforeLend - mintAmount, matcherContractSafeTrancheBalanceAfterLend);
@@ -124,12 +127,12 @@ contract Lend is CBBSetup {
         uint256 mintAmount = (stableLendAmount * s_deployedConvertibleBondBox.s_priceGranularity()) / s_deployedConvertibleBondBox.currentPrice();
         uint256 zTrancheAmount = (mintAmount * s_deployedConvertibleBondBox.riskRatio()) / s_deployedConvertibleBondBox.safeRatio();
 
-        uint256 matcherContractRiskTrancheBalanceBeforeLend = s_riskTranche.balanceOf(address(this));
+        uint256 matcherContractRiskTrancheBalanceBeforeLend = s_riskTranche.balanceOf(s_deployedConvertibleBondBox.owner());
         uint256 CBBRiskTrancheBalanceBeforeLend = s_riskTranche.balanceOf(address(s_deployedConvertibleBondBox));
-
+        vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.lend(s_borrower, s_lender, stableLendAmount);
 
-        uint256 matcherContractRiskTrancheBalanceAfterLend = s_riskTranche.balanceOf(address(this));
+        uint256 matcherContractRiskTrancheBalanceAfterLend = s_riskTranche.balanceOf(s_deployedConvertibleBondBox.owner());
         uint256 CBBRiskTrancheBalanceAfterLend = s_riskTranche.balanceOf(address(s_deployedConvertibleBondBox));
 
         assertEq(matcherContractRiskTrancheBalanceBeforeLend - zTrancheAmount, matcherContractRiskTrancheBalanceAfterLend);
@@ -142,7 +145,7 @@ contract Lend is CBBSetup {
         uint256 mintAmount = (stableLendAmount * s_deployedConvertibleBondBox.s_priceGranularity()) / s_deployedConvertibleBondBox.currentPrice();
 
         uint256 LenderSafeSlipBalanceBeforeLend = ICBBSlip(s_deployedConvertibleBondBox.s_safeSlipTokenAddress()).balanceOf(address(s_lender));
-
+        vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.lend(s_borrower, s_lender, stableLendAmount);
 
         uint256 LenderSafeSlipBalanceAfterLend = ICBBSlip(s_deployedConvertibleBondBox.s_safeSlipTokenAddress()).balanceOf(address(s_lender));
@@ -157,7 +160,7 @@ contract Lend is CBBSetup {
         uint256 zTrancheAmount = (mintAmount * s_deployedConvertibleBondBox.riskRatio()) / s_deployedConvertibleBondBox.safeRatio();
 
         uint256 borrowerSafeSlipBalanceBeforeLend = ICBBSlip(s_deployedConvertibleBondBox.s_riskSlipTokenAddress()).balanceOf(address(s_borrower));
-
+        vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.lend(s_borrower, s_lender, stableLendAmount);
 
         uint256 borrowerSafeSlipBalanceAfterLend = ICBBSlip(s_deployedConvertibleBondBox.s_riskSlipTokenAddress()).balanceOf(address(s_borrower));
@@ -169,12 +172,14 @@ contract Lend is CBBSetup {
         stableLendAmount = initializeCBBAndBoundStableLendAmount(stableLendAmount);
 
         uint256 borrowerStableBalanceBeforeLend = IERC20(s_deployedConvertibleBondBox.stableToken()).balanceOf(address(s_borrower));
-        uint256 CBBStableBalanceBeforeLend = IERC20(s_deployedConvertibleBondBox.stableToken()).balanceOf(address(this));
+        uint256 CBBStableBalanceBeforeLend = IERC20(s_deployedConvertibleBondBox.stableToken()).balanceOf(s_deployedConvertibleBondBox.owner());
 
+        //TODO check that this prank is supposed to be there. And all others in this file!!!
+        vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.lend(s_borrower, s_lender, stableLendAmount);
 
         uint256 borrowerStableBalanceAfterLend = IERC20(s_deployedConvertibleBondBox.stableToken()).balanceOf(address(s_borrower));
-        uint256 CBBStableBalanceAfterLend = IERC20(s_deployedConvertibleBondBox.stableToken()).balanceOf(address(this));
+        uint256 CBBStableBalanceAfterLend = IERC20(s_deployedConvertibleBondBox.stableToken()).balanceOf(s_deployedConvertibleBondBox.owner());
 
         assertEq(borrowerStableBalanceBeforeLend + stableLendAmount, borrowerStableBalanceAfterLend);
         assertEq(CBBStableBalanceBeforeLend - stableLendAmount, CBBStableBalanceAfterLend);
