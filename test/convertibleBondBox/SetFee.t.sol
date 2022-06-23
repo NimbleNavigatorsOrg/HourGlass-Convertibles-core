@@ -32,9 +32,10 @@ contract SetFee is CBBSetup {
     }
 
     function testCannotSetFeeBondIsMature(uint256 newFee) public {
-        s_buttonWoodBondController.mature();
         newFee = bound(newFee, 0, s_BPS);
-        vm.prank(s_deployedConvertibleBondBox.owner());
+
+        vm.startPrank(s_deployedConvertibleBondBox.owner());
+        s_buttonWoodBondController.mature();
         bytes memory customError = abi.encodeWithSignature(
             "BondIsMature(bool,bool)",
             true,
@@ -42,6 +43,7 @@ contract SetFee is CBBSetup {
         );
         vm.expectRevert(customError);
         s_deployedConvertibleBondBox.setFee(newFee);
+        vm.stopPrank();
     }
 
     function testCannotSetFeeFeeTooLarge(uint256 newFee) public {

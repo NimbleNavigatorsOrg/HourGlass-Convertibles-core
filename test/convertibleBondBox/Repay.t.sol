@@ -30,7 +30,7 @@ contract Repay is CBBSetup {
         amount = bound(amount, minAmount, 1e17);
         stableAmount = bound(stableAmount, minAmount, amount);
 
-        vm.prank(address(this));
+        vm.prank(s_cbb_owner);
         s_deployedConvertibleBondBox.reinitialize(
             borrowerAddress,
             address(2),
@@ -128,7 +128,7 @@ contract Repay is CBBSetup {
         stableAmount = bound(stableAmount, minAmount, amount);
         fee = bound(fee, 0, s_maxFeeBPS);
 
-        vm.prank(address(this));
+        vm.prank(s_cbb_owner);
         s_deployedConvertibleBondBox.reinitialize(
             borrowerAddress,
             address(2),
@@ -180,7 +180,6 @@ contract Repay is CBBSetup {
                 address(s_deployedConvertibleBondBox),
                 type(uint256).max
             );
-
         vm.expectEmit(true, true, true, true);
         emit Repay(
             borrowerAddress,

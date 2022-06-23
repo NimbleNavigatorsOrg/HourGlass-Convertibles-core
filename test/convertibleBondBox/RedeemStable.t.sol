@@ -21,7 +21,7 @@ contract RedeemStable is CBBSetup {
 
     function testRedeemStable(uint256 safeSlipAmount) public {
         // initializing the CBB
-        vm.prank(address(this));
+        vm.prank(s_cbb_owner);
         emit Initialized(address(1), address(2), 0, s_depositLimit);
         s_deployedConvertibleBondBox.reinitialize(
             address(1),
@@ -129,6 +129,8 @@ contract RedeemStable is CBBSetup {
     function testCannotRedeemStableMinimumInput(uint time, uint256 safeSlipAmount) public {
         time = bound(time, 1, s_maturityDate - 1);
         vm.warp(time);
+
+        vm.startPrank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.reinitialize(
             address(1),
             address(2),
@@ -136,6 +138,7 @@ contract RedeemStable is CBBSetup {
             0,
             s_price
         );
+        vm.stopPrank();
 
         safeSlipAmount = bound(safeSlipAmount, 0, s_deployedConvertibleBondBox.safeRatio() - 1);
         bytes memory customError = abi.encodeWithSignature(
@@ -157,13 +160,14 @@ contract RedeemStable is CBBSetup {
     address lender) private returns(uint256) {
         depositAmount = bound(depositAmount, 
         400,
-        s_safeTranche.balanceOf(address(this)));
+        s_safeTranche.balanceOf(s_cbb_owner));
 
         time = bound(time, 1, s_endOfUnixTime);
         fee = bound(fee, 0, s_maxFeeBPS);
 
         vm.warp(time);
 
+        vm.startPrank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.reinitialize(
             borrower,
             lender,
@@ -172,8 +176,8 @@ contract RedeemStable is CBBSetup {
             s_price
         );
 
-        vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.setFee(fee);
+        vm.stopPrank();
 
         repayAmount = bound(repayAmount,
          s_deployedConvertibleBondBox.safeRatio(),
