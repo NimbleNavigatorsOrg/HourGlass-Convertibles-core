@@ -23,12 +23,12 @@ contract RedeemSafeTranche is CBBSetup {
         amount = bound(
             amount,
             s_safeRatio,
-            s_safeTranche.balanceOf(address(this))
+            s_safeTranche.balanceOf(s_cbb_owner)
         );
 
         vm.warp(s_maturityDate + time);
 
-        vm.prank(address(this));
+        vm.prank(s_cbb_owner);
         s_deployedConvertibleBondBox.reinitialize(
             address(1),
             address(2),
@@ -135,7 +135,7 @@ contract RedeemSafeTranche is CBBSetup {
     function testCannotRedeemSafeTrancheBondNotMatureYet(uint256 time) public {
         time = bound(time, 1, s_maturityDate);
         vm.warp(s_maturityDate - time);
-
+        vm.prank(s_cbb_owner);
         s_deployedConvertibleBondBox.reinitialize(
             address(1),
             address(2),
@@ -153,9 +153,7 @@ contract RedeemSafeTranche is CBBSetup {
         s_deployedConvertibleBondBox.redeemSafeTranche(s_safeSlipAmount);
     }
 
-    function testCannotRedeemSafeTrancheMinimumInput(uint256 safeSlipAmount)
-        public
-    {
+    function testCannotRedeemSafeTrancheMinimumInput(uint256 safeSlipAmount) public {
         safeSlipAmount = bound(
             safeSlipAmount,
             0,
@@ -163,6 +161,7 @@ contract RedeemSafeTranche is CBBSetup {
         );
 
         vm.warp(s_maturityDate);
+        vm.prank(s_cbb_owner);
         s_deployedConvertibleBondBox.reinitialize(
             address(1),
             address(2),
@@ -192,10 +191,11 @@ contract RedeemSafeTranche is CBBSetup {
         depositAmount = bound(
             depositAmount,
             s_safeRatio,
-            s_safeTranche.balanceOf(address(this))
+            s_safeTranche.balanceOf(s_cbb_owner)
         );
 
         vm.warp(s_maturityDate);
+        vm.prank(s_cbb_owner);
         s_deployedConvertibleBondBox.reinitialize(
             borrower,
             lender,
@@ -251,10 +251,11 @@ contract RedeemSafeTranche is CBBSetup {
         depositAmount = bound(
             depositAmount,
             s_safeRatio,
-            s_safeTranche.balanceOf(address(this))
+            s_safeTranche.balanceOf(s_cbb_owner)
         );
 
         vm.warp(s_maturityDate);
+        vm.prank(s_cbb_owner);
         s_deployedConvertibleBondBox.reinitialize(
             borrower,
             lender,
@@ -307,10 +308,11 @@ contract RedeemSafeTranche is CBBSetup {
         depositAmount = bound(
             depositAmount,
             s_safeRatio,
-            s_safeTranche.balanceOf(address(this))
+            s_safeTranche.balanceOf(s_cbb_owner)
         );
 
         vm.warp(s_maturityDate);
+        vm.prank(s_cbb_owner);
         s_deployedConvertibleBondBox.reinitialize(
             borrower,
             lender,
@@ -378,10 +380,11 @@ contract RedeemSafeTranche is CBBSetup {
         depositAmount = bound(
             depositAmount,
             s_safeRatio,
-            s_safeTranche.balanceOf(address(this))
+            s_safeTranche.balanceOf(s_cbb_owner)
         );
 
         vm.warp(s_maturityDate);
+        vm.prank(s_cbb_owner);
         s_deployedConvertibleBondBox.reinitialize(
             borrower,
             lender,
@@ -463,10 +466,11 @@ contract RedeemSafeTranche is CBBSetup {
         depositAmount = bound(
             depositAmount,
             s_safeRatio,
-            s_safeTranche.balanceOf(address(this))
+            s_safeTranche.balanceOf(s_cbb_owner)
         );
 
         vm.warp(s_maturityDate);
+        vm.prank(s_cbb_owner);
         s_deployedConvertibleBondBox.reinitialize(
             borrower,
             lender,
