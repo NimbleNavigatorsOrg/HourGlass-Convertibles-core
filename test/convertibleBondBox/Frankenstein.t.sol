@@ -23,7 +23,7 @@ contract Frankenstein is CBBSetup {
     ) public {
         collateralAmount = bound(collateralAmount, 0, 1e20);
         // used to be 1e20, is this change correct?
-        amount = bound(amount, s_trancheGranularity, s_safeTranche.balanceOf(address(this)));
+        amount = bound(amount, s_trancheGranularity, s_safeTranche.balanceOf(s_cbb_owner));
         stableAmount = bound(
             stableAmount,
             (amount * s_price) / s_priceGranularity,
@@ -73,6 +73,7 @@ contract Frankenstein is CBBSetup {
             vm.stopPrank();
         }
 
+        vm.startPrank(s_deployedConvertibleBondBox.owner());
         vm.expectEmit(true, true, true, true);
         emit Initialized(address(borrower), address(lender), 0, amount);
         s_deployedConvertibleBondBox.reinitialize(
@@ -82,6 +83,7 @@ contract Frankenstein is CBBSetup {
             0,
             s_price
         );
+        vm.stopPrank();
 
         //get slip approvals for all addresses
         for (uint160 i = 1; i < 11; i++) {
