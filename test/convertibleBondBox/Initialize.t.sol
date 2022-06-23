@@ -43,19 +43,15 @@ contract Initialize is CBBSetup {
         collateralAmount = bound(
             collateralAmount,
             s_safeRatio,
-            s_safeTranche.balanceOf(address(this))
+            s_safeTranche.balanceOf(s_cbb_owner)
         );
 
         uint256 stableAmount = 0;
 
-        uint256 matcherSafeTrancheBalanceBefore = s_safeTranche.balanceOf(
-            address(this)
-        );
-        uint256 matcherRiskTrancheBalanceBefore = s_riskTranche.balanceOf(
-            address(this)
-        );
+        uint256 matcherSafeTrancheBalanceBefore = s_safeTranche.balanceOf(s_cbb_owner);
+        uint256 matcherRiskTrancheBalanceBefore = s_riskTranche.balanceOf(s_cbb_owner);
 
-        vm.prank(address(this));
+        vm.prank(s_cbb_owner);
         vm.expectEmit(true, true, true, true);
         emit Initialized(address(1), address(2), 0, collateralAmount);
         s_deployedConvertibleBondBox.reinitialize(
@@ -66,12 +62,8 @@ contract Initialize is CBBSetup {
             s_price
         );
 
-        uint256 matcherSafeTrancheBalanceAfter = s_safeTranche.balanceOf(
-            address(this)
-        );
-        uint256 matcherRiskTrancheBalanceAfter = s_riskTranche.balanceOf(
-            address(this)
-        );
+        uint256 matcherSafeTrancheBalanceAfter = s_safeTranche.balanceOf(s_cbb_owner);
+        uint256 matcherRiskTrancheBalanceAfter = s_riskTranche.balanceOf(s_cbb_owner);
 
         uint256 borrowerStableBalanceAfter = s_stableToken.balanceOf(
             address(1)
@@ -104,26 +96,20 @@ contract Initialize is CBBSetup {
         assertEq(lenderSafeSlipsAfter, collateralAmount);
     }
 
-    function testInitializeAndLendEmitsInitialized(uint256 stableAmount)
-        public
-    {
+    function testInitializeAndLendEmitsInitialized(uint256 stableAmount) public {
         stableAmount = bound(
             stableAmount,
             (s_safeRatio * s_price) / s_priceGranularity,
-            (s_safeTranche.balanceOf(address(this)) * s_price) /
+            (s_safeTranche.balanceOf(s_cbb_owner) * s_price) /
                 s_priceGranularity
         );
 
         uint256 collateralAmount = 0;
 
-        uint256 matcherSafeTrancheBalanceBefore = s_safeTranche.balanceOf(
-            address(this)
-        );
-        uint256 matcherRiskTrancheBalanceBefore = s_riskTranche.balanceOf(
-            address(this)
-        );
+        uint256 matcherSafeTrancheBalanceBefore = s_safeTranche.balanceOf(s_cbb_owner);
+        uint256 matcherRiskTrancheBalanceBefore = s_riskTranche.balanceOf(s_cbb_owner);
 
-        vm.prank(address(this));
+        vm.prank(s_cbb_owner);
         vm.expectEmit(true, true, true, true);
         emit Initialized(address(1), address(2), stableAmount, 0);
         s_deployedConvertibleBondBox.reinitialize(
@@ -134,12 +120,8 @@ contract Initialize is CBBSetup {
             s_price
         );
 
-        uint256 matcherSafeTrancheBalanceAfter = s_safeTranche.balanceOf(
-            address(this)
-        );
-        uint256 matcherRiskTrancheBalanceAfter = s_riskTranche.balanceOf(
-            address(this)
-        );
+        uint256 matcherSafeTrancheBalanceAfter = s_safeTranche.balanceOf(s_cbb_owner);
+        uint256 matcherRiskTrancheBalanceAfter = s_riskTranche.balanceOf(s_cbb_owner);
 
         uint256 borrowerStableBalanceAfter = s_stableToken.balanceOf(
             address(1)
@@ -193,6 +175,7 @@ contract Initialize is CBBSetup {
     }
 
     function testCannotInitializeBondIsMature() public {
+        vm.startPrank(s_cbb_owner);
         s_buttonWoodBondController.mature();
         bytes memory customError = abi.encodeWithSignature(
             "BondIsMature(bool,bool)",
@@ -209,6 +192,7 @@ contract Initialize is CBBSetup {
             s_trancheIndex,
             address(this)
         );
+        vm.stopPrank();
     }
 
     function testCannotInitializeTrancheIndexOutOfBounds() public {
@@ -252,7 +236,7 @@ contract Initialize is CBBSetup {
     }
 
     function testCannotReInitializeInitialPriceTooHigh(uint256 price) public {
-        vm.assume(price > s_priceGranularity);
+        price = bound(price, s_priceGranularity + 1, type(uint256).max);
         s_deployedCBBAddress = s_CBBFactory.createConvertibleBondBox(
             s_buttonWoodBondController,
             s_slipFactory,
@@ -260,8 +244,10 @@ contract Initialize is CBBSetup {
             address(s_collateralToken),
             address(s_stableToken),
             s_trancheIndex,
-            address(this)
+            s_cbb_owner
         );
+
+        vm.prank(s_cbb_owner);
         bytes memory customError = abi.encodeWithSignature(
             "InitialPriceTooHigh(uint256,uint256)",
             price,
@@ -286,8 +272,10 @@ contract Initialize is CBBSetup {
             address(s_collateralToken),
             address(s_stableToken),
             s_trancheIndex,
-            address(this)
+            s_cbb_owner
         );
+
+        vm.prank(s_cbb_owner);
         bytes memory customError = abi.encodeWithSignature(
             "InitialPriceIsZero(uint256,uint256)",
             price,
@@ -344,19 +332,16 @@ contract Initialize is CBBSetup {
         collateralAmount = bound(
             collateralAmount,
             s_safeRatio,
-            s_safeTranche.balanceOf(address(this))
+            s_safeTranche.balanceOf(s_cbb_owner)
         );
 
-        uint256 matcherSafeTrancheBalanceBefore = s_safeTranche.balanceOf(
-            address(this)
-        );
-        uint256 matcherRiskTrancheBalanceBefore = s_riskTranche.balanceOf(
-            address(this)
-        );
+        uint256 matcherSafeTrancheBalanceBefore = s_safeTranche.balanceOf(s_cbb_owner);
+        uint256 matcherRiskTrancheBalanceBefore = s_riskTranche.balanceOf(s_cbb_owner);
 
+        vm.prank(s_cbb_owner);
         vm.expectEmit(true, true, true, true);
         emit Borrow(
-            address(this),
+            s_cbb_owner,
             address(1),
             address(2),
             collateralAmount,
@@ -370,12 +355,8 @@ contract Initialize is CBBSetup {
             s_price
         );
 
-        uint256 matcherSafeTrancheBalanceAfter = s_safeTranche.balanceOf(
-            address(this)
-        );
-        uint256 matcherRiskTrancheBalanceAfter = s_riskTranche.balanceOf(
-            address(this)
-        );
+        uint256 matcherSafeTrancheBalanceAfter = s_safeTranche.balanceOf(s_cbb_owner);
+        uint256 matcherRiskTrancheBalanceAfter = s_riskTranche.balanceOf(s_cbb_owner);
 
         uint256 borrowerStableBalanceAfter = s_stableToken.balanceOf(
             address(1)
@@ -412,19 +393,15 @@ contract Initialize is CBBSetup {
         stableAmount = bound(
             stableAmount,
             (s_safeRatio * s_price) / s_priceGranularity,
-            (s_safeTranche.balanceOf(address(this)) * s_price) /
+            (s_safeTranche.balanceOf(s_cbb_owner) * s_price) /
                 s_priceGranularity
         );
 
-        uint256 matcherSafeTrancheBalanceBefore = s_safeTranche.balanceOf(
-            address(this)
-        );
-        uint256 matcherRiskTrancheBalanceBefore = s_riskTranche.balanceOf(
-            address(this)
-        );
-
+        uint256 matcherSafeTrancheBalanceBefore = s_safeTranche.balanceOf(s_cbb_owner);
+        uint256 matcherRiskTrancheBalanceBefore = s_riskTranche.balanceOf(s_cbb_owner);
+        vm.prank(s_cbb_owner);
         vm.expectEmit(true, true, true, true);
-        emit Lend(address(this), address(1), address(2), stableAmount, s_price);
+        emit Lend(s_cbb_owner, address(1), address(2), stableAmount, s_price);
         s_deployedConvertibleBondBox.reinitialize(
             address(1),
             address(2),
@@ -433,12 +410,8 @@ contract Initialize is CBBSetup {
             s_price
         );
 
-        uint256 matcherSafeTrancheBalanceAfter = s_safeTranche.balanceOf(
-            address(this)
-        );
-        uint256 matcherRiskTrancheBalanceAfter = s_riskTranche.balanceOf(
-            address(this)
-        );
+        uint256 matcherSafeTrancheBalanceAfter = s_safeTranche.balanceOf(s_cbb_owner);
+        uint256 matcherRiskTrancheBalanceAfter = s_riskTranche.balanceOf(s_cbb_owner);
 
         uint256 borrowerStableBalanceAfter = s_stableToken.balanceOf(
             address(1)
