@@ -10,7 +10,6 @@ import "./SBSetup.t.sol";
 contract SBTransferOwnership is SBSetup {
 
     function testTransferOwnership(uint256 price) public {
-        bool _isLend = true;
         address _newOwner = address(99);
         price = bound(price, 1, s_deployedConvertibleBondBox.s_priceGranularity());
 
@@ -27,8 +26,7 @@ contract SBTransferOwnership is SBSetup {
         assertEq(_newOwner , s_deployedSB.owner());
     }
 
-    function testTransferOwnershipOnlyOwner(uint256 price) public {
-        bool _isLend = true;
+    function testFailTransferOwnershipOnlyOwner(uint256 price) public {
         address _newOwner = address(99);
         price = bound(price, 1, s_deployedConvertibleBondBox.s_priceGranularity());
 
@@ -40,7 +38,5 @@ contract SBTransferOwnership is SBSetup {
         ));
 
         s_deployedSB.sbTransferOwnership(_newOwner);
-        vm.stopPrank();
-        assertEq(_newOwner , s_deployedSB.owner());
     }
 }

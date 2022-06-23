@@ -37,6 +37,7 @@ contract CBBFactoryTest is Test {
     uint256 constant s_priceGranularity = 1000000000;
     error PenaltyTooHigh(uint256 given, uint256 maxPenalty);
     address s_deployedCBBAddress;
+    address s_owner;
 
     event ConvertibleBondBoxCreated(
         address s_collateralToken,
@@ -73,11 +74,13 @@ contract CBBFactoryTest is Test {
         s_buttonWoodBondController = new ButtonWoodBondController();
         s_convertibleBondBox = new ConvertibleBondBox();
         s_CBBFactory = new CBBFactory(address(s_convertibleBondBox));
+        
+        s_owner = address(22);
 
         s_buttonWoodBondController.init(
             address(s_trancheFactory),
             address(s_collateralToken),
-            address(this),
+            s_owner,
             s_ratios,
             s_maturityDate,
             s_depositLimit
@@ -90,7 +93,7 @@ contract CBBFactoryTest is Test {
             address(s_collateralToken),
             address(s_stableToken),
             s_trancheIndex,
-            address(this)
+            s_owner
         );
     }
 
@@ -130,9 +133,10 @@ contract CBBFactoryTest is Test {
             address(s_stableToken),
             s_trancheIndex,
             s_penalty,
-            address(this)
+            s_owner
         );
         // The event we get
+        vm.startPrank(s_owner);
         s_CBBFactory.createConvertibleBondBox(
             s_buttonWoodBondController,
             s_slipFactory,
@@ -140,7 +144,8 @@ contract CBBFactoryTest is Test {
             address(s_collateralToken),
             address(s_stableToken),
             s_trancheIndex,
-            address(this)
+            s_owner
         );
+        vm.stopPrank();
     }
 }

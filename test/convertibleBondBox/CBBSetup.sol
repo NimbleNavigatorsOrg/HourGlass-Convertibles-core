@@ -20,7 +20,7 @@ abstract contract CBBSetup is Test {
     CBBFactory s_CBBFactory;
 
     //TODO use a different address other than address(this)
-    address s_cbb_owner = address(this);
+    address s_cbb_owner = address(55);
 
     MockERC20 s_collateralToken;
 
@@ -73,11 +73,11 @@ abstract contract CBBSetup is Test {
 
         // create buttonwood bond collateral token
         s_collateralToken = new MockERC20("CollateralToken", "CT");
-        s_collateralToken.mint(address(this), 1e18);
+        s_collateralToken.mint(s_cbb_owner, 1e18);
 
         // // create stable token
         s_stableToken = new MockERC20("StableToken", "ST");
-        s_stableToken.mint(address(this), 10e18);
+        s_stableToken.mint(s_cbb_owner, 10e18);
         // // create tranche
         s_tranche = new Tranche();
 
@@ -97,7 +97,7 @@ abstract contract CBBSetup is Test {
         s_buttonWoodBondController.init(
             address(s_trancheFactory),
             address(s_collateralToken),
-            address(this),
+            s_cbb_owner,
             s_ratios,
             s_maturityDate,
             s_depositLimit
@@ -113,13 +113,14 @@ abstract contract CBBSetup is Test {
             s_cbb_owner
         );
 
+        vm.prank(s_cbb_owner);
         s_collateralToken.approve(
             address(s_buttonWoodBondController),
             type(uint256).max
         );
 
+        vm.prank(s_cbb_owner);
         s_buttonWoodBondController.deposit(1e18);
-
         (s_safeTranche, s_safeRatio) = s_buttonWoodBondController.tranches(
             s_trancheIndex
         );
@@ -134,7 +135,7 @@ abstract contract CBBSetup is Test {
         s_deployedConvertibleBondBox = ConvertibleBondBox(s_deployedCBBAddress);
 
         s_depositLimit =
-            (s_safeTranche.balanceOf(address(this)) * s_price) /
+            (s_safeTranche.balanceOf(s_cbb_owner) * s_price) /
             s_priceGranularity;
     }
 }
