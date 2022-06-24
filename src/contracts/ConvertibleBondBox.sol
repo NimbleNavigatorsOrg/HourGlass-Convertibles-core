@@ -110,6 +110,8 @@ contract ConvertibleBondBox is
 
         // initial borrow/lend at initialPrice, provided matching order is provided
 
+        //Delete Lines Below
+
         if (_stableAmount != 0) {
             (bool success, ) = address(this).delegatecall(
                 abi.encodeWithSignature(
@@ -133,6 +135,8 @@ contract ConvertibleBondBox is
             );
             require(success);
         }
+
+        //Stop Delete
 
         emit Initialized(_borrower, _lender, _stableAmount, _safeTrancheAmount);
         return true;
