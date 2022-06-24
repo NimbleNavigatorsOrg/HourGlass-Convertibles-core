@@ -49,14 +49,16 @@ contract TransmitReinitLendIntegration is SBIntegrationSetup {
         uint256 sbSafeTrancheBalanceBefore = s_safeTranche.balanceOf(address(s_deployedSB));
         uint256 cbbSafeTrancheBalanceBefore = s_safeTranche.balanceOf(address(s_deployedConvertibleBondBox));
 
+        // test action
         vm.prank(s_cbb_owner);
         s_deployedSB.transmitReInit(s_isLend);
 
-        uint256 sbSafeTrancheBalanceAfter = s_safeTranche.balanceOf(address(s_deployedSB));
-        uint256 cbbSafeTrancheBalanceAfter = s_safeTranche.balanceOf(address(s_deployedConvertibleBondBox));
-
+        //TODO figure out why this calculation has to be done after the test action. Test fails if this math is moved above action.
         uint256 mintAmount = (sbStableTokenBalanceBeforeLend * s_priceGranularity) /
             s_deployedConvertibleBondBox.currentPrice();
+
+        uint256 sbSafeTrancheBalanceAfter = s_safeTranche.balanceOf(address(s_deployedSB));
+        uint256 cbbSafeTrancheBalanceAfter = s_safeTranche.balanceOf(address(s_deployedConvertibleBondBox));
 
         assertEq(
             sbSafeTrancheBalanceBefore - mintAmount,
