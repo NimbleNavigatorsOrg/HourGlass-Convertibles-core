@@ -37,10 +37,10 @@ contract SBIntegrationSetup is Test {
     uint256 s_depositLimit;
     uint256 s_safeRatio;
     uint256 s_riskRatio;
-    uint256 price;
+    uint256 s_price;
     uint256 maxStableAmount;
+    bool s_isLend;
     uint256 constant s_penalty = 500;
-    uint256 constant s_price = 5e8;
     uint256 constant s_trancheIndex = 0;
     uint256 constant s_maturityDate = 1656717949;
     uint256 constant s_safeSlipAmount = 10;
@@ -124,11 +124,54 @@ contract SBIntegrationSetup is Test {
         s_deployedConvertibleBondBox = ConvertibleBondBox(s_deployedCBBAddress);
 
         s_owner = address(55);
-        // s_borrower = address(1);
-        // s_lender = address(2);
 
         StagingBox stagingBox = new StagingBox();
         
         stagingBoxFactory = new StagingBoxFactory(address(stagingBox));
+    }
+
+    function transmitReinitIntegrationSetup (uint256 fuzzPrice, bool _isLend) internal {
+        s_price = bound(fuzzPrice, 1, s_deployedConvertibleBondBox.s_priceGranularity());
+
+        s_deployedSB = StagingBox(stagingBoxFactory.createStagingBox(
+            s_deployedConvertibleBondBox,
+            s_slipFactory,
+            s_price,
+            s_cbb_owner
+        ));
+
+        vm.prank(s_cbb_owner);
+        s_deployedConvertibleBondBox.cbbTransferOwnership(address(s_deployedSB));
+
+        s_collateralToken.mint(address(s_deployedSB), 1e18);
+
+        vm.prank(address(s_deployedSB));
+        s_collateralToken.approve(
+            address(s_buttonWoodBondController),
+            type(uint256).max
+        );
+
+        vm.prank(address(s_deployedSB));
+        s_buttonWoodBondController.deposit(1e18);
+        (s_safeTranche, s_safeRatio) = s_buttonWoodBondController.tranches(
+            s_trancheIndex
+        );
+        (s_riskTranche, s_riskRatio) = s_buttonWoodBondController.tranches(
+            s_buttonWoodBondController.trancheCount() - 1
+        );
+
+        maxStableAmount =
+            (s_safeTranche.balanceOf(address(s_deployedSB)) * s_price) /
+                s_priceGranularity;
+
+        s_stableToken.mint(address(s_deployedSB), maxStableAmount);
+
+        vm.startPrank(address(s_deployedSB));
+        s_safeTranche.approve(s_deployedCBBAddress, type(uint256).max);
+        s_riskTranche.approve(s_deployedCBBAddress, type(uint256).max);
+        s_stableToken.approve(s_deployedCBBAddress, type(uint256).max);
+        vm.stopPrank();
+
+        s_isLend = _isLend;
     }
 }
