@@ -108,36 +108,6 @@ contract ConvertibleBondBox is
         //set ConvertibleBondBox Start Date to be time when init() is called
         s_startDate = block.timestamp;
 
-        // initial borrow/lend at initialPrice, provided matching order is provided
-
-        //Delete Lines Below
-
-        if (_stableAmount != 0) {
-            (bool success, ) = address(this).delegatecall(
-                abi.encodeWithSignature(
-                    "lend(address,address,uint256)",
-                    _borrower,
-                    _lender,
-                    _stableAmount
-                )
-            );
-            require(success);
-        }
-
-        if (_safeTrancheAmount != 0) {
-            (bool success, ) = address(this).delegatecall(
-                abi.encodeWithSignature(
-                    "borrow(address,address,uint256)",
-                    _borrower,
-                    _lender,
-                    _safeTrancheAmount
-                )
-            );
-            require(success);
-        }
-
-        //Stop Delete
-
         emit Initialized(_borrower, _lender, _stableAmount, _safeTrancheAmount);
         return true;
     }
