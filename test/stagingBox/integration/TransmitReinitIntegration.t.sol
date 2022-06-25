@@ -5,28 +5,17 @@ import "../../../src/contracts/StagingBox.sol";
 import "../../../src/contracts/StagingBoxFactory.sol";
 import "../../../src/contracts/CBBFactory.sol";
 import "../../../src/contracts/ConvertibleBondBox.sol";
-import "../SBSetup.t.sol";
+import "./SBIntegrationSetup.t.sol";
 
-contract TransmitReinitIntegration is SBSetup {
+contract TransmitReinitIntegration is SBIntegrationSetup {
 
-    function testTransmitReInitIsLendTrue(uint256 price) public {
-        bool _isLend = true;
-        price = bound(price, 1, s_deployedConvertibleBondBox.s_priceGranularity());
-
-        s_deployedSB = StagingBox(stagingBoxFactory.createStagingBox(
-            s_deployedConvertibleBondBox,
-            s_slipFactory,
-            price,
-            s_cbb_owner
-        ));
-
-        vm.prank(s_cbb_owner);
-        s_deployedConvertibleBondBox.cbbTransferOwnership(address(s_deployedSB));
+    function testTransmitReInitIntegrationIsLendTrue(uint256 fuzzPrice) public {
+        transmitReinitIntegrationSetup(fuzzPrice, true);
 
         uint256 stableAmount = s_deployedSB.stableToken().balanceOf(address(s_deployedSB));
 
         vm.startPrank(s_cbb_owner);
-        s_deployedSB.transmitReInit(_isLend);
+        s_deployedSB.transmitReInit(s_isLend);
         vm.stopPrank();
 
         assertEq(true, s_deployedSB.s_hasReinitialized());

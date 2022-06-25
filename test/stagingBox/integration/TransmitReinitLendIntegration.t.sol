@@ -25,7 +25,6 @@ contract TransmitReinitLendIntegration is SBIntegrationSetup {
         uint256 sbSafeTrancheBalanceBefore = s_safeTranche.balanceOf(address(s_deployedSB));
         uint256 cbbSafeTrancheBalanceBefore = s_safeTranche.balanceOf(address(s_deployedConvertibleBondBox));
 
-        // test action
         vm.prank(s_cbb_owner);
         s_deployedSB.transmitReInit(s_isLend);
 
