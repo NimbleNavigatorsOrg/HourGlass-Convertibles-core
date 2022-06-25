@@ -8,6 +8,22 @@ import "../../../src/contracts/ConvertibleBondBox.sol";
 import "./SBIntegrationSetup.t.sol";
 
 contract TransmitReinitBorrowIntegration is SBIntegrationSetup {
+
+    function testTransmitReInitIntegrationBorrow(uint256 fuzzPrice) public {
+        transmitReinitIntegrationSetup(fuzzPrice, false);
+
+        uint256 safeTrancheBalance = s_deployedSB.safeTranche().balanceOf(address(s_deployedSB));
+        uint256 expectedReinitLendAmount = (safeTrancheBalance * s_deployedSB.initialPrice()) / s_deployedSB.priceGranularity();
+
+        vm.startPrank(s_cbb_owner);
+        s_deployedSB.transmitReInit(s_isLend);
+        vm.stopPrank();
+
+        assertEq(true, s_deployedSB.s_hasReinitialized());
+        assertEq(expectedReinitLendAmount, s_deployedSB.s_reinitLendAmount());
+        assertEq(s_cbb_owner, s_deployedSB.owner());
+    }
+
     function testTransmitReinitIntegrationBorrowEmitsBorrow(uint256 fuzzPrice) public {
         transmitReinitIntegrationSetup(fuzzPrice, false);
 

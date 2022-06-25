@@ -9,6 +9,20 @@ import "./SBIntegrationSetup.t.sol";
 
 contract TransmitReinitLendIntegration is SBIntegrationSetup {
 
+    function testTransmitReInitIntegrationLend(uint256 fuzzPrice) public {
+        transmitReinitIntegrationSetup(fuzzPrice, true);
+
+        uint256 stableAmount = s_deployedSB.stableToken().balanceOf(address(s_deployedSB));
+
+        vm.startPrank(s_cbb_owner);
+        s_deployedSB.transmitReInit(s_isLend);
+        vm.stopPrank();
+
+        assertEq(true, s_deployedSB.s_hasReinitialized());
+        assertEq(stableAmount, s_deployedSB.s_reinitLendAmount());
+        assertEq(s_cbb_owner, s_deployedSB.owner());
+    }
+
     function testTransmitReinitIntegrationLendEmitsLend(uint256 fuzzPrice) public {
         transmitReinitIntegrationSetup(fuzzPrice, true);
 
