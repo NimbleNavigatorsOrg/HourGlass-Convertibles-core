@@ -467,12 +467,14 @@ contract ConvertibleBondBox is
         ISlip(s_riskSlipTokenAddress).mint(_borrower, _riskSlipAmount);
 
         // // Transfer stables to borrower
-        TransferHelper.safeTransferFrom(
-            address(stableToken()),
-            _msgSender(),
-            _borrower,
-            _stableAmount
-        );
+        if(_msgSender() != _borrower) {
+            TransferHelper.safeTransferFrom(
+                address(stableToken()),
+                _msgSender(),
+                _borrower,
+                _stableAmount
+            );
+        }
     }
 
     function cbbTransferOwnership(address newOwner) external override onlyOwner {

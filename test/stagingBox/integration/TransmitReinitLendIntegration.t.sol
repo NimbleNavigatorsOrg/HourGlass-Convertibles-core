@@ -9,7 +9,7 @@ import "./SBIntegrationSetup.t.sol";
 
 contract TransmitReinitLendIntegration is SBIntegrationSetup {
 
-    function testTransmitReinitIntegrationIsLendTrueEmitsLend(uint256 fuzzPrice) public {
+    function testTransmitReinitIntegrationLendEmitsLend(uint256 fuzzPrice) public {
         transmitReinitIntegrationSetup(fuzzPrice, true);
 
         vm.prank(s_cbb_owner);
@@ -18,7 +18,7 @@ contract TransmitReinitLendIntegration is SBIntegrationSetup {
         s_deployedSB.transmitReInit(s_isLend);
     }
 
-    function testTransmitReinitIntegrationIsLendTrueTransfersSafeTranchesFromSBToCBB(uint256 fuzzPrice) public {
+    function testTransmitReinitIntegrationLendTransfersSafeTranchesFromSBToCBB(uint256 fuzzPrice) public {
         transmitReinitIntegrationSetup(fuzzPrice, true);
 
         uint256 sbStableTokenBalanceBeforeLend = IERC20(s_stableToken).balanceOf(address(s_deployedSB));
@@ -45,7 +45,7 @@ contract TransmitReinitLendIntegration is SBIntegrationSetup {
         );
     }
 
-    function testTransmitReinitIntegrationIsLendTrueTransfersRiskTrancheFromSBToCBB(uint256 fuzzPrice) public {
+    function testTransmitReinitIntegrationLendTransfersRiskTrancheFromSBToCBB(uint256 fuzzPrice) public {
         transmitReinitIntegrationSetup(fuzzPrice, true);
 
         uint256 sbStableTokenBalanceBeforeLend = IERC20(s_stableToken).balanceOf(address(s_deployedSB));
@@ -72,7 +72,7 @@ contract TransmitReinitLendIntegration is SBIntegrationSetup {
         );
     }
 
-    function testTransmitReinitIntegrationIsLendTrueMintsSafeSlipsToStagingBox(uint256 fuzzPrice) public {
+    function testTransmitReinitIntegrationLendMintsSafeSlipsToStagingBox(uint256 fuzzPrice) public {
         transmitReinitIntegrationSetup(fuzzPrice, true);
 
         uint256 sbStableTokenBalanceBeforeLend = IERC20(s_stableToken).balanceOf(address(s_deployedSB));
@@ -94,7 +94,7 @@ contract TransmitReinitLendIntegration is SBIntegrationSetup {
         assertEq(sbSafeSlipBalanceBefore + mintAmount, sbSafeSlipBalanceAfter);
     }
 
-    function testTransmitReinitIntegrationIsLendMintsRiskSlipsToStagingBox(uint256 fuzzPrice) public {
+    function testTransmitReinitIntegrationLendMintsRiskSlipsToStagingBox(uint256 fuzzPrice) public {
         transmitReinitIntegrationSetup(fuzzPrice, true);
 
         uint256 sbStableTokenBalanceBeforeLend = IERC20(s_stableToken).balanceOf(address(s_deployedSB));
@@ -113,7 +113,7 @@ contract TransmitReinitLendIntegration is SBIntegrationSetup {
         assertEq(sbRiskSlipBalanceBefore + expectedZ, sbRiskSlipBalanceAfter);
     }
 
-    function testTransmitReinitIntegrationIsLendTrueTransfersStablesFromSBToSB(uint256 fuzzPrice) public {
+    function testTransmitReinitIntegrationLendDoesNotChangeSBStableBalance(uint256 fuzzPrice) public {
         transmitReinitIntegrationSetup(fuzzPrice, true);
 
         uint256 sbStableBalanceBefore = IERC20(s_stableToken).balanceOf(address(s_deployedSB));
