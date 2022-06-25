@@ -10,6 +10,10 @@ import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
 import "@buttonwood-protocol/button-wrappers/contracts/interfaces/IButtonWrapper.sol";
 
 contract StagingLoanRouter is IStagingLoanRouter {
+    /**
+     * @inheritdoc IStagingLoanRouter
+     */
+
     function simpleWrapTrancheBorrow(
         IStagingBox _stagingBox,
         uint256 _amountRaw
@@ -37,6 +41,10 @@ contract StagingLoanRouter is IStagingLoanRouter {
 
         _stagingBox.depositBorrow(msg.sender, safeTrancheAmount);
     }
+
+    /**
+     * @inheritdoc IStagingLoanRouter
+     */
 
     function multiWrapTrancheBorrow(IStagingBox _stagingBox, uint256 _amountRaw)
         public

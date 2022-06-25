@@ -80,13 +80,17 @@ contract ConvertibleBondBox is
         );
     }
 
+    /**
+     * @inheritdoc IConvertibleBondBox
+     */
+
     function reinitialize(
         address _borrower,
         address _lender,
         uint256 _safeTrancheAmount,
         uint256 _stableAmount,
         uint256 _initialPrice
-    ) external reinitializer(2) onlyOwner returns(bool) {
+    ) external reinitializer(2) onlyOwner returns (bool) {
         uint256 priceGranularity = s_priceGranularity;
         if (_stableAmount * _safeTrancheAmount != 0)
             revert OnlyLendOrBorrow({
@@ -99,10 +103,7 @@ contract ConvertibleBondBox is
                 maxPrice: priceGranularity
             });
         if (_initialPrice == 0)
-            revert InitialPriceIsZero({
-                given: 0,
-                maxPrice: priceGranularity
-            });
+            revert InitialPriceIsZero({given: 0, maxPrice: priceGranularity});
         s_initalPrice = _initialPrice;
 
         //set ConvertibleBondBox Start Date to be time when init() is called
@@ -212,7 +213,7 @@ contract ConvertibleBondBox is
     }
 
     /**
-     * @dev returns time-weighted current price for Tranches, with final price as $1.00 at maturity
+     * @inheritdoc IConvertibleBondBox
      */
 
     function currentPrice() external view override returns (uint256) {
@@ -445,6 +446,10 @@ contract ConvertibleBondBox is
         emit RedeemStable(_msgSender(), _safeSlipAmount, this.currentPrice());
     }
 
+    /**
+     * @inheritdoc IConvertibleBondBox
+     */
+
     function setFee(uint256 newFeeBps) external override onlyOwner {
         if (bond().isMature())
             revert BondIsMature({given: bond().isMature(), required: false});
@@ -452,6 +457,18 @@ contract ConvertibleBondBox is
             revert FeeTooLarge({input: newFeeBps, maximum: maxFeeBPS});
         feeBps = newFeeBps;
         emit FeeUpdate(newFeeBps);
+    }
+
+    /**
+     * @inheritdoc IConvertibleBondBox
+     */
+
+    function cbbTransferOwnership(address newOwner)
+        external
+        override
+        onlyOwner
+    {
+        transferOwnership(newOwner);
     }
 
     function _atomicDeposit(
@@ -499,9 +516,5 @@ contract ConvertibleBondBox is
             _borrower,
             _stableAmount
         );
-    }
-
-    function cbbTransferOwnership(address newOwner) external override onlyOwner {
-        transferOwnership(newOwner);
     }
 }
