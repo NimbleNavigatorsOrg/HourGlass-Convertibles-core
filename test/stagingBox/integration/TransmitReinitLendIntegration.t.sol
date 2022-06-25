@@ -53,7 +53,6 @@ contract TransmitReinitLendIntegration is SBIntegrationSetup {
         vm.prank(s_cbb_owner);
         s_deployedSB.transmitReInit(s_isLend);
 
-        //TODO figure out why this calculation has to be done after the test action. Test fails if this math is moved above action.
         uint256 mintAmount = (sbStableTokenBalanceBeforeLend * s_priceGranularity) /
             s_deployedConvertibleBondBox.currentPrice();
 
@@ -70,4 +69,30 @@ contract TransmitReinitLendIntegration is SBIntegrationSetup {
         );
     }
 
+    function testTransmitReinitIntegrationIsLendTrueTransfersRiskTrancheFromSBToCBB(uint256 fuzzPrice) public {
+        transmitReinitIntegrationSetup(fuzzPrice, true);
+
+        uint256 sbStableTokenBalanceBeforeLend = IERC20(s_stableToken).balanceOf(address(s_deployedSB));
+        uint256 sbRiskTrancheBalanceBefore = s_riskTranche.balanceOf(address(s_deployedSB));
+        uint256 cbbRiskTrancheBalanceBefore = s_riskTranche.balanceOf(address(s_deployedConvertibleBondBox));
+
+        vm.prank(s_cbb_owner);
+        s_deployedSB.transmitReInit(s_isLend);
+
+        uint256 sbRiskTrancheBalanceAfter = s_riskTranche.balanceOf(address(s_deployedSB));
+        uint256 cbbRiskTrancheBalanceAfter = s_riskTranche.balanceOf(address(s_deployedConvertibleBondBox));
+
+        uint256 mintAmount = (sbStableTokenBalanceBeforeLend * s_priceGranularity) /
+            s_deployedConvertibleBondBox.currentPrice();
+        uint256 expectedZ = (mintAmount * s_ratios[2]) / s_ratios[0];
+
+        assertEq(
+            sbRiskTrancheBalanceBefore - expectedZ,
+            sbRiskTrancheBalanceAfter
+        );
+        assertEq(
+            cbbRiskTrancheBalanceBefore + expectedZ, 
+            cbbRiskTrancheBalanceAfter
+        );
+    }
 }
