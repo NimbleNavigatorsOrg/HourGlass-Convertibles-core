@@ -58,6 +58,13 @@ contract Reinitialize is CBBSetup {
             s_price
         );
 
+        vm.prank(s_cbb_owner);
+        s_deployedConvertibleBondBox.borrow(
+            address(1),
+            address(2),
+            collateralAmount
+        );
+
         uint256 matcherSafeTrancheBalanceAfter = s_safeTranche.balanceOf(s_cbb_owner);
         uint256 matcherRiskTrancheBalanceAfter = s_riskTranche.balanceOf(s_cbb_owner);
 
@@ -114,6 +121,13 @@ contract Reinitialize is CBBSetup {
             collateralAmount,
             stableAmount,
             s_price
+        );
+
+        vm.prank(s_cbb_owner);
+        s_deployedConvertibleBondBox.lend(
+            address(1),
+            address(2),
+            stableAmount
         );
 
         uint256 matcherSafeTrancheBalanceAfter = s_safeTranche.balanceOf(s_cbb_owner);
@@ -273,6 +287,15 @@ contract Reinitialize is CBBSetup {
         uint256 matcherRiskTrancheBalanceBefore = s_riskTranche.balanceOf(s_cbb_owner);
 
         vm.prank(s_cbb_owner);
+        s_deployedConvertibleBondBox.reinitialize(
+            address(1),
+            address(2),
+            collateralAmount,
+            0,
+            s_price
+        );
+
+        vm.prank(s_cbb_owner);
         vm.expectEmit(true, true, true, true);
         emit Borrow(
             s_cbb_owner,
@@ -281,12 +304,10 @@ contract Reinitialize is CBBSetup {
             collateralAmount,
             s_price
         );
-        s_deployedConvertibleBondBox.reinitialize(
+        s_deployedConvertibleBondBox.borrow(
             address(1),
             address(2),
-            collateralAmount,
-            0,
-            s_price
+            collateralAmount
         );
 
         uint256 matcherSafeTrancheBalanceAfter = s_safeTranche.balanceOf(s_cbb_owner);
@@ -342,6 +363,13 @@ contract Reinitialize is CBBSetup {
             0,
             stableAmount,
             s_price
+        );
+
+        vm.prank(s_cbb_owner);
+        s_deployedConvertibleBondBox.lend(
+            address(1),
+            address(2),
+            stableAmount
         );
 
         uint256 matcherSafeTrancheBalanceAfter = s_safeTranche.balanceOf(s_cbb_owner);

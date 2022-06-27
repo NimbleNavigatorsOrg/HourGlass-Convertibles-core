@@ -58,6 +58,9 @@ contract RedeemRiskTranche is CBBSetup {
         s_deployedConvertibleBondBox.reinitialize(borrowerAddress, lenderAddress, depositAmount, 0, s_price);
 
         vm.prank(s_deployedConvertibleBondBox.owner());
+        s_deployedConvertibleBondBox.borrow(borrowerAddress, lenderAddress, depositAmount);
+
+        vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.setFee(fee);
 
         riskSlipAmountToRedeem = bound(riskSlipAmountToRedeem, s_deployedConvertibleBondBox.riskRatio() , ISlip(s_deployedConvertibleBondBox.s_riskSlipTokenAddress()).balanceOf(borrowerAddress));
@@ -87,6 +90,9 @@ contract RedeemRiskTranche is CBBSetup {
 
         vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.reinitialize(borrowerAddress, lenderAddress, depositAmount, 0, s_price);
+
+        vm.prank(s_deployedConvertibleBondBox.owner());
+        s_deployedConvertibleBondBox.borrow(borrowerAddress, lenderAddress, depositAmount);
 
         vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.setFee(fee);
@@ -131,6 +137,9 @@ contract RedeemRiskTranche is CBBSetup {
         s_deployedConvertibleBondBox.reinitialize(borrowerAddress, lenderAddress, depositAmount, 0, s_price);
 
         vm.prank(s_deployedConvertibleBondBox.owner());
+        s_deployedConvertibleBondBox.borrow(borrowerAddress, lenderAddress, depositAmount);
+
+        vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.setFee(fee);
 
         riskSlipAmountToRedeem = bound(riskSlipAmountToRedeem, s_deployedConvertibleBondBox.riskRatio() , ISlip(s_deployedConvertibleBondBox.s_riskSlipTokenAddress()).balanceOf(borrowerAddress));
@@ -159,6 +168,9 @@ contract RedeemRiskTranche is CBBSetup {
 
         vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.reinitialize(borrowerAddress, lenderAddress, depositAmount, 0, s_price);
+
+        vm.prank(s_deployedConvertibleBondBox.owner());
+        s_deployedConvertibleBondBox.borrow(borrowerAddress, lenderAddress, depositAmount);
 
         vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.setFee(fee);

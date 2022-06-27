@@ -37,6 +37,13 @@ contract RedeemSafeTranche is CBBSetup {
             s_price
         );
 
+        vm.prank(s_cbb_owner);
+        s_deployedConvertibleBondBox.borrow(
+            address(1),
+            address(2),
+            amount
+        );
+
         uint256 safeSlipBalanceBeforeRedeem = Slip(
             s_deployedConvertibleBondBox.s_safeSlipTokenAddress()
         ).balanceOf(address(2));
@@ -204,6 +211,13 @@ contract RedeemSafeTranche is CBBSetup {
             s_price
         );
 
+        vm.prank(s_cbb_owner);
+        s_deployedConvertibleBondBox.borrow(
+            borrower,
+            lender,
+            depositAmount
+        );
+
         vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.setFee(fee);
 
@@ -264,6 +278,13 @@ contract RedeemSafeTranche is CBBSetup {
             s_price
         );
 
+        vm.prank(s_cbb_owner);
+        s_deployedConvertibleBondBox.borrow(
+            borrower,
+            lender,
+            depositAmount
+        );
+
         vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.setFee(fee);
 
@@ -319,6 +340,13 @@ contract RedeemSafeTranche is CBBSetup {
             depositAmount,
             0,
             s_price
+        );
+
+        vm.prank(s_cbb_owner);
+        s_deployedConvertibleBondBox.borrow(
+            borrower,
+            lender,
+            depositAmount
         );
 
         vm.prank(s_deployedConvertibleBondBox.owner());
@@ -392,6 +420,9 @@ contract RedeemSafeTranche is CBBSetup {
             0,
             s_price
         );
+
+        vm.prank(s_cbb_owner);
+        s_deployedConvertibleBondBox.borrow(borrower, lender, depositAmount);
 
         vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.setFee(fee);
@@ -477,6 +508,13 @@ contract RedeemSafeTranche is CBBSetup {
             depositAmount,
             0,
             s_price
+        );
+
+        vm.prank(s_cbb_owner);
+        s_deployedConvertibleBondBox.borrow(
+            borrower,
+            lender,
+            depositAmount
         );
 
         vm.prank(s_deployedConvertibleBondBox.owner());
