@@ -10,7 +10,8 @@ import "./SBIntegrationSetup.t.sol";
 contract TransmitReinitBorrowIntegration is SBIntegrationSetup {
 
     function testTransmitReInitIntegrationBorrow(uint256 fuzzPrice) public {
-        transmitReinitIntegrationSetup(fuzzPrice, false);
+        setupStagingBox(fuzzPrice);
+        setupTranches(false, address(s_deployedSB));
 
         uint256 safeTrancheBalance = s_deployedSB.safeTranche().balanceOf(address(s_deployedSB));
         uint256 expectedReinitLendAmount = (safeTrancheBalance * s_deployedSB.initialPrice()) / s_deployedSB.priceGranularity();
@@ -25,7 +26,8 @@ contract TransmitReinitBorrowIntegration is SBIntegrationSetup {
     }
 
     function testTransmitReinitIntegrationBorrowEmitsBorrow(uint256 fuzzPrice) public {
-        transmitReinitIntegrationSetup(fuzzPrice, false);
+        setupStagingBox(fuzzPrice);
+        setupTranches(false, address(s_deployedSB));
 
         uint256 sbSafeTrancheBalanceBefore = s_safeTranche.balanceOf(address(s_deployedSB));
 
@@ -59,7 +61,8 @@ contract TransmitReinitBorrowIntegration is SBIntegrationSetup {
     }
 
     function testTransmitReinitIntegrationBorrowTransfersSafeTrancheFromSBToCBB(uint256 fuzzPrice) public {
-        transmitReinitIntegrationSetup(fuzzPrice, false);
+        setupStagingBox(fuzzPrice);
+        setupTranches(false, address(s_deployedSB));
 
         uint256 sbSafeTrancheBalanceBefore = s_safeTranche.balanceOf(address(s_deployedSB));
         uint256 cbbSafeTrancheBalanceBefore = s_safeTranche.balanceOf(address(s_deployedConvertibleBondBox));
@@ -75,7 +78,8 @@ contract TransmitReinitBorrowIntegration is SBIntegrationSetup {
     }
 
     function testTransmitReinitIntegrationBorrowTransfersRiskTrancheFromSBToCBB(uint256 fuzzPrice) public {
-        transmitReinitIntegrationSetup(fuzzPrice, false);
+        setupStagingBox(fuzzPrice);
+        setupTranches(false, address(s_deployedSB));
 
         uint256 sbSafeTrancheBalanceBefore = s_safeTranche.balanceOf(address(s_deployedSB));
 
@@ -95,7 +99,8 @@ contract TransmitReinitBorrowIntegration is SBIntegrationSetup {
     }
 
     function testTransmitReinitIntegrationBorrowMintsSafeSlipsToSB(uint256 fuzzPrice) public {
-        transmitReinitIntegrationSetup(fuzzPrice, false);
+        setupStagingBox(fuzzPrice);
+        setupTranches(false, address(s_deployedSB));
 
         uint256 sbSafeTrancheBalanceBefore = s_safeTranche.balanceOf(address(s_deployedSB));
         uint256 sbSafeSlipBalanceBefore = ISlip(
@@ -113,7 +118,8 @@ contract TransmitReinitBorrowIntegration is SBIntegrationSetup {
     }
 
     function testTransmitReinitIntegrationBorrowMintsRiskSlipsToSB(uint256 fuzzPrice) public {
-        transmitReinitIntegrationSetup(fuzzPrice, false);
+        setupStagingBox(fuzzPrice);
+        setupTranches(false, address(s_deployedSB));
 
         uint256 sbSafeTrancheBalanceBefore = s_safeTranche.balanceOf(address(s_deployedSB));
         uint256 sbRiskSlipBalanceBefore = ISlip(
@@ -132,8 +138,9 @@ contract TransmitReinitBorrowIntegration is SBIntegrationSetup {
     }
 
     function testTransmitReinitIntegrationBorrowDoesNotChangeSBStableBalance(uint256 fuzzPrice) public {
-        transmitReinitIntegrationSetup(fuzzPrice, false);
-
+        setupStagingBox(fuzzPrice);
+        setupTranches(false, address(s_deployedSB));
+        
         uint256 sbStableBalanceBefore = s_stableToken.balanceOf(address(s_deployedSB));
 
         vm.prank(s_cbb_owner);
