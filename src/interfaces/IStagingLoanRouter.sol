@@ -29,4 +29,45 @@ interface IStagingLoanRouter {
 
     function multiWrapTrancheBorrow(IStagingBox _stagingBox, uint256 _amountRaw)
         external;
+
+    /**
+     * @dev redeems lendSlips for safeSlips and safeSlips for stables
+     * @param _stagingBox The staging box tied to the Convertible Bond
+     * @param _lendSlipAmount The amount of lendSlips to be redeemed
+     * Requirements:
+     *  - can only be called when there are stables in the CBB to be repaid
+     */
+
+    function redeemLendSlipsForStables(
+        IStagingBox _stagingBox,
+        uint256 _lendSlipAmount
+    ) external;
+
+    /**
+     * @dev redeems lendSlips for safeSlips and safeSlips for tranches, redeems tranches for rebasing
+     * collateral, unwraps rebasing collateral, and then swaps for stableToken
+     * @param _stagingBox The staging box tied to the Convertible Bond
+     * @param _lendSlipAmount The amount of lendSlips to be redeemed
+     * Requirements:
+     *  - can only be called after maturity
+     */
+
+    function redeemLendSlipsForTranchesAndUnwrap(
+        IStagingBox _stagingBox,
+        uint256 _lendSlipAmount
+    ) external;
+
+    /**
+     * @dev redeems riskSlips for risTranches, redeems tranches for rebasing
+     * collateral, unwraps rebasing collateral
+     * @param _stagingBox The staging box tied to the Convertible Bond
+     * @param _riskSlipAmount The amount of riskSlips to be redeemed
+     * Requirements:
+     *  - can only be called after maturity
+     */
+
+    function redeemRiskSlipsForTranchesAndUnwrap(
+        IStagingBox _stagingBox,
+        uint256 _riskSlipAmount
+    ) external;
 }

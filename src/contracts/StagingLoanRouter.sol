@@ -70,4 +70,138 @@ contract StagingLoanRouter is IStagingLoanRouter {
             }
         }
     }
+
+    /**
+     * @inheritdoc IStagingLoanRouter
+     */
+
+    function redeemLendSlipsForStables(
+        IStagingBox _stagingBox,
+        uint256 _lendSlipAmount
+    ) public {
+        IConvertibleBondBox convertibleBondBox = _stagingBox
+            .convertibleBondBox();
+        IButtonWoodBondController bond = convertibleBondBox.bond();
+        IButtonWrapper wrapper = IButtonWrapper(bond.collateralToken());
+        IERC20 underlying = IERC20(wrapper.underlying());
+
+        //Transfer lendslips to router
+        TransferHelper.safeTransferFrom(
+            _stagingBox.s_lendSlipTokenAddress(),
+            msg.sender,
+            address(this),
+            _lendSlipAmount
+        );
+
+        //redeem lendSlips for SafeSlips
+        _stagingBox.redeemLendSlip(_lendSlipAmount);
+
+        //get balance of SafeSlips and redeem for stables
+        uint256 safeSlipAmount = IERC20(
+            convertibleBondBox.s_safeSlipTokenAddress()
+        ).balanceOf(address(this));
+
+        convertibleBondBox.redeemStable(safeSlipAmount);
+
+        //get balance of stables and send back to user
+        uint256 stableBalance = convertibleBondBox.stableToken().balanceOf(
+            address(this)
+        );
+
+        TransferHelper.safeTransfer(
+            address(convertibleBondBox.stableToken()),
+            msg.sender,
+            stableBalance
+        );
+    }
+
+    function redeemLendSlipsForTranchesAndUnwrap(
+        IStagingBox _stagingBox,
+        uint256 _lendSlipAmount
+    ) public {
+        IConvertibleBondBox convertibleBondBox = _stagingBox
+            .convertibleBondBox();
+        IButtonWoodBondController bond = convertibleBondBox.bond();
+        IButtonWrapper wrapper = IButtonWrapper(bond.collateralToken());
+        IERC20 underlying = IERC20(wrapper.underlying());
+
+        //Transfer lendslips to router
+        TransferHelper.safeTransferFrom(
+            _stagingBox.s_lendSlipTokenAddress(),
+            msg.sender,
+            address(this),
+            _lendSlipAmount
+        );
+
+        //redeem lendSlips for SafeSlips
+        _stagingBox.redeemLendSlip(_lendSlipAmount);
+
+        //redeem SafeSlips for SafeTranche
+        uint256 safeSlipAmount = IERC20(
+            convertibleBondBox.s_safeSlipTokenAddress()
+        ).balanceOf(address(this));
+
+        convertibleBondBox.redeemSafeTranche(safeSlipAmount);
+
+        //redeem SafeTranche for underlying collateral
+        uint256 safeTrancheAmount = convertibleBondBox.safeTranche().balanceOf(
+            address(this)
+        );
+        bond.redeemMature(
+            address(convertibleBondBox.safeTranche()),
+            safeTrancheAmount
+        );
+
+        //redeem penalty riskTranche
+        uint256 riskTrancheAmount = convertibleBondBox.riskTranche().balanceOf(
+            address(this)
+        );
+        if (riskTrancheAmount > 0) {
+            bond.redeemMature(
+                address(convertibleBondBox.riskTranche()),
+                riskTrancheAmount
+            );
+        }
+
+        //unwrap to msg.sender
+        wrapper.withdrawAllTo(msg.sender);
+    }
+
+    /**
+     * @inheritdoc IStagingLoanRouter
+     */
+
+    function redeemRiskSlipsForTranchesAndUnwrap(
+        IStagingBox _stagingBox,
+        uint256 _riskSlipAmount
+    ) public {
+        IConvertibleBondBox convertibleBondBox = _stagingBox
+            .convertibleBondBox();
+        IButtonWoodBondController bond = convertibleBondBox.bond();
+        IButtonWrapper wrapper = IButtonWrapper(bond.collateralToken());
+        IERC20 underlying = IERC20(wrapper.underlying());
+
+        //Transfer riskSlips to router
+        TransferHelper.safeTransferFrom(
+            convertibleBondBox.s_riskSlipTokenAddress(),
+            msg.sender,
+            address(this),
+            _riskSlipAmount
+        );
+
+        //Redeem riskSlips for riskTranches
+        convertibleBondBox.redeemRiskTranche(_riskSlipAmount);
+
+        //redeem riskTranche for underlying collateral
+        uint256 riskTrancheAmount = convertibleBondBox.riskTranche().balanceOf(
+            address(this)
+        );
+        bond.redeemMature(
+            address(convertibleBondBox.riskTranche()),
+            riskTrancheAmount
+        );
+
+        //unwrap to msg.sender
+        wrapper.withdrawAllTo(msg.sender);
+    }
 }
