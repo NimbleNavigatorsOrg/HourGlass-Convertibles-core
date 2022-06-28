@@ -19,3 +19,6 @@
 [submodule "lib/tranche"]
 	path = lib/tranche
 	url = https://github.com/buttonwood-protocol/tranche
+[submodule "lib/button-wrappers"]
+	path = lib/button-wrappers
+	url = https://github.com/buttonwood-protocol/button-wrappers
