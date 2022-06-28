@@ -19,7 +19,7 @@ contract sbInitialize is SBSetup {
     }
 
     function testCannotInitialPriceTooHigh(uint256 price) public {
-        uint256 price = bound(
+        price = bound(
             price, 
             s_deployedConvertibleBondBox.s_priceGranularity() + 1, 
             type(uint256).max

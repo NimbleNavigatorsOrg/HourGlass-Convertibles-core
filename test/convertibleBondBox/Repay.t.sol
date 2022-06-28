@@ -39,6 +39,13 @@ contract Repay is CBBSetup {
             s_price
         );
 
+        vm.prank(s_cbb_owner);
+        s_deployedConvertibleBondBox.borrow(
+            borrowerAddress,
+            address(2),
+            amount
+        );
+
         uint256 userStableBalancedBeforeRepay = s_stableToken.balanceOf(
             borrowerAddress
         );
@@ -135,6 +142,13 @@ contract Repay is CBBSetup {
             amount,
             0,
             s_price
+        );
+
+        vm.prank(s_cbb_owner);
+        s_deployedConvertibleBondBox.borrow(
+            borrowerAddress,
+            address(2),
+            amount
         );
 
         vm.prank(s_deployedConvertibleBondBox.owner());

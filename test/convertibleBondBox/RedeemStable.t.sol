@@ -31,6 +31,13 @@ contract RedeemStable is CBBSetup {
             s_price
         );
 
+        vm.prank(s_cbb_owner);
+        s_deployedConvertibleBondBox.borrow(
+            address(1),
+            address(2),
+            s_depositLimit
+        );
+
         //getting lender + borrower balances after initialization deposit
         uint256 userSafeSlipBalanceBeforeRedeem = ISlip(
             s_deployedConvertibleBondBox.s_safeSlipTokenAddress()
@@ -174,6 +181,12 @@ contract RedeemStable is CBBSetup {
             depositAmount,
             0,
             s_price
+        );
+
+        s_deployedConvertibleBondBox.borrow(
+            borrower,
+            lender,
+            depositAmount
         );
 
         s_deployedConvertibleBondBox.setFee(fee);

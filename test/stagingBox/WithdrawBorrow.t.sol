@@ -73,8 +73,6 @@ contract WithdrawBorrow is SBSetup {
 
         uint256 sbSafeTrancheBalanceBeforeWithdraw = ITranche(s_deployedConvertibleBondBox.safeTranche()).balanceOf(address(s_deployedSB));
 
-        uint256 msgSenderBorrowSlipBalanceBeforeWithdraw = ISlip(s_deployedSB.s_borrowSlipTokenAddress()).balanceOf(address(this));
-
         _borrowSlipAmount = bound(_borrowSlipAmount, 0, sbSafeTrancheBalanceBeforeWithdraw);
 
         vm.expectEmit(true, true, true, true);

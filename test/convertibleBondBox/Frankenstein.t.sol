@@ -85,6 +85,13 @@ contract Frankenstein is CBBSetup {
         );
         vm.stopPrank();
 
+        vm.prank(s_deployedConvertibleBondBox.owner());
+        s_deployedConvertibleBondBox.borrow(
+            address(borrower),
+            address(lender),
+            amount
+        );
+
         //get slip approvals for all addresses
         for (uint160 i = 1; i < 11; i++) {
             vm.startPrank(address(i));

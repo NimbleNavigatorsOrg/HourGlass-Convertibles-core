@@ -235,8 +235,6 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
     }
 
     function transmitReInit(bool _isLend) external override onlyOwner {
-
-        console2.log(owner(), "owner");
         /*
         - calls `CBB.reinitialize(…)`
             - `Address(this)` as borrower + lender
@@ -254,6 +252,8 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
                 stableAmount,
                 initialPrice()
             );
+
+            convertibleBondBox().lend(address(this), address(this), stableAmount);
         }
 
         if (!_isLend) {
@@ -267,6 +267,8 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
                 0,
                 initialPrice()
             );
+
+            convertibleBondBox().borrow(address(this), address(this), safeTrancheBalance);
         }
 
         //- calls `CBB.transferOwner(owner())` to transfer ownership of CBB back to Owner()

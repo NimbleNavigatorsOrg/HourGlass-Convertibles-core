@@ -26,7 +26,6 @@ contract WithdrawLend is SBSetup {
 
         s_deployedSB.withdrawLend(_lendSlipAmount);
 
-        uint256 sbStableTokenBalanceAfterWithdraw  = IERC20(s_deployedConvertibleBondBox.stableToken()).balanceOf(address(s_deployedSB));
         uint256 msgSenderStableTokenBalanceAfterWithdraw  = IERC20(s_deployedConvertibleBondBox.stableToken()).balanceOf(address(this));
 
         assertEq(msgSenderStableTokenBalanceBeforeWithdraw + _lendSlipAmount, msgSenderStableTokenBalanceAfterWithdraw);
@@ -65,7 +64,6 @@ contract WithdrawLend is SBSetup {
         ));
 
         uint256 sbStableTokenBalanceBeforeWithdraw  = IERC20(s_deployedConvertibleBondBox.stableToken()).balanceOf(address(s_deployedSB));
-        uint256 msgSenderLendSlipBalanceBeforeWithdraw  = IERC20(s_deployedSB.s_lendSlipTokenAddress()).balanceOf(address(this));
 
         _lendSlipAmount = bound(_lendSlipAmount, 0, sbStableTokenBalanceBeforeWithdraw);
 
