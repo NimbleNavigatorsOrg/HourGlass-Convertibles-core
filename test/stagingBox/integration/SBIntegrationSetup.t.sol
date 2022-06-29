@@ -148,7 +148,7 @@ contract SBIntegrationSetup is Test {
         s_deployedConvertibleBondBox.cbbTransferOwnership(address(s_deployedSB));
     }
 
-    function transmitReinitIntegrationSetup (bool _isLend, address _user) internal {
+    function setupTranches(bool _isLend, address _user, address _approvalAddress) internal {
         s_collateralToken.mint(_user, 1e18);
 
         vm.prank(_user);
@@ -173,77 +173,11 @@ contract SBIntegrationSetup is Test {
         s_stableToken.mint(_user, maxStableAmount);
 
         vm.startPrank(_user);
-        s_safeTranche.approve(s_deployedCBBAddress, type(uint256).max);
-        s_riskTranche.approve(s_deployedCBBAddress, type(uint256).max);
-        s_stableToken.approve(s_deployedCBBAddress, type(uint256).max);
+        s_safeTranche.approve(_approvalAddress, type(uint256).max);
+        s_riskTranche.approve(_approvalAddress, type(uint256).max);
+        s_stableToken.approve(_approvalAddress, type(uint256).max);
         vm.stopPrank();
 
         s_isLend = _isLend;
-    }
-
-    function setupTranches (bool _isLend, address _user) internal {
-        s_collateralToken.mint(_user, 1e18);
-
-        vm.prank(_user);
-        s_collateralToken.approve(
-            address(s_buttonWoodBondController),
-            type(uint256).max
-        );
-
-        vm.prank(_user);
-        s_buttonWoodBondController.deposit(1e18);
-        (s_safeTranche, s_safeRatio) = s_buttonWoodBondController.tranches(
-            s_trancheIndex
-        );
-        (s_riskTranche, s_riskRatio) = s_buttonWoodBondController.tranches(
-            s_buttonWoodBondController.trancheCount() - 1
-        );
-
-        maxStableAmount =
-            (s_safeTranche.balanceOf(_user) * s_price) /
-                s_priceGranularity;
-
-        s_stableToken.mint(_user, maxStableAmount);
-
-        vm.startPrank(_user);
-        s_safeTranche.approve(s_deployedCBBAddress, type(uint256).max);
-        s_riskTranche.approve(s_deployedCBBAddress, type(uint256).max);
-        s_stableToken.approve(s_deployedCBBAddress, type(uint256).max);
-        vm.stopPrank();
-
-        s_isLend = _isLend;
-    }
-
-    function depositBorrowSetup(uint256 _fuzzPrice) internal {
-        setupStagingBox(_fuzzPrice);
-
-        s_collateralToken.mint(s_user, 1e18);
-
-        vm.prank(s_user);
-        s_collateralToken.approve(
-            address(s_buttonWoodBondController),
-            type(uint256).max
-        );
-
-        vm.prank(s_user);
-        s_buttonWoodBondController.deposit(1e18);
-        (s_safeTranche, s_safeRatio) = s_buttonWoodBondController.tranches(
-            s_trancheIndex
-        );
-        (s_riskTranche, s_riskRatio) = s_buttonWoodBondController.tranches(
-            s_buttonWoodBondController.trancheCount() - 1
-        );
-
-        maxStableAmount =
-            (s_safeTranche.balanceOf(s_user) * s_price) /
-                s_priceGranularity;
-
-        s_stableToken.mint(s_user, maxStableAmount);
-
-        vm.startPrank(s_user);
-        s_safeTranche.approve(address(s_deployedSB), type(uint256).max);
-        s_riskTranche.approve(address(s_deployedSB), type(uint256).max);
-        s_stableToken.approve(address(s_deployedSB), type(uint256).max);
-        vm.stopPrank();
     }
 }

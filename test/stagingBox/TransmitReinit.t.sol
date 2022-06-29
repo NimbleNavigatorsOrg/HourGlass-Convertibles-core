@@ -12,7 +12,7 @@ contract TransmitReinit is SBIntegrationSetup {
 
     function testTransmitReInitLendSetsStorageVariables(uint256 fuzzPrice) public {
         setupStagingBox(fuzzPrice);
-        setupTranches(true, address(s_deployedSB));
+        setupTranches(true, address(s_deployedSB), s_deployedCBBAddress);
 
         uint256 stableAmount = s_deployedSB.stableToken().balanceOf(address(s_deployedSB));
 
@@ -45,7 +45,7 @@ contract TransmitReinit is SBIntegrationSetup {
 
     function testTransmitReInitBorrowSetsStorageVariables(uint256 fuzzPrice) public {
         setupStagingBox(fuzzPrice);
-        setupTranches(false, address(s_deployedSB));
+        setupTranches(false, address(s_deployedSB), s_deployedCBBAddress);
 
         uint256 safeTrancheBalance = s_deployedSB.safeTranche().balanceOf(address(s_deployedSB));
         uint256 expectedReinitLendAmount = (safeTrancheBalance * s_deployedSB.initialPrice()) / s_deployedSB.priceGranularity();

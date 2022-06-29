@@ -10,7 +10,8 @@ import "./integration/SBIntegrationSetup.t.sol";
 contract DepositBorrow is SBIntegrationSetup {
 
     function testSendsSafeTranchesFromMsgSenderToStagingBox(uint256 _fuzzPrice, uint256 _safeTrancheAmount) public {
-        depositBorrowSetup(_fuzzPrice);
+        setupStagingBox(_fuzzPrice);
+        setupTranches(true, s_user, address(s_deployedSB));
 
         uint256 sbSafeTrancheBalanceBeforeDeposit = s_deployedConvertibleBondBox.safeTranche().balanceOf(address(s_deployedSB));
         uint256 userSafeTrancheBalanceBeforeDeposit = s_deployedConvertibleBondBox.safeTranche().balanceOf(s_user);
@@ -28,7 +29,8 @@ contract DepositBorrow is SBIntegrationSetup {
     }
 
     function testSendsRiskTranchesFromMsgSenderToStagingBox(uint256 _fuzzPrice, uint256 _safeTrancheAmount) public {
-        depositBorrowSetup(_fuzzPrice);
+        setupStagingBox(_fuzzPrice);
+        setupTranches(true, s_user, address(s_deployedSB));
 
         uint256 userSafeTrancheBalanceBeforeDeposit = s_deployedConvertibleBondBox.safeTranche().balanceOf(s_user);
 
@@ -53,7 +55,8 @@ contract DepositBorrow is SBIntegrationSetup {
     }
 
     function testMintsBorrowSlipsToBorrower(uint256 _fuzzPrice, uint256 _safeTrancheAmount) public {
-        depositBorrowSetup(_fuzzPrice);
+        setupStagingBox(_fuzzPrice);
+        setupTranches(true, s_user, address(s_deployedSB));
 
         uint256 userSafeTrancheBalanceBeforeDeposit = s_deployedConvertibleBondBox.safeTranche().balanceOf(s_user);
         uint256 borrowerBorrowSlipBalanceBeforeDeposit = ISlip(s_deployedSB.s_borrowSlipTokenAddress()).balanceOf(s_borrower);
@@ -72,8 +75,9 @@ contract DepositBorrow is SBIntegrationSetup {
     }
 
     function testEmitsBorrowDeposit(uint256 _fuzzPrice, uint256 _safeTrancheAmount) public {
-        depositBorrowSetup(_fuzzPrice);
-
+        setupStagingBox(_fuzzPrice);
+        setupTranches(true, s_user, address(s_deployedSB));
+        
         uint256 userSafeTrancheBalanceBeforeDeposit = s_deployedConvertibleBondBox.safeTranche().balanceOf(s_user);
 
         _safeTrancheAmount = bound(_safeTrancheAmount, 0, userSafeTrancheBalanceBeforeDeposit);
