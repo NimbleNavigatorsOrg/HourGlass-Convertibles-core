@@ -367,9 +367,8 @@ contract ConvertibleBondBox is
             (_safeSlipAmount)
         );
 
-        uint256 zPenaltyTotal = IERC20(address(riskTranche())).balanceOf(
-            address(this)
-        ) - IERC20(s_riskSlipTokenAddress).totalSupply();
+        uint256 zPenaltyTotal = riskTranche().balanceOf(address(this)) -
+            IERC20(s_riskSlipTokenAddress).totalSupply();
 
         //transfer risk-Tranche penalty after maturity only
         TransferHelper.safeTransfer(

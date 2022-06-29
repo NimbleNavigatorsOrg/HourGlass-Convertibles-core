@@ -303,7 +303,6 @@ contract StagingLoanRouter is IStagingLoanRouter {
         ) = fetchElasticStack(_stagingBox);
 
         //calculate lendSlips to safeSlips w/ initialPrice
-
         uint256 safeSlipsAmount = (_lendSlipAmount *
             _stagingBox.priceGranularity()) / _stagingBox.initialPrice();
 
@@ -314,16 +313,30 @@ contract StagingLoanRouter is IStagingLoanRouter {
 
         //safeSlips = safeTranches
         //calculate safe tranches to rebasing collateral via balance of safeTranche address
-
         uint256 buttonAmount = (wrapper.balanceOf(
             address(_stagingBox.safeTranche())
         ) * safeSlipsAmount) / _stagingBox.safeTranche().totalSupply();
+
         //calculate penalty riskTranche
+        uint256 penaltyTrancheTotal = _stagingBox.riskTranche().balanceOf(
+            address(convertibleBondBox)
+        ) - IERC20(_stagingBox.riskSlipAddress()).totalSupply();
+
+        uint256 penaltyTrancheRedeemable = (safeSlipsAmount *
+            penaltyTrancheTotal) /
+            (IERC20(_stagingBox.safeSlipAddress()).totalSupply() -
+                convertibleBondBox.s_repaidSafeSlips());
+
         //calculate rebasing collateral redeemable for riskTranche penalty
         //total the rebasing collateral
+        buttonAmount +=
+            (wrapper.balanceOf(address(_stagingBox.riskTranche())) *
+                penaltyTrancheRedeemable) /
+            _stagingBox.riskTranche().totalSupply();
 
         //convert rebasing collateral to collateralToken qty via wrapper
         uint256 underlyingAmount = wrapper.wrapperToUnderlying(buttonAmount);
+
         // return both
         return (underlyingAmount, buttonAmount);
     }
