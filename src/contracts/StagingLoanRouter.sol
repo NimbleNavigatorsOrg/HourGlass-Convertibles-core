@@ -20,11 +20,12 @@ contract StagingLoanRouter is IStagingLoanRouter {
         IStagingBox _stagingBox,
         uint256 _amountRaw
     ) public {
-        IConvertibleBondBox convertibleBondBox = _stagingBox
-            .convertibleBondBox();
-        IButtonWoodBondController bond = convertibleBondBox.bond();
-        IButtonToken wrapper = IButtonToken(bond.collateralToken());
-        IERC20 underlying = IERC20(wrapper.underlying());
+        (
+            IConvertibleBondBox convertibleBondBox,
+            IButtonWoodBondController bond,
+            IButtonToken wrapper,
+            IERC20 underlying
+        ) = fetchElasticStack(_stagingBox);
 
         TransferHelper.safeTransferFrom(
             address(underlying),
@@ -53,9 +54,12 @@ contract StagingLoanRouter is IStagingLoanRouter {
     {
         simpleWrapTrancheBorrow(_stagingBox, _amountRaw);
 
-        IConvertibleBondBox convertibleBondBox = _stagingBox
-            .convertibleBondBox();
-        IButtonWoodBondController bond = convertibleBondBox.bond();
+        (
+            IConvertibleBondBox convertibleBondBox,
+            IButtonWoodBondController bond,
+            ,
+
+        ) = fetchElasticStack(_stagingBox);
 
         //send back unused tranches to msg.sender
         for (uint256 i = 0; i < bond.trancheCount(); i++) {
@@ -83,11 +87,9 @@ contract StagingLoanRouter is IStagingLoanRouter {
         IStagingBox _stagingBox,
         uint256 _lendSlipAmount
     ) public {
-        IConvertibleBondBox convertibleBondBox = _stagingBox
-            .convertibleBondBox();
-        IButtonWoodBondController bond = convertibleBondBox.bond();
-        IButtonToken wrapper = IButtonToken(bond.collateralToken());
-        IERC20 underlying = IERC20(wrapper.underlying());
+        (IConvertibleBondBox convertibleBondBox, , , ) = fetchElasticStack(
+            _stagingBox
+        );
 
         //Transfer lendslips to router
         TransferHelper.safeTransferFrom(
@@ -129,11 +131,12 @@ contract StagingLoanRouter is IStagingLoanRouter {
         IStagingBox _stagingBox,
         uint256 _lendSlipAmount
     ) public {
-        IConvertibleBondBox convertibleBondBox = _stagingBox
-            .convertibleBondBox();
-        IButtonWoodBondController bond = convertibleBondBox.bond();
-        IButtonToken wrapper = IButtonToken(bond.collateralToken());
-        IERC20 underlying = IERC20(wrapper.underlying());
+        (
+            IConvertibleBondBox convertibleBondBox,
+            IButtonWoodBondController bond,
+            IButtonToken wrapper,
+
+        ) = fetchElasticStack(_stagingBox);
 
         //Transfer lendslips to router
         TransferHelper.safeTransferFrom(
@@ -187,11 +190,12 @@ contract StagingLoanRouter is IStagingLoanRouter {
         IStagingBox _stagingBox,
         uint256 _riskSlipAmount
     ) public {
-        IConvertibleBondBox convertibleBondBox = _stagingBox
-            .convertibleBondBox();
-        IButtonWoodBondController bond = convertibleBondBox.bond();
-        IButtonToken wrapper = IButtonToken(bond.collateralToken());
-        IERC20 underlying = IERC20(wrapper.underlying());
+        (
+            IConvertibleBondBox convertibleBondBox,
+            IButtonWoodBondController bond,
+            IButtonToken wrapper,
+
+        ) = fetchElasticStack(_stagingBox);
 
         //Transfer riskSlips to router
         TransferHelper.safeTransferFrom(
@@ -225,11 +229,12 @@ contract StagingLoanRouter is IStagingLoanRouter {
         IStagingBox _stagingBox,
         uint256 _amountRaw
     ) public view returns (uint256) {
-        IConvertibleBondBox convertibleBondBox = _stagingBox
-            .convertibleBondBox();
-        IButtonWoodBondController bond = convertibleBondBox.bond();
-        IButtonToken wrapper = IButtonToken(bond.collateralToken());
-        IERC20 underlying = IERC20(wrapper.underlying());
+        (
+            IConvertibleBondBox convertibleBondBox,
+            IButtonWoodBondController bond,
+            IButtonToken wrapper,
+
+        ) = fetchElasticStack(_stagingBox);
 
         //calculate rebase token qty w wrapperfunction
         uint256 buttonAmount = wrapper.underlyingToWrapper(_amountRaw);
@@ -260,11 +265,9 @@ contract StagingLoanRouter is IStagingLoanRouter {
         IStagingBox _stagingBox,
         uint256 _lendSlipAmount
     ) public view returns (uint256) {
-        IConvertibleBondBox convertibleBondBox = _stagingBox
-            .convertibleBondBox();
-        IButtonWoodBondController bond = convertibleBondBox.bond();
-        IButtonToken wrapper = IButtonToken(bond.collateralToken());
-        IERC20 underlying = IERC20(wrapper.underlying());
+        (IConvertibleBondBox convertibleBondBox, , , ) = fetchElasticStack(
+            _stagingBox
+        );
 
         //calculate lendSlips to safeSlips w/ initialPrice
         uint256 safeSlipsAmount = (_lendSlipAmount *
@@ -291,11 +294,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
         IStagingBox _stagingBox,
         uint256 _lendSlipAmount
     ) public view returns (uint256) {
-        IConvertibleBondBox convertibleBondBox = _stagingBox
-            .convertibleBondBox();
-        IButtonWoodBondController bond = convertibleBondBox.bond();
-        IButtonToken wrapper = IButtonToken(bond.collateralToken());
-        IERC20 underlying = IERC20(wrapper.underlying());
+        (, , IButtonToken wrapper, ) = fetchElasticStack(_stagingBox);
 
         //calculate lendSlips to safeSlips w/ initialPrice
 
@@ -328,11 +327,12 @@ contract StagingLoanRouter is IStagingLoanRouter {
         IStagingBox _stagingBox,
         uint256 _riskSlipAmount
     ) public view returns (uint256) {
-        IConvertibleBondBox convertibleBondBox = _stagingBox
-            .convertibleBondBox();
-        IButtonWoodBondController bond = convertibleBondBox.bond();
-        IButtonToken wrapper = IButtonToken(bond.collateralToken());
-        IERC20 underlying = IERC20(wrapper.underlying());
+        (
+            IConvertibleBondBox convertibleBondBox,
+            ,
+            IButtonToken wrapper,
+
+        ) = fetchElasticStack(_stagingBox);
 
         //calculate riskSlip to riskTranche - penalty
         uint256 riskTrancheAmount = _riskSlipAmount -
@@ -348,5 +348,24 @@ contract StagingLoanRouter is IStagingLoanRouter {
 
         // return both?
         return underlyingAmount;
+    }
+
+    function fetchElasticStack(IStagingBox _stagingBox)
+        internal
+        view
+        returns (
+            IConvertibleBondBox,
+            IButtonWoodBondController,
+            IButtonToken,
+            IERC20
+        )
+    {
+        IConvertibleBondBox convertibleBondBox = _stagingBox
+            .convertibleBondBox();
+        IButtonWoodBondController bond = convertibleBondBox.bond();
+        IButtonToken wrapper = IButtonToken(bond.collateralToken());
+        IERC20 underlying = IERC20(wrapper.underlying());
+
+        return (convertibleBondBox, bond, wrapper, underlying);
     }
 }
