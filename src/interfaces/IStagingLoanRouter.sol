@@ -81,7 +81,7 @@ interface IStagingLoanRouter {
     function viewSimpleWrapTrancheBorrow(
         IStagingBox _stagingBox,
         uint256 _amountRaw
-    ) external view returns (uint256);
+    ) external view returns (uint256, uint256);
 
     /**
      * @dev provides amount of stableTokens expected in return for redeeming lendSlips
@@ -105,7 +105,7 @@ interface IStagingLoanRouter {
     function viewRedeemLendSlipsForTranches(
         IStagingBox _stagingBox,
         uint256 _lendSlipAmount
-    ) external view returns (uint256);
+    ) external view returns (uint256, uint256);
 
     /**
      * @dev provides amount of unwrapped collateral tokens expected in return for redeeming riskSlips
@@ -117,5 +117,5 @@ interface IStagingLoanRouter {
     function viewRedeemRiskSlipsForTranches(
         IStagingBox _stagingBox,
         uint256 _riskSlipAmount
-    ) external view returns (uint256);
+    ) external view returns (uint256, uint256);
 }

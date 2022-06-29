@@ -228,7 +228,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
     function viewSimpleWrapTrancheBorrow(
         IStagingBox _stagingBox,
         uint256 _amountRaw
-    ) public view returns (uint256) {
+    ) public view returns (uint256, uint256) {
         (
             IConvertibleBondBox convertibleBondBox,
             IButtonWoodBondController bond,
@@ -239,7 +239,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
         //calculate rebase token qty w wrapperfunction
         uint256 buttonAmount = wrapper.underlyingToWrapper(_amountRaw);
 
-        //calculate tranche amount with tranche ratio & CDR
+        //calculate safeTranche (borrowSlip amount) amount with tranche ratio & CDR
         uint256 bondCollateralBalance = IERC20(bond.collateralToken())
             .balanceOf(address(bond));
         uint256 safeTrancheAmount = (buttonAmount *
@@ -252,7 +252,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
         uint256 stableLoanAmount = (safeTrancheAmount *
             _stagingBox.initialPrice()) / _stagingBox.priceGranularity();
 
-        return stableLoanAmount;
+        return (stableLoanAmount, safeTrancheAmount);
     }
 
     /**
@@ -293,7 +293,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
     function viewRedeemLendSlipsForTranches(
         IStagingBox _stagingBox,
         uint256 _lendSlipAmount
-    ) public view returns (uint256) {
+    ) public view returns (uint256, uint256) {
         (, , IButtonToken wrapper, ) = fetchElasticStack(_stagingBox);
 
         //calculate lendSlips to safeSlips w/ initialPrice
@@ -304,7 +304,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
         //safeSlips = safeTranches
         //calculate safe tranches to rebasing collateral via balance of safeTranche address
 
-        uint256 wrapperAmount = (wrapper.balanceOf(
+        uint256 buttonAmount = (wrapper.balanceOf(
             address(_stagingBox.safeTranche())
         ) * safeSlipsAmount) / _stagingBox.safeTranche().totalSupply();
         //calculate penalty riskTranche
@@ -312,9 +312,9 @@ contract StagingLoanRouter is IStagingLoanRouter {
         //total the rebasing collateral
 
         //convert rebasing collateral to collateralToken qty via wrapper
-        uint256 underlyingAmount = wrapper.wrapperToUnderlying(wrapperAmount);
-        // return both?
-        return underlyingAmount;
+        uint256 underlyingAmount = wrapper.wrapperToUnderlying(buttonAmount);
+        // return both
+        return (underlyingAmount, buttonAmount);
     }
 
     /**
@@ -326,7 +326,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
     function viewRedeemRiskSlipsForTranches(
         IStagingBox _stagingBox,
         uint256 _riskSlipAmount
-    ) public view returns (uint256) {
+    ) public view returns (uint256, uint256) {
         (
             IConvertibleBondBox convertibleBondBox,
             ,
@@ -339,15 +339,15 @@ contract StagingLoanRouter is IStagingLoanRouter {
             (_riskSlipAmount * convertibleBondBox.penalty()) /
             convertibleBondBox.s_penaltyGranularity();
         //calculate rebasing collateral redeemable for riskTranche - penalty via tranche balance
-        uint256 wrapperAmount = (wrapper.balanceOf(
+        uint256 buttonAmount = (wrapper.balanceOf(
             address(_stagingBox.riskTranche())
         ) * riskTrancheAmount) / _stagingBox.riskTranche().totalSupply();
 
         // convert rebasing collateral to collateralToken qty via wrapper
-        uint256 underlyingAmount = wrapper.wrapperToUnderlying(wrapperAmount);
+        uint256 underlyingAmount = wrapper.wrapperToUnderlying(buttonAmount);
 
-        // return both?
-        return underlyingAmount;
+        // return both
+        return (underlyingAmount, buttonAmount);
     }
 
     function fetchElasticStack(IStagingBox _stagingBox)
