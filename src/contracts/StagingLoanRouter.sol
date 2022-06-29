@@ -7,12 +7,14 @@ import "../interfaces/IButtonWoodBondController.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@uniswap/lib/contracts/libraries/TransferHelper.sol";
 import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
-import "@buttonwood-protocol/button-wrappers/contracts/interfaces/IButtonWrapper.sol";
+import "@buttonwood-protocol/button-wrappers/contracts/interfaces/IButtonToken.sol";
 
 contract StagingLoanRouter is IStagingLoanRouter {
     /**
      * @inheritdoc IStagingLoanRouter
      */
+
+    //TODO: Add slippage protection
 
     function simpleWrapTrancheBorrow(
         IStagingBox _stagingBox,
@@ -21,7 +23,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
         IConvertibleBondBox convertibleBondBox = _stagingBox
             .convertibleBondBox();
         IButtonWoodBondController bond = convertibleBondBox.bond();
-        IButtonWrapper wrapper = IButtonWrapper(bond.collateralToken());
+        IButtonToken wrapper = IButtonToken(bond.collateralToken());
         IERC20 underlying = IERC20(wrapper.underlying());
 
         TransferHelper.safeTransferFrom(
@@ -75,6 +77,8 @@ contract StagingLoanRouter is IStagingLoanRouter {
      * @inheritdoc IStagingLoanRouter
      */
 
+    //TODO: Add slippage protection
+
     function redeemLendSlipsForStables(
         IStagingBox _stagingBox,
         uint256 _lendSlipAmount
@@ -82,7 +86,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
         IConvertibleBondBox convertibleBondBox = _stagingBox
             .convertibleBondBox();
         IButtonWoodBondController bond = convertibleBondBox.bond();
-        IButtonWrapper wrapper = IButtonWrapper(bond.collateralToken());
+        IButtonToken wrapper = IButtonToken(bond.collateralToken());
         IERC20 underlying = IERC20(wrapper.underlying());
 
         //Transfer lendslips to router
@@ -115,6 +119,12 @@ contract StagingLoanRouter is IStagingLoanRouter {
         );
     }
 
+    /**
+     * @inheritdoc IStagingLoanRouter
+     */
+
+    //TODO: Add slippage protection
+
     function redeemLendSlipsForTranchesAndUnwrap(
         IStagingBox _stagingBox,
         uint256 _lendSlipAmount
@@ -122,7 +132,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
         IConvertibleBondBox convertibleBondBox = _stagingBox
             .convertibleBondBox();
         IButtonWoodBondController bond = convertibleBondBox.bond();
-        IButtonWrapper wrapper = IButtonWrapper(bond.collateralToken());
+        IButtonToken wrapper = IButtonToken(bond.collateralToken());
         IERC20 underlying = IERC20(wrapper.underlying());
 
         //Transfer lendslips to router
@@ -171,6 +181,8 @@ contract StagingLoanRouter is IStagingLoanRouter {
      * @inheritdoc IStagingLoanRouter
      */
 
+    //TODO: Add slippage protection
+
     function redeemRiskSlipsForTranchesAndUnwrap(
         IStagingBox _stagingBox,
         uint256 _riskSlipAmount
@@ -178,7 +190,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
         IConvertibleBondBox convertibleBondBox = _stagingBox
             .convertibleBondBox();
         IButtonWoodBondController bond = convertibleBondBox.bond();
-        IButtonWrapper wrapper = IButtonWrapper(bond.collateralToken());
+        IButtonToken wrapper = IButtonToken(bond.collateralToken());
         IERC20 underlying = IERC20(wrapper.underlying());
 
         //Transfer riskSlips to router
@@ -203,5 +215,138 @@ contract StagingLoanRouter is IStagingLoanRouter {
 
         //unwrap to msg.sender
         wrapper.withdrawAllTo(msg.sender);
+    }
+
+    /**
+     * @inheritdoc IStagingLoanRouter
+     */
+
+    function viewSimpleWrapTrancheBorrow(
+        IStagingBox _stagingBox,
+        uint256 _amountRaw
+    ) public view returns (uint256) {
+        IConvertibleBondBox convertibleBondBox = _stagingBox
+            .convertibleBondBox();
+        IButtonWoodBondController bond = convertibleBondBox.bond();
+        IButtonToken wrapper = IButtonToken(bond.collateralToken());
+        IERC20 underlying = IERC20(wrapper.underlying());
+
+        //calculate rebase token qty w wrapperfunction
+        uint256 buttonAmount = wrapper.underlyingToWrapper(_amountRaw);
+
+        //calculate tranche amount with tranche ratio & CDR
+        uint256 bondCollateralBalance = IERC20(bond.collateralToken())
+            .balanceOf(address(bond));
+        uint256 safeTrancheAmount = (buttonAmount *
+            _stagingBox.safeRatio() *
+            bond.totalDebt()) /
+            bondCollateralBalance /
+            convertibleBondBox.s_trancheGranularity();
+
+        //calculate stabletoken amount w/ safeTrancheAmount & initialPrice
+        uint256 stableLoanAmount = (safeTrancheAmount *
+            _stagingBox.initialPrice()) / _stagingBox.priceGranularity();
+
+        return stableLoanAmount;
+    }
+
+    /**
+     * @inheritdoc IStagingLoanRouter
+     */
+
+    //TODO: Account for fees
+
+    function viewRedeemLendSlipsForStables(
+        IStagingBox _stagingBox,
+        uint256 _lendSlipAmount
+    ) public view returns (uint256) {
+        IConvertibleBondBox convertibleBondBox = _stagingBox
+            .convertibleBondBox();
+        IButtonWoodBondController bond = convertibleBondBox.bond();
+        IButtonToken wrapper = IButtonToken(bond.collateralToken());
+        IERC20 underlying = IERC20(wrapper.underlying());
+
+        //calculate lendSlips to safeSlips w/ initialPrice
+        uint256 safeSlipsAmount = (_lendSlipAmount *
+            _stagingBox.priceGranularity()) / _stagingBox.initialPrice();
+
+        //calculate safeSlips to stables via math for CBB redeemStable
+        uint256 cbbStableBalance = _stagingBox.stableToken().balanceOf(
+            address(convertibleBondBox)
+        );
+
+        uint256 stableAmount = (safeSlipsAmount * cbbStableBalance) /
+            convertibleBondBox.s_repaidSafeSlips();
+
+        return stableAmount;
+    }
+
+    /**
+     * @inheritdoc IStagingLoanRouter
+     */
+
+    //TODO: Account for fees
+
+    function viewRedeemLendSlipsForTranches(
+        IStagingBox _stagingBox,
+        uint256 _lendSlipAmount
+    ) public view returns (uint256) {
+        IConvertibleBondBox convertibleBondBox = _stagingBox
+            .convertibleBondBox();
+        IButtonWoodBondController bond = convertibleBondBox.bond();
+        IButtonToken wrapper = IButtonToken(bond.collateralToken());
+        IERC20 underlying = IERC20(wrapper.underlying());
+
+        //calculate lendSlips to safeSlips w/ initialPrice
+
+        uint256 safeSlipsAmount = (_lendSlipAmount *
+            _stagingBox.priceGranularity()) / _stagingBox.initialPrice();
+
+        //safeSlips = safeTranches
+        //calculate safe tranches to rebasing collateral via balance of safeTranche address
+
+        uint256 wrapperAmount = (wrapper.balanceOf(
+            address(_stagingBox.safeTranche())
+        ) * safeSlipsAmount) / _stagingBox.safeTranche().totalSupply();
+        //calculate penalty riskTranche
+        //calculate rebasing collateral redeemable for riskTranche penalty
+        //total the rebasing collateral
+
+        //convert rebasing collateral to collateralToken qty via wrapper
+        uint256 underlyingAmount = wrapper.wrapperToUnderlying(wrapperAmount);
+        // return both?
+        return underlyingAmount;
+    }
+
+    /**
+     * @inheritdoc IStagingLoanRouter
+     */
+
+    //TODO: Account for fees
+
+    function viewRedeemRiskSlipsForTranches(
+        IStagingBox _stagingBox,
+        uint256 _riskSlipAmount
+    ) public view returns (uint256) {
+        IConvertibleBondBox convertibleBondBox = _stagingBox
+            .convertibleBondBox();
+        IButtonWoodBondController bond = convertibleBondBox.bond();
+        IButtonToken wrapper = IButtonToken(bond.collateralToken());
+        IERC20 underlying = IERC20(wrapper.underlying());
+
+        //calculate riskSlip to riskTranche - penalty
+        uint256 riskTrancheAmount = _riskSlipAmount -
+            (_riskSlipAmount * convertibleBondBox.penalty()) /
+            convertibleBondBox.s_penaltyGranularity();
+        //calculate rebasing collateral redeemable for riskTranche - penalty via tranche balance
+        uint256 wrapperAmount = (wrapper.balanceOf(
+            address(_stagingBox.riskTranche())
+        ) * riskTrancheAmount) / _stagingBox.riskTranche().totalSupply();
+
+        // convert rebasing collateral to collateralToken qty via wrapper
+        uint256 underlyingAmount = wrapper.wrapperToUnderlying(wrapperAmount);
+
+        // return both?
+        return underlyingAmount;
     }
 }

@@ -70,4 +70,52 @@ interface IStagingLoanRouter {
         IStagingBox _stagingBox,
         uint256 _riskSlipAmount
     ) external;
+
+    /**
+     * @dev provides amount of stableTokens expected in return for a given collateral amount
+     * @param _stagingBox The staging box tied to the Convertible Bond
+     * @param _amountRaw The amount of unwrapped tokens to be used as collateral
+     * Requirements:
+     */
+
+    function viewSimpleWrapTrancheBorrow(
+        IStagingBox _stagingBox,
+        uint256 _amountRaw
+    ) external view returns (uint256);
+
+    /**
+     * @dev provides amount of stableTokens expected in return for redeeming lendSlips
+     * @param _stagingBox The staging box tied to the Convertible Bond
+     * @param _lendSlipAmount The amount of lendSlips to be redeemed
+     * Requirements:
+     */
+
+    function viewRedeemLendSlipsForStables(
+        IStagingBox _stagingBox,
+        uint256 _lendSlipAmount
+    ) external view returns (uint256);
+
+    /**
+     * @dev provides amount of unwrapped collateral tokens expected in return for redeeming lendSlips
+     * @param _stagingBox The staging box tied to the Convertible Bond
+     * @param _lendSlipAmount The amount of lendSlips to be redeemed
+     * Requirements:
+     */
+
+    function viewRedeemLendSlipsForTranches(
+        IStagingBox _stagingBox,
+        uint256 _lendSlipAmount
+    ) external view returns (uint256);
+
+    /**
+     * @dev provides amount of unwrapped collateral tokens expected in return for redeeming riskSlips
+     * @param _stagingBox The staging box tied to the Convertible Bond
+     * @param _riskSlipAmount The amount of riskSlips to be redeemed
+     * Requirements:
+     */
+
+    function viewRedeemRiskSlipsForTranches(
+        IStagingBox _stagingBox,
+        uint256 _riskSlipAmount
+    ) external view returns (uint256);
 }
