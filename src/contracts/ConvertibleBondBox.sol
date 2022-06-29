@@ -226,6 +226,19 @@ contract ConvertibleBondBox is
                 reqInput: (safeRatio() * price) / priceGranularity
             });
 
+        //transfer fee to owner
+        if (feeBps > 0 && _msgSender() != owner()) {
+            uint256 feeSlip = (_stableAmount * feeBps) / BPS;
+            TransferHelper.safeTransferFrom(
+                address(stableToken()),
+                _msgSender(),
+                owner(),
+                feeSlip
+            );
+
+            _stableAmount -= feeSlip;
+        }
+
         // Calculate safeTranche payout
         uint256 safeTranchePayout = (_stableAmount * priceGranularity) / price;
 
@@ -249,20 +262,6 @@ contract ConvertibleBondBox is
         //calculate Z-tranche payout
         uint256 zTranchePaidFor = (safeTranchePayout * riskRatio()) /
             safeRatio();
-
-        //transfer fee to owner
-        if (feeBps > 0) {
-            uint256 feeSlip = (zTranchePaidFor * feeBps) / BPS;
-            TransferHelper.safeTransferFrom(
-                s_riskSlipTokenAddress,
-                _msgSender(),
-                owner(),
-                feeSlip
-            );
-
-            //calculate Z-tranche payout
-            zTranchePaidFor -= feeSlip;
-        }
 
         //transfer Z-tranches from ConvertibleBondBox to msg.sender
         TransferHelper.safeTransfer(
@@ -294,7 +293,7 @@ contract ConvertibleBondBox is
             });
 
         //transfer fee to owner
-        if (feeBps > 0) {
+        if (feeBps > 0 && _msgSender() != owner()) {
             uint256 feeSlip = (_riskSlipAmount * feeBps) / BPS;
             TransferHelper.safeTransferFrom(
                 s_riskSlipTokenAddress,
