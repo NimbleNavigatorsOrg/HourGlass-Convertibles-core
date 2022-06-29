@@ -133,7 +133,10 @@ contract RedeemStable is CBBSetup {
         s_deployedConvertibleBondBox.redeemStable(s_safeSlipAmount);
     }
 
-    function testCannotRedeemStableMinimumInput(uint time, uint256 safeSlipAmount) public {
+    function testCannotRedeemStableMinimumInput(
+        uint256 time,
+        uint256 safeSlipAmount
+    ) public {
         time = bound(time, 1, s_maturityDate - 1);
         vm.warp(time);
 
@@ -147,7 +150,11 @@ contract RedeemStable is CBBSetup {
         );
         vm.stopPrank();
 
-        safeSlipAmount = bound(safeSlipAmount, 0, s_deployedConvertibleBondBox.safeRatio() - 1);
+        safeSlipAmount = bound(
+            safeSlipAmount,
+            0,
+            s_deployedConvertibleBondBox.safeRatio() - 1
+        );
         bytes memory customError = abi.encodeWithSignature(
             "MinimumInput(uint256,uint256)",
             safeSlipAmount,
@@ -158,19 +165,22 @@ contract RedeemStable is CBBSetup {
     }
 
     function redeemStableSetup(
-    uint256 time,     
-    uint256 depositAmount,
-    uint256 fee,
-    uint256 repayAmount,
-    uint256 safeSlipAmount,
-    address borrower,
-    address lender) private returns(uint256) {
-        depositAmount = bound(depositAmount, 
-        400,
-        s_safeTranche.balanceOf(s_cbb_owner));
+        uint256 time,
+        uint256 depositAmount,
+        uint256 fee,
+        uint256 repayAmount,
+        uint256 safeSlipAmount,
+        address borrower,
+        address lender
+    ) private returns (uint256) {
+        depositAmount = bound(
+            depositAmount,
+            10000,
+            s_safeTranche.balanceOf(s_cbb_owner)
+        );
 
         time = bound(time, 1, s_endOfUnixTime);
-        fee = bound(fee, 0, s_maxFeeBPS);
+        fee = bound(fee, 1, s_maxFeeBPS);
 
         vm.warp(time);
 
@@ -183,18 +193,19 @@ contract RedeemStable is CBBSetup {
             s_price
         );
 
-        s_deployedConvertibleBondBox.borrow(
-            borrower,
-            lender,
-            depositAmount
-        );
+        s_deployedConvertibleBondBox.borrow(borrower, lender, depositAmount);
 
         s_deployedConvertibleBondBox.setFee(fee);
         vm.stopPrank();
 
-        repayAmount = bound(repayAmount,
-         s_deployedConvertibleBondBox.safeRatio(),
-         IERC20(address(s_deployedConvertibleBondBox.stableToken())).balanceOf(borrower));
+        repayAmount = bound(
+            repayAmount,
+            s_deployedConvertibleBondBox.safeRatio(),
+            (s_deployedConvertibleBondBox.safeTranche().balanceOf(
+                address(s_deployedConvertibleBondBox)
+            ) * s_deployedConvertibleBondBox.currentPrice()) /
+                s_priceGranularity
+        );
 
         vm.startPrank(borrower);
         s_stableToken.approve(
@@ -209,26 +220,41 @@ contract RedeemStable is CBBSetup {
         vm.stopPrank();
 
         safeSlipAmount = bound(
-            safeSlipAmount, s_deployedConvertibleBondBox.safeRatio(), 
-            IERC20(s_deployedConvertibleBondBox.stableToken()).balanceOf(address(s_deployedConvertibleBondBox))
-            );
+            safeSlipAmount,
+            s_deployedConvertibleBondBox.safeRatio(),
+            IERC20(s_deployedConvertibleBondBox.stableToken()).balanceOf(
+                address(s_deployedConvertibleBondBox)
+            )
+        );
 
-            return safeSlipAmount;
+        return safeSlipAmount;
     }
 
-function testRedeemStableSendsSafeSlipFeesToOwner(
-    uint256 time, 
-    uint256 depositAmount,
-    uint256 fee,
-    uint256 repayAmount,
-    uint256 safeSlipAmount) public {
+    function testRedeemStableSendsSafeSlipFeesToOwner(
+        uint256 time,
+        uint256 depositAmount,
+        uint256 fee,
+        uint256 repayAmount,
+        uint256 safeSlipAmount
+    ) public {
         address borrower = address(1);
         address lender = address(2);
 
-        safeSlipAmount = redeemStableSetup(time, depositAmount, fee, repayAmount, safeSlipAmount, borrower, lender);
+        safeSlipAmount = redeemStableSetup(
+            time,
+            depositAmount,
+            fee,
+            repayAmount,
+            safeSlipAmount,
+            borrower,
+            lender
+        );
 
-        uint256 feeSlipAmount = (safeSlipAmount * s_deployedConvertibleBondBox.feeBps()) / s_BPS;
-        uint256 ownerSafeSlipBalanceBeforeRedeem = ISlip(s_deployedConvertibleBondBox.s_safeSlipTokenAddress()).balanceOf(s_deployedConvertibleBondBox.owner());
+        uint256 feeSlipAmount = (safeSlipAmount *
+            s_deployedConvertibleBondBox.feeBps()) / s_BPS;
+        uint256 ownerSafeSlipBalanceBeforeRedeem = ISlip(
+            s_deployedConvertibleBondBox.s_safeSlipTokenAddress()
+        ).balanceOf(s_deployedConvertibleBondBox.owner());
 
         vm.startPrank(lender);
         IERC20(s_deployedConvertibleBondBox.s_safeSlipTokenAddress()).approve(
@@ -238,23 +264,39 @@ function testRedeemStableSendsSafeSlipFeesToOwner(
         s_deployedConvertibleBondBox.redeemStable(safeSlipAmount);
         vm.stopPrank();
 
-        uint256 ownerSafeSlipBalanceAfterRedeem = ISlip(s_deployedConvertibleBondBox.s_safeSlipTokenAddress()).balanceOf(s_deployedConvertibleBondBox.owner());
+        uint256 ownerSafeSlipBalanceAfterRedeem = ISlip(
+            s_deployedConvertibleBondBox.s_safeSlipTokenAddress()
+        ).balanceOf(s_deployedConvertibleBondBox.owner());
 
-        assertEq(ownerSafeSlipBalanceBeforeRedeem + feeSlipAmount, ownerSafeSlipBalanceAfterRedeem);
+        assertEq(
+            ownerSafeSlipBalanceBeforeRedeem + feeSlipAmount,
+            ownerSafeSlipBalanceAfterRedeem
+        );
     }
 
     function testRedeemStableBurnsMsgSenderSafeSlips(
-    uint time, 
-    uint256 depositAmount,
-    uint256 fee,
-    uint256 repayAmount,
-    uint256 safeSlipAmount) public {
+        uint256 time,
+        uint256 depositAmount,
+        uint256 fee,
+        uint256 repayAmount,
+        uint256 safeSlipAmount
+    ) public {
         address borrower = address(1);
         address lender = address(2);
 
-        safeSlipAmount = redeemStableSetup(time, depositAmount, fee, repayAmount, safeSlipAmount, borrower, lender);
+        safeSlipAmount = redeemStableSetup(
+            time,
+            depositAmount,
+            fee,
+            repayAmount,
+            safeSlipAmount,
+            borrower,
+            lender
+        );
 
-        uint256 lenderSafeSlipBalanceBeforeRedeem = ISlip(s_deployedConvertibleBondBox.s_safeSlipTokenAddress()).balanceOf(lender);
+        uint256 lenderSafeSlipBalanceBeforeRedeem = ISlip(
+            s_deployedConvertibleBondBox.s_safeSlipTokenAddress()
+        ).balanceOf(lender);
 
         vm.startPrank(lender);
         IERC20(s_deployedConvertibleBondBox.s_safeSlipTokenAddress()).approve(
@@ -264,73 +306,108 @@ function testRedeemStableSendsSafeSlipFeesToOwner(
         s_deployedConvertibleBondBox.redeemStable(safeSlipAmount);
         vm.stopPrank();
 
-        uint256 lenderSafeSlipBalanceAfterRedeem = ISlip(s_deployedConvertibleBondBox.s_safeSlipTokenAddress()).balanceOf(lender);
+        uint256 lenderSafeSlipBalanceAfterRedeem = ISlip(
+            s_deployedConvertibleBondBox.s_safeSlipTokenAddress()
+        ).balanceOf(lender);
 
-        assertEq(lenderSafeSlipBalanceBeforeRedeem - safeSlipAmount, lenderSafeSlipBalanceAfterRedeem);
+        assertEq(
+            lenderSafeSlipBalanceBeforeRedeem - safeSlipAmount,
+            lenderSafeSlipBalanceAfterRedeem
+        );
     }
 
     function testRedeemStableSendsStableTokensToMsgSenderFromCBB(
-        uint time, 
+        uint256 time,
         uint256 depositAmount,
         uint256 fee,
         uint256 repayAmount,
         uint256 safeSlipAmount
-        ) public {
-            address borrower = address(1);
-            address lender = address(2);
+    ) public {
+        address borrower = address(1);
+        address lender = address(2);
 
-            safeSlipAmount = redeemStableSetup(time, depositAmount, fee, repayAmount, safeSlipAmount, borrower, lender);
+        safeSlipAmount = redeemStableSetup(
+            time,
+            depositAmount,
+            fee,
+            repayAmount,
+            safeSlipAmount,
+            borrower,
+            lender
+        );
 
-            uint256 feeSlipAmount = (safeSlipAmount * s_deployedConvertibleBondBox.feeBps()) / s_BPS;
-            uint256 SafeSlipAmountMinusFee = safeSlipAmount - feeSlipAmount;
+        uint256 feeSlipAmount = (safeSlipAmount *
+            s_deployedConvertibleBondBox.feeBps()) / s_BPS;
+        uint256 SafeSlipAmountMinusFee = safeSlipAmount - feeSlipAmount;
 
-            uint256 CBBStableSlipBalanceBeforeRedeem = IERC20(s_stableToken).balanceOf(address(s_deployedConvertibleBondBox));
-            uint256 lenderStableSlipBalanceBeforeRedeem = IERC20(s_stableToken).balanceOf(lender);
+        uint256 CBBStableSlipBalanceBeforeRedeem = IERC20(s_stableToken)
+            .balanceOf(address(s_deployedConvertibleBondBox));
+        uint256 lenderStableSlipBalanceBeforeRedeem = IERC20(s_stableToken)
+            .balanceOf(lender);
 
-            uint256 StableAmountToSend = (SafeSlipAmountMinusFee * CBBStableSlipBalanceBeforeRedeem) / s_deployedConvertibleBondBox.s_repaidSafeSlips();
+        uint256 StableAmountToSend = (SafeSlipAmountMinusFee *
+            CBBStableSlipBalanceBeforeRedeem) /
+            s_deployedConvertibleBondBox.s_repaidSafeSlips();
 
-            vm.startPrank(lender);
-            IERC20(s_deployedConvertibleBondBox.s_safeSlipTokenAddress()).approve(
-                address(s_deployedConvertibleBondBox),
-                type(uint256).max
-            );
-            s_deployedConvertibleBondBox.redeemStable(safeSlipAmount);
-            vm.stopPrank();
+        vm.startPrank(lender);
+        IERC20(s_deployedConvertibleBondBox.s_safeSlipTokenAddress()).approve(
+            address(s_deployedConvertibleBondBox),
+            type(uint256).max
+        );
+        s_deployedConvertibleBondBox.redeemStable(safeSlipAmount);
+        vm.stopPrank();
 
-            uint256 lenderStableSlipBalanceAfterRedeem = IERC20(s_stableToken).balanceOf(lender);
-            uint256 CBBStableSlipBalanceAfterRedeem = IERC20(s_stableToken).balanceOf(address(s_deployedConvertibleBondBox));
+        uint256 lenderStableSlipBalanceAfterRedeem = IERC20(s_stableToken)
+            .balanceOf(lender);
+        uint256 CBBStableSlipBalanceAfterRedeem = IERC20(s_stableToken)
+            .balanceOf(address(s_deployedConvertibleBondBox));
 
-            assertEq(CBBStableSlipBalanceBeforeRedeem - StableAmountToSend, CBBStableSlipBalanceAfterRedeem);
-            assertEq(lenderStableSlipBalanceBeforeRedeem + StableAmountToSend, lenderStableSlipBalanceAfterRedeem);
-        }
+        assertEq(
+            CBBStableSlipBalanceBeforeRedeem - StableAmountToSend,
+            CBBStableSlipBalanceAfterRedeem
+        );
+        assertEq(
+            lenderStableSlipBalanceBeforeRedeem + StableAmountToSend,
+            lenderStableSlipBalanceAfterRedeem
+        );
+    }
 
-        function testRedeemStableEmitsRedeemStable(
-        uint time, 
+    function testRedeemStableEmitsRedeemStable(
+        uint256 time,
         uint256 depositAmount,
         uint256 fee,
         uint256 repayAmount,
         uint256 safeSlipAmount
-        ) public {
-            address borrower = address(1);
-            address lender = address(2);
+    ) public {
+        address borrower = address(1);
+        address lender = address(2);
 
-            safeSlipAmount = redeemStableSetup(time, depositAmount, fee, repayAmount, safeSlipAmount, borrower, lender);
+        safeSlipAmount = redeemStableSetup(
+            time,
+            depositAmount,
+            fee,
+            repayAmount,
+            safeSlipAmount,
+            borrower,
+            lender
+        );
 
-            uint256 feeSlipAmount = (safeSlipAmount * s_deployedConvertibleBondBox.feeBps()) / s_BPS;
-            uint256 SafeSlipAmountMinusFee = safeSlipAmount - feeSlipAmount;
+        uint256 feeSlipAmount = (safeSlipAmount *
+            s_deployedConvertibleBondBox.feeBps()) / s_BPS;
+        uint256 SafeSlipAmountMinusFee = safeSlipAmount - feeSlipAmount;
 
-            vm.startPrank(lender);
-            IERC20(s_deployedConvertibleBondBox.s_safeSlipTokenAddress()).approve(
-                address(s_deployedConvertibleBondBox),
-                type(uint256).max
-            );
-            vm.expectEmit(true, true, true, true);
-            emit RedeemStable(
-                lender,
-                SafeSlipAmountMinusFee,
-                s_deployedConvertibleBondBox.currentPrice()
-            );
-            s_deployedConvertibleBondBox.redeemStable(safeSlipAmount);
-            vm.stopPrank();
-        }
+        vm.startPrank(lender);
+        IERC20(s_deployedConvertibleBondBox.s_safeSlipTokenAddress()).approve(
+            address(s_deployedConvertibleBondBox),
+            type(uint256).max
+        );
+        vm.expectEmit(true, true, true, true);
+        emit RedeemStable(
+            lender,
+            SafeSlipAmountMinusFee,
+            s_deployedConvertibleBondBox.currentPrice()
+        );
+        s_deployedConvertibleBondBox.redeemStable(safeSlipAmount);
+        vm.stopPrank();
+    }
 }
