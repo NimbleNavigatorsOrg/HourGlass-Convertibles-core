@@ -259,8 +259,6 @@ contract StagingLoanRouter is IStagingLoanRouter {
      * @inheritdoc IStagingLoanRouter
      */
 
-    //TODO: Account for fees
-
     function viewRedeemLendSlipsForStables(
         IStagingBox _stagingBox,
         uint256 _lendSlipAmount
@@ -272,6 +270,11 @@ contract StagingLoanRouter is IStagingLoanRouter {
         //calculate lendSlips to safeSlips w/ initialPrice
         uint256 safeSlipsAmount = (_lendSlipAmount *
             _stagingBox.priceGranularity()) / _stagingBox.initialPrice();
+
+        //subtract fees
+        safeSlipsAmount -=
+            (safeSlipsAmount * convertibleBondBox.feeBps()) /
+            convertibleBondBox.BPS();
 
         //calculate safeSlips to stables via math for CBB redeemStable
         uint256 cbbStableBalance = _stagingBox.stableToken().balanceOf(
@@ -288,18 +291,26 @@ contract StagingLoanRouter is IStagingLoanRouter {
      * @inheritdoc IStagingLoanRouter
      */
 
-    //TODO: Account for fees
-
     function viewRedeemLendSlipsForTranches(
         IStagingBox _stagingBox,
         uint256 _lendSlipAmount
     ) public view returns (uint256, uint256) {
-        (, , IButtonToken wrapper, ) = fetchElasticStack(_stagingBox);
+        (
+            IConvertibleBondBox convertibleBondBox,
+            ,
+            IButtonToken wrapper,
+
+        ) = fetchElasticStack(_stagingBox);
 
         //calculate lendSlips to safeSlips w/ initialPrice
 
         uint256 safeSlipsAmount = (_lendSlipAmount *
             _stagingBox.priceGranularity()) / _stagingBox.initialPrice();
+
+        //subtract fees
+        safeSlipsAmount -=
+            (safeSlipsAmount * convertibleBondBox.feeBps()) /
+            convertibleBondBox.BPS();
 
         //safeSlips = safeTranches
         //calculate safe tranches to rebasing collateral via balance of safeTranche address
@@ -321,8 +332,6 @@ contract StagingLoanRouter is IStagingLoanRouter {
      * @inheritdoc IStagingLoanRouter
      */
 
-    //TODO: Account for fees
-
     function viewRedeemRiskSlipsForTranches(
         IStagingBox _stagingBox,
         uint256 _riskSlipAmount
@@ -334,10 +343,16 @@ contract StagingLoanRouter is IStagingLoanRouter {
 
         ) = fetchElasticStack(_stagingBox);
 
+        //subtract fees
+        _riskSlipAmount -=
+            (_riskSlipAmount * convertibleBondBox.feeBps()) /
+            convertibleBondBox.BPS();
+
         //calculate riskSlip to riskTranche - penalty
         uint256 riskTrancheAmount = _riskSlipAmount -
             (_riskSlipAmount * convertibleBondBox.penalty()) /
             convertibleBondBox.s_penaltyGranularity();
+
         //calculate rebasing collateral redeemable for riskTranche - penalty via tranche balance
         uint256 buttonAmount = (wrapper.balanceOf(
             address(_stagingBox.riskTranche())
