@@ -5,7 +5,6 @@ import "../../../src/contracts/StagingBox.sol";
 import "../../../src/contracts/StagingBoxFactory.sol";
 import "../../../src/contracts/CBBFactory.sol";
 import "../../../src/contracts/ConvertibleBondBox.sol";
-import "../SBSetup.t.sol";
 import "../../../src/contracts/ButtonWoodBondController.sol";
 import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
 import "@buttonwood-protocol/tranche/contracts/Tranche.sol";
