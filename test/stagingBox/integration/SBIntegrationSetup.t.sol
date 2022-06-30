@@ -49,6 +49,7 @@ contract SBIntegrationSetup is Test {
     uint256 constant s_penaltyGranularity = 1000;
     uint256 constant s_priceGranularity = 1e9;
     uint256 constant s_BPS = 10_000;
+    uint256 constant s_maxMint = 1e18;
     uint256 public constant s_maxFeeBPS = 50;
     address s_deployedCBBAddress;
 
@@ -149,7 +150,7 @@ contract SBIntegrationSetup is Test {
     }
 
     function setupTranches(bool _isLend, address _user, address _approvalAddress) internal {
-        s_collateralToken.mint(_user, 1e18);
+        s_collateralToken.mint(_user, s_maxMint);
 
         vm.prank(_user);
         s_collateralToken.approve(
@@ -158,7 +159,7 @@ contract SBIntegrationSetup is Test {
         );
 
         vm.prank(_user);
-        s_buttonWoodBondController.deposit(1e18);
+        s_buttonWoodBondController.deposit(s_maxMint);
         (s_safeTranche, s_safeRatio) = s_buttonWoodBondController.tranches(
             s_trancheIndex
         );
