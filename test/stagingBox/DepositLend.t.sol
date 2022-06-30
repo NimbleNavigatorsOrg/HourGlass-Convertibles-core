@@ -5,75 +5,68 @@ import "../../src/contracts/StagingBox.sol";
 import "../../src/contracts/StagingBoxFactory.sol";
 import "../../src/contracts/CBBFactory.sol";
 import "../../src/contracts/ConvertibleBondBox.sol";
-import "./SBSetup.t.sol";
+import "./integration/SBIntegrationSetup.t.sol";
 
-contract DepositBorrow is SBSetup {
-    function testTransfersStableTokensFromMsgSenderToStagingBox(uint256 price, uint256 lendAmount) public {
-        price = bound(price, 1, s_deployedConvertibleBondBox.s_priceGranularity());
+contract DepositLend is SBIntegrationSetup {
+    function testTransfersStableTokensFromMsgSenderToStagingBox(uint256 _fuzzPrice, uint256 _lendAmount) public {
+        setupStagingBox(_fuzzPrice);
+        setupTranches(true, s_user, address(s_deployedSB));
 
-        s_deployedSB = StagingBox(stagingBoxFactory.createStagingBox(
-            s_deployedConvertibleBondBox,
-            s_slipFactory,
-            price,
-            s_owner
-        ));
-
-        uint256 userStableTokenBalanceBeforeLend = IERC20(s_deployedConvertibleBondBox.stableToken()).balanceOf(address(this));
+        uint256 userStableTokenBalanceBeforeLend = IERC20(s_deployedConvertibleBondBox.stableToken()).balanceOf(s_user);
         uint256 sbStableTokenBalanceBeforeLend = IERC20(s_deployedConvertibleBondBox.stableToken()).balanceOf(address(s_deployedSB));
 
-        lendAmount = bound(lendAmount, 0, userStableTokenBalanceBeforeLend);
-
-        IERC20(s_deployedConvertibleBondBox.stableToken()).approve(address(s_deployedSB), lendAmount);
-
-        s_deployedSB.depositLend(s_lender, lendAmount);
-
-        uint256 userStableTokenBalanceAfterLend = IERC20(s_deployedConvertibleBondBox.stableToken()).balanceOf(address(this));
-        uint256 sbStableTokenBalanceAfterLend = IERC20(s_deployedConvertibleBondBox.stableToken()).balanceOf(address(s_deployedSB));
-
-        assertEq(userStableTokenBalanceBeforeLend - lendAmount, userStableTokenBalanceAfterLend);
-        assertEq(sbStableTokenBalanceBeforeLend + lendAmount, sbStableTokenBalanceAfterLend);
-    }
-
-    function testMintsLendSlipsToLender(uint256 _price, uint256 _lendAmount) public {
-        _price = bound(_price, 1, s_deployedConvertibleBondBox.s_priceGranularity());
-
-        s_deployedSB = StagingBox(stagingBoxFactory.createStagingBox(
-            s_deployedConvertibleBondBox,
-            s_slipFactory,
-            _price,
-            s_owner
-        ));
-        uint256 userStableTokenBalanceBeforeLend = IERC20(s_deployedConvertibleBondBox.stableToken()).balanceOf(address(this));
-        uint256 lenderLendSlipBalanceBeforeLend = ISlip(s_deployedSB.s_lendSlipTokenAddress()).balanceOf(address(s_lender));
-
-        _lendAmount = bound(_lendAmount, 0, userStableTokenBalanceBeforeLend);
+        _lendAmount = bound(_lendAmount, 1, userStableTokenBalanceBeforeLend);
 
         IERC20(s_deployedConvertibleBondBox.stableToken()).approve(address(s_deployedSB), _lendAmount);
 
+        vm.prank(s_user);
+        s_deployedSB.depositLend(s_lender, _lendAmount);
+
+        uint256 userStableTokenBalanceAfterLend = IERC20(s_deployedConvertibleBondBox.stableToken()).balanceOf(s_user);
+        uint256 sbStableTokenBalanceAfterLend = IERC20(s_deployedConvertibleBondBox.stableToken()).balanceOf(address(s_deployedSB));
+
+        assertEq(userStableTokenBalanceBeforeLend - _lendAmount, userStableTokenBalanceAfterLend);
+        assertEq(sbStableTokenBalanceBeforeLend + _lendAmount, sbStableTokenBalanceAfterLend);
+
+        assertFalse(_lendAmount == 0);
+    }
+
+    function testMintsLendSlipsToLender(uint256 _fuzzPrice, uint256 _lendAmount) public {
+        setupStagingBox(_fuzzPrice);
+        setupTranches(true, s_user, address(s_deployedSB));
+
+        uint256 userStableTokenBalanceBeforeLend = IERC20(s_deployedConvertibleBondBox.stableToken()).balanceOf(s_user);
+        uint256 lenderLendSlipBalanceBeforeLend = ISlip(s_deployedSB.s_lendSlipTokenAddress()).balanceOf(address(s_lender));
+
+        _lendAmount = bound(_lendAmount, 1, userStableTokenBalanceBeforeLend);
+
+        IERC20(s_deployedConvertibleBondBox.stableToken()).approve(address(s_deployedSB), _lendAmount);
+
+        vm.prank(s_user);
         s_deployedSB.depositLend(s_lender, _lendAmount);
 
         uint256 lenderLendSlipBalanceAfterLend = ISlip(s_deployedSB.s_lendSlipTokenAddress()).balanceOf(address(s_lender));
 
         assertEq(lenderLendSlipBalanceBeforeLend + _lendAmount, lenderLendSlipBalanceAfterLend);
+
+        assertFalse(_lendAmount == 0);
     }
 
-    function testEmitsLendDeposit(uint256 _price, uint256 _lendAmount) public {
-        _price = bound(_price, 1, s_deployedConvertibleBondBox.s_priceGranularity());
+    function testEmitsLendDeposit(uint256 _fuzzPrice, uint256 _lendAmount) public {
+        setupStagingBox(_fuzzPrice);
+        setupTranches(true, s_user, address(s_deployedSB));
 
-        s_deployedSB = StagingBox(stagingBoxFactory.createStagingBox(
-            s_deployedConvertibleBondBox,
-            s_slipFactory,
-            _price,
-            s_owner
-        ));
-        uint256 userStableTokenBalanceBeforeLend = IERC20(s_deployedConvertibleBondBox.stableToken()).balanceOf(address(this));
+        uint256 userStableTokenBalanceBeforeLend = IERC20(s_deployedConvertibleBondBox.stableToken()).balanceOf(s_user);
 
-        _lendAmount = bound(_lendAmount, 0, userStableTokenBalanceBeforeLend);
+        _lendAmount = bound(_lendAmount, 1, userStableTokenBalanceBeforeLend);
         
         IERC20(s_deployedConvertibleBondBox.stableToken()).approve(address(s_deployedSB), _lendAmount);
 
+        vm.prank(s_user);
         vm.expectEmit(true, true, true, true);
         emit LendDeposit(s_lender, _lendAmount);
         s_deployedSB.depositLend(s_lender, _lendAmount);
+
+        assertFalse(_lendAmount == 0);
     }
 }

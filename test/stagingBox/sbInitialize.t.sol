@@ -5,11 +5,12 @@ import "../../src/contracts/StagingBox.sol";
 import "../../src/contracts/StagingBoxFactory.sol";
 import "../../src/contracts/CBBFactory.sol";
 import "../../src/contracts/ConvertibleBondBox.sol";
-import "./SBSetup.t.sol";
+import "./integration/SBIntegrationSetup.t.sol";
 
-contract sbInitialize is SBSetup {
+contract sbInitialize is SBIntegrationSetup {
 
-    function testFailInvalidOwnerAddress() public {
+    function testFailInvalidOwnerAddress(uint256 _fuzzPrice) public {
+        s_price = bound(_fuzzPrice, 1, s_deployedConvertibleBondBox.s_priceGranularity());
         s_deployedSB = StagingBox(stagingBoxFactory.createStagingBox(
             s_deployedConvertibleBondBox,
             s_slipFactory,
@@ -18,23 +19,23 @@ contract sbInitialize is SBSetup {
         ));
     }
 
-    function testCannotInitialPriceTooHigh(uint256 price) public {
-        price = bound(
-            price, 
+    function testCannotInitialPriceTooHigh(uint256 _fuzzPrice) public {
+        s_price = bound(
+            _fuzzPrice, 
             s_deployedConvertibleBondBox.s_priceGranularity() + 1, 
             type(uint256).max
         );
 
         bytes memory customError = abi.encodeWithSignature(
             "InitialPriceTooHigh(uint256,uint256)",
-            price,
+            s_price,
             s_priceGranularity
         );
         vm.expectRevert(customError);
         s_deployedSB = StagingBox(stagingBoxFactory.createStagingBox(
             s_deployedConvertibleBondBox,
             s_slipFactory,
-            price,
+            s_price,
             s_owner
         ));
     }
@@ -56,7 +57,8 @@ contract sbInitialize is SBSetup {
         ));
     }
 
-    function testEmitsInitialized(uint256 price) public {
+    function testEmitsInitialized(uint256 _fuzzPrice) public {
+        s_price = bound(_fuzzPrice, 1, s_deployedConvertibleBondBox.s_priceGranularity());
         vm.expectEmit(true, false, false, false);
         emit Initialized(s_owner, address(1), address(2));
         s_deployedSB = StagingBox(stagingBoxFactory.createStagingBox(

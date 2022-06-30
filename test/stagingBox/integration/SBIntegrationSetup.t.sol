@@ -5,7 +5,6 @@ import "../../../src/contracts/StagingBox.sol";
 import "../../../src/contracts/StagingBoxFactory.sol";
 import "../../../src/contracts/CBBFactory.sol";
 import "../../../src/contracts/ConvertibleBondBox.sol";
-import "../SBSetup.t.sol";
 import "../../../src/contracts/ButtonWoodBondController.sol";
 import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
 import "@buttonwood-protocol/tranche/contracts/Tranche.sol";
@@ -49,6 +48,7 @@ contract SBIntegrationSetup is Test {
     uint256 constant s_penaltyGranularity = 1000;
     uint256 constant s_priceGranularity = 1e9;
     uint256 constant s_BPS = 10_000;
+    uint256 constant s_maxMint = 1e18;
     uint256 public constant s_maxFeeBPS = 50;
     address s_deployedCBBAddress;
 
@@ -134,7 +134,7 @@ contract SBIntegrationSetup is Test {
         stagingBoxFactory = new StagingBoxFactory(address(stagingBox));
     }
 
-    function createAndSetupStagingBox(uint256 _fuzzPrice) private {
+    function setupStagingBox(uint256 _fuzzPrice) internal {
         s_price = bound(_fuzzPrice, 1, s_deployedConvertibleBondBox.s_priceGranularity());
 
         s_deployedSB = StagingBox(stagingBoxFactory.createStagingBox(
@@ -148,19 +148,17 @@ contract SBIntegrationSetup is Test {
         s_deployedConvertibleBondBox.cbbTransferOwnership(address(s_deployedSB));
     }
 
-    function transmitReinitIntegrationSetup (uint256 _fuzzPrice, bool _isLend) internal {
-        createAndSetupStagingBox(_fuzzPrice);
+    function setupTranches(bool _isLend, address _user, address _approvalAddress) internal {
+        s_collateralToken.mint(_user, s_maxMint);
 
-        s_collateralToken.mint(address(s_deployedSB), 1e18);
-
-        vm.prank(address(s_deployedSB));
+        vm.prank(_user);
         s_collateralToken.approve(
             address(s_buttonWoodBondController),
             type(uint256).max
         );
 
-        vm.prank(address(s_deployedSB));
-        s_buttonWoodBondController.deposit(1e18);
+        vm.prank(_user);
+        s_buttonWoodBondController.deposit(s_maxMint);
         (s_safeTranche, s_safeRatio) = s_buttonWoodBondController.tranches(
             s_trancheIndex
         );
@@ -169,50 +167,17 @@ contract SBIntegrationSetup is Test {
         );
 
         maxStableAmount =
-            (s_safeTranche.balanceOf(address(s_deployedSB)) * s_price) /
+            (s_safeTranche.balanceOf(_user) * s_price) /
                 s_priceGranularity;
 
-        s_stableToken.mint(address(s_deployedSB), maxStableAmount);
+        s_stableToken.mint(_user, maxStableAmount);
 
-        vm.startPrank(address(s_deployedSB));
-        s_safeTranche.approve(s_deployedCBBAddress, type(uint256).max);
-        s_riskTranche.approve(s_deployedCBBAddress, type(uint256).max);
-        s_stableToken.approve(s_deployedCBBAddress, type(uint256).max);
+        vm.startPrank(_user);
+        s_safeTranche.approve(_approvalAddress, type(uint256).max);
+        s_riskTranche.approve(_approvalAddress, type(uint256).max);
+        s_stableToken.approve(_approvalAddress, type(uint256).max);
         vm.stopPrank();
 
         s_isLend = _isLend;
-    }
-
-    function depositBorrowSetup(uint256 _fuzzPrice) internal {
-        createAndSetupStagingBox(_fuzzPrice);
-
-        s_collateralToken.mint(s_user, 1e18);
-
-        vm.prank(s_user);
-        s_collateralToken.approve(
-            address(s_buttonWoodBondController),
-            type(uint256).max
-        );
-
-        vm.prank(s_user);
-        s_buttonWoodBondController.deposit(1e18);
-        (s_safeTranche, s_safeRatio) = s_buttonWoodBondController.tranches(
-            s_trancheIndex
-        );
-        (s_riskTranche, s_riskRatio) = s_buttonWoodBondController.tranches(
-            s_buttonWoodBondController.trancheCount() - 1
-        );
-
-        maxStableAmount =
-            (s_safeTranche.balanceOf(s_user) * s_price) /
-                s_priceGranularity;
-
-        s_stableToken.mint(s_user, maxStableAmount);
-
-        vm.startPrank(s_user);
-        s_safeTranche.approve(address(s_deployedSB), type(uint256).max);
-        s_riskTranche.approve(address(s_deployedSB), type(uint256).max);
-        s_stableToken.approve(address(s_deployedSB), type(uint256).max);
-        vm.stopPrank();
     }
 }

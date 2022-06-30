@@ -5,38 +5,24 @@ import "../../src/contracts/StagingBox.sol";
 import "../../src/contracts/StagingBoxFactory.sol";
 import "../../src/contracts/CBBFactory.sol";
 import "../../src/contracts/ConvertibleBondBox.sol";
-import "./SBSetup.t.sol";
+import "./integration/SBIntegrationSetup.t.sol";
 
-contract SBTransferOwnership is SBSetup {
+contract SBTransferOwnership is SBIntegrationSetup {
 
-    function testTransferOwnership(uint256 price) public {
-        address _newOwner = address(99);
-        price = bound(price, 1, s_deployedConvertibleBondBox.s_priceGranularity());
-
-        s_deployedSB = StagingBox(stagingBoxFactory.createStagingBox(
-            s_deployedConvertibleBondBox,
-            s_slipFactory,
-            price,
-            s_cbb_owner
-        ));
+    function testTransferOwnership(uint256 _fuzzPrice) public {
+        setupStagingBox(_fuzzPrice);
+        address newOwner = address(99);
 
         vm.startPrank(s_cbb_owner);
-        s_deployedSB.sbTransferOwnership(_newOwner);
+        s_deployedSB.sbTransferOwnership(newOwner);
         vm.stopPrank();
-        assertEq(_newOwner , s_deployedSB.owner());
+        assertEq(newOwner , s_deployedSB.owner());
     }
 
-    function testFailTransferOwnershipOnlyOwner(uint256 price) public {
-        address _newOwner = address(99);
-        price = bound(price, 1, s_deployedConvertibleBondBox.s_priceGranularity());
+    function testFailTransferOwnershipOnlyOwner(uint256 _fuzzPrice) public {
+        setupStagingBox(_fuzzPrice);
+        address newOwner = address(99);
 
-        s_deployedSB = StagingBox(stagingBoxFactory.createStagingBox(
-            s_deployedConvertibleBondBox,
-            s_slipFactory,
-            price,
-            s_cbb_owner
-        ));
-
-        s_deployedSB.sbTransferOwnership(_newOwner);
+        s_deployedSB.sbTransferOwnership(newOwner);
     }
 }
