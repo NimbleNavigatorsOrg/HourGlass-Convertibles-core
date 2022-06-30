@@ -247,7 +247,7 @@ contract ConvertibleBondBox is
             uint256 feeSlip = (safeTranchePayout * feeBps) / BPS;
             TransferHelper.safeTransfer(
                 address(safeTranche()),
-                _msgSender(),
+                owner(),
                 feeSlip
             );
 
