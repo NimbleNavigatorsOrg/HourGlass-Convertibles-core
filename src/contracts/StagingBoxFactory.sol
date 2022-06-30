@@ -33,6 +33,7 @@ contract StagingBoxFactory is IStagingBoxFactory {
         uint256 initialPrice,
         address owner
     ) public returns (address) {
+        //TODO Create CBB here. Remove from function parameters.
         bytes memory data = abi.encodePacked(
             slipFactory, 
             convertibleBondBox, 
