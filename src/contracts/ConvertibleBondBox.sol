@@ -226,6 +226,19 @@ contract ConvertibleBondBox is
                 reqInput: (safeRatio() * price) / priceGranularity
             });
 
+        //transfer fee to owner
+        if (feeBps > 0 && _msgSender() != owner()) {
+            uint256 feeSlip = (_stableAmount * feeBps) / BPS;
+            TransferHelper.safeTransferFrom(
+                address(stableToken()),
+                _msgSender(),
+                owner(),
+                feeSlip
+            );
+
+            _stableAmount -= feeSlip;
+        }
+
         // Calculate safeTranche payout
         uint256 safeTranchePayout = (_stableAmount * priceGranularity) / price;
 
@@ -249,18 +262,6 @@ contract ConvertibleBondBox is
         //calculate Z-tranche payout
         uint256 zTranchePaidFor = (safeTranchePayout * riskRatio()) /
             safeRatio();
-
-        //transfer fee to owner
-        uint256 feeSlip = (zTranchePaidFor * feeBps) / BPS;
-        TransferHelper.safeTransferFrom(
-            s_riskSlipTokenAddress,
-            _msgSender(),
-            owner(),
-            feeSlip
-        );
-
-        //calculate Z-tranche payout
-        zTranchePaidFor -= feeSlip;
 
         //transfer Z-tranches from ConvertibleBondBox to msg.sender
         TransferHelper.safeTransfer(
@@ -292,15 +293,17 @@ contract ConvertibleBondBox is
             });
 
         //transfer fee to owner
-        uint256 feeSlip = (_riskSlipAmount * feeBps) / BPS;
-        TransferHelper.safeTransferFrom(
-            s_riskSlipTokenAddress,
-            _msgSender(),
-            owner(),
-            feeSlip
-        );
+        if (feeBps > 0 && _msgSender() != owner()) {
+            uint256 feeSlip = (_riskSlipAmount * feeBps) / BPS;
+            TransferHelper.safeTransferFrom(
+                s_riskSlipTokenAddress,
+                _msgSender(),
+                owner(),
+                feeSlip
+            );
 
-        _riskSlipAmount -= feeSlip;
+            _riskSlipAmount -= feeSlip;
+        }
 
         uint256 zTranchePayout = _riskSlipAmount;
         zTranchePayout =
@@ -339,15 +342,17 @@ contract ConvertibleBondBox is
         address safeSlipTokenAddress = s_safeSlipTokenAddress;
 
         //transfer fee to owner
-        uint256 feeSlip = (_safeSlipAmount * feeBps) / BPS;
-        TransferHelper.safeTransferFrom(
-            safeSlipTokenAddress,
-            _msgSender(),
-            owner(),
-            feeSlip
-        );
+        if (feeBps > 0 && _msgSender() != owner()) {
+            uint256 feeSlip = (_safeSlipAmount * feeBps) / BPS;
+            TransferHelper.safeTransferFrom(
+                safeSlipTokenAddress,
+                _msgSender(),
+                owner(),
+                feeSlip
+            );
 
-        _safeSlipAmount -= feeSlip;
+            _safeSlipAmount -= feeSlip;
+        }
 
         uint256 safeSlipSupply = ISlip(safeSlipTokenAddress).totalSupply();
 
@@ -361,9 +366,8 @@ contract ConvertibleBondBox is
             (_safeSlipAmount)
         );
 
-        uint256 zPenaltyTotal = IERC20(address(riskTranche())).balanceOf(
-            address(this)
-        ) - IERC20(s_riskSlipTokenAddress).totalSupply();
+        uint256 zPenaltyTotal = riskTranche().balanceOf(address(this)) -
+            IERC20(s_riskSlipTokenAddress).totalSupply();
 
         //transfer risk-Tranche penalty after maturity only
         TransferHelper.safeTransfer(
@@ -395,16 +399,19 @@ contract ConvertibleBondBox is
 
         address safeSlipTokenAddress = s_safeSlipTokenAddress;
 
-        //change to owner as recipient
-        uint256 feeSlip = (_safeSlipAmount * feeBps) / BPS;
-        TransferHelper.safeTransferFrom(
-            safeSlipTokenAddress,
-            _msgSender(),
-            owner(),
-            feeSlip
-        );
+        //transfer safeSlips to owner
+        if (feeBps > 0 && _msgSender() != owner()) {
+            uint256 feeSlip = (_safeSlipAmount * feeBps) / BPS;
+            TransferHelper.safeTransferFrom(
+                safeSlipTokenAddress,
+                _msgSender(),
+                owner(),
+                feeSlip
+            );
 
-        _safeSlipAmount -= feeSlip;
+            _safeSlipAmount -= feeSlip;
+        }
+
         uint256 stableBalance = stableToken().balanceOf(address(this));
 
         //burn safe-slips
@@ -484,7 +491,7 @@ contract ConvertibleBondBox is
         ISlip(s_riskSlipTokenAddress).mint(_borrower, _riskSlipAmount);
 
         // // Transfer stables to borrower
-        if(_msgSender() != _borrower) {
+        if (_msgSender() != _borrower) {
             TransferHelper.safeTransferFrom(
                 address(stableToken()),
                 _msgSender(),
