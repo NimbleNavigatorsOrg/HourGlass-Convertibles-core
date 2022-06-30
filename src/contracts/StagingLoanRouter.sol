@@ -342,8 +342,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
     function repayAndUnwrapMature(
         IStagingBox _stagingBox,
         uint256 _stableAmount,
-        uint256 _riskSlipAmount,
-        uint256 _safeTrancheAmount
+        uint256 _riskSlipAmount
     ) public {
         (
             IConvertibleBondBox convertibleBondBox,
@@ -378,7 +377,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
         //call redeemMature on bond
         bond.redeemMature(
             address(convertibleBondBox.safeTranche()),
-            _safeTrancheAmount
+            _stableAmount
         );
         bond.redeemMature(
             address(convertibleBondBox.riskTranche()),

@@ -90,6 +90,7 @@ interface IStagingLoanRouter {
     /**
      * @dev repays of users riskSlips w/ stable tokens to CBB and unwraps collateral into underlying
      * @param _stagingBox The staging box tied to the Convertible Bond
+     * @param _stableAmount The amount of stableTokens to be repaid
      * @param _riskSlipAmount The amount of risk slips being repaid for
      * Requirements:
      *  - can only be called prior to maturity
@@ -98,6 +99,7 @@ interface IStagingLoanRouter {
 
     function repayMaxAndUnwrapSimple(
         IStagingBox _stagingBox,
+        uint256 _stableAmount,
         uint256 _riskSlipAmount
     ) external;
 
@@ -106,7 +108,6 @@ interface IStagingLoanRouter {
      * @param _stagingBox The staging box tied to the Convertible Bond
      * @param _stableAmount The amount of stableTokens to be repaid
      * @param _riskSlipAmount The amount of riskSlips to be repaid with
-     * @param _safeTrancheAmount The amount of safeTranche expected in return
      * Requirements:
      *  - can only be called after maturity
      */
@@ -114,7 +115,6 @@ interface IStagingLoanRouter {
     function repayAndUnwrapMature(
         IStagingBox _stagingBox,
         uint256 _stableAmount,
-        uint256 _riskSlipAmount,
-        uint256 _safeTrancheAmount
+        uint256 _riskSlipAmount
     ) external;
 }

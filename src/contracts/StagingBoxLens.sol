@@ -171,12 +171,19 @@ contract StagingBoxLens is IStagingBoxLens {
      * @inheritdoc IStagingBoxLens
      */
 
-    //TODO: Account for fees
-
     function viewRepayAndUnwrapSimple(
         IStagingBox _stagingBox,
         uint256 _stableAmount
-    ) public view returns (uint256, uint256) {
+    )
+        public
+        view
+        returns (
+            uint256,
+            uint256,
+            uint256,
+            uint256
+        )
+    {
         (
             IConvertibleBondBox convertibleBondBox,
             IButtonWoodBondController bond,
@@ -185,14 +192,16 @@ contract StagingBoxLens is IStagingBoxLens {
         ) = fetchElasticStack(_stagingBox);
 
         //minus fees
-        _stableAmount -=
-            (_stableAmount * convertibleBondBox.feeBps()) /
+        uint256 stableFees = (_stableAmount * convertibleBondBox.feeBps()) /
             convertibleBondBox.BPS();
 
         //calculate safeTranches for stables w/ current price
         uint256 safeTranchePayout = (_stableAmount *
             convertibleBondBox.s_priceGranularity()) /
             convertibleBondBox.currentPrice();
+
+        uint256 riskTranchePayout = (safeTranchePayout *
+            convertibleBondBox.riskRatio()) / convertibleBondBox.safeRatio();
 
         //get collateral balance for rebasing collateral output
         uint256 collateralBalance = wrapper.balanceOf(address(bond));
@@ -206,7 +215,60 @@ contract StagingBoxLens is IStagingBoxLens {
         uint256 underlyingAmount = wrapper.wrapperToUnderlying(buttonAmount);
 
         // return both
-        return (underlyingAmount, buttonAmount);
+        return (underlyingAmount, _stableAmount, stableFees, riskTranchePayout);
+    }
+
+    /**
+     * @inheritdoc IStagingBoxLens
+     */
+
+    function viewRepayMaxAndUnwrapSimple(
+        IStagingBox _stagingBox,
+        uint256 _riskSlipAmount
+    )
+        public
+        view
+        returns (
+            uint256,
+            uint256,
+            uint256,
+            uint256
+        )
+    {
+        (
+            IConvertibleBondBox convertibleBondBox,
+            IButtonWoodBondController bond,
+            IButtonToken wrapper,
+
+        ) = fetchElasticStack(_stagingBox);
+
+        //riskTranche payout = riskSlipAmount
+        uint256 riskTranchePayout = _riskSlipAmount;
+        uint256 safeTranchePayout = (riskTranchePayout *
+            _stagingBox.safeRatio()) / _stagingBox.riskRatio();
+
+        //calculate repayment cost
+        uint256 stablesOwed = (safeTranchePayout *
+            convertibleBondBox.currentPrice()) /
+            convertibleBondBox.s_priceGranularity();
+
+        //calculate stable Fees
+        uint256 stableFees = (stablesOwed * convertibleBondBox.feeBps()) /
+            convertibleBondBox.BPS();
+
+        //get collateral balance for rebasing collateral output
+        uint256 collateralBalance = wrapper.balanceOf(address(bond));
+        uint256 buttonAmount = (safeTranchePayout *
+            convertibleBondBox.s_trancheGranularity() *
+            collateralBalance) /
+            convertibleBondBox.safeRatio() /
+            bond.totalDebt();
+
+        // convert rebasing collateral to collateralToken qty via wrapper
+        uint256 underlyingAmount = wrapper.wrapperToUnderlying(buttonAmount);
+
+        // return both
+        return (underlyingAmount, stablesOwed, stableFees, riskTranchePayout);
     }
 
     /**
@@ -216,7 +278,16 @@ contract StagingBoxLens is IStagingBoxLens {
     function viewRepayAndUnwrapMature(
         IStagingBox _stagingBox,
         uint256 _stableAmount
-    ) public view returns (uint256, uint256) {
+    )
+        public
+        view
+        returns (
+            uint256,
+            uint256,
+            uint256,
+            uint256
+        )
+    {
         (
             IConvertibleBondBox convertibleBondBox,
             ,
@@ -224,13 +295,12 @@ contract StagingBoxLens is IStagingBoxLens {
 
         ) = fetchElasticStack(_stagingBox);
 
-        //minus fees
-        _stableAmount -=
-            (_stableAmount * convertibleBondBox.feeBps()) /
+        //calculate fees
+        uint256 stableFees = (_stableAmount * convertibleBondBox.feeBps()) /
             convertibleBondBox.BPS();
 
+        //calculate tranches
         //safeTranchepayout = _stableAmount @ maturity
-        uint256 safeTranchePayout = _stableAmount;
         uint256 riskTranchePayout = (_stableAmount * _stagingBox.riskRatio()) /
             _stagingBox.safeRatio();
 
@@ -238,7 +308,7 @@ contract StagingBoxLens is IStagingBoxLens {
         uint256 collateralBalanceSafe = wrapper.balanceOf(
             address(_stagingBox.safeTranche())
         );
-        uint256 buttonAmount = (safeTranchePayout * collateralBalanceSafe) /
+        uint256 buttonAmount = (_stableAmount * collateralBalanceSafe) /
             convertibleBondBox.safeTranche().totalSupply();
 
         //get collateral balance for riskTranche rebasing collateral output
@@ -253,70 +323,21 @@ contract StagingBoxLens is IStagingBoxLens {
         uint256 underlyingAmount = wrapper.wrapperToUnderlying(buttonAmount);
 
         // return both
-        return (underlyingAmount, buttonAmount);
+        return (underlyingAmount, _stableAmount, stableFees, riskTranchePayout);
     }
 
     /**
      * @inheritdoc IStagingBoxLens
      */
 
-    //TODO: Account for fees
-
-    function viewRepayAndUnwrapMax(IStagingBox _stagingBox)
+    function viewRepayMaxAndUnwrapMature(
+        IStagingBox _stagingBox,
+        uint256 _riskSlipAmount
+    )
         public
         view
         returns (
             uint256,
-            uint256,
-            uint256
-        )
-    {
-        (
-            IConvertibleBondBox convertibleBondBox,
-            IButtonWoodBondController bond,
-            IButtonToken wrapper,
-
-        ) = fetchElasticStack(_stagingBox);
-
-        //get msg.sender's risk slip balance
-        uint256 riskSlipAmount = IERC20(_stagingBox.riskSlipAddress())
-            .balanceOf(msg.sender);
-
-        //riskTranche payout = riskSlipAmount
-        uint256 riskTranchePayout = riskSlipAmount;
-        uint256 safeTranchePayout = (riskTranchePayout *
-            _stagingBox.safeRatio()) / _stagingBox.riskRatio();
-
-        //calculate repayment cost
-        uint256 stableRepayment = (safeTranchePayout *
-            convertibleBondBox.currentPrice()) /
-            convertibleBondBox.s_priceGranularity();
-
-        //get collateral balance for rebasing collateral output
-        uint256 collateralBalance = wrapper.balanceOf(address(bond));
-        uint256 buttonAmount = (safeTranchePayout *
-            convertibleBondBox.s_trancheGranularity() *
-            collateralBalance) /
-            convertibleBondBox.safeRatio() /
-            bond.totalDebt();
-
-        // convert rebasing collateral to collateralToken qty via wrapper
-        uint256 underlyingAmount = wrapper.wrapperToUnderlying(buttonAmount);
-
-        // return both
-        return (stableRepayment, underlyingAmount, buttonAmount);
-    }
-
-    /**
-     * @inheritdoc IStagingBoxLens
-     */
-
-    //TODO: Account for fees
-
-    function viewRepayAndUnwrapMaxMature(IStagingBox _stagingBox)
-        public
-        view
-        returns (
             uint256,
             uint256,
             uint256
@@ -329,23 +350,22 @@ contract StagingBoxLens is IStagingBoxLens {
 
         ) = fetchElasticStack(_stagingBox);
 
-        //get msg.sender's risk slip balance
-        uint256 riskSlipAmount = IERC20(_stagingBox.riskSlipAddress())
-            .balanceOf(msg.sender);
-
+        //Calculate tranches
         //riskTranche payout = riskSlipAmount
-        uint256 riskTranchePayout = riskSlipAmount;
-        uint256 safeTranchePayout = (riskTranchePayout *
-            _stagingBox.safeRatio()) / _stagingBox.riskRatio();
+        //safeTranche payout = stables owed
 
-        //calculate repayment cost
-        uint256 stableRepayment = (safeTranchePayout);
+        uint256 stablesOwed = (_riskSlipAmount * _stagingBox.safeRatio()) /
+            _stagingBox.riskRatio();
+
+        //calculate stable Fees
+        uint256 stableFees = (stablesOwed * convertibleBondBox.feeBps()) /
+            convertibleBondBox.BPS();
 
         //get collateral balance for safeTranche rebasing collateral output
         uint256 collateralBalanceSafe = wrapper.balanceOf(
             address(_stagingBox.safeTranche())
         );
-        uint256 buttonAmount = (safeTranchePayout * collateralBalanceSafe) /
+        uint256 buttonAmount = (stablesOwed * collateralBalanceSafe) /
             convertibleBondBox.safeTranche().totalSupply();
 
         //get collateral balance for riskTranche rebasing collateral output
@@ -353,14 +373,14 @@ contract StagingBoxLens is IStagingBoxLens {
             address(_stagingBox.riskTranche())
         );
         buttonAmount +=
-            (riskTranchePayout * collateralBalanceRisk) /
+            (_riskSlipAmount * collateralBalanceRisk) /
             convertibleBondBox.riskTranche().totalSupply();
 
         // convert rebasing collateral to collateralToken qty via wrapper
         uint256 underlyingAmount = wrapper.wrapperToUnderlying(buttonAmount);
 
         // return both
-        return (stableRepayment, underlyingAmount, buttonAmount);
+        return (underlyingAmount, stablesOwed, stableFees, _riskSlipAmount);
     }
 
     function fetchElasticStack(IStagingBox _stagingBox)
