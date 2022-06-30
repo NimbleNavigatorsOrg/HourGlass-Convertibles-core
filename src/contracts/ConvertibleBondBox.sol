@@ -210,12 +210,6 @@ contract ConvertibleBondBox is
      */
 
     function repay(uint256 _stableAmount) external override {
-        if (s_startDate == 0)
-            revert ConvertibleBondBoxNotStarted({
-                given: 0,
-                minStartDate: block.timestamp
-            });
-
         //Load into memory
         uint256 price = this.currentPrice();
         uint256 priceGranularity = s_priceGranularity;
@@ -226,53 +220,41 @@ contract ConvertibleBondBox is
                 reqInput: (safeRatio() * price) / priceGranularity
             });
 
-        //transfer fee to owner
-        if (feeBps > 0 && _msgSender() != owner()) {
-            uint256 feeSlip = (_stableAmount * feeBps) / BPS;
-            TransferHelper.safeTransferFrom(
-                address(stableToken()),
-                _msgSender(),
-                owner(),
-                feeSlip
-            );
-
-            _stableAmount -= feeSlip;
-        }
-
-        // Calculate safeTranche payout
+        //calculate inputs for internal redeem function
+        uint256 stableFees = (_stableAmount * feeBps) / BPS;
         uint256 safeTranchePayout = (_stableAmount * priceGranularity) / price;
-
-        //Repay stables to ConvertibleBondBox
-        TransferHelper.safeTransferFrom(
-            address(stableToken()),
-            _msgSender(),
-            address(this),
-            _stableAmount
-        );
-
-        //transfer A-tranches from ConvertibleBondBox to msg.sender
-        TransferHelper.safeTransfer(
-            address(safeTranche()),
-            _msgSender(),
-            safeTranchePayout
-        );
-
-        s_repaidSafeSlips += safeTranchePayout;
-
-        //calculate Z-tranche payout
-        uint256 zTranchePaidFor = (safeTranchePayout * riskRatio()) /
+        uint256 riskTranchePayout = (safeTranchePayout * riskRatio()) /
             safeRatio();
 
-        //transfer Z-tranches from ConvertibleBondBox to msg.sender
-        TransferHelper.safeTransfer(
-            address(riskTranche()),
-            _msgSender(),
-            zTranchePaidFor
-        );
+        _repay(_stableAmount, stableFees, safeTranchePayout, riskTranchePayout);
+        emit Repay(_msgSender(), _stableAmount, riskTranchePayout, price);
+    }
 
-        ISlip(s_riskSlipTokenAddress).burn(_msgSender(), zTranchePaidFor);
+    /**
+     * @inheritdoc IConvertibleBondBox
+     */
 
-        emit Repay(_msgSender(), _stableAmount, zTranchePaidFor, price);
+    function repayMax(uint256 _riskSlipAmount) external override {
+        // Load params into memory
+        uint256 price = this.currentPrice();
+
+        // check min input
+        if (_riskSlipAmount < riskRatio())
+            revert MinimumInput({
+                input: _riskSlipAmount,
+                reqInput: riskRatio()
+            });
+
+        // Calculate inputs for internal repay function
+        uint256 safeTranchePayout = (_riskSlipAmount * safeRatio()) /
+            riskRatio();
+        uint256 stablesOwed = (safeTranchePayout * price) / s_priceGranularity;
+        uint256 stableFees = (stablesOwed * feeBps) / BPS;
+
+        _repay(stablesOwed, stableFees, safeTranchePayout, _riskSlipAmount);
+
+        //emit event
+        emit Repay(_msgSender(), stablesOwed, _riskSlipAmount, price);
     }
 
     /**
@@ -499,5 +481,56 @@ contract ConvertibleBondBox is
                 _stableAmount
             );
         }
+    }
+
+    function _repay(
+        uint256 _stablesOwed,
+        uint256 _stableFees,
+        uint256 _safeTranchePayout,
+        uint256 _riskTranchePayout
+    ) internal {
+        // Ensure CBB started
+        if (s_startDate == 0)
+            revert ConvertibleBondBoxNotStarted({
+                given: 0,
+                minStartDate: block.timestamp
+            });
+
+        // Transfer fees to owner
+        if (feeBps > 0 && _msgSender() != owner()) {
+            TransferHelper.safeTransferFrom(
+                address(stableToken()),
+                _msgSender(),
+                owner(),
+                _stableFees
+            );
+        }
+
+        // Transfers stables to CBB
+        TransferHelper.safeTransferFrom(
+            address(stableToken()),
+            _msgSender(),
+            address(this),
+            _stablesOwed
+        );
+
+        // Transfer safeTranches to msg.sender (increment state)
+        TransferHelper.safeTransfer(
+            address(safeTranche()),
+            _msgSender(),
+            _safeTranchePayout
+        );
+
+        s_repaidSafeSlips += _safeTranchePayout;
+
+        // Transfer riskTranches to msg.sender
+        TransferHelper.safeTransfer(
+            address(riskTranche()),
+            _msgSender(),
+            _riskTranchePayout
+        );
+
+        // Burn riskSlips
+        ISlip(s_riskSlipTokenAddress).burn(_msgSender(), _riskTranchePayout);
     }
 }
