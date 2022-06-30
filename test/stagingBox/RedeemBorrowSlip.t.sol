@@ -35,7 +35,7 @@ contract RedeemBorrowSlip is SBIntegrationSetup {
         uint256 stagingBoxRiskSlipBalanceBeforeRedeem = ISlip(s_deployedConvertibleBondBox.s_riskSlipTokenAddress()).balanceOf(address(s_deployedSB));
         uint256 msgSenderRiskSlipBalanceBeforeRedeem = ISlip(s_deployedConvertibleBondBox.s_riskSlipTokenAddress()).balanceOf(s_user);
 
-        _borrowSlipAmount = bound(_borrowSlipAmount, 0, msgSenderBorrowSlipBalanceBeforeRedeem);
+        _borrowSlipAmount = bound(_borrowSlipAmount, s_deployedConvertibleBondBox.safeRatio(), msgSenderBorrowSlipBalanceBeforeRedeem);
 
         uint256 riskSlipTransferAmount = (_borrowSlipAmount * s_deployedConvertibleBondBox.riskRatio()) / s_deployedConvertibleBondBox.safeRatio();
 
@@ -47,6 +47,8 @@ contract RedeemBorrowSlip is SBIntegrationSetup {
 
         assertEq(stagingBoxRiskSlipBalanceBeforeRedeem - riskSlipTransferAmount, stagingBoxRiskSlipBalanceAfterRedeem);
         assertEq(msgSenderRiskSlipBalanceBeforeRedeem + riskSlipTransferAmount, msgSenderRiskSlipBalanceAfterRedeem);
+
+        assertFalse(riskSlipTransferAmount == 0);
     }
 
     function testRedeemBorrowSlipTransfersStableTokensFromStagingBoxToMsgSender(uint256 _fuzzPrice, uint256 _borrowSlipAmount) public {
@@ -59,7 +61,7 @@ contract RedeemBorrowSlip is SBIntegrationSetup {
         uint256 stagingBoxStableTokenBalanceBeforeRedeem = IERC20(s_deployedConvertibleBondBox.stableToken()).balanceOf(address(s_deployedSB));
         uint256 msgSenderStableTokenBalanceBeforeRedeem = IERC20(s_deployedConvertibleBondBox.stableToken()).balanceOf(s_user);
 
-        _borrowSlipAmount = bound(_borrowSlipAmount, 0, msgSenderBorrowSlipBalanceBeforeRedeem);
+        _borrowSlipAmount = bound(_borrowSlipAmount, s_deployedSB.priceGranularity(), msgSenderBorrowSlipBalanceBeforeRedeem);
 
         uint256 stableTokenTransferAmount = (_borrowSlipAmount * s_deployedSB.initialPrice()) / s_deployedSB.priceGranularity();
 
@@ -71,6 +73,8 @@ contract RedeemBorrowSlip is SBIntegrationSetup {
 
         assertEq(stagingBoxStableTokenBalanceBeforeRedeem - stableTokenTransferAmount, stagingBoxStableTokenBalanceAfterRedeem);
         assertEq(msgSenderStableTokenBalanceBeforeRedeem + stableTokenTransferAmount, msgSenderStableTokenBalanceAfterRedeem);
+
+        assertFalse(stableTokenTransferAmount == 0);
     }
 
     function testRedeemBorrowBurnsMsgSenderBorrowSlips(uint256 _fuzzPrice, uint256 _borrowSlipAmount) public {
@@ -81,7 +85,7 @@ contract RedeemBorrowSlip is SBIntegrationSetup {
         uint256 msgSenderBorrowSlipBalanceBeforeRedeem = IERC20(s_deployedSB.s_borrowSlipTokenAddress()).balanceOf(s_user);
         uint256 msgSenderStableTokenBalanceBeforeRedeem = ISlip(s_deployedSB.s_borrowSlipTokenAddress()).balanceOf(s_user);
 
-        _borrowSlipAmount = bound(_borrowSlipAmount, 0, msgSenderBorrowSlipBalanceBeforeRedeem);
+        _borrowSlipAmount = bound(_borrowSlipAmount, 1, msgSenderBorrowSlipBalanceBeforeRedeem);
 
         vm.prank(s_user);
         s_deployedSB.redeemBorrowSlip(_borrowSlipAmount);
@@ -89,6 +93,8 @@ contract RedeemBorrowSlip is SBIntegrationSetup {
         uint256 msgSenderStableTokenBalanceAfterRedeem = ISlip(s_deployedSB.s_borrowSlipTokenAddress()).balanceOf(s_user);
 
         assertEq(msgSenderStableTokenBalanceBeforeRedeem - _borrowSlipAmount, msgSenderStableTokenBalanceAfterRedeem);
+
+        assertFalse(_borrowSlipAmount == 0);
     }
 
     function testRedeemBorrowEmitsRedeemBorrowSlip(uint256 _fuzzPrice, uint256 _borrowSlipAmount) public {
@@ -98,11 +104,13 @@ contract RedeemBorrowSlip is SBIntegrationSetup {
 
         uint256 msgSenderBorrowSlipBalanceBeforeRedeem = IERC20(s_deployedSB.s_borrowSlipTokenAddress()).balanceOf(s_user);
 
-        _borrowSlipAmount = bound(_borrowSlipAmount, 0, msgSenderBorrowSlipBalanceBeforeRedeem);
+        _borrowSlipAmount = bound(_borrowSlipAmount, 1, msgSenderBorrowSlipBalanceBeforeRedeem);
 
         vm.prank(s_user);
         vm.expectEmit(true, true, true, true);
         emit RedeemBorrowSlip(s_user, _borrowSlipAmount);
         s_deployedSB.redeemBorrowSlip(_borrowSlipAmount);
+
+        assertFalse(_borrowSlipAmount == 0);
     }
 }
