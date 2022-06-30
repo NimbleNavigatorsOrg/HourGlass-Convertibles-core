@@ -92,7 +92,6 @@ contract Repay is CBBSetup {
 
         repayStableBalanceAssertions(
             stableAmount,
-            0,
             s_stableToken,
             userStableBalancedBeforeRepay,
             borrowerAddress
@@ -101,6 +100,7 @@ contract Repay is CBBSetup {
         repaySafeTrancheBalanceAssertions(
             userSafeTrancheBalanceBeforeRepay,
             safeTranchePayout,
+            0,
             CBBSafeTrancheBalancedBeforeRepay,
             borrowerAddress
         );
@@ -174,9 +174,10 @@ contract Repay is CBBSetup {
             .riskTranche()
             .balanceOf(address(s_deployedConvertibleBondBox));
 
-        uint256 stableFees = (stableAmount * fee) / s_BPS;
-        uint256 safeTranchePayout = ((stableAmount - stableFees) *
-            s_priceGranularity) / s_deployedConvertibleBondBox.currentPrice();
+        uint256 safeTranchePayout = ((stableAmount) * s_priceGranularity) /
+            s_deployedConvertibleBondBox.currentPrice();
+
+        uint256 safeTrancheFees = (safeTranchePayout * fee) / s_BPS;
 
         uint256 zTranchePaidFor = (safeTranchePayout *
             s_deployedConvertibleBondBox.riskRatio()) /
@@ -195,7 +196,7 @@ contract Repay is CBBSetup {
         vm.expectEmit(true, true, true, true);
         emit Repay(
             borrowerAddress,
-            stableAmount - stableFees,
+            stableAmount,
             zTranchePaidFor,
             s_deployedConvertibleBondBox.currentPrice()
         );
@@ -204,7 +205,6 @@ contract Repay is CBBSetup {
 
         repayStableBalanceAssertions(
             stableAmount,
-            stableFees,
             s_stableToken,
             userStableBalancedBeforeRepay,
             borrowerAddress
@@ -213,6 +213,7 @@ contract Repay is CBBSetup {
         repaySafeTrancheBalanceAssertions(
             userSafeTrancheBalanceBeforeRepay,
             safeTranchePayout,
+            safeTrancheFees,
             CBBSafeTrancheBalancedBeforeRepay,
             borrowerAddress
         );
@@ -233,7 +234,6 @@ contract Repay is CBBSetup {
 
     function repayStableBalanceAssertions(
         uint256 stableAmount,
-        uint256 stableFees,
         MockERC20 s_stableToken,
         uint256 userStableBalancedBeforeRepay,
         address borrowerAddress
@@ -245,7 +245,7 @@ contract Repay is CBBSetup {
             borrowerAddress
         );
 
-        assertEq(stableAmount - stableFees, CBBStableBalance);
+        assertEq(stableAmount, CBBStableBalance);
         assertEq(
             userStableBalancedBeforeRepay - stableAmount,
             userStableBalancedAfterRepay
@@ -255,6 +255,7 @@ contract Repay is CBBSetup {
     function repaySafeTrancheBalanceAssertions(
         uint256 userSafeTrancheBalanceBeforeRepay,
         uint256 safeTranchePayout,
+        uint256 safeTrancheFees,
         uint256 CBBSafeTrancheBalancedBeforeRepay,
         address borrowerAddress
     ) private {
@@ -266,7 +267,9 @@ contract Repay is CBBSetup {
             .balanceOf(address(s_deployedConvertibleBondBox));
 
         assertEq(
-            userSafeTrancheBalanceBeforeRepay + safeTranchePayout,
+            userSafeTrancheBalanceBeforeRepay +
+                safeTranchePayout -
+                safeTrancheFees,
             userSafeTrancheBalancedAfterRepay
         );
         assertEq(
