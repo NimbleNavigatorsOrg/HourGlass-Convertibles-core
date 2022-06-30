@@ -9,12 +9,14 @@ import "./ISlipFactory.sol";
  */
 
 interface IStagingBoxFactory {
+    // TODO: test this event
     event StagingBoxCreated(
         IConvertibleBondBox convertibleBondBox,
         ISlipFactory slipFactory,
         uint256 initialPrice,
         address owner,
-        address msgSender
+        address msgSender,
+        address stagingBox
     );
 
     /// @notice Some parameters are invalid

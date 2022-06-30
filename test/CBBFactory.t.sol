@@ -128,6 +128,7 @@ contract CBBFactoryTest is Test {
     function testCreateConvertibleBondBoxEmitsConvertibleBondBoxCreated() public {
         vm.expectEmit(true, true, true, true);
         // The event we expect
+
         emit ConvertibleBondBoxCreated(
             address(s_collateralToken),
             address(s_stableToken),

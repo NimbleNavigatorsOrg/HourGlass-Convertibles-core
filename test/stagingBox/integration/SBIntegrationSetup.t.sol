@@ -5,6 +5,7 @@ import "../../../src/contracts/StagingBox.sol";
 import "../../../src/contracts/StagingBoxFactory.sol";
 import "../../../src/contracts/CBBFactory.sol";
 import "../../../src/contracts/ConvertibleBondBox.sol";
+import "../../../src/interfaces/IConvertibleBondBox.sol";
 import "../../../src/contracts/ButtonWoodBondController.sol";
 import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
 import "@buttonwood-protocol/tranche/contracts/Tranche.sol";
@@ -18,7 +19,7 @@ import "forge-std/console2.sol";
 contract SBIntegrationSetup is Test {
     ButtonWoodBondController s_buttonWoodBondController;
     ConvertibleBondBox s_convertibleBondBox;
-    ConvertibleBondBox s_deployedConvertibleBondBox;
+    IConvertibleBondBox s_deployedConvertibleBondBox;
     CBBFactory s_CBBFactory;
 
     address s_cbb_owner = address(55);
@@ -112,18 +113,6 @@ contract SBIntegrationSetup is Test {
             s_depositLimit
         );
 
-        s_deployedCBBAddress = s_CBBFactory.createConvertibleBondBox(
-            s_buttonWoodBondController,
-            s_slipFactory,
-            s_penalty,
-            address(s_collateralToken),
-            address(s_stableToken),
-            s_trancheIndex,
-            s_cbb_owner
-        );
-
-        s_deployedConvertibleBondBox = ConvertibleBondBox(s_deployedCBBAddress);
-
         s_owner = address(55);
         s_borrower = address(1);
         s_lender = address(2);
@@ -135,14 +124,23 @@ contract SBIntegrationSetup is Test {
     }
 
     function setupStagingBox(uint256 _fuzzPrice) internal {
-        s_price = bound(_fuzzPrice, 1, s_deployedConvertibleBondBox.s_priceGranularity());
+        s_price = bound(_fuzzPrice, 1, s_priceGranularity);
 
         s_deployedSB = StagingBox(stagingBoxFactory.createStagingBox(
-            s_deployedConvertibleBondBox,
+            s_CBBFactory,
             s_slipFactory,
+            s_buttonWoodBondController,
+            s_penalty,
+            address(s_collateralToken),
+            address(s_stableToken),
+            s_trancheIndex,
             s_price,
+            s_owner,
             s_cbb_owner
         ));
+
+        s_deployedConvertibleBondBox = s_deployedSB.convertibleBondBox();
+        s_deployedCBBAddress = address(s_deployedConvertibleBondBox);
 
         vm.prank(s_cbb_owner);
         s_deployedConvertibleBondBox.cbbTransferOwnership(address(s_deployedSB));

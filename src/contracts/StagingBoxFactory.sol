@@ -6,6 +6,8 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/IERC20Metadat
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import "./StagingBox.sol";
+import "./CBBFactory.sol";
+import "../interfaces/IButtonWoodBondController.sol";
 import "../interfaces/IStagingBoxFactory.sol";
 import "../interfaces/IConvertibleBondBox.sol";
 
@@ -21,19 +23,41 @@ contract StagingBoxFactory is IStagingBoxFactory {
 
     /**
      * @dev Initializer for Convertible Bond Box
-     * @param convertibleBondBox The ConvertibleBondBox tied to this StagingBox
+     * @param cBBFactory The ConvertibleBondBox factory
      * @param slipFactory The factory for the Slip-Tokens
-     * @param initialPrice The initial price
-     * @param owner The initial owner
+     * @param bond The buttonwood bond
+     * @param penalty The penalty for late repay
+     * @param collateralToken The collateral token
+     * @param stableToken The stable token
+     * @param trancheIndex The tranche index used to determine the safe tranche
+     * @param initialPrice The initial price of the safe asset
+     * @param stagingBoxOwner The owner of the SB
+     * @param cbbOwner The owner of the ConvertibleBondBox
      */
 
     function createStagingBox(
-        IConvertibleBondBox convertibleBondBox,
+        CBBFactory cBBFactory,
         ISlipFactory slipFactory,
+        IButtonWoodBondController bond,
+        uint256 penalty,
+        address collateralToken,
+        address stableToken,
+        uint256 trancheIndex,
         uint256 initialPrice,
-        address owner
+        address stagingBoxOwner,
+        address cbbOwner
     ) public returns (address) {
-        //TODO Create CBB here. Remove from function parameters.
+
+        ConvertibleBondBox convertibleBondBox = ConvertibleBondBox(cBBFactory.createConvertibleBondBox(
+            bond,
+            slipFactory,
+            penalty,
+            collateralToken,
+            stableToken,
+            trancheIndex,
+            cbbOwner
+        ));
+
         bytes memory data = abi.encodePacked(
             slipFactory, 
             convertibleBondBox, 
@@ -46,18 +70,19 @@ contract StagingBoxFactory is IStagingBoxFactory {
             convertibleBondBox.s_riskSlipTokenAddress(),
             convertibleBondBox.riskRatio(),
             convertibleBondBox.s_priceGranularity(),
-            owner
+            stagingBoxOwner
             );
         StagingBox clone = StagingBox(implementation.clone(data));
 
-        clone.initialize(owner);
+        clone.initialize(stagingBoxOwner);
 
         emit StagingBoxCreated(
             convertibleBondBox,
             slipFactory,
             initialPrice,
-            owner,
-            msg.sender
+            stagingBoxOwner,
+            msg.sender,
+            address(clone)
         );
 
         return address(clone);
