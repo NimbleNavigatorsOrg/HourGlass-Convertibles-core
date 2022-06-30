@@ -6,6 +6,13 @@ import "../interfaces/IConvertibleBondBox.sol";
 import "../interfaces/IButtonWoodBondController.sol";
 
 interface IStagingBoxLens {
+    /**
+     * @dev provides amount of stableTokens expected in return for a given collateral amount
+     * @param _stagingBox The staging box tied to the Convertible Bond
+     * @param _amountRaw The amount of unwrapped tokens to be used as collateral
+     * Requirements:
+     */
+
     function viewSimpleWrapTrancheBorrow(
         IStagingBox _stagingBox,
         uint256 _amountRaw
@@ -80,6 +87,7 @@ interface IStagingBoxLens {
      * @param _stagingBox The staging box tied to the Convertible Bond
      * Requirements:
      *      - Only for prior to maturity
+     *      - Only for bonds with A/Z tranches
      */
 
     function viewRepayAndUnwrapMax(IStagingBox _stagingBox)

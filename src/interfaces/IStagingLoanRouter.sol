@@ -72,9 +72,45 @@ interface IStagingLoanRouter {
     ) external;
 
     /**
-     * @dev provides amount of stableTokens expected in return for a given collateral amount
+     * @dev repays stable tokens to CBB and unwraps collateral into underlying
      * @param _stagingBox The staging box tied to the Convertible Bond
-     * @param _amountRaw The amount of unwrapped tokens to be used as collateral
+     * @param _stableAmount The amount of stableTokens to be repaid
+     * @param _riskSlipAmount The amount of riskSlips to be repaid with
      * Requirements:
+     *  - can only be called prior to maturity
+     *  - only to be called with bonds that have A/Z tranche setup
      */
+
+    function repayAndUnwrapSimple(
+        IStagingBox _stagingBox,
+        uint256 _stableAmount,
+        uint256 _riskSlipAmount
+    ) external;
+
+    /**
+     * @dev repays all of users riskSlips w/ stable tokens to CBB and unwraps collateral into underlying
+     * @param _stagingBox The staging box tied to the Convertible Bond
+     * Requirements:
+     *  - can only be called prior to maturity
+     *  - only to be called with bonds that have A/Z tranche setup
+     */
+
+    function repayAndUnwrapMax(IStagingBox _stagingBox) external;
+
+    /**
+     * @dev repays stable tokens to CBB and unwraps collateral into underlying
+     * @param _stagingBox The staging box tied to the Convertible Bond
+     * @param _stableAmount The amount of stableTokens to be repaid
+     * @param _riskSlipAmount The amount of riskSlips to be repaid with
+     * @param _safeTrancheAmount The amount of safeTranche expected in return
+     * Requirements:
+     *  - can only be called after maturity
+     */
+
+    function repayAndUnwrapMature(
+        IStagingBox _stagingBox,
+        uint256 _stableAmount,
+        uint256 _riskSlipAmount,
+        uint256 _safeTrancheAmount
+    ) external;
 }

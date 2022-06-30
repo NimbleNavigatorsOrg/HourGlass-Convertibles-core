@@ -81,8 +81,6 @@ contract StagingLoanRouter is IStagingLoanRouter {
      * @inheritdoc IStagingLoanRouter
      */
 
-    //TODO: Add slippage protection
-
     function redeemLendSlipsForStables(
         IStagingBox _stagingBox,
         uint256 _lendSlipAmount
@@ -124,8 +122,6 @@ contract StagingLoanRouter is IStagingLoanRouter {
     /**
      * @inheritdoc IStagingLoanRouter
      */
-
-    //TODO: Add slippage protection
 
     function redeemLendSlipsForTranchesAndUnwrap(
         IStagingBox _stagingBox,
@@ -184,8 +180,6 @@ contract StagingLoanRouter is IStagingLoanRouter {
      * @inheritdoc IStagingLoanRouter
      */
 
-    //TODO: Add slippage protection
-
     function redeemRiskSlipsForTranchesAndUnwrap(
         IStagingBox _stagingBox,
         uint256 _riskSlipAmount
@@ -218,6 +212,146 @@ contract StagingLoanRouter is IStagingLoanRouter {
         );
 
         //unwrap to msg.sender
+        wrapper.withdrawAllTo(msg.sender);
+    }
+
+    /**
+     * @inheritdoc IStagingLoanRouter
+     */
+
+    function repayAndUnwrapSimple(
+        IStagingBox _stagingBox,
+        uint256 _stableAmount,
+        uint256 _riskSlipAmount
+    ) public {
+        (
+            IConvertibleBondBox convertibleBondBox,
+            IButtonWoodBondController bond,
+            IButtonToken wrapper,
+
+        ) = fetchElasticStack(_stagingBox);
+
+        //Transfer Stables to Router
+        TransferHelper.safeTransferFrom(
+            address(convertibleBondBox.stableToken()),
+            msg.sender,
+            address(this),
+            _stableAmount
+        );
+
+        //Calculate RiskSlips (minus fees) and transfer to router
+
+        TransferHelper.safeTransferFrom(
+            convertibleBondBox.s_riskSlipTokenAddress(),
+            msg.sender,
+            address(this),
+            _riskSlipAmount
+        );
+
+        //call repay function
+        convertibleBondBox.stableToken().approve(
+            address(convertibleBondBox),
+            _stableAmount
+        );
+        convertibleBondBox.repay(_stableAmount);
+
+        //call redeem on bond (ratio concern?)
+        uint256[] memory redeemAmounts = new uint256[](2);
+        redeemAmounts[0] = (
+            convertibleBondBox.safeTranche().balanceOf(address(this))
+        );
+        redeemAmounts[1] = ((redeemAmounts[0] *
+            convertibleBondBox.riskRatio()) / convertibleBondBox.safeRatio());
+        bond.redeem(redeemAmounts);
+
+        //unwrap rebasing collateral to msg.sender
+        wrapper.withdrawAllTo(msg.sender);
+
+        //send unpaid riskSlip back
+        TransferHelper.safeTransfer(
+            convertibleBondBox.s_riskSlipTokenAddress(),
+            msg.sender,
+            IERC20(convertibleBondBox.s_riskSlipTokenAddress()).balanceOf(
+                address(this)
+            )
+        );
+    }
+
+    /**
+     * @inheritdoc IStagingLoanRouter
+     */
+
+    function repayAndUnwrapMax(IStagingBox _stagingBox) public {
+        (
+            IConvertibleBondBox convertibleBondBox,
+            IButtonWoodBondController bond,
+            IButtonToken wrapper,
+
+        ) = fetchElasticStack(_stagingBox);
+
+        //Transfer all riskSlips router
+
+        //Transfer Stables to Router
+
+        //call repay function
+
+        //call redeem on bond (ratio concern?)
+
+        //unwrap rebasing collateral to msg.sender
+        wrapper.withdrawAllTo(msg.sender);
+    }
+
+    /**
+     * @inheritdoc IStagingLoanRouter
+     */
+
+    function repayAndUnwrapMature(
+        IStagingBox _stagingBox,
+        uint256 _stableAmount,
+        uint256 _riskSlipAmount,
+        uint256 _safeTrancheAmount
+    ) public {
+        (
+            IConvertibleBondBox convertibleBondBox,
+            IButtonWoodBondController bond,
+            IButtonToken wrapper,
+
+        ) = fetchElasticStack(_stagingBox);
+
+        //Transfer Stables to Router
+        TransferHelper.safeTransferFrom(
+            address(convertibleBondBox.stableToken()),
+            msg.sender,
+            address(this),
+            _stableAmount
+        );
+
+        //Calculate RiskSlips and transfer to router
+        TransferHelper.safeTransferFrom(
+            convertibleBondBox.s_riskSlipTokenAddress(),
+            msg.sender,
+            address(this),
+            _riskSlipAmount
+        );
+
+        //call repay function
+        convertibleBondBox.stableToken().approve(
+            address(convertibleBondBox),
+            _stableAmount
+        );
+        convertibleBondBox.repay(_stableAmount);
+
+        //call redeemMature on bond (ratio concern?)
+        bond.redeemMature(
+            address(convertibleBondBox.safeTranche()),
+            _safeTrancheAmount
+        );
+        bond.redeemMature(
+            address(convertibleBondBox.riskTranche()),
+            _riskSlipAmount
+        );
+
+        //unwrap rebasing collateral to msg.sender
         wrapper.withdrawAllTo(msg.sender);
     }
 
