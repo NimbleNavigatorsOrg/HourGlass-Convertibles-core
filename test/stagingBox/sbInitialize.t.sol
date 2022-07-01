@@ -12,9 +12,15 @@ contract sbInitialize is SBIntegrationSetup {
     function testFailInvalidOwnerAddress(uint256 _fuzzPrice) public {
         s_price = bound(_fuzzPrice, 1, s_deployedConvertibleBondBox.s_priceGranularity());
         s_deployedSB = StagingBox(stagingBoxFactory.createStagingBox(
-            s_deployedConvertibleBondBox,
+            s_CBBFactory,
             s_slipFactory,
+            s_buttonWoodBondController,
+            s_penalty,
+            address(s_collateralToken),
+            address(s_stableToken),
+            s_trancheIndex,
             s_price,
+            address(0),
             address(0)
         ));
     }
@@ -22,7 +28,7 @@ contract sbInitialize is SBIntegrationSetup {
     function testCannotInitialPriceTooHigh(uint256 _fuzzPrice) public {
         s_price = bound(
             _fuzzPrice, 
-            s_deployedConvertibleBondBox.s_priceGranularity() + 1, 
+            s_priceGranularity + 1, 
             type(uint256).max
         );
 
@@ -33,10 +39,16 @@ contract sbInitialize is SBIntegrationSetup {
         );
         vm.expectRevert(customError);
         s_deployedSB = StagingBox(stagingBoxFactory.createStagingBox(
-            s_deployedConvertibleBondBox,
+            s_CBBFactory,
             s_slipFactory,
+            s_buttonWoodBondController,
+            s_penalty,
+            address(s_collateralToken),
+            address(s_stableToken),
+            s_trancheIndex,
             s_price,
-            s_owner
+            s_owner,
+            s_cbb_owner
         ));
     }
 
@@ -50,22 +62,36 @@ contract sbInitialize is SBIntegrationSetup {
         );
         vm.expectRevert(customError);
         s_deployedSB = StagingBox(stagingBoxFactory.createStagingBox(
-            s_deployedConvertibleBondBox,
+            s_CBBFactory,
             s_slipFactory,
-            price,
-            s_owner
+            s_buttonWoodBondController,
+            s_penalty,
+            address(s_collateralToken),
+            address(s_stableToken),
+            s_trancheIndex,
+            s_price,
+            s_owner,
+            s_cbb_owner
         ));
     }
 
     function testEmitsInitialized(uint256 _fuzzPrice) public {
-        s_price = bound(_fuzzPrice, 1, s_deployedConvertibleBondBox.s_priceGranularity());
+        s_price = bound(_fuzzPrice, 1, s_priceGranularity);
+
+        vm.prank(s_user);
         vm.expectEmit(true, false, false, false);
-        emit Initialized(s_owner, address(1), address(2));
+        emit StagingBoxCreated(ConvertibleBondBox(s_deployedCBBAddress), s_slipFactory, s_price, s_owner, s_user);
         s_deployedSB = StagingBox(stagingBoxFactory.createStagingBox(
-            s_deployedConvertibleBondBox,
+            s_CBBFactory,
             s_slipFactory,
+            s_buttonWoodBondController,
+            s_penalty,
+            address(s_collateralToken),
+            address(s_stableToken),
+            s_trancheIndex,
             s_price,
-            s_owner
+            s_owner,
+            s_cbb_owner
         ));
     }
 }

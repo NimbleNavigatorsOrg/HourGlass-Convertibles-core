@@ -37,7 +37,7 @@ contract ConvertibleBondBox is
     uint256 public constant override s_priceGranularity = 1e9;
     uint256 public override feeBps = 0;
 
-    uint256 public s_initalPrice = 0;
+    uint256 public s_initialPrice = 0;
 
     // Denominator for basis points. Used to calculate fees
     uint256 public constant override BPS = 10_000;
@@ -104,7 +104,7 @@ contract ConvertibleBondBox is
             });
         if (_initialPrice == 0)
             revert InitialPriceIsZero({given: 0, maxPrice: priceGranularity});
-        s_initalPrice = _initialPrice;
+        s_initialPrice = _initialPrice;
 
         //set ConvertibleBondBox Start Date to be time when init() is called
         s_startDate = block.timestamp;
@@ -192,15 +192,31 @@ contract ConvertibleBondBox is
 
     function currentPrice() external view override returns (uint256) {
         //load storage variables into memory
+        console2.log("1");
         uint256 price = s_priceGranularity;
-        uint256 maturityDate = maturityDate();
+                console2.log("2");
 
+        uint256 maturityDate = maturityDate();
+                console2.log("3");
+
+                console2.log(s_initialPrice, "s_initialPrice");
+                console2.log(price, "price");
+                console2.log(maturityDate, "maturityDate");
+                console2.log(block.timestamp, "block.timestamp");
+                console2.log(s_startDate, "s_startDate");
+
+
+
+        //TODO replace math below with full math to enable larger deposit amounts
+        //TODO figure out how to calculate price when line 215 is smaller than line 216&&217
         if (block.timestamp < maturityDate) {
+
             price =
                 price -
-                ((price - s_initalPrice) * (maturityDate - block.timestamp)) /
+                ((price - s_initialPrice) * (maturityDate - block.timestamp)) /
                 (maturityDate - s_startDate);
         }
+                console2.log("4");
 
         return price;
     }

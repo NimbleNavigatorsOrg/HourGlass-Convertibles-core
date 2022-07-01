@@ -9,6 +9,7 @@ import "./ISlipFactory.sol";
  */
 
 interface IStagingBoxFactory {
+    // TODO: test this event
     event StagingBoxCreated(
         IConvertibleBondBox convertibleBondBox,
         ISlipFactory slipFactory,

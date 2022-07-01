@@ -21,6 +21,7 @@ contract Frankenstein is CBBSetup {
         uint256 amount,
         uint256 seed
     ) public {
+        vm.warp(1);
         collateralAmount = bound(collateralAmount, 0, 1e20);
         // used to be 1e20, is this change correct?
         amount = bound(amount, s_trancheGranularity, s_safeTranche.balanceOf(s_cbb_owner));
