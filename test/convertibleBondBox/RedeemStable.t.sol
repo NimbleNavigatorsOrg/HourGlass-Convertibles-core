@@ -182,8 +182,6 @@ contract RedeemStable is CBBSetup {
         time = bound(time, 1, s_endOfUnixTime);
         fee = bound(fee, 1, s_maxFeeBPS);
 
-        vm.warp(time);
-
         vm.startPrank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.reinitialize(
             borrower,
@@ -198,6 +196,8 @@ contract RedeemStable is CBBSetup {
         s_deployedConvertibleBondBox.setFee(fee);
         vm.stopPrank();
 
+        vm.warp(time);
+
         repayAmount = bound(
             repayAmount,
             s_deployedConvertibleBondBox.safeRatio(),
@@ -206,6 +206,8 @@ contract RedeemStable is CBBSetup {
             ) * s_deployedConvertibleBondBox.currentPrice()) /
                 s_priceGranularity
         );
+
+        s_stableToken.mint(borrower, repayAmount);
 
         vm.startPrank(borrower);
         s_stableToken.approve(

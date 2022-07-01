@@ -66,7 +66,36 @@ interface IStagingBoxLens {
     function viewRepayAndUnwrapSimple(
         IStagingBox _stagingBox,
         uint256 _stableAmount
-    ) external view returns (uint256, uint256);
+    )
+        external
+        view
+        returns (
+            uint256,
+            uint256,
+            uint256,
+            uint256
+        );
+
+    /**
+     * @dev provides amount of unwrapped collateral tokens expected in return for repaying in full the RiskSlips
+     * @param _stagingBox The staging box tied to the Convertible Bond
+     * Requirements:
+     *      - Only for prior to maturity
+     *      - Only for bonds with A/Z tranches
+     */
+
+    function viewRepayMaxAndUnwrapSimple(
+        IStagingBox _stagingBox,
+        uint256 _riskSlipAmount
+    )
+        external
+        view
+        returns (
+            uint256,
+            uint256,
+            uint256,
+            uint256
+        );
 
     /**
      * @dev provides amount of unwrapped collateral tokens expected in return for repaying a specified amount of stables
@@ -80,36 +109,32 @@ interface IStagingBoxLens {
     function viewRepayAndUnwrapMature(
         IStagingBox _stagingBox,
         uint256 _stableAmount
-    ) external view returns (uint256, uint256);
-
-    /**
-     * @dev provides amount of unwrapped collateral tokens expected in return for repaying all of the user's RiskSlips
-     * @param _stagingBox The staging box tied to the Convertible Bond
-     * Requirements:
-     *      - Only for prior to maturity
-     *      - Only for bonds with A/Z tranches
-     */
-
-    function viewRepayAndUnwrapMax(IStagingBox _stagingBox)
+    )
         external
         view
         returns (
+            uint256,
             uint256,
             uint256,
             uint256
         );
 
     /**
-     * @dev provides amount of unwrapped collateral tokens expected in return for repaying all of the user's RiskSlips
+     * @dev provides amount of unwrapped collateral tokens expected in return for repaying a specified amount of stables
      * @param _stagingBox The staging box tied to the Convertible Bond
+     * @param _stableAmount The amount of stables being repaid
      * Requirements:
      *      - Only for after maturity
      */
 
-    function viewRepayAndUnwrapMaxMature(IStagingBox _stagingBox)
+    function viewRepayMaxAndUnwrapMature(
+        IStagingBox _stagingBox,
+        uint256 _stableAmount
+    )
         external
         view
         returns (
+            uint256,
             uint256,
             uint256,
             uint256

@@ -14,11 +14,10 @@ contract StagingLoanRouter is IStagingLoanRouter {
      * @inheritdoc IStagingLoanRouter
      */
 
-    //TODO: Add slippage protection
-
     function simpleWrapTrancheBorrow(
         IStagingBox _stagingBox,
-        uint256 _amountRaw
+        uint256 _amountRaw,
+        uint256 _minBorrowSlips
     ) public {
         (
             IConvertibleBondBox convertibleBondBox,
@@ -43,16 +42,24 @@ contract StagingLoanRouter is IStagingLoanRouter {
             convertibleBondBox.s_trancheGranularity();
 
         _stagingBox.depositBorrow(msg.sender, safeTrancheAmount);
+
+        if (safeTrancheAmount < _minBorrowSlips)
+            revert SlippageExceeded({
+                expectedAmount: safeTrancheAmount,
+                minAmount: _minBorrowSlips
+            });
     }
 
     /**
      * @inheritdoc IStagingLoanRouter
      */
 
-    function multiWrapTrancheBorrow(IStagingBox _stagingBox, uint256 _amountRaw)
-        public
-    {
-        simpleWrapTrancheBorrow(_stagingBox, _amountRaw);
+    function multiWrapTrancheBorrow(
+        IStagingBox _stagingBox,
+        uint256 _amountRaw,
+        uint256 _minBorrowSlips
+    ) public {
+        simpleWrapTrancheBorrow(_stagingBox, _amountRaw, _minBorrowSlips);
 
         (
             IConvertibleBondBox convertibleBondBox,
@@ -240,7 +247,6 @@ contract StagingLoanRouter is IStagingLoanRouter {
         );
 
         //Calculate RiskSlips (minus fees) and transfer to router
-
         TransferHelper.safeTransferFrom(
             convertibleBondBox.s_riskSlipTokenAddress(),
             msg.sender,
@@ -281,7 +287,11 @@ contract StagingLoanRouter is IStagingLoanRouter {
      * @inheritdoc IStagingLoanRouter
      */
 
-    function repayAndUnwrapMax(IStagingBox _stagingBox) public {
+    function repayMaxAndUnwrapSimple(
+        IStagingBox _stagingBox,
+        uint256 _stableAmount,
+        uint256 _riskSlipAmount
+    ) public {
         (
             IConvertibleBondBox convertibleBondBox,
             IButtonWoodBondController bond,
@@ -289,16 +299,47 @@ contract StagingLoanRouter is IStagingLoanRouter {
 
         ) = fetchElasticStack(_stagingBox);
 
-        //Transfer all riskSlips router
+        //Transfer Stables + fees + slippage to Router
+        TransferHelper.safeTransferFrom(
+            address(convertibleBondBox.stableToken()),
+            msg.sender,
+            address(this),
+            _stableAmount
+        );
 
-        //Transfer Stables to Router
+        //Transfer risk slips to CBB
+        TransferHelper.safeTransferFrom(
+            convertibleBondBox.s_riskSlipTokenAddress(),
+            msg.sender,
+            address(this),
+            _riskSlipAmount
+        );
 
-        //call repay function
+        //call repayMax function
+        convertibleBondBox.stableToken().approve(
+            address(convertibleBondBox),
+            _stableAmount
+        );
+        convertibleBondBox.repayMax(_riskSlipAmount);
 
         //call redeem on bond (ratio concern?)
+        uint256[] memory redeemAmounts = new uint256[](2);
+        redeemAmounts[0] = (
+            convertibleBondBox.safeTranche().balanceOf(address(this))
+        );
+        redeemAmounts[1] = ((redeemAmounts[0] *
+            convertibleBondBox.riskRatio()) / convertibleBondBox.safeRatio());
+        bond.redeem(redeemAmounts);
 
         //unwrap rebasing collateral to msg.sender
         wrapper.withdrawAllTo(msg.sender);
+
+        //send unused stables back to msg.sender
+        TransferHelper.safeTransfer(
+            address(convertibleBondBox.stableToken()),
+            msg.sender,
+            convertibleBondBox.stableToken().balanceOf(address(this))
+        );
     }
 
     /**
@@ -308,8 +349,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
     function repayAndUnwrapMature(
         IStagingBox _stagingBox,
         uint256 _stableAmount,
-        uint256 _riskSlipAmount,
-        uint256 _safeTrancheAmount
+        uint256 _riskSlipAmount
     ) public {
         (
             IConvertibleBondBox convertibleBondBox,
@@ -326,7 +366,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
             _stableAmount
         );
 
-        //Calculate RiskSlips and transfer to router
+        //Transfer to router
         TransferHelper.safeTransferFrom(
             convertibleBondBox.s_riskSlipTokenAddress(),
             msg.sender,
@@ -341,10 +381,10 @@ contract StagingLoanRouter is IStagingLoanRouter {
         );
         convertibleBondBox.repay(_stableAmount);
 
-        //call redeemMature on bond (ratio concern?)
+        //call redeemMature on bond
         bond.redeemMature(
             address(convertibleBondBox.safeTranche()),
-            _safeTrancheAmount
+            _stableAmount
         );
         bond.redeemMature(
             address(convertibleBondBox.riskTranche()),
