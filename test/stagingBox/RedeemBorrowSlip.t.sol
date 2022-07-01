@@ -14,23 +14,11 @@ contract RedeemBorrowSlip is SBIntegrationSetup {
         vm.startPrank(address(s_deployedConvertibleBondBox));
         ISlip(s_deployedConvertibleBondBox.s_riskSlipTokenAddress()).mint(address(s_deployedSB), type(uint256).max);
         vm.stopPrank();
-        console.log((s_maxMint / s_deployedSB.riskRatio()) * s_deployedSB.safeRatio(), 'yes');
+
         vm.startPrank(address(s_deployedSB));
         ISlip(s_deployedSB.s_borrowSlipTokenAddress()).mint(s_user, 
         (s_maxMint / s_deployedSB.riskRatio()) * s_deployedSB.safeRatio());
         vm.stopPrank();
-        s_deployedSB = StagingBox(stagingBoxFactory.createStagingBox(
-            s_CBBFactory,
-            s_slipFactory,
-            s_buttonWoodBondController,
-            s_penalty,
-            address(s_collateralToken),
-            address(s_stableToken),
-            s_trancheIndex,
-            s_price,
-            s_owner,
-            s_cbb_owner
-        ));
 
         vm.startPrank(address(s_deployedSB));
         s_stableToken.mint(address(s_deployedSB), s_maxMint);
@@ -94,9 +82,8 @@ contract RedeemBorrowSlip is SBIntegrationSetup {
         setupTranches(true, s_user, address(s_deployedSB));
         redeemBorrowSetupMints();
 
-        uint256 msgSenderBorrowSlipBalanceBeforeRedeem = IERC20(s_deployedSB.s_borrowSlipTokenAddress()).balanceOf(s_user);
+        uint256 msgSenderBorrowSlipBalanceBeforeRedeem = ISlip(s_deployedSB.s_borrowSlipTokenAddress()).balanceOf(s_user);
         uint256 msgSenderStableTokenBalanceBeforeRedeem = ISlip(s_deployedSB.s_borrowSlipTokenAddress()).balanceOf(s_user);
-        console.log(msgSenderBorrowSlipBalanceBeforeRedeem, 'vote for pedro');
 
         _borrowSlipAmount = bound(_borrowSlipAmount, 1, msgSenderBorrowSlipBalanceBeforeRedeem);
 

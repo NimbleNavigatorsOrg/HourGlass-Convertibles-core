@@ -15,8 +15,7 @@ interface IStagingBoxFactory {
         ISlipFactory slipFactory,
         uint256 initialPrice,
         address owner,
-        address msgSender,
-        address stagingBox
+        address msgSender
     );
 
     /// @notice Some parameters are invalid

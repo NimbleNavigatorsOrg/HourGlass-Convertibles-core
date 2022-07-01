@@ -127,7 +127,7 @@ contract Repay is CBBSetup {
     ) public {
         address borrowerAddress = address(1);
         time = bound(time, s_maturityDate, s_endOfUnixTime);
-        vm.warp(s_maturityDate + time);
+        vm.warp(time);
         uint256 minAmount = ((s_deployedConvertibleBondBox.safeRatio() *
             s_deployedConvertibleBondBox.currentPrice()) / s_priceGranularity) *
             10000;

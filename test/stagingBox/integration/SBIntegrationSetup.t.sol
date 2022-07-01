@@ -76,6 +76,13 @@ contract SBIntegrationSetup is Test {
     event Repay(address, uint256, uint256, uint256);
     event Initialized(address, address, uint256, uint256);
     event FeeUpdate(uint256);
+    event StagingBoxCreated(
+        IConvertibleBondBox convertibleBondBox,
+        ISlipFactory slipFactory,
+        uint256 initialPrice,
+        address owner,
+        address msgSender
+    );
 
     function setUp() public virtual {
         //push numbers into array

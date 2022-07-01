@@ -28,7 +28,7 @@ contract sbInitialize is SBIntegrationSetup {
     function testCannotInitialPriceTooHigh(uint256 _fuzzPrice) public {
         s_price = bound(
             _fuzzPrice, 
-            s_deployedConvertibleBondBox.s_priceGranularity() + 1, 
+            s_priceGranularity + 1, 
             type(uint256).max
         );
 
@@ -77,8 +77,10 @@ contract sbInitialize is SBIntegrationSetup {
 
     function testEmitsInitialized(uint256 _fuzzPrice) public {
         s_price = bound(_fuzzPrice, 1, s_deployedConvertibleBondBox.s_priceGranularity());
+
+        vm.prank(s_user);
         vm.expectEmit(true, false, false, false);
-        emit Initialized(s_owner, address(1), address(2));
+        emit StagingBoxCreated(ConvertibleBondBox(s_deployedCBBAddress), s_slipFactory, s_price, s_owner, s_user);
         s_deployedSB = StagingBox(stagingBoxFactory.createStagingBox(
             s_CBBFactory,
             s_slipFactory,
