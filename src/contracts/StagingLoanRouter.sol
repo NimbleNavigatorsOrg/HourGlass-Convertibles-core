@@ -18,7 +18,8 @@ contract StagingLoanRouter is IStagingLoanRouter {
 
     function simpleWrapTrancheBorrow(
         IStagingBox _stagingBox,
-        uint256 _amountRaw
+        uint256 _amountRaw,
+        uint256 _minBorrowSlips
     ) public {
         (
             IConvertibleBondBox convertibleBondBox,
@@ -43,16 +44,24 @@ contract StagingLoanRouter is IStagingLoanRouter {
             convertibleBondBox.s_trancheGranularity();
 
         _stagingBox.depositBorrow(msg.sender, safeTrancheAmount);
+
+        if (safeTrancheAmount < _minBorrowSlips)
+            revert SlippageExceeded({
+                expectedAmount: safeTrancheAmount,
+                minAmount: _minBorrowSlips
+            });
     }
 
     /**
      * @inheritdoc IStagingLoanRouter
      */
 
-    function multiWrapTrancheBorrow(IStagingBox _stagingBox, uint256 _amountRaw)
-        public
-    {
-        simpleWrapTrancheBorrow(_stagingBox, _amountRaw);
+    function multiWrapTrancheBorrow(
+        IStagingBox _stagingBox,
+        uint256 _amountRaw,
+        uint256 _minBorrowSlips
+    ) public {
+        simpleWrapTrancheBorrow(_stagingBox, _amountRaw, _minBorrowSlips);
 
         (
             IConvertibleBondBox convertibleBondBox,
