@@ -14,21 +14,16 @@ import "forge-std/console2.sol";
 import "../../test/mocks/MockERC20.sol";
 import "./CBBSetup.sol";
 
-contract Repay is CBBSetup {
-    //tests Repay after maturity
-    function testRepay(
+contract RepayMax is CBBSetup {
+    //tests repayMax after maturity
+    function testRepayMax(
         uint256 time,
         uint256 amount,
-        uint256 stableAmount
+        uint256 riskSlipAmount
     ) public {
         address borrowerAddress = address(1);
         time = bound(time, s_maturityDate, s_endOfUnixTime);
         amount = bound(amount, s_deployedConvertibleBondBox.safeRatio(), 1e15);
-        stableAmount = bound(
-            stableAmount,
-            s_deployedConvertibleBondBox.safeRatio(),
-            amount
-        );
 
         vm.prank(s_cbb_owner);
         s_deployedConvertibleBondBox.reinitialize(
@@ -46,7 +41,14 @@ contract Repay is CBBSetup {
             amount
         );
 
-        s_stableToken.mint(borrowerAddress, stableAmount);
+        riskSlipAmount = bound(
+            riskSlipAmount,
+            s_deployedConvertibleBondBox.riskRatio(),
+            IERC20(s_deployedConvertibleBondBox.s_riskSlipTokenAddress())
+                .balanceOf(borrowerAddress)
+        );
+
+        s_stableToken.mint(borrowerAddress, amount);
 
         vm.warp(time);
 
@@ -70,12 +72,9 @@ contract Repay is CBBSetup {
             .riskTranche()
             .balanceOf(address(s_deployedConvertibleBondBox));
 
-        uint256 safeTranchePayout = (stableAmount * s_priceGranularity) /
-            s_deployedConvertibleBondBox.currentPrice();
-
-        uint256 zTranchePaidFor = (safeTranchePayout *
-            s_deployedConvertibleBondBox.riskRatio()) /
-            s_deployedConvertibleBondBox.safeRatio();
+        uint256 stablesOwed = (riskSlipAmount *
+            s_deployedConvertibleBondBox.safeRatio()) /
+            s_deployedConvertibleBondBox.riskRatio();
 
         vm.startPrank(borrowerAddress);
 
@@ -87,57 +86,53 @@ contract Repay is CBBSetup {
         vm.expectEmit(true, true, true, true);
         emit Repay(
             borrowerAddress,
-            stableAmount,
-            zTranchePaidFor,
+            stablesOwed,
+            riskSlipAmount,
             s_deployedConvertibleBondBox.currentPrice()
         );
-        s_deployedConvertibleBondBox.repay(stableAmount);
+        s_deployedConvertibleBondBox.repayMax(riskSlipAmount);
         vm.stopPrank();
 
         repayStableBalanceAssertions(
-            stableAmount,
+            stablesOwed,
             0,
             userStableBalancedBeforeRepay,
             0,
             borrowerAddress
         );
 
+        //stables owed = safeTranche @ maturity
         repaySafeTrancheBalanceAssertions(
             userSafeTrancheBalanceBeforeRepay,
-            safeTranchePayout,
+            stablesOwed,
             CBBSafeTrancheBalancedBeforeRepay,
             borrowerAddress
         );
 
         repayRiskTrancheBalanceAssertions(
             userRiskTrancheBalancedBeforeRepay,
-            zTranchePaidFor,
+            riskSlipAmount,
             CBBRiskTrancheBalancedBeforeRepay,
             borrowerAddress
         );
 
         repayRiskSlipAssertions(
             userRiskSlipBalancedBeforeRepay,
-            zTranchePaidFor,
+            riskSlipAmount,
             borrowerAddress
         );
     }
 
-    //tests Repay after maturity with fee
-    function testRepayWithFee(
+    //tests repayMax after maturity with fee
+    function testRepayMaxWithFee(
         uint256 time,
         uint256 amount,
-        uint256 stableAmount,
+        uint256 riskSlipAmount,
         uint256 fee
     ) public {
         address borrowerAddress = address(1);
         time = bound(time, s_maturityDate, s_endOfUnixTime);
         amount = bound(amount, s_deployedConvertibleBondBox.safeRatio(), 1e15);
-        stableAmount = bound(
-            stableAmount,
-            s_deployedConvertibleBondBox.safeRatio(),
-            amount
-        );
         fee = bound(fee, 0, s_maxFeeBPS);
 
         vm.prank(s_cbb_owner);
@@ -156,7 +151,14 @@ contract Repay is CBBSetup {
             amount
         );
 
-        s_stableToken.mint(borrowerAddress, stableAmount);
+        riskSlipAmount = bound(
+            riskSlipAmount,
+            s_deployedConvertibleBondBox.riskRatio(),
+            IERC20(s_deployedConvertibleBondBox.s_riskSlipTokenAddress())
+                .balanceOf(borrowerAddress)
+        );
+
+        s_stableToken.mint(borrowerAddress, amount);
 
         vm.prank(s_cbb_owner);
         s_deployedConvertibleBondBox.setFee(fee);
@@ -186,12 +188,9 @@ contract Repay is CBBSetup {
             .riskTranche()
             .balanceOf(address(s_deployedConvertibleBondBox));
 
-        uint256 safeTranchePayout = ((stableAmount) * s_priceGranularity) /
-            s_deployedConvertibleBondBox.currentPrice();
-
-        uint256 zTranchePaidFor = (safeTranchePayout *
-            s_deployedConvertibleBondBox.riskRatio()) /
-            s_deployedConvertibleBondBox.safeRatio();
+        uint256 stablesOwed = (riskSlipAmount *
+            s_deployedConvertibleBondBox.safeRatio()) /
+            s_deployedConvertibleBondBox.riskRatio();
 
         vm.startPrank(borrowerAddress);
 
@@ -206,38 +205,39 @@ contract Repay is CBBSetup {
         vm.expectEmit(true, true, true, true);
         emit Repay(
             borrowerAddress,
-            stableAmount,
-            zTranchePaidFor,
+            stablesOwed,
+            riskSlipAmount,
             s_deployedConvertibleBondBox.currentPrice()
         );
-        s_deployedConvertibleBondBox.repay(stableAmount);
+        s_deployedConvertibleBondBox.repayMax(riskSlipAmount);
         vm.stopPrank();
 
         repayStableBalanceAssertions(
-            stableAmount,
+            stablesOwed,
             fee,
             userStableBalancedBeforeRepay,
             ownerStableBalancedBeforeRepay,
             borrowerAddress
         );
 
+        //stables owed = safeTranche @ maturity
         repaySafeTrancheBalanceAssertions(
             userSafeTrancheBalanceBeforeRepay,
-            safeTranchePayout,
+            stablesOwed,
             CBBSafeTrancheBalancedBeforeRepay,
             borrowerAddress
         );
 
         repayRiskTrancheBalanceAssertions(
             userRiskTrancheBalancedBeforeRepay,
-            zTranchePaidFor,
+            riskSlipAmount,
             CBBRiskTrancheBalancedBeforeRepay,
             borrowerAddress
         );
 
         repayRiskSlipAssertions(
             userRiskSlipBalancedBeforeRepay,
-            zTranchePaidFor,
+            riskSlipAmount,
             borrowerAddress
         );
     }
