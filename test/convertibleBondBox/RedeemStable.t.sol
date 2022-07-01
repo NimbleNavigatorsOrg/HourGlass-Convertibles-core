@@ -182,6 +182,8 @@ contract RedeemStable is CBBSetup {
         time = bound(time, 1, s_endOfUnixTime);
         fee = bound(fee, 1, s_maxFeeBPS);
 
+        vm.warp(1);
+
         vm.startPrank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.reinitialize(
             borrower,
