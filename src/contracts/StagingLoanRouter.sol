@@ -14,8 +14,6 @@ contract StagingLoanRouter is IStagingLoanRouter {
      * @inheritdoc IStagingLoanRouter
      */
 
-    //TODO: Add slippage protection
-
     function simpleWrapTrancheBorrow(
         IStagingBox _stagingBox,
         uint256 _amountRaw,
