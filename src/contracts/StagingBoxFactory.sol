@@ -81,7 +81,8 @@ contract StagingBoxFactory is IStagingBoxFactory {
             slipFactory,
             initialPrice,
             stagingBoxOwner,
-            msg.sender
+            msg.sender,
+            address(clone)
         );
 
         return address(clone);

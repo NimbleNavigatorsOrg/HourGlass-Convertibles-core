@@ -192,21 +192,8 @@ contract ConvertibleBondBox is
 
     function currentPrice() external view override returns (uint256) {
         //load storage variables into memory
-        console2.log("1");
         uint256 price = s_priceGranularity;
-                console2.log("2");
-
         uint256 maturityDate = maturityDate();
-                console2.log("3");
-
-                console2.log(s_initialPrice, "s_initialPrice");
-                console2.log(price, "price");
-                console2.log(maturityDate, "maturityDate");
-                console2.log(block.timestamp, "block.timestamp");
-                console2.log(s_startDate, "s_startDate");
-
-
-
         //TODO replace math below with full math to enable larger deposit amounts
         //TODO figure out how to calculate price when line 215 is smaller than line 216&&217
         if (block.timestamp < maturityDate) {
@@ -216,7 +203,6 @@ contract ConvertibleBondBox is
                 ((price - s_initialPrice) * (maturityDate - block.timestamp)) /
                 (maturityDate - s_startDate);
         }
-                console2.log("4");
 
         return price;
     }

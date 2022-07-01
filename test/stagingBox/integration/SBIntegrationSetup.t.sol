@@ -81,7 +81,8 @@ contract SBIntegrationSetup is Test {
         ISlipFactory slipFactory,
         uint256 initialPrice,
         address owner,
-        address msgSender
+        address msgSender,
+        address stagingBox
     );
 
     function setUp() public virtual {

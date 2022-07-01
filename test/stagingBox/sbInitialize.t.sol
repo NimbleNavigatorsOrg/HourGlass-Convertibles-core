@@ -80,7 +80,8 @@ contract sbInitialize is SBIntegrationSetup {
 
         vm.prank(s_user);
         vm.expectEmit(true, false, false, false);
-        emit StagingBoxCreated(ConvertibleBondBox(s_deployedCBBAddress), s_slipFactory, s_price, s_owner, s_user);
+        //TODO determine how to add the address to the expected emit without hardcoding the address.
+        emit StagingBoxCreated(ConvertibleBondBox(s_deployedCBBAddress), s_slipFactory, s_price, s_owner, s_user, address(0x80fa3ce05Cca48fA7C0377acD80F065Ff24a67b8));
         s_deployedSB = StagingBox(stagingBoxFactory.createStagingBox(
             s_CBBFactory,
             s_slipFactory,
