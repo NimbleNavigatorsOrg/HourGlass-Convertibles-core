@@ -24,10 +24,8 @@ contract Repay is CBBSetup {
     ) public {
         address borrowerAddress = address(1);
         time = bound(time, s_maturityDate, s_endOfUnixTime);
-        vm.warp(s_maturityDate + time);
-        uint256 minAmount = (s_deployedConvertibleBondBox.safeRatio() *
-            s_deployedConvertibleBondBox.currentPrice()) / s_priceGranularity;
-        amount = bound(amount, minAmount, 1e17);
+        uint256 minAmount = s_deployedConvertibleBondBox.safeRatio();
+        amount = bound(amount, minAmount, 1e15);
         stableAmount = bound(stableAmount, minAmount, amount);
 
         vm.prank(s_cbb_owner);
@@ -45,6 +43,10 @@ contract Repay is CBBSetup {
             address(2),
             amount
         );
+
+        s_stableToken.mint(borrowerAddress, stableAmount);
+
+        vm.warp(time);
 
         uint256 userStableBalancedBeforeRepay = s_stableToken.balanceOf(
             borrowerAddress
@@ -94,6 +96,7 @@ contract Repay is CBBSetup {
             stableAmount,
             0,
             userStableBalancedBeforeRepay,
+            0,
             borrowerAddress
         );
 
@@ -149,13 +152,16 @@ contract Repay is CBBSetup {
 
         s_stableToken.mint(borrowerAddress, stableAmount);
 
-        vm.prank(s_deployedConvertibleBondBox.owner());
+        vm.prank(s_cbb_owner);
         s_deployedConvertibleBondBox.setFee(fee);
 
         vm.warp(time);
 
         uint256 userStableBalancedBeforeRepay = s_stableToken.balanceOf(
             borrowerAddress
+        );
+        uint256 ownerStableBalancedBeforeRepay = s_stableToken.balanceOf(
+            s_cbb_owner
         );
         uint256 userSafeTrancheBalanceBeforeRepay = s_deployedConvertibleBondBox
             .safeTranche()
@@ -174,7 +180,6 @@ contract Repay is CBBSetup {
             .riskTranche()
             .balanceOf(address(s_deployedConvertibleBondBox));
 
-        uint256 stableFees = (stableAmount * fee) / s_BPS;
         uint256 safeTranchePayout = ((stableAmount) * s_priceGranularity) /
             s_deployedConvertibleBondBox.currentPrice();
 
@@ -204,8 +209,9 @@ contract Repay is CBBSetup {
 
         repayStableBalanceAssertions(
             stableAmount,
-            stableFees,
+            fee,
             userStableBalancedBeforeRepay,
+            ownerStableBalancedBeforeRepay,
             borrowerAddress
         );
 
@@ -232,8 +238,9 @@ contract Repay is CBBSetup {
 
     function repayStableBalanceAssertions(
         uint256 stableAmount,
-        uint256 stableFees,
+        uint256 fee,
         uint256 userStableBalancedBeforeRepay,
+        uint256 ownerStableBalancedBeforeRepay,
         address borrowerAddress
     ) private {
         uint256 CBBStableBalance = s_stableToken.balanceOf(
@@ -242,12 +249,23 @@ contract Repay is CBBSetup {
         uint256 userStableBalancedAfterRepay = s_stableToken.balanceOf(
             borrowerAddress
         );
+        uint256 ownerStableBalancedAfterRepay = s_stableToken.balanceOf(
+            s_cbb_owner
+        );
+
+        uint256 stableFees = (stableAmount * fee) / s_BPS;
 
         assertEq(stableAmount, CBBStableBalance);
         assertEq(
             userStableBalancedBeforeRepay - stableAmount - stableFees,
             userStableBalancedAfterRepay
         );
+        if (stableFees > 0) {
+            assertEq(
+                ownerStableBalancedBeforeRepay + stableFees,
+                ownerStableBalancedAfterRepay
+            );
+        }
     }
 
     function repaySafeTrancheBalanceAssertions(
