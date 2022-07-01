@@ -76,7 +76,7 @@ contract sbInitialize is SBIntegrationSetup {
     }
 
     function testEmitsInitialized(uint256 _fuzzPrice) public {
-        s_price = bound(_fuzzPrice, 1, s_deployedConvertibleBondBox.s_priceGranularity());
+        s_price = bound(_fuzzPrice, 1, s_priceGranularity);
 
         vm.prank(s_user);
         vm.expectEmit(true, false, false, false);
