@@ -22,7 +22,7 @@ contract CurrentPrice is CBBSetup {
             (s_deployedConvertibleBondBox.s_startDate() + s_maturityDate) / 2
         );
         uint256 currentPrice = s_deployedConvertibleBondBox.currentPrice();
-        uint256 price = s_deployedConvertibleBondBox.s_initalPrice();
+        uint256 price = s_deployedConvertibleBondBox.s_initialPrice();
         uint256 priceGranularity = s_priceGranularity;
         assertEq((priceGranularity - price) / 2 + price, currentPrice);
     }
