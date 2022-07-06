@@ -106,7 +106,6 @@ abstract contract CBBSetup is Test {
             s_buttonWoodBondController,
             s_slipFactory,
             s_penalty,
-            address(s_collateralToken),
             address(s_stableToken),
             s_trancheIndex,
             s_cbb_owner

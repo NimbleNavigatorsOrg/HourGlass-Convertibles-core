@@ -9,7 +9,6 @@ import "./ISlipFactory.sol";
  */
 interface ICBBFactory {
     event ConvertibleBondBoxCreated(
-        address collateralToken,
         address stableToken,
         uint256 trancheIndex,
         uint256 penalty,
@@ -23,7 +22,6 @@ interface ICBBFactory {
         IButtonWoodBondController bond,
         ISlipFactory slipFactory,
         uint256 penalty,
-        address collateralToken,
         address stableToken,
         uint256 trancheIndex,
         address owner

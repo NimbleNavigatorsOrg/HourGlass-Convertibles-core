@@ -15,7 +15,6 @@ import "../../test/mocks/MockERC20.sol";
 import "./CBBSetup.sol";
 
 contract Initialize is CBBSetup {
-
     function testCannotInitializePenaltyTooHigh(uint256 penalty) public {
         vm.assume(penalty > s_penaltyGranularity);
         bytes memory customError = abi.encodeWithSignature(
@@ -28,7 +27,6 @@ contract Initialize is CBBSetup {
             s_buttonWoodBondController,
             s_slipFactory,
             penalty,
-            address(s_collateralToken),
             address(s_stableToken),
             s_trancheIndex,
             address(this)
@@ -50,7 +48,6 @@ contract Initialize is CBBSetup {
             s_buttonWoodBondController,
             s_slipFactory,
             s_penalty,
-            address(s_collateralToken),
             address(s_stableToken),
             s_trancheIndex,
             address(this)
@@ -69,7 +66,6 @@ contract Initialize is CBBSetup {
             s_buttonWoodBondController,
             s_slipFactory,
             s_penalty,
-            address(s_collateralToken),
             address(s_stableToken),
             2,
             address(this)

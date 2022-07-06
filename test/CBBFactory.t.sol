@@ -40,7 +40,6 @@ contract CBBFactoryTest is Test {
     address s_owner;
 
     event ConvertibleBondBoxCreated(
-        address s_collateralToken,
         address s_stableToken,
         uint256 trancheIndex,
         uint256 penalty,
@@ -90,7 +89,6 @@ contract CBBFactoryTest is Test {
             s_buttonWoodBondController,
             s_slipFactory,
             s_penalty,
-            address(s_collateralToken),
             address(s_stableToken),
             s_trancheIndex,
             s_owner
@@ -134,7 +132,6 @@ contract CBBFactoryTest is Test {
         // The event we expect
 
         emit ConvertibleBondBoxCreated(
-            address(s_collateralToken),
             address(s_stableToken),
             s_trancheIndex,
             s_penalty,
@@ -146,7 +143,6 @@ contract CBBFactoryTest is Test {
             s_buttonWoodBondController,
             s_slipFactory,
             s_penalty,
-            address(s_collateralToken),
             address(s_stableToken),
             s_trancheIndex,
             s_owner

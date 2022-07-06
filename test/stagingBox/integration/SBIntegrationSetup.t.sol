@@ -140,7 +140,6 @@ contract SBIntegrationSetup is Test {
                 s_slipFactory,
                 s_buttonWoodBondController,
                 s_penalty,
-                address(s_collateralToken),
                 address(s_stableToken),
                 s_trancheIndex,
                 s_price,

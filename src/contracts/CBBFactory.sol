@@ -25,7 +25,6 @@ contract CBBFactory is ICBBFactory {
      * @param bond The buttonTranche bond tied to this Convertible Bond Box
      * @param slipFactory The factory for the Slip-Tokens
      * @param penalty The penalty ratio for non-repayment of loan
-     * @param collateralToken The base asset collateral token (a btn-Token)
      * @param stableToken The address of the stable-token being lent for the safe-Tranche
      * @param trancheIndex The index of the safe-Tranche
      * @param owner The initial owner
@@ -34,7 +33,6 @@ contract CBBFactory is ICBBFactory {
         IButtonWoodBondController bond,
         ISlipFactory slipFactory,
         uint256 penalty,
-        address collateralToken,
         address stableToken,
         uint256 trancheIndex,
         address owner
@@ -50,6 +48,7 @@ contract CBBFactory is ICBBFactory {
             (ITranche riskTranche, uint256 riskRatio) = bond.tranches(
                 trancheCount - 1
             );
+            address collateralToken = bond.collateralToken();
 
             s_data = bytes.concat(
                 abi.encodePacked(
@@ -71,7 +70,6 @@ contract CBBFactory is ICBBFactory {
 
         //TODO: Need to update this event
         emit ConvertibleBondBoxCreated(
-            collateralToken,
             stableToken,
             trancheIndex,
             penalty,

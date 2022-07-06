@@ -27,7 +27,6 @@ contract StagingBoxFactory is IStagingBoxFactory {
      * @param slipFactory The factory for the Slip-Tokens
      * @param bond The buttonwood bond
      * @param penalty The penalty for late repay
-     * @param collateralToken The collateral token
      * @param stableToken The stable token
      * @param trancheIndex The tranche index used to determine the safe tranche
      * @param initialPrice The initial price of the safe asset
@@ -40,28 +39,27 @@ contract StagingBoxFactory is IStagingBoxFactory {
         ISlipFactory slipFactory,
         IButtonWoodBondController bond,
         uint256 penalty,
-        address collateralToken,
         address stableToken,
         uint256 trancheIndex,
         uint256 initialPrice,
         address stagingBoxOwner,
         address cbbOwner
     ) public returns (address) {
-
-        ConvertibleBondBox convertibleBondBox = ConvertibleBondBox(cBBFactory.createConvertibleBondBox(
-            bond,
-            slipFactory,
-            penalty,
-            collateralToken,
-            stableToken,
-            trancheIndex,
-            cbbOwner
-        ));
+        ConvertibleBondBox convertibleBondBox = ConvertibleBondBox(
+            cBBFactory.createConvertibleBondBox(
+                bond,
+                slipFactory,
+                penalty,
+                stableToken,
+                trancheIndex,
+                cbbOwner
+            )
+        );
 
         bytes memory data = abi.encodePacked(
-            slipFactory, 
-            convertibleBondBox, 
-            initialPrice, 
+            slipFactory,
+            convertibleBondBox,
+            initialPrice,
             convertibleBondBox.stableToken(),
             convertibleBondBox.safeTranche(),
             convertibleBondBox.s_safeSlipTokenAddress(),
@@ -71,7 +69,7 @@ contract StagingBoxFactory is IStagingBoxFactory {
             convertibleBondBox.riskRatio(),
             convertibleBondBox.s_priceGranularity(),
             stagingBoxOwner
-            );
+        );
         StagingBox clone = StagingBox(implementation.clone(data));
 
         clone.initialize(stagingBoxOwner);
