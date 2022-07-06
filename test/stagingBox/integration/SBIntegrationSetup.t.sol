@@ -42,7 +42,7 @@ contract SBIntegrationSetup is Test {
     bool s_isLend;
     uint256 constant s_penalty = 500;
     uint256 constant s_trancheIndex = 0;
-    uint256 constant s_maturityDate = 1656717949;
+    uint256 constant s_maturityDate = 1659246194;
     uint256 constant s_safeSlipAmount = 10;
     uint256 constant s_endOfUnixTime = 2147483647;
     uint256 constant s_trancheGranularity = 1000;
@@ -53,7 +53,7 @@ contract SBIntegrationSetup is Test {
     uint256 public constant s_maxFeeBPS = 50;
     address s_deployedCBBAddress;
 
-    address s_owner; 
+    address s_owner;
     address s_borrower;
     address s_lender;
     address s_user;
@@ -127,34 +127,42 @@ contract SBIntegrationSetup is Test {
         s_user = address(3);
 
         StagingBox stagingBox = new StagingBox();
-        
+
         stagingBoxFactory = new StagingBoxFactory(address(stagingBox));
     }
 
     function setupStagingBox(uint256 _fuzzPrice) internal {
         s_price = bound(_fuzzPrice, 1, s_priceGranularity);
 
-        s_deployedSB = StagingBox(stagingBoxFactory.createStagingBox(
-            s_CBBFactory,
-            s_slipFactory,
-            s_buttonWoodBondController,
-            s_penalty,
-            address(s_collateralToken),
-            address(s_stableToken),
-            s_trancheIndex,
-            s_price,
-            s_owner,
-            s_cbb_owner
-        ));
+        s_deployedSB = StagingBox(
+            stagingBoxFactory.createStagingBox(
+                s_CBBFactory,
+                s_slipFactory,
+                s_buttonWoodBondController,
+                s_penalty,
+                address(s_collateralToken),
+                address(s_stableToken),
+                s_trancheIndex,
+                s_price,
+                s_owner,
+                s_cbb_owner
+            )
+        );
 
         s_deployedConvertibleBondBox = s_deployedSB.convertibleBondBox();
         s_deployedCBBAddress = address(s_deployedConvertibleBondBox);
 
         vm.prank(s_cbb_owner);
-        s_deployedConvertibleBondBox.cbbTransferOwnership(address(s_deployedSB));
+        s_deployedConvertibleBondBox.cbbTransferOwnership(
+            address(s_deployedSB)
+        );
     }
 
-    function setupTranches(bool _isLend, address _user, address _approvalAddress) internal {
+    function setupTranches(
+        bool _isLend,
+        address _user,
+        address _approvalAddress
+    ) internal {
         s_collateralToken.mint(_user, s_maxMint);
 
         vm.prank(_user);
@@ -174,7 +182,7 @@ contract SBIntegrationSetup is Test {
 
         maxStableAmount =
             (s_safeTranche.balanceOf(_user) * s_price) /
-                s_priceGranularity;
+            s_priceGranularity;
 
         s_stableToken.mint(_user, maxStableAmount);
 

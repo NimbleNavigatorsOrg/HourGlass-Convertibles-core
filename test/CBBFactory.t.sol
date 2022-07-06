@@ -30,7 +30,7 @@ contract CBBFactoryTest is Test {
     uint256 constant s_price = 5e8;
     uint256 constant s_startDate = 1654100749;
     uint256 constant s_trancheIndex = 0;
-    uint256 constant s_maturityDate = 1656717949;
+    uint256 constant s_maturityDate = 1659246194;
     uint256 constant s_depositLimit = 1000e9;
     uint256 constant s_trancheGranularity = 1000;
     uint256 constant s_penaltyGranularity = 1000;
@@ -74,7 +74,7 @@ contract CBBFactoryTest is Test {
         s_buttonWoodBondController = new ButtonWoodBondController();
         s_convertibleBondBox = new ConvertibleBondBox();
         s_CBBFactory = new CBBFactory(address(s_convertibleBondBox));
-        
+
         s_owner = address(22);
 
         s_buttonWoodBondController.init(
@@ -99,7 +99,9 @@ contract CBBFactoryTest is Test {
 
     function testFactoryCreatesConvertibleBondBox() public {
         // wrap address in IConvertibleBondBox and make assertions on inital values
-        ConvertibleBondBox deployedConvertibleBondBox = ConvertibleBondBox(s_deployedCBBAddress);
+        ConvertibleBondBox deployedConvertibleBondBox = ConvertibleBondBox(
+            s_deployedCBBAddress
+        );
 
         // keep this assert
         assertEq(s_CBBFactory.implementation(), address(s_convertibleBondBox));
@@ -125,7 +127,9 @@ contract CBBFactoryTest is Test {
         assertEq(deployedConvertibleBondBox.trancheIndex(), s_trancheIndex);
     }
 
-    function testCreateConvertibleBondBoxEmitsConvertibleBondBoxCreated() public {
+    function testCreateConvertibleBondBoxEmitsConvertibleBondBoxCreated()
+        public
+    {
         vm.expectEmit(true, true, true, true);
         // The event we expect
 
