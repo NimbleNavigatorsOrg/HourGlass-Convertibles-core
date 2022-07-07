@@ -9,6 +9,8 @@ import "@uniswap/lib/contracts/libraries/TransferHelper.sol";
 import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
 import "@buttonwood-protocol/button-wrappers/contracts/interfaces/IButtonToken.sol";
 
+import "forge-std/console2.sol";
+
 contract StagingLoanRouter is IStagingLoanRouter {
     /**
      * @inheritdoc IStagingLoanRouter
@@ -26,6 +28,8 @@ contract StagingLoanRouter is IStagingLoanRouter {
             IERC20 underlying
         ) = fetchElasticStack(_stagingBox);
 
+        console2.log(_amountRaw, "_amountRaw inside method");
+
         TransferHelper.safeTransferFrom(
             address(underlying),
             msg.sender,
@@ -34,6 +38,9 @@ contract StagingLoanRouter is IStagingLoanRouter {
         );
         underlying.approve(address(wrapper), _amountRaw);
         uint256 wrapperAmount = wrapper.deposit(_amountRaw);
+        console2.log(underlying.balanceOf(address(this)), "_amountRaw inside method after deposit");
+
+        console2.log(wrapperAmount, "wrapperAmount");
 
         wrapper.approve(address(bond), type(uint256).max);
         bond.deposit(wrapperAmount);

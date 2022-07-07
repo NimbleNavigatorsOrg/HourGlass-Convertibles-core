@@ -12,6 +12,7 @@ import "@buttonwood-protocol/tranche/contracts/Tranche.sol";
 import "@buttonwood-protocol/tranche/contracts/TrancheFactory.sol";
 import "../../src/contracts/Slip.sol";
 import "../../src/contracts/SlipFactory.sol";
+import "../../src/contracts/StagingLoanRouter.sol";
 import "../mocks/MockERC20.sol";
 import "@buttonwood-protocol/button-wrappers/contracts/ButtonToken.sol";
 import "@buttonwood-protocol/button-wrappers/contracts/mocks/MockOracle.sol";
@@ -29,9 +30,10 @@ contract StagingLoanRouterSetup is Test {
     ButtonToken s_collateralToken;
     uint256 s_oracleData;
     uint256 s_stalenessThreshold;
+    uint256 s_maxUnderlyingMint;
     MockERC20 s_underlying;
     MockOracle s_oracle;
-
+    StagingLoanRouter s_stagingLoanRouter;
 
     MockERC20 s_stableToken;
     TrancheFactory s_trancheFactory;
@@ -204,21 +206,11 @@ contract StagingLoanRouterSetup is Test {
         address _user,
         address _approvalAddress
     ) internal {
-        console.log("Can you feel the love tonight");
-
-
-        console.log(s_user, "s_user");
-        console.log(_user, "_user");
-
         s_underlying.mint(_user, 200000000000000000000000);
-
-        console2.log(address(s_collateralToken), "address(s_collateralToken)");
-        console2.log(address(s_underlying), "address(this)");
 
         vm.prank(_user);
         s_underlying.approve(address(s_collateralToken), type(uint256).max);
 
- console.log(s_underlying.balanceOf(_user), "s_underlying.balanceOf(_user)");
         vm.prank(_user);
         s_collateralToken.mint(s_maxMint);
 
@@ -228,8 +220,6 @@ contract StagingLoanRouterSetup is Test {
             type(uint256).max
         );
 
-        console.log("New LOG");
-
         vm.prank(_user);
         s_buttonWoodBondController.deposit(s_maxMint);
         (s_safeTranche, s_safeRatio) = s_buttonWoodBondController.tranches(
@@ -238,8 +228,6 @@ contract StagingLoanRouterSetup is Test {
         (s_riskTranche, s_riskRatio) = s_buttonWoodBondController.tranches(
             s_buttonWoodBondController.trancheCount() - 1
         );
-
-
 
         maxStableAmount =
             (s_safeTranche.balanceOf(_user) * s_price) /
@@ -254,12 +242,14 @@ contract StagingLoanRouterSetup is Test {
         vm.stopPrank();
 
         s_isLend = _isLend;
- console.log(s_underlying.balanceOf(_user), "bf s_underlying.balanceOf(_user)");
 
-        s_underlying.mint(s_user, 200000000000000000000000);
+        s_maxUnderlyingMint = 200000000000000000000000;
 
+        s_underlying.mint(s_user, s_maxUnderlyingMint);
 
- console.log(s_underlying.balanceOf(_user), "af s_underlying.balanceOf(_user)");
-
+        s_stagingLoanRouter = new StagingLoanRouter();
+        
+        vm.prank(s_user);
+        s_underlying.approve(address(s_stagingLoanRouter), type(uint256).max);
     }
 }
