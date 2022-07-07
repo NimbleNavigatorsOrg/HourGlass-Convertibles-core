@@ -12,7 +12,7 @@ interface ISlip is IERC20 {
      * @dev returns the bond box address which owns this slip contract
      *  It should have admin permissions to call mint, burn, and redeem functions
      */
-    function bondBox() external view returns (address);
+    function boxOwner() external view returns (address);
 
     /**
      * @dev Mint `amount` tokens to `to`

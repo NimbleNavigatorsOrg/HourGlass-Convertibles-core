@@ -4,6 +4,7 @@ pragma solidity 0.8.13;
 import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@uniswap/lib/contracts/libraries/TransferHelper.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "../interfaces/ISlipFactory.sol";
 import "../interfaces/ISlip.sol";
 import "../../utils/SBImmutableArgs.sol";
@@ -38,29 +39,26 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
                 maxPrice: priceGranularity()
             });
         if (initialPrice() == 0)
-            revert InitialPriceIsZero({
-                given: 0,
-                maxPrice: priceGranularity()
-            });
+            revert InitialPriceIsZero({given: 0, maxPrice: priceGranularity()});
 
         //Setup ownership
         __Ownable_init();
         transferOwnership(_owner);
 
         //Deploy Borrow Lend Slips
-        //TODO: Need to use ERC20 meta-data and revise slip factory inputs
+
         // clone deploy safe slip
         s_lendSlipTokenAddress = slipFactory().createSlip(
-            "ASSET-Tranche",
+            IERC20Metadata(safeSlipAddress()).symbol(),
             "Staging-Lender-Slip",
-            address(this)
+            safeSlipAddress()
         );
 
         //clone deploy z slip
         s_borrowSlipTokenAddress = slipFactory().createSlip(
-            "ASSET-Tranche",
+            IERC20Metadata(riskSlipAddress()).symbol(),
             "Staging-Borrower-Slip",
-            address(this)
+            riskSlipAddress()
         );
 
         //Check if valid ICBB immutable arg?
@@ -155,10 +153,7 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
         );
 
         //- burns `_borrowSlipAmount` of msg.sender’s BorrowSlips
-        ISlip(s_borrowSlipTokenAddress).burn(
-            _msgSender(),
-            _borrowSlipAmount
-        );
+        ISlip(s_borrowSlipTokenAddress).burn(_msgSender(), _borrowSlipAmount);
 
         //event stuff
         emit BorrowWithdrawal(_msgSender(), _borrowSlipAmount);
@@ -209,10 +204,7 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
         );
 
         // burns `_borrowSlipAmount` of msg.sender’s BorrowSlips
-        ISlip(s_borrowSlipTokenAddress).burn(
-            _msgSender(),
-            _borrowSlipAmount
-        );
+        ISlip(s_borrowSlipTokenAddress).burn(_msgSender(), _borrowSlipAmount);
 
         //event stuff
         emit RedeemBorrowSlip(_msgSender(), _borrowSlipAmount);
@@ -253,12 +245,18 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
                 initialPrice()
             );
 
-            convertibleBondBox().lend(address(this), address(this), stableAmount);
+            convertibleBondBox().lend(
+                address(this),
+                address(this),
+                stableAmount
+            );
         }
 
         if (!_isLend) {
             uint256 safeTrancheBalance = safeTranche().balanceOf(address(this));
-            s_reinitLendAmount = (safeTrancheBalance * initialPrice()) / priceGranularity();
+            s_reinitLendAmount =
+                (safeTrancheBalance * initialPrice()) /
+                priceGranularity();
 
             s_hasReinitialized = convertibleBondBox().reinitialize(
                 address(this),
@@ -268,14 +266,22 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
                 initialPrice()
             );
 
-            convertibleBondBox().borrow(address(this), address(this), safeTrancheBalance);
+            convertibleBondBox().borrow(
+                address(this),
+                address(this),
+                safeTrancheBalance
+            );
         }
 
         //- calls `CBB.transferOwner(owner())` to transfer ownership of CBB back to Owner()
         convertibleBondBox().cbbTransferOwnership(owner());
     }
 
-    function sbTransferOwnership(address _newOwner) external override onlyOwner {
+    function sbTransferOwnership(address _newOwner)
+        external
+        override
+        onlyOwner
+    {
         transferOwnership(_newOwner);
     }
 }

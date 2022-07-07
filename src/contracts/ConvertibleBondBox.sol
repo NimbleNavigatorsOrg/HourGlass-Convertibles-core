@@ -4,6 +4,7 @@ pragma solidity 0.8.13;
 import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@uniswap/lib/contracts/libraries/TransferHelper.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "clones-with-immutable-args/Clone.sol";
 import "../interfaces/IButtonWoodBondController.sol";
 import "../interfaces/ISlipFactory.sol";
@@ -65,16 +66,23 @@ contract ConvertibleBondBox is
                 maxIndex: trancheCount() - 2
             });
 
+        string memory collateralSymbolSafe = IERC20Metadata(
+            address(safeTranche())
+        ).symbol();
+        string memory collateralSymbolRisk = IERC20Metadata(
+            address(riskTranche())
+        ).symbol();
+
         // clone deploy safe slip
         s_safeSlipTokenAddress = slipFactory().createSlip(
-            "ASSET-Tranche",
+            string(abi.encodePacked("SLIP-", collateralSymbolSafe)),
             "Safe-CBB-Slip",
             address(safeTranche())
         );
 
         //clone deploy z slip
         s_riskSlipTokenAddress = slipFactory().createSlip(
-            "ASSET-Tranche",
+            string(abi.encodePacked("SLIP-", collateralSymbolRisk)),
             "Risk-CBB-Slip",
             address(riskTranche())
         );
@@ -197,7 +205,6 @@ contract ConvertibleBondBox is
         //TODO replace math below with full math to enable larger deposit amounts
         //TODO figure out how to calculate price when line 215 is smaller than line 216&&217
         if (block.timestamp < maturityDate) {
-
             price =
                 price -
                 ((price - s_initialPrice) * (maturityDate - block.timestamp)) /
