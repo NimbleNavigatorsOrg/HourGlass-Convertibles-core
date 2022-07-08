@@ -237,14 +237,6 @@ contract StagingLoanRouterSetup is Test {
 
         s_stableToken.mint(_user, maxStableAmount);
 
-        vm.startPrank(_user);
-        s_safeTranche.approve(_approvalAddress, type(uint256).max);
-        s_riskTranche.approve(_approvalAddress, type(uint256).max);
-        s_stableToken.approve(_approvalAddress, type(uint256).max);
-        vm.stopPrank();
-
-        s_isLend = _isLend;
-
         s_maxUnderlyingMint = 200000000000000000000000;
 
         s_underlying.mint(s_user, s_maxUnderlyingMint);

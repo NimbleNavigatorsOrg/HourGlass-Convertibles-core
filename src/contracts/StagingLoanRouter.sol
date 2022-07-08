@@ -43,24 +43,27 @@ contract StagingLoanRouter is IStagingLoanRouter {
         wrapper.approve(address(bond), type(uint256).max);
         bond.deposit(wrapperAmount);
 
-        uint256 safeTrancheAmount = (wrapperAmount *
-            convertibleBondBox.safeRatio()) /
-            convertibleBondBox.s_trancheGranularity();
+        uint256 riskTrancheBalance = _stagingBox.riskTranche().balanceOf(address(this));
+        uint256 safeTrancheBalance = _stagingBox.safeTranche().balanceOf(address(this));
 
-        convertibleBondBox.safeTranche().approve(
+        _stagingBox.safeTranche().approve(
             address(_stagingBox), type(uint256).max
         );
-        convertibleBondBox.riskTranche().approve(
+        _stagingBox.riskTranche().approve(
             address(_stagingBox), type(uint256).max
         );
 
-        _stagingBox.depositBorrow(msg.sender, safeTrancheAmount);
+        _stagingBox.depositBorrow(msg.sender, min(safeTrancheBalance, (riskTrancheBalance * convertibleBondBox.safeRatio() / convertibleBondBox.riskRatio())));
 
-        if (safeTrancheAmount < _minBorrowSlips)
+        if (safeTrancheBalance < _minBorrowSlips)
             revert SlippageExceeded({
-                expectedAmount: safeTrancheAmount,
+                expectedAmount: safeTrancheBalance,
                 minAmount: _minBorrowSlips
             });
+    }
+
+    function min(uint256 a, uint256 b) private pure returns (uint256) {
+    return a <= b ? a : b;
     }
 
     /**
