@@ -13,6 +13,7 @@ import "@buttonwood-protocol/tranche/contracts/TrancheFactory.sol";
 import "../../src/contracts/Slip.sol";
 import "../../src/contracts/SlipFactory.sol";
 import "../../src/contracts/StagingLoanRouter.sol";
+import "../../src/contracts/StagingBoxLens.sol";
 import "../mocks/MockERC20.sol";
 import "@buttonwood-protocol/button-wrappers/contracts/ButtonToken.sol";
 import "@buttonwood-protocol/button-wrappers/contracts/mocks/MockOracle.sol";
@@ -34,6 +35,7 @@ contract StagingLoanRouterSetup is Test {
     MockERC20 s_underlying;
     MockOracle s_oracle;
     StagingLoanRouter s_stagingLoanRouter;
+    StagingBoxLens s_stagingBoxLens;
 
     MockERC20 s_stableToken;
     TrancheFactory s_trancheFactory;
@@ -251,5 +253,7 @@ contract StagingLoanRouterSetup is Test {
         
         vm.prank(s_user);
         s_underlying.approve(address(s_stagingLoanRouter), type(uint256).max);
+
+        s_stagingBoxLens = new StagingBoxLens();
     }
 }
