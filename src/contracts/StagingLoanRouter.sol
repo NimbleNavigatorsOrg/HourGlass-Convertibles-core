@@ -48,13 +48,10 @@ contract StagingLoanRouter is IStagingLoanRouter {
             convertibleBondBox.s_trancheGranularity();
 
         convertibleBondBox.safeTranche().approve(
-            address(_stagingBox),
-            safeTrancheAmount
+            address(_stagingBox), type(uint256).max
         );
         convertibleBondBox.riskTranche().approve(
-            address(_stagingBox),
-            (safeTrancheAmount * convertibleBondBox.riskRatio()) /
-                convertibleBondBox.safeRatio()
+            address(_stagingBox), type(uint256).max
         );
 
         _stagingBox.depositBorrow(msg.sender, safeTrancheAmount);
