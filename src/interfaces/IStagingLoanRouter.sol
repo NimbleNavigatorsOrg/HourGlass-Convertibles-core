@@ -21,7 +21,7 @@ interface IStagingLoanRouter {
         IStagingBox _stagingBox,
         uint256 _amountRaw,
         uint256 _minBorrowSlips
-    ) public;
+    ) external;
 
     /**
      * @dev Wraps and tranches raw token and then deposits into staging box for any underlying bond

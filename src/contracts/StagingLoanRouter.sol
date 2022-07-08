@@ -18,7 +18,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
         IStagingBox _stagingBox,
         uint256 _amountRaw,
         uint256 _minBorrowSlips
-    ) public {
+    ) external {
         (
             IConvertibleBondBox convertibleBondBox,
             IButtonWoodBondController bond,
