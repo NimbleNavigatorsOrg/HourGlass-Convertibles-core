@@ -22,14 +22,8 @@ contract RedeemStable is CBBSetup {
     function testRedeemStable(uint256 safeSlipAmount) public {
         // initializing the CBB
         vm.prank(s_cbb_owner);
-        emit Initialized(address(1), address(2), 0, s_depositLimit);
-        s_deployedConvertibleBondBox.reinitialize(
-            address(1),
-            address(2),
-            s_depositLimit,
-            0,
-            s_price
-        );
+        emit ReInitialized(s_price, block.timestamp);
+        s_deployedConvertibleBondBox.reinitialize(s_price);
 
         vm.prank(s_cbb_owner);
         s_deployedConvertibleBondBox.borrow(
@@ -140,13 +134,7 @@ contract RedeemStable is CBBSetup {
         vm.warp(time);
 
         vm.startPrank(s_deployedConvertibleBondBox.owner());
-        s_deployedConvertibleBondBox.reinitialize(
-            address(1),
-            address(2),
-            0,
-            0,
-            s_price
-        );
+        s_deployedConvertibleBondBox.reinitialize(s_price);
         vm.stopPrank();
 
         safeSlipAmount = bound(
@@ -184,13 +172,7 @@ contract RedeemStable is CBBSetup {
         vm.warp(1);
 
         vm.startPrank(s_deployedConvertibleBondBox.owner());
-        s_deployedConvertibleBondBox.reinitialize(
-            borrower,
-            lender,
-            depositAmount,
-            0,
-            s_price
-        );
+        s_deployedConvertibleBondBox.reinitialize(s_price);
 
         s_deployedConvertibleBondBox.borrow(borrower, lender, depositAmount);
 

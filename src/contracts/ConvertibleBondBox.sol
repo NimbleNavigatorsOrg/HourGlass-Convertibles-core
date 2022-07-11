@@ -54,25 +54,21 @@ contract ConvertibleBondBox is
             });
         if (bond().isMature())
             revert BondIsMature({given: bond().isMature(), required: false});
+
+        emit Initialized(_owner);
     }
 
     /**
      * @inheritdoc IConvertibleBondBox
      */
 
-    function reinitialize(
-        address _borrower,
-        address _lender,
-        uint256 _safeTrancheAmount,
-        uint256 _stableAmount,
-        uint256 _initialPrice
-    ) external reinitializer(2) onlyOwner returns (bool) {
+    function reinitialize(uint256 _initialPrice)
+        external
+        reinitializer(2)
+        onlyOwner
+    {
         uint256 priceGranularity = s_priceGranularity;
-        if (_stableAmount * _safeTrancheAmount != 0)
-            revert OnlyLendOrBorrow({
-                _stableAmount: _stableAmount,
-                _collateralAmount: _safeTrancheAmount
-            });
+
         if (_initialPrice > priceGranularity)
             revert InitialPriceTooHigh({
                 given: _initialPrice,
@@ -85,8 +81,7 @@ contract ConvertibleBondBox is
         //set ConvertibleBondBox Start Date to be time when init() is called
         s_startDate = block.timestamp;
 
-        emit Initialized(_borrower, _lender, _stableAmount, _safeTrancheAmount);
-        return true;
+        emit ReInitialized(_initialPrice, block.timestamp);
     }
 
     /**

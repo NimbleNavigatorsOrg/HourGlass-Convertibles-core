@@ -25,13 +25,7 @@ contract Reinitialize is CBBSetup {
         uint256 stableAmount = 0;
 
         vm.prank(address(1));
-        s_deployedConvertibleBondBox.reinitialize(
-            address(1),
-            address(2),
-            collateralAmount,
-            stableAmount,
-            s_price
-        );
+        s_deployedConvertibleBondBox.reinitialize(s_price);
     }
 
     function testReinitializeAndBorrowEmitsInitialized(uint256 collateralAmount)
@@ -54,14 +48,8 @@ contract Reinitialize is CBBSetup {
 
         vm.prank(s_cbb_owner);
         vm.expectEmit(true, true, true, true);
-        emit Initialized(address(1), address(2), 0, collateralAmount);
-        s_deployedConvertibleBondBox.reinitialize(
-            address(1),
-            address(2),
-            collateralAmount,
-            stableAmount,
-            s_price
-        );
+        emit ReInitialized(s_price, block.timestamp);
+        s_deployedConvertibleBondBox.reinitialize(s_price);
 
         vm.prank(s_cbb_owner);
         s_deployedConvertibleBondBox.borrow(
@@ -129,14 +117,8 @@ contract Reinitialize is CBBSetup {
 
         vm.prank(s_cbb_owner);
         vm.expectEmit(true, true, true, true);
-        emit Initialized(address(1), address(2), stableAmount, 0);
-        s_deployedConvertibleBondBox.reinitialize(
-            address(1),
-            address(2),
-            collateralAmount,
-            stableAmount,
-            s_price
-        );
+        emit ReInitialized(s_price, block.timestamp);
+        s_deployedConvertibleBondBox.reinitialize(s_price);
 
         vm.prank(s_cbb_owner);
         s_deployedConvertibleBondBox.lend(address(1), address(2), stableAmount);
@@ -190,13 +172,7 @@ contract Reinitialize is CBBSetup {
         );
         s_deployedConvertibleBondBox = ConvertibleBondBox(s_deployedCBBAddress);
 
-        s_deployedConvertibleBondBox.reinitialize(
-            address(1),
-            address(2),
-            s_depositLimit,
-            0,
-            s_price
-        );
+        s_deployedConvertibleBondBox.reinitialize(s_price);
     }
 
     function testCannotReinitializeInitialPriceTooHigh(uint256 price) public {
@@ -217,13 +193,7 @@ contract Reinitialize is CBBSetup {
             s_priceGranularity
         );
         vm.expectRevert(customError);
-        s_deployedConvertibleBondBox.reinitialize(
-            address(1),
-            address(2),
-            0,
-            0,
-            price
-        );
+        s_deployedConvertibleBondBox.reinitialize(price);
     }
 
     function testCannotReinitializeInitialPriceIsZero() public {
@@ -244,47 +214,7 @@ contract Reinitialize is CBBSetup {
             s_priceGranularity
         );
         vm.expectRevert(customError);
-        s_deployedConvertibleBondBox.reinitialize(
-            address(1),
-            address(2),
-            0,
-            0,
-            price
-        );
-    }
-
-    function testCannotReinitializeOnlyLendOrBorrow(
-        uint256 collateralAmount,
-        uint256 stableAmount
-    ) public {
-        stableAmount = bound(stableAmount, 0, 10e12);
-        collateralAmount = bound(collateralAmount, 0, 10e12);
-        vm.assume(stableAmount * collateralAmount != 0);
-
-        s_deployedCBBAddress = s_CBBFactory.createConvertibleBondBox(
-            s_buttonWoodBondController,
-            s_slipFactory,
-            s_penalty,
-            address(s_stableToken),
-            s_trancheIndex,
-            address(this)
-        );
-
-        s_deployedConvertibleBondBox = ConvertibleBondBox(s_deployedCBBAddress);
-
-        bytes memory customError = abi.encodeWithSignature(
-            "OnlyLendOrBorrow(uint256,uint256)",
-            collateralAmount,
-            stableAmount
-        );
-        vm.expectRevert(customError);
-        s_deployedConvertibleBondBox.reinitialize(
-            address(1),
-            address(2),
-            stableAmount,
-            collateralAmount,
-            s_price
-        );
+        s_deployedConvertibleBondBox.reinitialize(price);
     }
 
     function testReinitializeAndBorrowEmitsBorrow(uint256 collateralAmount)
@@ -304,13 +234,7 @@ contract Reinitialize is CBBSetup {
         );
 
         vm.prank(s_cbb_owner);
-        s_deployedConvertibleBondBox.reinitialize(
-            address(1),
-            address(2),
-            collateralAmount,
-            0,
-            s_price
-        );
+        s_deployedConvertibleBondBox.reinitialize(s_price);
 
         vm.prank(s_cbb_owner);
         vm.expectEmit(true, true, true, true);
@@ -381,14 +305,9 @@ contract Reinitialize is CBBSetup {
         );
         vm.prank(s_cbb_owner);
         vm.expectEmit(true, true, true, true);
-        emit Lend(s_cbb_owner, address(1), address(2), stableAmount, s_price);
-        s_deployedConvertibleBondBox.reinitialize(
-            address(1),
-            address(2),
-            0,
-            stableAmount,
-            s_price
-        );
+        emit ReInitialized(s_price, block.timestamp);
+
+        s_deployedConvertibleBondBox.reinitialize(s_price);
 
         vm.prank(s_cbb_owner);
         s_deployedConvertibleBondBox.lend(address(1), address(2), stableAmount);

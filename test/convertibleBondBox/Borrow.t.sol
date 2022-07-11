@@ -44,13 +44,7 @@ contract Borrow is CBBSetup {
             s_deployedConvertibleBondBox.safeRatio() - 1
         );
         vm.prank(s_deployedConvertibleBondBox.owner());
-        s_deployedConvertibleBondBox.reinitialize(
-            s_initial_borrower,
-            s_initial_lender,
-            0,
-            0,
-            s_price
-        );
+        s_deployedConvertibleBondBox.reinitialize(s_price);
 
         bytes memory customError = abi.encodeWithSignature(
             "MinimumInput(uint256,uint256)",
@@ -76,13 +70,7 @@ contract Borrow is CBBSetup {
         );
 
         vm.prank(s_deployedConvertibleBondBox.owner());
-        s_deployedConvertibleBondBox.reinitialize(
-            s_initial_borrower,
-            s_initial_lender,
-            0,
-            0,
-            s_price
-        );
+        s_deployedConvertibleBondBox.reinitialize(s_price);
 
         return safeTrancheAmount;
     }

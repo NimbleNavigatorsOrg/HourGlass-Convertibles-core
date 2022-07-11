@@ -26,13 +26,7 @@ contract RepayMax is CBBSetup {
         amount = bound(amount, s_deployedConvertibleBondBox.safeRatio(), 1e15);
 
         vm.prank(s_cbb_owner);
-        s_deployedConvertibleBondBox.reinitialize(
-            borrowerAddress,
-            address(2),
-            amount,
-            0,
-            s_price
-        );
+        s_deployedConvertibleBondBox.reinitialize(s_price);
 
         vm.prank(s_cbb_owner);
         s_deployedConvertibleBondBox.borrow(
@@ -135,13 +129,7 @@ contract RepayMax is CBBSetup {
         fee = bound(fee, 0, s_maxFeeBPS);
 
         vm.prank(s_cbb_owner);
-        s_deployedConvertibleBondBox.reinitialize(
-            borrowerAddress,
-            address(2),
-            amount,
-            0,
-            s_price
-        );
+        s_deployedConvertibleBondBox.reinitialize(s_price);
 
         vm.prank(s_cbb_owner);
         s_deployedConvertibleBondBox.borrow(

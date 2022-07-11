@@ -49,13 +49,7 @@ contract Lend is CBBSetup {
         );
 
         vm.prank(s_deployedConvertibleBondBox.owner());
-        s_deployedConvertibleBondBox.reinitialize(
-            s_borrower,
-            s_lender,
-            0,
-            0,
-            s_price
-        );
+        s_deployedConvertibleBondBox.reinitialize(s_price);
 
         return stableLendAmount;
     }
@@ -77,13 +71,7 @@ contract Lend is CBBSetup {
         stableLendAmount = bound(stableLendAmount, 0, minimumInput - 1);
 
         vm.prank(s_deployedConvertibleBondBox.owner());
-        s_deployedConvertibleBondBox.reinitialize(
-            s_borrower,
-            s_lender,
-            0,
-            stableInitialAmount,
-            s_price
-        );
+        s_deployedConvertibleBondBox.reinitialize(s_price);
         vm.prank(s_deployedConvertibleBondBox.owner());
         bytes memory customError = abi.encodeWithSignature(
             "MinimumInput(uint256,uint256)",

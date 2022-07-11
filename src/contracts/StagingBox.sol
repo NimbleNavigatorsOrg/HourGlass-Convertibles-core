@@ -58,8 +58,6 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
             riskSlipAddress()
         );
 
-        //Check if valid ICBB immutable arg?
-
         //Add event stuff
         emit Initialized(
             _owner,
@@ -225,13 +223,7 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
         if (_isLend) {
             uint256 stableAmount = stableToken().balanceOf(address(this));
             s_reinitLendAmount = stableAmount;
-            convertibleBondBox().reinitialize(
-                address(this),
-                address(this),
-                0,
-                stableAmount,
-                initialPrice()
-            );
+            convertibleBondBox().reinitialize(initialPrice());
 
             convertibleBondBox().lend(
                 address(this),
@@ -246,13 +238,7 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
                 (safeTrancheBalance * initialPrice()) /
                 priceGranularity();
 
-            convertibleBondBox().reinitialize(
-                address(this),
-                address(this),
-                safeTrancheBalance,
-                0,
-                initialPrice()
-            );
+            convertibleBondBox().reinitialize(initialPrice());
 
             convertibleBondBox().borrow(
                 address(this),

@@ -17,7 +17,8 @@ interface IConvertibleBondBox is ICBBImmutableArgs {
     event RedeemSafeTranche(address, uint256);
     event RedeemRiskTranche(address, uint256);
     event Repay(address, uint256, uint256, uint256);
-    event Initialized(address, address, uint256, uint256);
+    event Initialized(address);
+    event ReInitialized(uint256, uint256);
     event FeeUpdate(uint256);
 
     error PenaltyTooHigh(uint256 given, uint256 maxPenalty);
@@ -26,7 +27,6 @@ interface IConvertibleBondBox is ICBBImmutableArgs {
     error InitialPriceIsZero(uint256 given, uint256 maxPrice);
     error ConvertibleBondBoxNotStarted(uint256 given, uint256 minStartDate);
     error BondNotMatureYet(uint256 maturityDate, uint256 currentTime);
-    error OnlyLendOrBorrow(uint256 _stableAmount, uint256 _collateralAmount);
     error MinimumInput(uint256 input, uint256 reqInput);
     error FeeTooLarge(uint256 input, uint256 maximum);
 
@@ -34,24 +34,12 @@ interface IConvertibleBondBox is ICBBImmutableArgs {
 
     /**
      * @dev Sets startdate to be block.timestamp, sets initialPrice, and takes initial atomic deposit
-     * @param _borrower The address to send the Z* and stableTokens to
-     * @param _lender The address to send the safeSlips to
-     * @param _safeTrancheAmount The amount of SafeTranches to borrow against for initial deposit
-     * @param _stableAmount The amount of stable tokens to lend against for initial deposit
-     * @param _initialPrice the initial price of SafeTranche
+     * @param _initialPrice the initialPrice for the CBB
      * Requirements:
-     *  - `msg.sender` must have `approved` `_stableAmount` stable tokens to this contract
-     *  - `msg.sender` must have `approved` `_safeTrancheAmount` SafeTranches to this contract
-     *  - `msg.sender` must have `approved` `_safeTrancheAmount * riskRato()/safeRatio()` RiskTranches to this contract
+     *  - `msg.sender` is owner
      */
 
-    function reinitialize(
-        address _borrower,
-        address _lender,
-        uint256 _safeTrancheAmount,
-        uint256 _stableAmount,
-        uint256 _initialPrice
-    ) external returns (bool);
+    function reinitialize(uint256 _initialPrice) external;
 
     /**
      * @dev Lends stableAmount of stable-tokens for safe-Tranche slips when provided with matching borrow collateral

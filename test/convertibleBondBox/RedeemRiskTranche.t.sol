@@ -73,13 +73,7 @@ contract RedeemRiskTranche is CBBSetup {
         address lenderAddress = address(2);
 
         vm.prank(s_deployedConvertibleBondBox.owner());
-        s_deployedConvertibleBondBox.reinitialize(
-            borrowerAddress,
-            lenderAddress,
-            depositAmount,
-            0,
-            s_price
-        );
+        s_deployedConvertibleBondBox.reinitialize(s_price);
 
         vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.borrow(
@@ -141,13 +135,7 @@ contract RedeemRiskTranche is CBBSetup {
         address lenderAddress = address(2);
 
         vm.prank(s_deployedConvertibleBondBox.owner());
-        s_deployedConvertibleBondBox.reinitialize(
-            borrowerAddress,
-            lenderAddress,
-            depositAmount,
-            0,
-            s_price
-        );
+        s_deployedConvertibleBondBox.reinitialize(s_price);
 
         vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.borrow(
@@ -226,13 +214,7 @@ contract RedeemRiskTranche is CBBSetup {
         address lenderAddress = address(2);
 
         vm.prank(s_deployedConvertibleBondBox.owner());
-        s_deployedConvertibleBondBox.reinitialize(
-            borrowerAddress,
-            lenderAddress,
-            depositAmount,
-            0,
-            s_price
-        );
+        s_deployedConvertibleBondBox.reinitialize(s_price);
 
         vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.borrow(
@@ -292,13 +274,7 @@ contract RedeemRiskTranche is CBBSetup {
         address lenderAddress = address(2);
 
         vm.prank(s_deployedConvertibleBondBox.owner());
-        s_deployedConvertibleBondBox.reinitialize(
-            borrowerAddress,
-            lenderAddress,
-            depositAmount,
-            0,
-            s_price
-        );
+        s_deployedConvertibleBondBox.reinitialize(s_price);
 
         vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.borrow(

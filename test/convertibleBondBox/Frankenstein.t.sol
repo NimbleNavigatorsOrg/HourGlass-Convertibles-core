@@ -80,14 +80,8 @@ contract Frankenstein is CBBSetup {
 
         vm.startPrank(s_deployedConvertibleBondBox.owner());
         vm.expectEmit(true, true, true, true);
-        emit Initialized(address(borrower), address(lender), 0, amount);
-        s_deployedConvertibleBondBox.reinitialize(
-            address(borrower),
-            address(lender),
-            amount,
-            0,
-            s_price
-        );
+        emit ReInitialized(s_price, block.timestamp);
+        s_deployedConvertibleBondBox.reinitialize(s_price);
         vm.stopPrank();
 
         vm.prank(s_deployedConvertibleBondBox.owner());
