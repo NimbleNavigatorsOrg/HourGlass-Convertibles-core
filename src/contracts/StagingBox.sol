@@ -23,7 +23,6 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
     address public override s_borrowSlipTokenAddress;
 
     uint256 public s_reinitLendAmount = 0;
-    bool public s_hasReinitialized = false;
 
     function initialize(address _owner) external initializer {
         require(
