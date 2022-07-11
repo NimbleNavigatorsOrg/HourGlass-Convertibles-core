@@ -127,7 +127,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
 
         //Transfer lendslips to router
         TransferHelper.safeTransferFrom(
-            _stagingBox.s_lendSlipTokenAddress(),
+            address(_stagingBox.lendSlip()),
             msg.sender,
             address(this),
             _lendSlipAmount
@@ -171,7 +171,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
 
         //Transfer lendslips to router
         TransferHelper.safeTransferFrom(
-            _stagingBox.s_lendSlipTokenAddress(),
+            address(_stagingBox.lendSlip()),
             msg.sender,
             address(this),
             _lendSlipAmount

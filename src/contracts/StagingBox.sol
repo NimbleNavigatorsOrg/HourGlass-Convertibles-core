@@ -19,9 +19,6 @@ import "../interfaces/IStagingBox.sol";
  */
 
 contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
-    address public override s_lendSlipTokenAddress;
-    address public override s_borrowSlipTokenAddress;
-
     uint256 public s_reinitLendAmount = 0;
 
     function initialize(address _owner) external initializer {
@@ -42,28 +39,8 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
         __Ownable_init();
         transferOwnership(_owner);
 
-        //Deploy Borrow Lend Slips
-
-        // clone deploy safe slip
-        s_lendSlipTokenAddress = slipFactory().createSlip(
-            IERC20Metadata(safeSlipAddress()).symbol(),
-            "Staging-Lender-Slip",
-            safeSlipAddress()
-        );
-
-        //clone deploy z slip
-        s_borrowSlipTokenAddress = slipFactory().createSlip(
-            IERC20Metadata(riskSlipAddress()).symbol(),
-            "Staging-Borrower-Slip",
-            riskSlipAddress()
-        );
-
         //Add event stuff
-        emit Initialized(
-            _owner,
-            s_borrowSlipTokenAddress,
-            s_lendSlipTokenAddress
-        );
+        emit Initialized(_owner);
     }
 
     function depositBorrow(address _borrower, uint256 _safeTrancheAmount)
@@ -92,7 +69,7 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
         );
 
         //- mints `_safeTrancheAmount` of BorrowerSlips to `_borrower`
-        ISlip(s_borrowSlipTokenAddress).mint(_borrower, _safeTrancheAmount);
+        borrowSlip().mint(_borrower, _safeTrancheAmount);
 
         //add event stuff
         emit BorrowDeposit(_borrower, _safeTrancheAmount);
@@ -116,7 +93,7 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
         );
 
         //- mints `_lendAmount`of LenderSlips to `_lender`
-        ISlip(s_lendSlipTokenAddress).mint(_lender, _lendAmount);
+        lendSlip().mint(_lender, _lendAmount);
 
         //add event stuff
         emit LendDeposit(_lender, _lendAmount);
@@ -139,7 +116,7 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
         );
 
         //- burns `_borrowSlipAmount` of msg.sender’s BorrowSlips
-        ISlip(s_borrowSlipTokenAddress).burn(_msgSender(), _borrowSlipAmount);
+        borrowSlip().burn(_msgSender(), _borrowSlipAmount);
 
         //event stuff
         emit BorrowWithdrawal(_msgSender(), _borrowSlipAmount);
@@ -167,7 +144,7 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
         );
 
         //- burns `_lendSlipAmount` of msg.sender’s LenderSlips
-        ISlip(s_lendSlipTokenAddress).burn(_msgSender(), _lendSlipAmount);
+        lendSlip().burn(_msgSender(), _lendSlipAmount);
 
         //event stuff
         emit LendWithdrawal(_msgSender(), _lendSlipAmount);
@@ -190,7 +167,7 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
         );
 
         // burns `_borrowSlipAmount` of msg.sender’s BorrowSlips
-        ISlip(s_borrowSlipTokenAddress).burn(_msgSender(), _borrowSlipAmount);
+        borrowSlip().burn(_msgSender(), _borrowSlipAmount);
 
         //event stuff
         emit RedeemBorrowSlip(_msgSender(), _borrowSlipAmount);
@@ -207,7 +184,7 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
         );
 
         //- burns `_lendSlipAmount` of msg.sender’s LendSlips
-        ISlip(s_lendSlipTokenAddress).burn(_msgSender(), _lendSlipAmount);
+        lendSlip().burn(_msgSender(), _lendSlipAmount);
 
         emit RedeemLendSlip(_msgSender(), _lendSlipAmount);
     }

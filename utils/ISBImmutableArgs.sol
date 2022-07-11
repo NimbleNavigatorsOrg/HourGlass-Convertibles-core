@@ -3,16 +3,23 @@ pragma solidity ^0.8.7;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "clones-with-immutable-args/Clone.sol";
-import "../src/interfaces/ISlipFactory.sol";
+import "../src/interfaces/ISlip.sol";
 import "../src/interfaces/IConvertibleBondBox.sol";
 
 interface ISBImmutableArgs {
     /**
-     * @notice The slip factory used to deploy slips
+     * @notice the lend slip object
      * @dev using ClonesWithImmutableArgs pattern here to save gas
      * @dev https://github.com/wighawag/clones-with-immutable-args
      */
-    function slipFactory() external pure returns (ISlipFactory);
+    function lendSlip() external pure returns (ISlip);
+
+    /**
+     * @notice the lend slip object
+     * @dev using ClonesWithImmutableArgs pattern here to save gas
+     * @dev https://github.com/wighawag/clones-with-immutable-args
+     */
+    function borrowSlip() external pure returns (ISlip);
 
     /**
      * @notice The stable token used to buy bonds

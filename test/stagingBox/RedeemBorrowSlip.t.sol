@@ -18,7 +18,7 @@ contract RedeemBorrowSlip is SBIntegrationSetup {
         vm.stopPrank();
 
         vm.startPrank(address(s_deployedSB));
-        ISlip(s_deployedSB.s_borrowSlipTokenAddress()).mint(
+        s_deployedSB.borrowSlip().mint(
             s_user,
             (s_maxMint / s_deployedSB.riskRatio()) * s_deployedSB.safeRatio()
         );
@@ -37,9 +37,9 @@ contract RedeemBorrowSlip is SBIntegrationSetup {
         setupTranches(true, s_user, address(s_deployedSB));
         redeemBorrowSetupMints();
 
-        uint256 msgSenderBorrowSlipBalanceBeforeRedeem = ISlip(
-            s_deployedSB.s_borrowSlipTokenAddress()
-        ).balanceOf(s_user);
+        uint256 msgSenderBorrowSlipBalanceBeforeRedeem = s_deployedSB
+            .borrowSlip()
+            .balanceOf(s_user);
 
         uint256 stagingBoxRiskSlipBalanceBeforeRedeem = s_deployedConvertibleBondBox
                 .riskSlip()
@@ -88,9 +88,9 @@ contract RedeemBorrowSlip is SBIntegrationSetup {
         setupTranches(true, s_user, address(s_deployedSB));
         redeemBorrowSetupMints();
 
-        uint256 msgSenderBorrowSlipBalanceBeforeRedeem = IERC20(
-            s_deployedSB.s_borrowSlipTokenAddress()
-        ).balanceOf(s_user);
+        uint256 msgSenderBorrowSlipBalanceBeforeRedeem = s_deployedSB
+            .borrowSlip()
+            .balanceOf(s_user);
 
         uint256 stagingBoxStableTokenBalanceBeforeRedeem = IERC20(
             s_deployedConvertibleBondBox.stableToken()
@@ -139,12 +139,9 @@ contract RedeemBorrowSlip is SBIntegrationSetup {
         setupTranches(true, s_user, address(s_deployedSB));
         redeemBorrowSetupMints();
 
-        uint256 msgSenderBorrowSlipBalanceBeforeRedeem = ISlip(
-            s_deployedSB.s_borrowSlipTokenAddress()
-        ).balanceOf(s_user);
-        uint256 msgSenderStableTokenBalanceBeforeRedeem = ISlip(
-            s_deployedSB.s_borrowSlipTokenAddress()
-        ).balanceOf(s_user);
+        uint256 msgSenderBorrowSlipBalanceBeforeRedeem = s_deployedSB
+            .borrowSlip()
+            .balanceOf(s_user);
 
         _borrowSlipAmount = bound(
             _borrowSlipAmount,
@@ -155,13 +152,13 @@ contract RedeemBorrowSlip is SBIntegrationSetup {
         vm.prank(s_user);
         s_deployedSB.redeemBorrowSlip(_borrowSlipAmount);
 
-        uint256 msgSenderStableTokenBalanceAfterRedeem = ISlip(
-            s_deployedSB.s_borrowSlipTokenAddress()
-        ).balanceOf(s_user);
+        uint256 msgSenderBorrowSlipBalanceAfterRedeem = s_deployedSB
+            .borrowSlip()
+            .balanceOf(s_user);
 
         assertEq(
-            msgSenderStableTokenBalanceBeforeRedeem - _borrowSlipAmount,
-            msgSenderStableTokenBalanceAfterRedeem
+            msgSenderBorrowSlipBalanceBeforeRedeem - _borrowSlipAmount,
+            msgSenderBorrowSlipBalanceAfterRedeem
         );
 
         assertFalse(_borrowSlipAmount == 0);
@@ -175,9 +172,9 @@ contract RedeemBorrowSlip is SBIntegrationSetup {
         setupTranches(true, s_user, address(s_deployedSB));
         redeemBorrowSetupMints();
 
-        uint256 msgSenderBorrowSlipBalanceBeforeRedeem = IERC20(
-            s_deployedSB.s_borrowSlipTokenAddress()
-        ).balanceOf(s_user);
+        uint256 msgSenderBorrowSlipBalanceBeforeRedeem = s_deployedSB
+            .borrowSlip()
+            .balanceOf(s_user);
 
         _borrowSlipAmount = bound(
             _borrowSlipAmount,
