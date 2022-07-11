@@ -11,8 +11,6 @@ import "../../utils/SBImmutableArgs.sol";
 import "../interfaces/IConvertibleBondBox.sol";
 import "../interfaces/IStagingBox.sol";
 
-import "forge-std/console2.sol";
-
 /**
  * @dev Staging Box for reinitializing a ConvertibleBondBox
  *
@@ -76,12 +74,8 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
         override
     {
         //- Ensure CBB not reinitialized
-        bool hasReinitialized = s_hasReinitialized;
-        if (hasReinitialized) {
-            revert CBBReinitialized({
-                state: hasReinitialized,
-                requiredState: false
-            });
+        if (convertibleBondBox().s_startDate() != 0) {
+            revert CBBReinitialized({state: true, requiredState: false});
         }
 
         //- transfers `_safeTrancheAmount` of SafeTranche Tokens from msg.sender to SB
@@ -101,7 +95,6 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
         );
 
         //- mints `_safeTrancheAmount` of BorrowerSlips to `_borrower`
-        // TODO shouldn't we be minting to the same address that the SB took tranches from. ie. _msgSender()
         ISlip(s_borrowSlipTokenAddress).mint(_borrower, _safeTrancheAmount);
 
         //add event stuff
@@ -113,12 +106,8 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
         override
     {
         //- Ensure CBB not reinitialized
-        bool hasReinitialized = s_hasReinitialized;
-        if (hasReinitialized) {
-            revert CBBReinitialized({
-                state: hasReinitialized,
-                requiredState: false
-            });
+        if (convertibleBondBox().s_startDate() != 0) {
+            revert CBBReinitialized({state: true, requiredState: false});
         }
 
         //- transfers `_lendAmount`of Stable Tokens from msg.sender to SB
@@ -163,7 +152,7 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
         //- Reverse of depositBorrow() function
 
         //revert check for _lendSlipAmount after CBB reinitialized
-        if (s_hasReinitialized) {
+        if (convertibleBondBox().s_startDate() != 0) {
             uint256 reinitAmount = s_reinitLendAmount;
             if (_lendSlipAmount < reinitAmount) {
                 revert WithdrawAmountTooHigh({
@@ -237,7 +226,7 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
         if (_isLend) {
             uint256 stableAmount = stableToken().balanceOf(address(this));
             s_reinitLendAmount = stableAmount;
-            s_hasReinitialized = convertibleBondBox().reinitialize(
+            convertibleBondBox().reinitialize(
                 address(this),
                 address(this),
                 0,
@@ -258,7 +247,7 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
                 (safeTrancheBalance * initialPrice()) /
                 priceGranularity();
 
-            s_hasReinitialized = convertibleBondBox().reinitialize(
+            convertibleBondBox().reinitialize(
                 address(this),
                 address(this),
                 safeTrancheBalance,

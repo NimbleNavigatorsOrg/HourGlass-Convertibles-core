@@ -22,7 +22,6 @@ contract TransmitReinitBorrowIntegration is SBIntegrationSetup {
         s_deployedSB.transmitReInit(s_isLend);
         vm.stopPrank();
 
-        assertEq(true, s_deployedSB.s_hasReinitialized());
         assertEq(expectedReinitLendAmount, s_deployedSB.s_reinitLendAmount());
         assertEq(s_cbb_owner, s_deployedSB.owner());
     }
