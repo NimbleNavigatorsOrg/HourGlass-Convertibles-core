@@ -11,7 +11,12 @@ import "@buttonwood-protocol/button-wrappers/contracts/interfaces/IButtonToken.s
 
 contract StagingLoanRouter is IStagingLoanRouter {
     /**
-     * @inheritdoc IStagingLoanRouter
+     * @dev Wraps and tranches raw token and then deposits into staging box for a simple underlying bond (A/Z)
+     * @param _stagingBox The staging box tied to the Convertible Bond
+     * @param _amountRaw The amount of SafeTranche tokens to borrow against
+     * @param _minBorrowSlips The minimum expected borrowSlips for slippage protection
+     * Requirements:
+     *  - `msg.sender` must have `approved` `_amountRaw` collateral tokens to this contract
      */
 
     function simpleWrapTrancheBorrow(
@@ -38,27 +43,27 @@ contract StagingLoanRouter is IStagingLoanRouter {
         wrapper.approve(address(bond), type(uint256).max);
         bond.deposit(wrapperAmount);
 
-        uint256 safeTrancheAmount = (wrapperAmount *
-            convertibleBondBox.safeRatio()) /
-            convertibleBondBox.s_trancheGranularity();
+        uint256 riskTrancheBalance = _stagingBox.riskTranche().balanceOf(address(this));
+        uint256 safeTrancheBalance = _stagingBox.safeTranche().balanceOf(address(this));
 
-        convertibleBondBox.safeTranche().approve(
-            address(_stagingBox),
-            safeTrancheAmount
+        _stagingBox.safeTranche().approve(
+            address(_stagingBox), type(uint256).max
         );
-        convertibleBondBox.riskTranche().approve(
-            address(_stagingBox),
-            (safeTrancheAmount * convertibleBondBox.riskRatio()) /
-                convertibleBondBox.safeRatio()
+        _stagingBox.riskTranche().approve(
+            address(_stagingBox), type(uint256).max
         );
 
-        _stagingBox.depositBorrow(msg.sender, safeTrancheAmount);
+        _stagingBox.depositBorrow(msg.sender, min(safeTrancheBalance, (riskTrancheBalance * convertibleBondBox.safeRatio() / convertibleBondBox.riskRatio())));
 
-        if (safeTrancheAmount < _minBorrowSlips)
+        if (safeTrancheBalance < _minBorrowSlips)
             revert SlippageExceeded({
-                expectedAmount: safeTrancheAmount,
+                expectedAmount: safeTrancheBalance,
                 minAmount: _minBorrowSlips
             });
+    }
+
+    function min(uint256 a, uint256 b) private pure returns (uint256) {
+    return a <= b ? a : b;
     }
 
     /**
@@ -69,7 +74,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
         IStagingBox _stagingBox,
         uint256 _amountRaw,
         uint256 _minBorrowSlips
-    ) public {
+    ) external {
         simpleWrapTrancheBorrow(_stagingBox, _amountRaw, _minBorrowSlips);
 
         (
@@ -102,7 +107,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
     function redeemLendSlipsForStables(
         IStagingBox _stagingBox,
         uint256 _lendSlipAmount
-    ) public {
+    ) external {
         (IConvertibleBondBox convertibleBondBox, , , ) = fetchElasticStack(
             _stagingBox
         );
@@ -144,7 +149,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
     function redeemLendSlipsForTranchesAndUnwrap(
         IStagingBox _stagingBox,
         uint256 _lendSlipAmount
-    ) public {
+    ) external {
         (
             IConvertibleBondBox convertibleBondBox,
             IButtonWoodBondController bond,
@@ -201,7 +206,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
     function redeemRiskSlipsForTranchesAndUnwrap(
         IStagingBox _stagingBox,
         uint256 _riskSlipAmount
-    ) public {
+    ) external {
         (
             IConvertibleBondBox convertibleBondBox,
             IButtonWoodBondController bond,
@@ -241,7 +246,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
         IStagingBox _stagingBox,
         uint256 _stableAmount,
         uint256 _riskSlipAmount
-    ) public {
+    ) external {
         (
             IConvertibleBondBox convertibleBondBox,
             IButtonWoodBondController bond,
@@ -302,7 +307,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
         IStagingBox _stagingBox,
         uint256 _stableAmount,
         uint256 _riskSlipAmount
-    ) public {
+    ) external {
         (
             IConvertibleBondBox convertibleBondBox,
             IButtonWoodBondController bond,
@@ -361,7 +366,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
         IStagingBox _stagingBox,
         uint256 _stableAmount,
         uint256 _riskSlipAmount
-    ) public {
+    ) external {
         (
             IConvertibleBondBox convertibleBondBox,
             IButtonWoodBondController bond,
