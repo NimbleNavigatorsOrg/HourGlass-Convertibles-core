@@ -8,6 +8,8 @@ import "./ISlipFactory.sol";
  * @notice Interface for Convertible Bond Box factory contracts
  */
 interface ICBBFactory {
+    error TrancheIndexOutOfBounds(uint256 given, uint256 maxIndex);
+
     event ConvertibleBondBoxCreated(
         address stableToken,
         uint256 trancheIndex,

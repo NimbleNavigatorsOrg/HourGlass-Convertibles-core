@@ -200,9 +200,9 @@ contract Borrow is CBBSetup {
             safeTrancheAmount
         );
 
-        uint256 LenderSafeSlipBalanceBeforeBorrow = ISlip(
-            s_deployedConvertibleBondBox.s_safeSlipTokenAddress()
-        ).balanceOf(address(s_lender));
+        uint256 LenderSafeSlipBalanceBeforeBorrow = s_deployedConvertibleBondBox
+            .safeSlip()
+            .balanceOf(address(s_lender));
 
         vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.borrow(
@@ -211,9 +211,9 @@ contract Borrow is CBBSetup {
             safeTrancheAmount
         );
 
-        uint256 LenderSafeSlipBalanceAfterBorrow = ISlip(
-            s_deployedConvertibleBondBox.s_safeSlipTokenAddress()
-        ).balanceOf(address(s_lender));
+        uint256 LenderSafeSlipBalanceAfterBorrow = s_deployedConvertibleBondBox
+            .safeSlip()
+            .balanceOf(address(s_lender));
 
         assertEq(
             LenderSafeSlipBalanceBeforeBorrow + safeTrancheAmount,
@@ -234,9 +234,9 @@ contract Borrow is CBBSetup {
             s_deployedConvertibleBondBox.riskRatio()) /
             s_deployedConvertibleBondBox.safeRatio();
 
-        uint256 borrowerSafeSlipBalanceBeforeBorrow = ISlip(
-            s_deployedConvertibleBondBox.s_riskSlipTokenAddress()
-        ).balanceOf(address(s_borrower));
+        uint256 borrowerSafeSlipBalanceBeforeBorrow = s_deployedConvertibleBondBox
+                .riskSlip()
+                .balanceOf(address(s_borrower));
 
         vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.borrow(
@@ -245,9 +245,9 @@ contract Borrow is CBBSetup {
             safeTrancheAmount
         );
 
-        uint256 borrowerSafeSlipBalanceAfterBorrow = ISlip(
-            s_deployedConvertibleBondBox.s_riskSlipTokenAddress()
-        ).balanceOf(address(s_borrower));
+        uint256 borrowerSafeSlipBalanceAfterBorrow = s_deployedConvertibleBondBox
+                .riskSlip()
+                .balanceOf(address(s_borrower));
 
         assertEq(
             borrowerSafeSlipBalanceBeforeBorrow + zTrancheAmount,

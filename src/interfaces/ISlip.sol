@@ -29,4 +29,10 @@ interface ISlip is IERC20 {
      * @param amount The amount of tokens to burn
      */
     function burn(address from, uint256 amount) external;
+
+    /**
+     * @dev allows owner to transfer ownership to a new owner. Implemented so that factory can transfer minting/burning ability to CBB after deployment
+     * @param newOwner The address of the CBB
+     */
+    function changeOwner(address newOwner) external;
 }

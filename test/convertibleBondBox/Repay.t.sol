@@ -59,9 +59,9 @@ contract Repay is CBBSetup {
         uint256 userRiskTrancheBalancedBeforeRepay = s_deployedConvertibleBondBox
                 .riskTranche()
                 .balanceOf(borrowerAddress);
-        uint256 userRiskSlipBalancedBeforeRepay = ISlip(
-            s_deployedConvertibleBondBox.s_riskSlipTokenAddress()
-        ).balanceOf(borrowerAddress);
+        uint256 userRiskSlipBalancedBeforeRepay = s_deployedConvertibleBondBox
+            .riskSlip()
+            .balanceOf(borrowerAddress);
 
         uint256 CBBSafeTrancheBalancedBeforeRepay = s_deployedConvertibleBondBox
             .safeTranche()
@@ -175,9 +175,9 @@ contract Repay is CBBSetup {
         uint256 userRiskTrancheBalancedBeforeRepay = s_deployedConvertibleBondBox
                 .riskTranche()
                 .balanceOf(borrowerAddress);
-        uint256 userRiskSlipBalancedBeforeRepay = ISlip(
-            s_deployedConvertibleBondBox.s_riskSlipTokenAddress()
-        ).balanceOf(borrowerAddress);
+        uint256 userRiskSlipBalancedBeforeRepay = s_deployedConvertibleBondBox
+            .riskSlip()
+            .balanceOf(borrowerAddress);
 
         uint256 CBBSafeTrancheBalancedBeforeRepay = s_deployedConvertibleBondBox
             .safeTranche()
@@ -199,7 +199,7 @@ contract Repay is CBBSetup {
             address(s_deployedConvertibleBondBox),
             type(uint256).max
         );
-        ISlip(s_deployedConvertibleBondBox.s_riskSlipTokenAddress()).approve(
+        s_deployedConvertibleBondBox.riskSlip().approve(
             address(s_deployedConvertibleBondBox),
             type(uint256).max
         );
@@ -324,9 +324,9 @@ contract Repay is CBBSetup {
         uint256 zTranchePaidForWithoutFees,
         address borrowerAddress
     ) private {
-        uint256 userRiskSlipBalancedAfterRepay = ISlip(
-            s_deployedConvertibleBondBox.s_riskSlipTokenAddress()
-        ).balanceOf(borrowerAddress);
+        uint256 userRiskSlipBalancedAfterRepay = s_deployedConvertibleBondBox
+            .riskSlip()
+            .balanceOf(borrowerAddress);
 
         assertEq(
             userRiskSlipBalancedBeforeRepay - zTranchePaidForWithoutFees,

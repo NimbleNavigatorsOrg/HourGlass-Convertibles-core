@@ -80,13 +80,13 @@ contract Reinitialize is CBBSetup {
         uint256 borrowerStableBalanceAfter = s_stableToken.balanceOf(
             address(1)
         );
-        uint256 borrowerRiskSlipsAfter = ISlip(
-            s_deployedConvertibleBondBox.s_riskSlipTokenAddress()
-        ).balanceOf(address(1));
+        uint256 borrowerRiskSlipsAfter = s_deployedConvertibleBondBox
+            .riskSlip()
+            .balanceOf(address(1));
 
-        uint256 lenderSafeSlipsAfter = ISlip(
-            s_deployedConvertibleBondBox.s_safeSlipTokenAddress()
-        ).balanceOf(address(2));
+        uint256 lenderSafeSlipsAfter = s_deployedConvertibleBondBox
+            .safeSlip()
+            .balanceOf(address(2));
 
         uint256 expectedZ = (collateralAmount * s_ratios[2]) / s_ratios[0];
 
@@ -151,13 +151,13 @@ contract Reinitialize is CBBSetup {
         uint256 borrowerStableBalanceAfter = s_stableToken.balanceOf(
             address(1)
         );
-        uint256 borrowerRiskSlipsAfter = ISlip(
-            s_deployedConvertibleBondBox.s_riskSlipTokenAddress()
-        ).balanceOf(address(1));
+        uint256 borrowerRiskSlipsAfter = s_deployedConvertibleBondBox
+            .riskSlip()
+            .balanceOf(address(1));
 
-        uint256 lenderSafeSlipsAfter = ISlip(
-            s_deployedConvertibleBondBox.s_safeSlipTokenAddress()
-        ).balanceOf(address(2));
+        uint256 lenderSafeSlipsAfter = s_deployedConvertibleBondBox
+            .safeSlip()
+            .balanceOf(address(2));
 
         uint256 mintAmount = (stableAmount * s_priceGranularity) /
             s_deployedConvertibleBondBox.currentPrice();
@@ -337,13 +337,13 @@ contract Reinitialize is CBBSetup {
         uint256 borrowerStableBalanceAfter = s_stableToken.balanceOf(
             address(1)
         );
-        uint256 borrowerRiskSlipsAfter = ISlip(
-            s_deployedConvertibleBondBox.s_riskSlipTokenAddress()
-        ).balanceOf(address(1));
+        uint256 borrowerRiskSlipsAfter = s_deployedConvertibleBondBox
+            .riskSlip()
+            .balanceOf(address(1));
 
-        uint256 lenderSafeSlipsAfter = ISlip(
-            s_deployedConvertibleBondBox.s_safeSlipTokenAddress()
-        ).balanceOf(address(2));
+        uint256 lenderSafeSlipsAfter = s_deployedConvertibleBondBox
+            .safeSlip()
+            .balanceOf(address(2));
 
         uint256 expectedZ = (collateralAmount * s_ratios[2]) / s_ratios[0];
 
@@ -403,13 +403,13 @@ contract Reinitialize is CBBSetup {
         uint256 borrowerStableBalanceAfter = s_stableToken.balanceOf(
             address(1)
         );
-        uint256 borrowerRiskSlipsAfter = ISlip(
-            s_deployedConvertibleBondBox.s_riskSlipTokenAddress()
-        ).balanceOf(address(1));
+        uint256 borrowerRiskSlipsAfter = s_deployedConvertibleBondBox
+            .riskSlip()
+            .balanceOf(address(1));
 
-        uint256 lenderSafeSlipsAfter = ISlip(
-            s_deployedConvertibleBondBox.s_safeSlipTokenAddress()
-        ).balanceOf(address(2));
+        uint256 lenderSafeSlipsAfter = s_deployedConvertibleBondBox
+            .safeSlip()
+            .balanceOf(address(2));
 
         uint256 mintAmount = (stableAmount * s_priceGranularity) /
             s_deployedConvertibleBondBox.currentPrice();

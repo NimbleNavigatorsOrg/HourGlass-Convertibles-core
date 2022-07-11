@@ -22,7 +22,6 @@ interface IConvertibleBondBox is ICBBImmutableArgs {
 
     error PenaltyTooHigh(uint256 given, uint256 maxPenalty);
     error BondIsMature(bool given, bool required);
-    error TrancheIndexOutOfBounds(uint256 given, uint256 maxIndex);
     error InitialPriceTooHigh(uint256 given, uint256 maxPrice);
     error InitialPriceIsZero(uint256 given, uint256 maxPrice);
     error ConvertibleBondBoxNotStarted(uint256 given, uint256 minStartDate);
@@ -150,16 +149,6 @@ interface IConvertibleBondBox is ICBBImmutableArgs {
      */
 
     function setFee(uint256 newFeeBps) external;
-
-    /**
-     * @dev Gets the safe slip token Address
-     */
-    function s_safeSlipTokenAddress() external view returns (address);
-
-    /**
-     * @dev Gets the risk slip token Address
-     */
-    function s_riskSlipTokenAddress() external view returns (address);
 
     /**
      * @dev Gets the start date

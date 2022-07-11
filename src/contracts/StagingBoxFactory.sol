@@ -62,10 +62,10 @@ contract StagingBoxFactory is IStagingBoxFactory {
             initialPrice,
             convertibleBondBox.stableToken(),
             convertibleBondBox.safeTranche(),
-            convertibleBondBox.s_safeSlipTokenAddress(),
+            address(convertibleBondBox.safeSlip()),
             convertibleBondBox.safeRatio(),
             convertibleBondBox.riskTranche(),
-            convertibleBondBox.s_riskSlipTokenAddress(),
+            address(convertibleBondBox.riskSlip()),
             convertibleBondBox.riskRatio(),
             convertibleBondBox.s_priceGranularity(),
             stagingBoxOwner

@@ -3,11 +3,11 @@ pragma solidity ^0.8.7;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "clones-with-immutable-args/Clone.sol";
-import "../src/interfaces/ISlipFactory.sol";
+import "../src/interfaces/ISlip.sol";
 import "../src/interfaces/IButtonWoodBondController.sol";
 
 interface ICBBImmutableArgs {
-        /**
+    /**
      * @notice The bond that holds the tranches
      * @dev using ClonesWithImmutableArgs pattern here to save gas
      * @dev https://github.com/wighawag/clones-with-immutable-args
@@ -16,18 +16,23 @@ interface ICBBImmutableArgs {
     function bond() external pure returns (IButtonWoodBondController);
 
     /**
-     * @notice The slip factory used to deploy slips
+     * @notice The safeSlip object
      * @dev using ClonesWithImmutableArgs pattern here to save gas
      * @dev https://github.com/wighawag/clones-with-immutable-args
-     * @return The asset being used to make bids
      */
-    function slipFactory() external pure returns (ISlipFactory);
+    function safeSlip() external pure returns (ISlip);
+
+    /**
+     * @notice The riskSlip object
+     * @dev using ClonesWithImmutableArgs pattern here to save gas
+     * @dev https://github.com/wighawag/clones-with-immutable-args
+     */
+    function riskSlip() external pure returns (ISlip);
 
     /**
      * @notice penalty for zslips
      * @dev using ClonesWithImmutableArgs pattern here to save gas
      * @dev https://github.com/wighawag/clones-with-immutable-args
-     * @return The asset being used to make bids
      */
     function penalty() external pure returns (uint256);
 
@@ -54,8 +59,6 @@ interface ICBBImmutableArgs {
      * @return The asset being used to make bids
      */
     function trancheIndex() external pure returns (uint256);
-
-    function trancheCount() external pure returns (uint256);
 
     function maturityDate() external pure returns (uint256);
 
