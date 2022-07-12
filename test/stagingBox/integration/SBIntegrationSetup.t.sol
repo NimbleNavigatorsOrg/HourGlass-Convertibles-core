@@ -67,7 +67,7 @@ contract SBIntegrationSetup is Test {
     event RedeemBorrowSlip(address, uint256);
     event RedeemLendSlip(address, uint256);
     event TrasmitReint(bool, uint256);
-    event Initialized(address index, address, address);
+    event Initialized(address index);
     event Lend(address, address, address, uint256, uint256);
     event Borrow(address, address, address, uint256, uint256);
     event RedeemStable(address, uint256, uint256);

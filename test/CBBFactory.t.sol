@@ -108,10 +108,7 @@ contract CBBFactoryTest is Test {
             address(deployedConvertibleBondBox.bond()),
             address(s_buttonWoodBondController)
         );
-        assertEq(
-            address(deployedConvertibleBondBox.slipFactory()),
-            address(s_slipFactory)
-        );
+
         assertEq(deployedConvertibleBondBox.penalty(), s_penalty);
         assertEq(
             address(deployedConvertibleBondBox.collateralToken()),

@@ -29,24 +29,14 @@ contract RedeemSafeTranche is CBBSetup {
         vm.warp(s_maturityDate + time);
 
         vm.prank(s_cbb_owner);
-        s_deployedConvertibleBondBox.reinitialize(
-            address(1),
-            address(2),
-            amount, 
-            0,
-            s_price
-        );
+        s_deployedConvertibleBondBox.reinitialize(s_price);
 
         vm.prank(s_cbb_owner);
-        s_deployedConvertibleBondBox.borrow(
-            address(1),
-            address(2),
-            amount
-        );
+        s_deployedConvertibleBondBox.borrow(address(1), address(2), amount);
 
-        uint256 safeSlipBalanceBeforeRedeem = Slip(
-            s_deployedConvertibleBondBox.s_safeSlipTokenAddress()
-        ).balanceOf(address(2));
+        uint256 safeSlipBalanceBeforeRedeem = s_deployedConvertibleBondBox
+            .safeSlip()
+            .balanceOf(address(2));
         uint256 safeTrancheUserBalanceBeforeRedeem = s_deployedConvertibleBondBox
                 .safeTranche()
                 .balanceOf(address(2));
@@ -64,12 +54,11 @@ contract RedeemSafeTranche is CBBSetup {
         uint256 zPenaltyTotal = IERC20(
             address(s_deployedConvertibleBondBox.riskTranche())
         ).balanceOf(address(s_deployedConvertibleBondBox)) -
-            IERC20(s_deployedConvertibleBondBox.s_riskSlipTokenAddress())
-                .totalSupply();
+            s_deployedConvertibleBondBox.riskSlip().totalSupply();
 
-        uint256 safeSlipSupply = ISlip(
-            s_deployedConvertibleBondBox.s_safeSlipTokenAddress()
-        ).totalSupply();
+        uint256 safeSlipSupply = s_deployedConvertibleBondBox
+            .safeSlip()
+            .totalSupply();
 
         uint256 riskTranchePayout = (amount * zPenaltyTotal) /
             (safeSlipSupply - s_deployedConvertibleBondBox.s_repaidSafeSlips());
@@ -98,9 +87,9 @@ contract RedeemSafeTranche is CBBSetup {
         uint256 riskTranchePayout,
         uint256 riskTrancheCBBBalanceBeforeRedeem
     ) private {
-        uint256 safeSlipBalanceAfterRedeem = Slip(
-            s_deployedConvertibleBondBox.s_safeSlipTokenAddress()
-        ).balanceOf(address(2));
+        uint256 safeSlipBalanceAfterRedeem = s_deployedConvertibleBondBox
+            .safeSlip()
+            .balanceOf(address(2));
         uint256 safeTrancheUserBalanceAfterRedeem = s_deployedConvertibleBondBox
             .safeTranche()
             .balanceOf(address(2));
@@ -143,13 +132,7 @@ contract RedeemSafeTranche is CBBSetup {
         time = bound(time, 1, s_maturityDate);
         vm.warp(s_maturityDate - time);
         vm.prank(s_cbb_owner);
-        s_deployedConvertibleBondBox.reinitialize(
-            address(1),
-            address(2),
-            s_depositLimit,
-            0,
-            s_price
-        );
+        s_deployedConvertibleBondBox.reinitialize(s_price);
 
         bytes memory customError = abi.encodeWithSignature(
             "BondNotMatureYet(uint256,uint256)",
@@ -160,7 +143,9 @@ contract RedeemSafeTranche is CBBSetup {
         s_deployedConvertibleBondBox.redeemSafeTranche(s_safeSlipAmount);
     }
 
-    function testCannotRedeemSafeTrancheMinimumInput(uint256 safeSlipAmount) public {
+    function testCannotRedeemSafeTrancheMinimumInput(uint256 safeSlipAmount)
+        public
+    {
         safeSlipAmount = bound(
             safeSlipAmount,
             0,
@@ -169,13 +154,7 @@ contract RedeemSafeTranche is CBBSetup {
 
         vm.warp(s_maturityDate);
         vm.prank(s_cbb_owner);
-        s_deployedConvertibleBondBox.reinitialize(
-            address(1),
-            address(2),
-            s_depositLimit,
-            0,
-            s_price
-        );
+        s_deployedConvertibleBondBox.reinitialize(s_price);
 
         bytes memory customError = abi.encodeWithSignature(
             "MinimumInput(uint256,uint256)",
@@ -203,20 +182,10 @@ contract RedeemSafeTranche is CBBSetup {
 
         vm.warp(s_maturityDate);
         vm.prank(s_cbb_owner);
-        s_deployedConvertibleBondBox.reinitialize(
-            borrower,
-            lender,
-            depositAmount,
-            0,
-            s_price
-        );
+        s_deployedConvertibleBondBox.reinitialize(s_price);
 
         vm.prank(s_cbb_owner);
-        s_deployedConvertibleBondBox.borrow(
-            borrower,
-            lender,
-            depositAmount
-        );
+        s_deployedConvertibleBondBox.borrow(borrower, lender, depositAmount);
 
         vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.setFee(fee);
@@ -224,28 +193,27 @@ contract RedeemSafeTranche is CBBSetup {
         safeSlipAmount = bound(
             safeSlipAmount,
             s_deployedConvertibleBondBox.safeRatio(),
-            ISlip(s_deployedConvertibleBondBox.s_safeSlipTokenAddress())
-                .balanceOf(lender)
+            s_deployedConvertibleBondBox.safeSlip().balanceOf(lender)
         );
 
-        uint256 ownerSafeSlipBalanceBeforeRedeem = ISlip(
-            s_deployedConvertibleBondBox.s_safeSlipTokenAddress()
-        ).balanceOf(s_deployedConvertibleBondBox.owner());
+        uint256 ownerSafeSlipBalanceBeforeRedeem = s_deployedConvertibleBondBox
+            .safeSlip()
+            .balanceOf(s_deployedConvertibleBondBox.owner());
 
         uint256 feeSlipAmount = (safeSlipAmount *
             s_deployedConvertibleBondBox.feeBps()) / s_BPS;
 
         vm.startPrank(lender);
-        ISlip(s_deployedConvertibleBondBox.s_safeSlipTokenAddress()).approve(
-                address(s_deployedConvertibleBondBox),
-                type(uint256).max
-            );
+        s_deployedConvertibleBondBox.safeSlip().approve(
+            address(s_deployedConvertibleBondBox),
+            type(uint256).max
+        );
         s_deployedConvertibleBondBox.redeemSafeTranche(safeSlipAmount);
         vm.stopPrank();
 
-        uint256 ownerSafeSlipBalanceAfterRedeem = ISlip(
-            s_deployedConvertibleBondBox.s_safeSlipTokenAddress()
-        ).balanceOf(s_deployedConvertibleBondBox.owner());
+        uint256 ownerSafeSlipBalanceAfterRedeem = s_deployedConvertibleBondBox
+            .safeSlip()
+            .balanceOf(s_deployedConvertibleBondBox.owner());
 
         assertEq(
             ownerSafeSlipBalanceBeforeRedeem + feeSlipAmount,
@@ -270,20 +238,10 @@ contract RedeemSafeTranche is CBBSetup {
 
         vm.warp(s_maturityDate);
         vm.prank(s_cbb_owner);
-        s_deployedConvertibleBondBox.reinitialize(
-            borrower,
-            lender,
-            depositAmount,
-            0,
-            s_price
-        );
+        s_deployedConvertibleBondBox.reinitialize(s_price);
 
         vm.prank(s_cbb_owner);
-        s_deployedConvertibleBondBox.borrow(
-            borrower,
-            lender,
-            depositAmount
-        );
+        s_deployedConvertibleBondBox.borrow(borrower, lender, depositAmount);
 
         vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.setFee(fee);
@@ -291,25 +249,24 @@ contract RedeemSafeTranche is CBBSetup {
         safeSlipAmount = bound(
             safeSlipAmount,
             s_deployedConvertibleBondBox.safeRatio(),
-            ISlip(s_deployedConvertibleBondBox.s_safeSlipTokenAddress())
-                .balanceOf(lender)
+            s_deployedConvertibleBondBox.safeSlip().balanceOf(lender)
         );
 
-        uint256 lenderSafeSlipBalanceBeforeRedeem = ISlip(
-            s_deployedConvertibleBondBox.s_safeSlipTokenAddress()
-        ).balanceOf(lender);
+        uint256 lenderSafeSlipBalanceBeforeRedeem = s_deployedConvertibleBondBox
+            .safeSlip()
+            .balanceOf(lender);
 
         vm.startPrank(lender);
-        ISlip(s_deployedConvertibleBondBox.s_safeSlipTokenAddress()).approve(
-                address(s_deployedConvertibleBondBox),
-                type(uint256).max
-            );
+        s_deployedConvertibleBondBox.safeSlip().approve(
+            address(s_deployedConvertibleBondBox),
+            type(uint256).max
+        );
         s_deployedConvertibleBondBox.redeemSafeTranche(safeSlipAmount);
         vm.stopPrank();
 
-        uint256 lenderSafeSlipBalanceAfterRedeem = ISlip(
-            s_deployedConvertibleBondBox.s_safeSlipTokenAddress()
-        ).balanceOf(lender);
+        uint256 lenderSafeSlipBalanceAfterRedeem = s_deployedConvertibleBondBox
+            .safeSlip()
+            .balanceOf(lender);
 
         assertEq(
             lenderSafeSlipBalanceBeforeRedeem - safeSlipAmount,
@@ -334,20 +291,10 @@ contract RedeemSafeTranche is CBBSetup {
 
         vm.warp(s_maturityDate);
         vm.prank(s_cbb_owner);
-        s_deployedConvertibleBondBox.reinitialize(
-            borrower,
-            lender,
-            depositAmount,
-            0,
-            s_price
-        );
+        s_deployedConvertibleBondBox.reinitialize(s_price);
 
         vm.prank(s_cbb_owner);
-        s_deployedConvertibleBondBox.borrow(
-            borrower,
-            lender,
-            depositAmount
-        );
+        s_deployedConvertibleBondBox.borrow(borrower, lender, depositAmount);
 
         vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.setFee(fee);
@@ -355,8 +302,7 @@ contract RedeemSafeTranche is CBBSetup {
         safeSlipAmount = bound(
             safeSlipAmount,
             s_deployedConvertibleBondBox.safeRatio(),
-            ISlip(s_deployedConvertibleBondBox.s_safeSlipTokenAddress())
-                .balanceOf(lender)
+            s_deployedConvertibleBondBox.safeSlip().balanceOf(lender)
         );
 
         uint256 lenderSafeTrancheBalanceBeforeRedeem = ITranche(
@@ -370,10 +316,10 @@ contract RedeemSafeTranche is CBBSetup {
             s_deployedConvertibleBondBox.feeBps()) / s_BPS;
 
         vm.startPrank(lender);
-        ISlip(s_deployedConvertibleBondBox.s_safeSlipTokenAddress()).approve(
-                address(s_deployedConvertibleBondBox),
-                type(uint256).max
-            );
+        s_deployedConvertibleBondBox.safeSlip().approve(
+            address(s_deployedConvertibleBondBox),
+            type(uint256).max
+        );
         s_deployedConvertibleBondBox.redeemSafeTranche(safeSlipAmount);
         vm.stopPrank();
 
@@ -413,13 +359,7 @@ contract RedeemSafeTranche is CBBSetup {
 
         vm.warp(s_maturityDate);
         vm.prank(s_cbb_owner);
-        s_deployedConvertibleBondBox.reinitialize(
-            borrower,
-            lender,
-            depositAmount,
-            0,
-            s_price
-        );
+        s_deployedConvertibleBondBox.reinitialize(s_price);
 
         vm.prank(s_cbb_owner);
         s_deployedConvertibleBondBox.borrow(borrower, lender, depositAmount);
@@ -430,8 +370,7 @@ contract RedeemSafeTranche is CBBSetup {
         safeSlipAmount = bound(
             safeSlipAmount,
             s_deployedConvertibleBondBox.safeRatio(),
-            ISlip(s_deployedConvertibleBondBox.s_safeSlipTokenAddress())
-                .balanceOf(lender)
+            s_deployedConvertibleBondBox.safeSlip().balanceOf(lender)
         );
 
         uint256 lenderRiskTrancheBalanceBeforeRedeem = ITranche(
@@ -449,22 +388,21 @@ contract RedeemSafeTranche is CBBSetup {
         uint256 zPenaltyTotal = IERC20(
             address(s_deployedConvertibleBondBox.riskTranche())
         ).balanceOf(address(s_deployedConvertibleBondBox)) -
-            IERC20(s_deployedConvertibleBondBox.s_riskSlipTokenAddress())
-                .totalSupply();
+            s_deployedConvertibleBondBox.riskSlip().totalSupply();
 
-        uint256 safeSlipSupply = ISlip(
-            s_deployedConvertibleBondBox.s_safeSlipTokenAddress()
-        ).totalSupply();
+        uint256 safeSlipSupply = s_deployedConvertibleBondBox
+            .safeSlip()
+            .totalSupply();
 
         uint256 riskTrancheTransferAmount = (safeSlipAmountMinusFee *
             zPenaltyTotal) /
             (safeSlipSupply - s_deployedConvertibleBondBox.s_repaidSafeSlips());
 
         vm.startPrank(lender);
-        ISlip(s_deployedConvertibleBondBox.s_safeSlipTokenAddress()).approve(
-                address(s_deployedConvertibleBondBox),
-                type(uint256).max
-            );
+        s_deployedConvertibleBondBox.safeSlip().approve(
+            address(s_deployedConvertibleBondBox),
+            type(uint256).max
+        );
         s_deployedConvertibleBondBox.redeemSafeTranche(safeSlipAmount);
         vm.stopPrank();
 
@@ -502,20 +440,10 @@ contract RedeemSafeTranche is CBBSetup {
 
         vm.warp(s_maturityDate);
         vm.prank(s_cbb_owner);
-        s_deployedConvertibleBondBox.reinitialize(
-            borrower,
-            lender,
-            depositAmount,
-            0,
-            s_price
-        );
+        s_deployedConvertibleBondBox.reinitialize(s_price);
 
         vm.prank(s_cbb_owner);
-        s_deployedConvertibleBondBox.borrow(
-            borrower,
-            lender,
-            depositAmount
-        );
+        s_deployedConvertibleBondBox.borrow(borrower, lender, depositAmount);
 
         vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.setFee(fee);
@@ -523,8 +451,7 @@ contract RedeemSafeTranche is CBBSetup {
         safeSlipAmount = bound(
             safeSlipAmount,
             s_deployedConvertibleBondBox.safeRatio(),
-            ISlip(s_deployedConvertibleBondBox.s_safeSlipTokenAddress())
-                .balanceOf(lender)
+            s_deployedConvertibleBondBox.safeSlip().balanceOf(lender)
         );
 
         uint256 feeSlipAmount = (safeSlipAmount *
@@ -532,10 +459,10 @@ contract RedeemSafeTranche is CBBSetup {
         uint256 safeSlipAmountMinusFee = safeSlipAmount - feeSlipAmount;
 
         vm.startPrank(lender);
-        ISlip(s_deployedConvertibleBondBox.s_safeSlipTokenAddress()).approve(
-                address(s_deployedConvertibleBondBox),
-                type(uint256).max
-            );
+        s_deployedConvertibleBondBox.safeSlip().approve(
+            address(s_deployedConvertibleBondBox),
+            type(uint256).max
+        );
         vm.expectEmit(true, true, true, true);
         emit RedeemSafeTranche(lender, safeSlipAmountMinusFee);
         s_deployedConvertibleBondBox.redeemSafeTranche(safeSlipAmount);

@@ -90,4 +90,11 @@ contract Slip is ISlip, ERC20, Initializable {
     function decimals() public view override returns (uint8) {
         return IERC20Metadata(collateralToken).decimals();
     }
+
+    /**
+     * @inheritdoc ISlip
+     */
+    function changeOwner(address newOwner) external override onlyBoxOwner {
+        boxOwner = newOwner;
+    }
 }

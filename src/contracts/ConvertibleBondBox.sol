@@ -4,15 +4,12 @@ pragma solidity 0.8.13;
 import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@uniswap/lib/contracts/libraries/TransferHelper.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "clones-with-immutable-args/Clone.sol";
 import "../interfaces/IButtonWoodBondController.sol";
 import "../interfaces/ISlipFactory.sol";
 import "../interfaces/ISlip.sol";
 import "../../utils/CBBImmutableArgs.sol";
 import "../interfaces/IConvertibleBondBox.sol";
-
-import "forge-std/console2.sol";
 
 /**
  * @dev Convertible Bond Box for a ButtonTranche bond
@@ -29,8 +26,6 @@ contract ConvertibleBondBox is
     CBBImmutableArgs,
     IConvertibleBondBox
 {
-    address public override s_safeSlipTokenAddress;
-    address public override s_riskSlipTokenAddress;
     uint256 public override s_startDate = 0;
     uint256 public override s_repaidSafeSlips = 0;
     uint256 public constant override s_trancheGranularity = 1000;
@@ -59,52 +54,21 @@ contract ConvertibleBondBox is
             });
         if (bond().isMature())
             revert BondIsMature({given: bond().isMature(), required: false});
-        // Safe-Tranche cannot be the Z-Tranche
-        if (trancheIndex() >= trancheCount() - 1)
-            revert TrancheIndexOutOfBounds({
-                given: trancheIndex(),
-                maxIndex: trancheCount() - 2
-            });
 
-        string memory collateralSymbolSafe = IERC20Metadata(
-            address(safeTranche())
-        ).symbol();
-        string memory collateralSymbolRisk = IERC20Metadata(
-            address(riskTranche())
-        ).symbol();
-
-        // clone deploy safe slip
-        s_safeSlipTokenAddress = slipFactory().createSlip(
-            string(abi.encodePacked("SLIP-", collateralSymbolSafe)),
-            "Safe-CBB-Slip",
-            address(safeTranche())
-        );
-
-        //clone deploy z slip
-        s_riskSlipTokenAddress = slipFactory().createSlip(
-            string(abi.encodePacked("SLIP-", collateralSymbolRisk)),
-            "Risk-CBB-Slip",
-            address(riskTranche())
-        );
+        emit Initialized(_owner);
     }
 
     /**
      * @inheritdoc IConvertibleBondBox
      */
 
-    function reinitialize(
-        address _borrower,
-        address _lender,
-        uint256 _safeTrancheAmount,
-        uint256 _stableAmount,
-        uint256 _initialPrice
-    ) external reinitializer(2) onlyOwner returns (bool) {
+    function reinitialize(uint256 _initialPrice)
+        external
+        reinitializer(2)
+        onlyOwner
+    {
         uint256 priceGranularity = s_priceGranularity;
-        if (_stableAmount * _safeTrancheAmount != 0)
-            revert OnlyLendOrBorrow({
-                _stableAmount: _stableAmount,
-                _collateralAmount: _safeTrancheAmount
-            });
+
         if (_initialPrice > priceGranularity)
             revert InitialPriceTooHigh({
                 given: _initialPrice,
@@ -117,8 +81,7 @@ contract ConvertibleBondBox is
         //set ConvertibleBondBox Start Date to be time when init() is called
         s_startDate = block.timestamp;
 
-        emit Initialized(_borrower, _lender, _stableAmount, _safeTrancheAmount);
-        return true;
+        emit ReInitialized(_initialPrice, block.timestamp);
     }
 
     /**
@@ -287,7 +250,7 @@ contract ConvertibleBondBox is
         if (feeBps > 0 && _msgSender() != owner()) {
             uint256 feeSlip = (_riskSlipAmount * feeBps) / BPS;
             TransferHelper.safeTransferFrom(
-                s_riskSlipTokenAddress,
+                address(riskSlip()),
                 _msgSender(),
                 owner(),
                 feeSlip
@@ -308,7 +271,7 @@ contract ConvertibleBondBox is
             zTranchePayout
         );
 
-        ISlip(s_riskSlipTokenAddress).burn(_msgSender(), _riskSlipAmount);
+        riskSlip().burn(_msgSender(), _riskSlipAmount);
 
         emit RedeemRiskTranche(_msgSender(), _riskSlipAmount);
     }
@@ -330,13 +293,11 @@ contract ConvertibleBondBox is
                 reqInput: safeRatio()
             });
 
-        address safeSlipTokenAddress = s_safeSlipTokenAddress;
-
         //transfer fee to owner
         if (feeBps > 0 && _msgSender() != owner()) {
             uint256 feeSlip = (_safeSlipAmount * feeBps) / BPS;
             TransferHelper.safeTransferFrom(
-                safeSlipTokenAddress,
+                address(safeSlip()),
                 _msgSender(),
                 owner(),
                 feeSlip
@@ -345,10 +306,10 @@ contract ConvertibleBondBox is
             _safeSlipAmount -= feeSlip;
         }
 
-        uint256 safeSlipSupply = ISlip(safeSlipTokenAddress).totalSupply();
+        uint256 safeSlipSupply = safeSlip().totalSupply();
 
         //burn safe-slips
-        ISlip(safeSlipTokenAddress).burn(_msgSender(), _safeSlipAmount);
+        safeSlip().burn(_msgSender(), _safeSlipAmount);
 
         //transfer safe-Tranche after maturity only
         TransferHelper.safeTransfer(
@@ -358,7 +319,7 @@ contract ConvertibleBondBox is
         );
 
         uint256 zPenaltyTotal = riskTranche().balanceOf(address(this)) -
-            IERC20(s_riskSlipTokenAddress).totalSupply();
+            riskSlip().totalSupply();
 
         //transfer risk-Tranche penalty after maturity only
         TransferHelper.safeTransfer(
@@ -388,7 +349,7 @@ contract ConvertibleBondBox is
                 reqInput: safeRatio()
             });
 
-        address safeSlipTokenAddress = s_safeSlipTokenAddress;
+        address safeSlipTokenAddress = address(safeSlip());
 
         //transfer safeSlips to owner
         if (feeBps > 0 && _msgSender() != owner()) {
@@ -476,10 +437,10 @@ contract ConvertibleBondBox is
         );
 
         // //Mint safeSlips to the lender
-        ISlip(s_safeSlipTokenAddress).mint(_lender, _safeSlipAmount);
+        safeSlip().mint(_lender, _safeSlipAmount);
 
         // //Mint riskSlips to the borrower
-        ISlip(s_riskSlipTokenAddress).mint(_borrower, _riskSlipAmount);
+        riskSlip().mint(_borrower, _riskSlipAmount);
 
         // // Transfer stables to borrower
         if (_msgSender() != _borrower) {
@@ -540,6 +501,6 @@ contract ConvertibleBondBox is
         );
 
         // Burn riskSlips
-        ISlip(s_riskSlipTokenAddress).burn(_msgSender(), _riskTranchePayout);
+        riskSlip().burn(_msgSender(), _riskTranchePayout);
     }
 }

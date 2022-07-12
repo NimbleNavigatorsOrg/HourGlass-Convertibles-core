@@ -2,7 +2,7 @@
 pragma solidity 0.8.13;
 
 import "clones-with-immutable-args/ClonesWithImmutableArgs.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import "./StagingBox.sol";
@@ -16,6 +16,11 @@ contract StagingBoxFactory is IStagingBoxFactory {
     using ClonesWithImmutableArgs for address;
 
     address public immutable implementation;
+
+    struct SlipPair {
+        address lendSlip;
+        address borrowSlip;
+    }
 
     constructor(address _implementation) {
         implementation = _implementation;
@@ -56,23 +61,39 @@ contract StagingBoxFactory is IStagingBoxFactory {
             )
         );
 
-        bytes memory data = abi.encodePacked(
+        SlipPair memory SlipData = deploySlips(
             slipFactory,
-            convertibleBondBox,
-            initialPrice,
-            convertibleBondBox.stableToken(),
-            convertibleBondBox.safeTranche(),
-            convertibleBondBox.s_safeSlipTokenAddress(),
-            convertibleBondBox.safeRatio(),
-            convertibleBondBox.riskTranche(),
-            convertibleBondBox.s_riskSlipTokenAddress(),
-            convertibleBondBox.riskRatio(),
-            convertibleBondBox.s_priceGranularity(),
-            stagingBoxOwner
+            address(convertibleBondBox.safeSlip()),
+            address(convertibleBondBox.riskSlip())
         );
-        StagingBox clone = StagingBox(implementation.clone(data));
 
+        bytes memory data = bytes.concat(
+            abi.encodePacked(
+                SlipData.lendSlip,
+                SlipData.borrowSlip,
+                convertibleBondBox,
+                initialPrice,
+                convertibleBondBox.stableToken(),
+                convertibleBondBox.safeTranche(),
+                address(convertibleBondBox.safeSlip()),
+                convertibleBondBox.safeRatio()
+            ),
+            abi.encodePacked(
+                convertibleBondBox.riskTranche(),
+                address(convertibleBondBox.riskSlip()),
+                convertibleBondBox.riskRatio(),
+                convertibleBondBox.s_priceGranularity(),
+                stagingBoxOwner
+            )
+        );
+
+        // clone staging box
+        StagingBox clone = StagingBox(implementation.clone(data));
         clone.initialize(stagingBoxOwner);
+
+        //tansfer slips ownership to staging box
+        ISlip(SlipData.lendSlip).changeOwner(address(clone));
+        ISlip(SlipData.borrowSlip).changeOwner(address(clone));
 
         emit StagingBoxCreated(
             convertibleBondBox,
@@ -84,5 +105,32 @@ contract StagingBoxFactory is IStagingBoxFactory {
         );
 
         return address(clone);
+    }
+
+    function deploySlips(
+        ISlipFactory slipFactory,
+        address safeSlip,
+        address riskSlip
+    ) private returns (SlipPair memory) {
+        // clone deploy lend slip
+        address lendSlipTokenAddress = slipFactory.createSlip(
+            IERC20Metadata(safeSlip).symbol(),
+            "Staging-Lender-Slip",
+            safeSlip
+        );
+
+        //clone deployborrow slip
+        address borrowSlipTokenAddress = slipFactory.createSlip(
+            IERC20Metadata(riskSlip).symbol(),
+            "Staging-Borrower-Slip",
+            riskSlip
+        );
+
+        SlipPair memory SlipData = SlipPair(
+            lendSlipTokenAddress,
+            borrowSlipTokenAddress
+        );
+
+        return SlipData;
     }
 }

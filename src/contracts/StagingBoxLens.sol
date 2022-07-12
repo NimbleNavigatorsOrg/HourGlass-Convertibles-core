@@ -14,6 +14,33 @@ contract StagingBoxLens is IStagingBoxLens {
      * @inheritdoc IStagingBoxLens
      */
 
+    function viewTransmitReInitBool(IStagingBox _stagingBox)
+        public
+        view
+        returns (bool)
+    {
+        bool isLend = false;
+
+        uint256 stableBalance = _stagingBox.stableToken().balanceOf(
+            address(_stagingBox)
+        );
+        uint256 safeTrancheBalance = _stagingBox.safeTranche().balanceOf(
+            address(_stagingBox)
+        );
+        uint256 expectedStableLoan = (safeTrancheBalance *
+            _stagingBox.initialPrice()) / _stagingBox.priceGranularity();
+
+        if (expectedStableLoan > stableBalance) {
+            isLend = true;
+        }
+
+        return isLend;
+    }
+
+    /**
+     * @inheritdoc IStagingBoxLens
+     */
+
     function viewSimpleWrapTrancheBorrow(
         IStagingBox _stagingBox,
         uint256 _amountRaw

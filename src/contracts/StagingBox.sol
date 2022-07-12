@@ -11,8 +11,6 @@ import "../../utils/SBImmutableArgs.sol";
 import "../interfaces/IConvertibleBondBox.sol";
 import "../interfaces/IStagingBox.sol";
 
-import "forge-std/console2.sol";
-
 /**
  * @dev Staging Box for reinitializing a ConvertibleBondBox
  *
@@ -21,11 +19,7 @@ import "forge-std/console2.sol";
  */
 
 contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
-    address public override s_lendSlipTokenAddress;
-    address public override s_borrowSlipTokenAddress;
-
     uint256 public s_reinitLendAmount = 0;
-    bool public s_hasReinitialized = false;
 
     function initialize(address _owner) external initializer {
         require(
@@ -45,30 +39,8 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
         __Ownable_init();
         transferOwnership(_owner);
 
-        //Deploy Borrow Lend Slips
-
-        // clone deploy safe slip
-        s_lendSlipTokenAddress = slipFactory().createSlip(
-            IERC20Metadata(safeSlipAddress()).symbol(),
-            "Staging-Lender-Slip",
-            safeSlipAddress()
-        );
-
-        //clone deploy z slip
-        s_borrowSlipTokenAddress = slipFactory().createSlip(
-            IERC20Metadata(riskSlipAddress()).symbol(),
-            "Staging-Borrower-Slip",
-            riskSlipAddress()
-        );
-
-        //Check if valid ICBB immutable arg?
-
         //Add event stuff
-        emit Initialized(
-            _owner,
-            s_borrowSlipTokenAddress,
-            s_lendSlipTokenAddress
-        );
+        emit Initialized(_owner);
     }
 
     function depositBorrow(address _borrower, uint256 _safeTrancheAmount)
@@ -76,12 +48,8 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
         override
     {
         //- Ensure CBB not reinitialized
-        bool hasReinitialized = s_hasReinitialized;
-        if (hasReinitialized) {
-            revert CBBReinitialized({
-                state: hasReinitialized,
-                requiredState: false
-            });
+        if (convertibleBondBox().s_startDate() != 0) {
+            revert CBBReinitialized({state: true, requiredState: false});
         }
 
         //- transfers `_safeTrancheAmount` of SafeTranche Tokens from msg.sender to SB
@@ -101,8 +69,7 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
         );
 
         //- mints `_safeTrancheAmount` of BorrowerSlips to `_borrower`
-        // TODO shouldn't we be minting to the same address that the SB took tranches from. ie. _msgSender()
-        ISlip(s_borrowSlipTokenAddress).mint(_borrower, _safeTrancheAmount);
+        borrowSlip().mint(_borrower, _safeTrancheAmount);
 
         //add event stuff
         emit BorrowDeposit(_borrower, _safeTrancheAmount);
@@ -113,12 +80,8 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
         override
     {
         //- Ensure CBB not reinitialized
-        bool hasReinitialized = s_hasReinitialized;
-        if (hasReinitialized) {
-            revert CBBReinitialized({
-                state: hasReinitialized,
-                requiredState: false
-            });
+        if (convertibleBondBox().s_startDate() != 0) {
+            revert CBBReinitialized({state: true, requiredState: false});
         }
 
         //- transfers `_lendAmount`of Stable Tokens from msg.sender to SB
@@ -130,7 +93,7 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
         );
 
         //- mints `_lendAmount`of LenderSlips to `_lender`
-        ISlip(s_lendSlipTokenAddress).mint(_lender, _lendAmount);
+        lendSlip().mint(_lender, _lendAmount);
 
         //add event stuff
         emit LendDeposit(_lender, _lendAmount);
@@ -153,7 +116,7 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
         );
 
         //- burns `_borrowSlipAmount` of msg.sender’s BorrowSlips
-        ISlip(s_borrowSlipTokenAddress).burn(_msgSender(), _borrowSlipAmount);
+        borrowSlip().burn(_msgSender(), _borrowSlipAmount);
 
         //event stuff
         emit BorrowWithdrawal(_msgSender(), _borrowSlipAmount);
@@ -163,7 +126,7 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
         //- Reverse of depositBorrow() function
 
         //revert check for _lendSlipAmount after CBB reinitialized
-        if (s_hasReinitialized) {
+        if (convertibleBondBox().s_startDate() != 0) {
             uint256 reinitAmount = s_reinitLendAmount;
             if (_lendSlipAmount < reinitAmount) {
                 revert WithdrawAmountTooHigh({
@@ -181,7 +144,7 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
         );
 
         //- burns `_lendSlipAmount` of msg.sender’s LenderSlips
-        ISlip(s_lendSlipTokenAddress).burn(_msgSender(), _lendSlipAmount);
+        lendSlip().burn(_msgSender(), _lendSlipAmount);
 
         //event stuff
         emit LendWithdrawal(_msgSender(), _lendSlipAmount);
@@ -204,7 +167,7 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
         );
 
         // burns `_borrowSlipAmount` of msg.sender’s BorrowSlips
-        ISlip(s_borrowSlipTokenAddress).burn(_msgSender(), _borrowSlipAmount);
+        borrowSlip().burn(_msgSender(), _borrowSlipAmount);
 
         //event stuff
         emit RedeemBorrowSlip(_msgSender(), _borrowSlipAmount);
@@ -221,7 +184,7 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
         );
 
         //- burns `_lendSlipAmount` of msg.sender’s LendSlips
-        ISlip(s_lendSlipTokenAddress).burn(_msgSender(), _lendSlipAmount);
+        lendSlip().burn(_msgSender(), _lendSlipAmount);
 
         emit RedeemLendSlip(_msgSender(), _lendSlipAmount);
     }
@@ -237,13 +200,7 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
         if (_isLend) {
             uint256 stableAmount = stableToken().balanceOf(address(this));
             s_reinitLendAmount = stableAmount;
-            s_hasReinitialized = convertibleBondBox().reinitialize(
-                address(this),
-                address(this),
-                0,
-                stableAmount,
-                initialPrice()
-            );
+            convertibleBondBox().reinitialize(initialPrice());
 
             convertibleBondBox().lend(
                 address(this),
@@ -258,13 +215,7 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
                 (safeTrancheBalance * initialPrice()) /
                 priceGranularity();
 
-            s_hasReinitialized = convertibleBondBox().reinitialize(
-                address(this),
-                address(this),
-                safeTrancheBalance,
-                0,
-                initialPrice()
-            );
+            convertibleBondBox().reinitialize(initialPrice());
 
             convertibleBondBox().borrow(
                 address(this),

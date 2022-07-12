@@ -3,7 +3,7 @@ pragma solidity ^0.8.7;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "clones-with-immutable-args/Clone.sol";
-import "../src/interfaces/ISlipFactory.sol";
+import "../src/interfaces/ISlip.sol";
 import "../src/interfaces/IButtonWoodBondController.sol";
 import "./ICBBImmutableArgs.sol";
 
@@ -14,86 +14,91 @@ import "./ICBBImmutableArgs.sol";
  */
 contract CBBImmutableArgs is Clone, ICBBImmutableArgs {
     /**
-     * @notice The bond that holds the tranches
-     * @dev using ClonesWithImmutableArgs pattern here to save gas
-     * @dev https://github.com/wighawag/clones-with-immutable-args
-     * @return The asset being used to make bids
+     * @inheritdoc ICBBImmutableArgs
      */
-    function bond() public override pure returns (IButtonWoodBondController) {
+    function bond() public pure override returns (IButtonWoodBondController) {
         return IButtonWoodBondController(_getArgAddress(0));
     }
 
     /**
-     * @notice The slip factory used to deploy slips
-     * @dev using ClonesWithImmutableArgs pattern here to save gas
-     * @dev https://github.com/wighawag/clones-with-immutable-args
-     * @return The asset being used to make bids
+     * @inheritdoc ICBBImmutableArgs
      */
-    function slipFactory() public override pure returns (ISlipFactory) {
-        return ISlipFactory(_getArgAddress(20));
+    function safeSlip() public pure override returns (ISlip) {
+        return ISlip(_getArgAddress(20));
     }
 
     /**
-     * @notice penalty for zslips
-     * @dev using ClonesWithImmutableArgs pattern here to save gas
-     * @dev https://github.com/wighawag/clones-with-immutable-args
-     * @return The asset being used to make bids
+     * @inheritdoc ICBBImmutableArgs
      */
-    function penalty() public override pure returns (uint256) {
-        return _getArgUint256(40);
+    function riskSlip() public pure override returns (ISlip) {
+        return ISlip(_getArgAddress(40));
     }
 
     /**
-     * @notice The collateral token used to make bonds
-     * @dev using ClonesWithImmutableArgs pattern here to save gas
-     * @dev https://github.com/wighawag/clones-with-immutable-args
-     * @return The asset being used to make bids
+     * @inheritdoc ICBBImmutableArgs
      */
-    function collateralToken() public override pure returns (IERC20) {
-        return IERC20(_getArgAddress(72));
+    function penalty() public pure override returns (uint256) {
+        return _getArgUint256(60);
     }
 
     /**
-     * @notice The stable token used to buy bonds
-     * @dev using ClonesWithImmutableArgs pattern here to save gas
-     * @dev https://github.com/wighawag/clones-with-immutable-args
-     * @return The asset being used to make bids
+     * @inheritdoc ICBBImmutableArgs
      */
-    function stableToken() public override pure returns (IERC20) {
+    function collateralToken() public pure override returns (IERC20) {
         return IERC20(_getArgAddress(92));
     }
 
     /**
-     * @notice The tranche index used to pick a safe tranche
-     * @dev using ClonesWithImmutableArgs pattern here to save gas
-     * @dev https://github.com/wighawag/clones-with-immutable-args
-     * @return The asset being used to make bids
+     * @inheritdoc ICBBImmutableArgs
      */
-    function trancheIndex() public override pure returns (uint256) {
-        return _getArgUint256(112);
+    function stableToken() public pure override returns (IERC20) {
+        return IERC20(_getArgAddress(112));
     }
 
-    function trancheCount() public override pure returns (uint256) {
-        return _getArgUint256(144);
+    /**
+     * @inheritdoc ICBBImmutableArgs
+     */
+    function trancheIndex() public pure override returns (uint256) {
+        return _getArgUint256(132);
     }
 
-    function maturityDate() public override pure returns (uint256) {
-        return _getArgUint256(176);
+    /**
+     * @inheritdoc ICBBImmutableArgs
+     */
+
+    function maturityDate() public pure override returns (uint256) {
+        return _getArgUint256(164);
     }
 
-    function safeTranche() public override pure returns (ITranche) {
-        return ITranche(_getArgAddress(208));
+    /**
+     * @inheritdoc ICBBImmutableArgs
+     */
+
+    function safeTranche() public pure override returns (ITranche) {
+        return ITranche(_getArgAddress(196));
     }
 
-    function safeRatio() public override pure returns (uint256) {
-        return _getArgUint256(228);
+    /**
+     * @inheritdoc ICBBImmutableArgs
+     */
+
+    function safeRatio() public pure override returns (uint256) {
+        return _getArgUint256(216);
     }
 
-    function riskTranche() public override pure returns (ITranche) {
-        return ITranche(_getArgAddress(260));
+    /**
+     * @inheritdoc ICBBImmutableArgs
+     */
+
+    function riskTranche() public pure override returns (ITranche) {
+        return ITranche(_getArgAddress(248));
     }
 
-    function riskRatio() public override pure returns (uint256) {
-        return _getArgUint256(280);
+    /**
+     * @inheritdoc ICBBImmutableArgs
+     */
+
+    function riskRatio() public pure override returns (uint256) {
+        return _getArgUint256(268);
     }
 }

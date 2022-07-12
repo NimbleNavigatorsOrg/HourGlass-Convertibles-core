@@ -3,7 +3,6 @@ pragma solidity ^0.8.7;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "clones-with-immutable-args/Clone.sol";
-import "../src/interfaces/ISlipFactory.sol";
 import "../src/interfaces/IConvertibleBondBox.sol";
 import "./ISBImmutableArgs.sol";
 
@@ -17,8 +16,16 @@ contract SBImmutableArgs is Clone, ISBImmutableArgs {
      * @inheritdoc ISBImmutableArgs
      */
 
-    function slipFactory() public pure returns (ISlipFactory) {
-        return ISlipFactory(_getArgAddress(0));
+    function lendSlip() public pure returns (ISlip) {
+        return ISlip(_getArgAddress(0));
+    }
+
+    /**
+     * @inheritdoc ISBImmutableArgs
+     */
+
+    function borrowSlip() public pure returns (ISlip) {
+        return ISlip(_getArgAddress(20));
     }
 
     /**
@@ -26,7 +33,7 @@ contract SBImmutableArgs is Clone, ISBImmutableArgs {
      */
 
     function convertibleBondBox() public pure returns (IConvertibleBondBox) {
-        return IConvertibleBondBox(_getArgAddress(20));
+        return IConvertibleBondBox(_getArgAddress(40));
     }
 
     /**
@@ -34,7 +41,7 @@ contract SBImmutableArgs is Clone, ISBImmutableArgs {
      */
 
     function initialPrice() public pure returns (uint256) {
-        return _getArgUint256(40);
+        return _getArgUint256(60);
     }
 
     /**
@@ -42,7 +49,7 @@ contract SBImmutableArgs is Clone, ISBImmutableArgs {
      */
 
     function stableToken() public pure returns (IERC20) {
-        return IERC20(_getArgAddress(72));
+        return IERC20(_getArgAddress(92));
     }
 
     /**
@@ -50,7 +57,7 @@ contract SBImmutableArgs is Clone, ISBImmutableArgs {
      */
 
     function safeTranche() public pure returns (ITranche) {
-        return ITranche(_getArgAddress(92));
+        return ITranche(_getArgAddress(112));
     }
 
     /**
@@ -58,7 +65,7 @@ contract SBImmutableArgs is Clone, ISBImmutableArgs {
      */
 
     function safeSlipAddress() public pure returns (address) {
-        return (_getArgAddress(112));
+        return (_getArgAddress(132));
     }
 
     /**
@@ -66,7 +73,7 @@ contract SBImmutableArgs is Clone, ISBImmutableArgs {
      */
 
     function safeRatio() public pure returns (uint256) {
-        return _getArgUint256(132);
+        return _getArgUint256(152);
     }
 
     /**
@@ -74,7 +81,7 @@ contract SBImmutableArgs is Clone, ISBImmutableArgs {
      */
 
     function riskTranche() public pure returns (ITranche) {
-        return ITranche(_getArgAddress(164));
+        return ITranche(_getArgAddress(184));
     }
 
     /**
@@ -82,7 +89,7 @@ contract SBImmutableArgs is Clone, ISBImmutableArgs {
      */
 
     function riskSlipAddress() public pure returns (address) {
-        return (_getArgAddress(184));
+        return (_getArgAddress(204));
     }
 
     /**
@@ -90,7 +97,7 @@ contract SBImmutableArgs is Clone, ISBImmutableArgs {
      */
 
     function riskRatio() public pure returns (uint256) {
-        return _getArgUint256(204);
+        return _getArgUint256(224);
     }
 
     /**
@@ -98,6 +105,6 @@ contract SBImmutableArgs is Clone, ISBImmutableArgs {
      */
 
     function priceGranularity() public pure returns (uint256) {
-        return _getArgUint256(236);
+        return _getArgUint256(256);
     }
 }
