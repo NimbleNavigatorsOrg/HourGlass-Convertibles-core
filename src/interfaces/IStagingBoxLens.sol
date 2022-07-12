@@ -7,6 +7,17 @@ import "../interfaces/IButtonWoodBondController.sol";
 
 interface IStagingBoxLens {
     /**
+     * @dev provides the bool for limiting factor for the staging box reinit
+     * @param _stagingBox The staging box tied to the Convertible Bond
+     * Requirements:
+     */
+
+    function viewTransmitReInitBool(IStagingBox _stagingBox)
+        external
+        view
+        returns (bool);
+
+    /**
      * @dev provides amount of stableTokens expected in return for a given collateral amount
      * @param _stagingBox The staging box tied to the Convertible Bond
      * @param _amountRaw The amount of unwrapped tokens to be used as collateral

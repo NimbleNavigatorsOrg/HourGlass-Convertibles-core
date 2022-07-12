@@ -15,7 +15,6 @@ contract CBBFactory is ICBBFactory {
     using ClonesWithImmutableArgs for address;
 
     address public immutable implementation;
-    bytes s_data;
 
     struct TranchePair {
         ITranche safeTranche;
@@ -63,7 +62,7 @@ contract CBBFactory is ICBBFactory {
         uint256 maturityDate = bond.maturityDate();
         address collateralToken = bond.collateralToken();
 
-        s_data = bytes.concat(
+        bytes memory data = bytes.concat(
             abi.encodePacked(
                 bond,
                 SlipData.safeAddress,
@@ -83,7 +82,7 @@ contract CBBFactory is ICBBFactory {
         );
 
         //Clone CBB and initialize
-        clone = ConvertibleBondBox(implementation.clone(s_data));
+        clone = ConvertibleBondBox(implementation.clone(data));
         clone.initialize(owner);
 
         //Transfer ownership of slips back to CBB
