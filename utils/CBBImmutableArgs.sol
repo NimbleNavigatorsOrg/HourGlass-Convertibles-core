@@ -14,86 +14,89 @@ import "./ICBBImmutableArgs.sol";
  */
 contract CBBImmutableArgs is Clone, ICBBImmutableArgs {
     /**
-     * @notice The bond that holds the tranches
-     * @dev using ClonesWithImmutableArgs pattern here to save gas
-     * @dev https://github.com/wighawag/clones-with-immutable-args
+     * @inheritdoc ICBBImmutableArgs
      */
     function bond() public pure override returns (IButtonWoodBondController) {
         return IButtonWoodBondController(_getArgAddress(0));
     }
 
     /**
-     * @notice The safe slip
-     * @dev using ClonesWithImmutableArgs pattern here to save gas
-     * @dev https://github.com/wighawag/clones-with-immutable-args
+     * @inheritdoc ICBBImmutableArgs
      */
     function safeSlip() public pure override returns (ISlip) {
         return ISlip(_getArgAddress(20));
     }
 
     /**
-     * @notice The risk slip
-     * @dev using ClonesWithImmutableArgs pattern here to save gas
-     * @dev https://github.com/wighawag/clones-with-immutable-args
+     * @inheritdoc ICBBImmutableArgs
      */
     function riskSlip() public pure override returns (ISlip) {
         return ISlip(_getArgAddress(40));
     }
 
     /**
-     * @notice penalty for zslips
-     * @dev using ClonesWithImmutableArgs pattern here to save gas
-     * @dev https://github.com/wighawag/clones-with-immutable-args
+     * @inheritdoc ICBBImmutableArgs
      */
     function penalty() public pure override returns (uint256) {
         return _getArgUint256(60);
     }
 
     /**
-     * @notice The collateral token used to make bonds
-     * @dev using ClonesWithImmutableArgs pattern here to save gas
-     * @dev https://github.com/wighawag/clones-with-immutable-args
-     * @return The asset being used to make bids
+     * @inheritdoc ICBBImmutableArgs
      */
     function collateralToken() public pure override returns (IERC20) {
         return IERC20(_getArgAddress(92));
     }
 
     /**
-     * @notice The stable token used to buy bonds
-     * @dev using ClonesWithImmutableArgs pattern here to save gas
-     * @dev https://github.com/wighawag/clones-with-immutable-args
-     * @return The asset being used to make bids
+     * @inheritdoc ICBBImmutableArgs
      */
     function stableToken() public pure override returns (IERC20) {
         return IERC20(_getArgAddress(112));
     }
 
     /**
-     * @notice The tranche index used to pick a safe tranche
-     * @dev using ClonesWithImmutableArgs pattern here to save gas
-     * @dev https://github.com/wighawag/clones-with-immutable-args
-     * @return The asset being used to make bids
+     * @inheritdoc ICBBImmutableArgs
      */
     function trancheIndex() public pure override returns (uint256) {
         return _getArgUint256(132);
     }
 
+    /**
+     * @inheritdoc ICBBImmutableArgs
+     */
+
     function maturityDate() public pure override returns (uint256) {
         return _getArgUint256(164);
     }
+
+    /**
+     * @inheritdoc ICBBImmutableArgs
+     */
 
     function safeTranche() public pure override returns (ITranche) {
         return ITranche(_getArgAddress(196));
     }
 
+    /**
+     * @inheritdoc ICBBImmutableArgs
+     */
+
     function safeRatio() public pure override returns (uint256) {
         return _getArgUint256(216);
     }
 
+    /**
+     * @inheritdoc ICBBImmutableArgs
+     */
+
     function riskTranche() public pure override returns (ITranche) {
         return ITranche(_getArgAddress(248));
     }
+
+    /**
+     * @inheritdoc ICBBImmutableArgs
+     */
 
     function riskRatio() public pure override returns (uint256) {
         return _getArgUint256(268);

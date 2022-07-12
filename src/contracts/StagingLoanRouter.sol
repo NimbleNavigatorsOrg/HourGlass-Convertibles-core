@@ -11,12 +11,7 @@ import "@buttonwood-protocol/button-wrappers/contracts/interfaces/IButtonToken.s
 
 contract StagingLoanRouter is IStagingLoanRouter {
     /**
-     * @dev Wraps and tranches raw token and then deposits into staging box for a simple underlying bond (A/Z)
-     * @param _stagingBox The staging box tied to the Convertible Bond
-     * @param _amountRaw The amount of SafeTranche tokens to borrow against
-     * @param _minBorrowSlips The minimum expected borrowSlips for slippage protection
-     * Requirements:
-     *  - `msg.sender` must have `approved` `_amountRaw` collateral tokens to this contract
+     * @inheritdoc IStagingLoanRouter
      */
 
     function simpleWrapTrancheBorrow(
