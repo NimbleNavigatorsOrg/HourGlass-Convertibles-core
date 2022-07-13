@@ -75,10 +75,6 @@ contract StagingLoanRouter is IStagingLoanRouter {
             });
     }
 
-    function min(uint256 a, uint256 b) private pure returns (uint256) {
-        return a <= b ? a : b;
-    }
-
     /**
      * @inheritdoc IStagingLoanRouter
      */
@@ -437,5 +433,9 @@ contract StagingLoanRouter is IStagingLoanRouter {
         IERC20 underlying = IERC20(wrapper.underlying());
 
         return (convertibleBondBox, bond, wrapper, underlying);
+    }
+
+    function min(uint256 a, uint256 b) private pure returns (uint256) {
+        return a <= b ? a : b;
     }
 }

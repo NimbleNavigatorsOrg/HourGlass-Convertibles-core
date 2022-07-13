@@ -396,12 +396,12 @@ contract ConvertibleBondBox is
      * @inheritdoc IConvertibleBondBox
      */
 
-    function cbbTransferOwnership(address newOwner)
-        external
-        override
+    function transferOwnership(address newOwner)
+        public
+        override(IConvertibleBondBox, OwnableUpgradeable)
         onlyOwner
     {
-        transferOwnership(newOwner);
+        _transferOwnership(newOwner);
     }
 
     function _atomicDeposit(

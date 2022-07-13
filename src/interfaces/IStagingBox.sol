@@ -80,8 +80,8 @@ interface IStagingBox is ISBImmutableArgs {
     function transmitReInit(bool _lendOrBorrow) external;
 
     /**
-     * @dev Transfers ownership.
-     * @param _newOwner address of the new owner of SB
+     * @dev Transfers ownership of the contract to a new account (`newOwner`).
+     * Can only be called by the current owner.
      */
-    function sbTransferOwnership(address _newOwner) external;
+    function transferOwnership(address newOwner) external;
 }

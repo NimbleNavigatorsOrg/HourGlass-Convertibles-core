@@ -143,18 +143,12 @@ contract SBIntegrationSetup is Test {
                 address(s_stableToken),
                 s_trancheIndex,
                 s_price,
-                s_owner,
                 s_cbb_owner
             )
         );
 
         s_deployedConvertibleBondBox = s_deployedSB.convertibleBondBox();
         s_deployedCBBAddress = address(s_deployedConvertibleBondBox);
-
-        vm.prank(s_cbb_owner);
-        s_deployedConvertibleBondBox.cbbTransferOwnership(
-            address(s_deployedSB)
-        );
     }
 
     function setupTranches(

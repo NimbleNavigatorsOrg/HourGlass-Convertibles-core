@@ -119,7 +119,6 @@ contract StagingLoanRouterSetup is Test {
         //         console.log("after chainlink oracle");
 
         //         (uint256 data2, bool success2) = s_chainlinkOracle.getData();
-        
 
         // console.log("datame chain", data2, success2);
 
@@ -131,9 +130,12 @@ contract StagingLoanRouterSetup is Test {
 
         // console.log("before initialize s_collateralToken", address(s_chainlinkOracle));
 
-
-        s_collateralToken.initialize(address(s_underlying), "UnderlyingToken", "UT", address(s_oracle));
-
+        s_collateralToken.initialize(
+            address(s_underlying),
+            "RebasingToken",
+            "bUT",
+            address(s_oracle)
+        );
 
         console.log("after initialize s_collateralToken");
 
@@ -186,21 +188,14 @@ contract StagingLoanRouterSetup is Test {
                 address(s_stableToken),
                 s_trancheIndex,
                 s_price,
-                s_owner,
                 s_cbb_owner
             )
         );
 
         console.log(address(s_deployedSB), "s_deployedSB");
 
-
         s_deployedConvertibleBondBox = s_deployedSB.convertibleBondBox();
         s_deployedCBBAddress = address(s_deployedConvertibleBondBox);
-
-        vm.prank(s_cbb_owner);
-        s_deployedConvertibleBondBox.cbbTransferOwnership(
-            address(s_deployedSB)
-        );
     }
 
     function setupTranches(
@@ -242,7 +237,7 @@ contract StagingLoanRouterSetup is Test {
         s_underlying.mint(s_user, s_maxUnderlyingMint);
 
         s_stagingLoanRouter = new StagingLoanRouter();
-        
+
         vm.prank(s_user);
         s_underlying.approve(address(s_stagingLoanRouter), type(uint256).max);
 

@@ -150,4 +150,15 @@ interface IStagingBoxLens {
             uint256,
             uint256
         );
+
+    /**
+     * @dev provides maximum input param for redeemBorrowSlip
+     * @param _stagingBox The staging box tied to the Convertible Bond
+     * Requirements:
+     */
+
+    function viewMaxRedeemBorrowSlip(IStagingBox _stagingBox)
+        external
+        view
+        returns (uint256);
 }

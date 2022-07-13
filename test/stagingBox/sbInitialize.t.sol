@@ -23,7 +23,6 @@ contract sbInitialize is SBIntegrationSetup {
                 address(s_stableToken),
                 s_trancheIndex,
                 s_price,
-                address(0),
                 address(0)
             )
         );
@@ -47,7 +46,6 @@ contract sbInitialize is SBIntegrationSetup {
                 address(s_stableToken),
                 s_trancheIndex,
                 s_price,
-                s_owner,
                 s_cbb_owner
             )
         );
@@ -71,7 +69,6 @@ contract sbInitialize is SBIntegrationSetup {
                 address(s_stableToken),
                 s_trancheIndex,
                 s_price,
-                s_owner,
                 s_cbb_owner
             )
         );
@@ -100,7 +97,6 @@ contract sbInitialize is SBIntegrationSetup {
                 address(s_stableToken),
                 s_trancheIndex,
                 s_price,
-                s_owner,
                 s_cbb_owner
             )
         );
