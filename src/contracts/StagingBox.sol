@@ -225,14 +225,14 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
         }
 
         //- calls `CBB.transferOwner(owner())` to transfer ownership of CBB back to Owner()
-        convertibleBondBox().cbbTransferOwnership(owner());
+        convertibleBondBox().transferOwnership(owner());
     }
 
-    function sbTransferOwnership(address _newOwner)
-        external
-        override
+    function transferOwnership(address newOwner)
+        public
+        override(IStagingBox, OwnableUpgradeable)
         onlyOwner
     {
-        transferOwnership(_newOwner);
+        _transferOwnership(newOwner);
     }
 }

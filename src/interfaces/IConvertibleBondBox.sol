@@ -179,8 +179,8 @@ interface IConvertibleBondBox is ICBBImmutableArgs {
     function maxFeeBPS() external view returns (uint256);
 
     /**
-     * @dev Transfers ownership.
-     * @param _newOwner address of the new owner of SB
+     * @dev Transfers ownership of the contract to a new account (`newOwner`).
+     * Can only be called by the current owner.
      */
-    function cbbTransferOwnership(address _newOwner) external;
+    function transferOwnership(address newOwner) external;
 }

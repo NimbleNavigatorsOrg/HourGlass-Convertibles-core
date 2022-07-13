@@ -36,7 +36,7 @@ contract TransmitReinit is SBIntegrationSetup {
         vm.mockCall(
             address(s_deployedConvertibleBondBox),
             abi.encodeWithSelector(
-                s_deployedConvertibleBondBox.cbbTransferOwnership.selector
+                s_deployedConvertibleBondBox.transferOwnership.selector
             ),
             abi.encode(true)
         );
@@ -80,7 +80,7 @@ contract TransmitReinit is SBIntegrationSetup {
         vm.mockCall(
             address(s_deployedConvertibleBondBox),
             abi.encodeWithSelector(
-                s_deployedConvertibleBondBox.cbbTransferOwnership.selector
+                s_deployedConvertibleBondBox.transferOwnership.selector
             ),
             abi.encode(true)
         );

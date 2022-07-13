@@ -51,12 +51,12 @@ contract CBBFactory is ICBBFactory {
     ) public returns (address) {
         ConvertibleBondBox clone;
 
-        TranchePair memory TrancheData = getBondData(bond, trancheIndex);
+        TranchePair memory TrancheSet = getBondData(bond, trancheIndex);
 
         SlipPair memory SlipData = deploySlips(
             slipFactory,
-            TrancheData.safeTranche,
-            TrancheData.riskTranche
+            TrancheSet.safeTranche,
+            TrancheSet.riskTranche
         );
 
         uint256 maturityDate = bond.maturityDate();
@@ -74,10 +74,10 @@ contract CBBFactory is ICBBFactory {
                 maturityDate
             ),
             abi.encodePacked(
-                TrancheData.safeTranche,
-                TrancheData.safeRatio,
-                TrancheData.riskTranche,
-                TrancheData.riskRatio
+                TrancheSet.safeTranche,
+                TrancheSet.safeRatio,
+                TrancheSet.riskTranche,
+                TrancheSet.riskRatio
             )
         );
 
@@ -130,6 +130,7 @@ contract CBBFactory is ICBBFactory {
 
     function getBondData(IButtonWoodBondController bond, uint256 trancheIndex)
         private
+        view
         returns (TranchePair memory)
     {
         uint256 trancheCount = bond.trancheCount();
@@ -146,13 +147,13 @@ contract CBBFactory is ICBBFactory {
             trancheCount - 1
         );
 
-        TranchePair memory TrancheData = TranchePair(
+        TranchePair memory TrancheSet = TranchePair(
             safeTranche,
             safeRatio,
             riskTranche,
             riskRatio
         );
 
-        return TrancheData;
+        return TrancheSet;
     }
 }

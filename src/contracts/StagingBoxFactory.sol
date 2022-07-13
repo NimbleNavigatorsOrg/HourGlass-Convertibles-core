@@ -93,7 +93,7 @@ contract StagingBoxFactory is IStagingBoxFactory {
         ISlip(SlipData.borrowSlip).changeOwner(address(clone));
 
         //transfer ownership of CBB to SB
-        convertibleBondBox.cbbTransferOwnership(address(clone));
+        convertibleBondBox.transferOwnership(address(clone));
 
         emit StagingBoxCreated(
             convertibleBondBox,
