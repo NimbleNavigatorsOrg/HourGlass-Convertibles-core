@@ -322,6 +322,8 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
         (uint256 underlyingAmount, uint256 stablesOwed, uint256 stableFees, uint256 riskTranchePayout) = 
         IStagingBoxLens(s_stagingBoxLens).viewRepayMaxAndUnwrapSimple(s_deployedSB, borrowRiskSlipBalanceBeforeRepay);
 
+        vm.assume(stablesOwed > 0);
+
         vm.startPrank(s_borrower);
         ISlip(s_deployedSB.riskSlipAddress()).approve(address(s_stagingLoanRouter), type(uint256).max);
         vm.stopPrank();
