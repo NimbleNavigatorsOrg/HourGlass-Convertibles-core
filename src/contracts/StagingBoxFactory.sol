@@ -35,7 +35,6 @@ contract StagingBoxFactory is IStagingBoxFactory {
      * @param stableToken The stable token
      * @param trancheIndex The tranche index used to determine the safe tranche
      * @param initialPrice The initial price of the safe asset
-     * @param stagingBoxOwner The owner of the SB
      * @param cbbOwner The owner of the ConvertibleBondBox
      */
 
@@ -47,7 +46,6 @@ contract StagingBoxFactory is IStagingBoxFactory {
         address stableToken,
         uint256 trancheIndex,
         uint256 initialPrice,
-        address stagingBoxOwner,
         address cbbOwner
     ) public returns (address) {
         ConvertibleBondBox convertibleBondBox = ConvertibleBondBox(
@@ -57,7 +55,7 @@ contract StagingBoxFactory is IStagingBoxFactory {
                 penalty,
                 stableToken,
                 trancheIndex,
-                cbbOwner
+                address(this)
             )
         );
 
@@ -82,24 +80,26 @@ contract StagingBoxFactory is IStagingBoxFactory {
                 convertibleBondBox.riskTranche(),
                 address(convertibleBondBox.riskSlip()),
                 convertibleBondBox.riskRatio(),
-                convertibleBondBox.s_priceGranularity(),
-                stagingBoxOwner
+                convertibleBondBox.s_priceGranularity()
             )
         );
 
         // clone staging box
         StagingBox clone = StagingBox(implementation.clone(data));
-        clone.initialize(stagingBoxOwner);
+        clone.initialize(cbbOwner);
 
         //tansfer slips ownership to staging box
         ISlip(SlipData.lendSlip).changeOwner(address(clone));
         ISlip(SlipData.borrowSlip).changeOwner(address(clone));
 
+        //transfer ownership of CBB to SB
+        convertibleBondBox.cbbTransferOwnership(address(clone));
+
         emit StagingBoxCreated(
             convertibleBondBox,
             slipFactory,
             initialPrice,
-            stagingBoxOwner,
+            cbbOwner,
             msg.sender,
             address(clone)
         );
