@@ -410,6 +410,35 @@ contract StagingBoxLens is IStagingBoxLens {
         return (underlyingAmount, stablesOwed, stableFees, _riskSlipAmount);
     }
 
+    /**
+     * @inheritdoc IStagingBoxLens
+     */
+
+    function viewMaxRedeemBorrowSlip(IStagingBox _stagingBox)
+        public
+        view
+        returns (uint256)
+    {
+        (IConvertibleBondBox convertibleBondBox, , , ) = fetchElasticStack(
+            _stagingBox
+        );
+
+        uint256 riskSlipBalance = convertibleBondBox.riskSlip().balanceOf(
+            address(_stagingBox)
+        );
+        uint256 stableBalance = convertibleBondBox.stableToken().balanceOf(
+            address(_stagingBox)
+        );
+
+        uint256 maxBorrowSlipAmountFromSlips = (riskSlipBalance *
+            _stagingBox.safeRatio()) / _stagingBox.riskRatio();
+        uint256 maxBorrowSlipAmountFromStables = (stableBalance *
+            _stagingBox.priceGranularity()) / _stagingBox.initialPrice();
+
+        return
+            min(maxBorrowSlipAmountFromSlips, maxBorrowSlipAmountFromStables);
+    }
+
     function fetchElasticStack(IStagingBox _stagingBox)
         internal
         view
@@ -427,5 +456,9 @@ contract StagingBoxLens is IStagingBoxLens {
         IERC20 underlying = IERC20(wrapper.underlying());
 
         return (convertibleBondBox, bond, wrapper, underlying);
+    }
+
+    function min(uint256 a, uint256 b) private pure returns (uint256) {
+        return a <= b ? a : b;
     }
 }
