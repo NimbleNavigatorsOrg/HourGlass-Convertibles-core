@@ -1,9 +1,9 @@
-pragma solidity 0.8.7;
+pragma solidity 0.8.13;
 
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@uniswap/lib/contracts/libraries/TransferHelper.sol";
-import "./ITranche.sol";
+import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
 
 struct TrancheData {
     ITranche token;
@@ -22,16 +22,22 @@ interface IButtonWoodBondController {
 
     function collateralToken() external view returns (address);
 
-    function tranches(uint256 i) external view returns (ITranche token, uint256 ratio);
+    function tranches(uint256 i)
+        external
+        view
+        returns (ITranche token, uint256 ratio);
 
     function trancheCount() external view returns (uint256 count);
 
     function feeBps() external view returns (uint256 fee);
 
     function maturityDate() external view returns (uint256 maturityDate);
+
     function isMature() external view returns (bool isMature);
 
     function creationDate() external view returns (uint256 creationDate);
+
+    function totalDebt() external view returns (uint256 totalDebt);
 
     /**
      * @dev Deposit `amount` tokens from `msg.sender`, get tranche tokens in return

@@ -1,5 +1,7 @@
-@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/
 @uniswap/lib/=lib/solidity-lib/
 clones-with-immutable-args/=lib/clones-with-immutable-args/src/
 @openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/
-@rari-capital/solmate/src/=lib/solmate/src/
+@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/
+@buttonwood-protocol/tranche/=lib/tranche/
+@buttonwood-protocol/button-wrappers/=lib/button-wrappers/
+forge-std/=lib\forge-std\src/

@@ -2,5 +2,9 @@
 src = 'src'
 out = 'out'
 libs = ['lib']
+fuzz_runs = 500
+eth_rpc_url = "https://kovan.infura.io/v3/62fa2a8935034ef78454bc3b22baa11b"
+etherscan_api_key = "5K9RU7RWUXAS1C6MZ6Z173I6REY9I6RTEU"
+
 
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config

@@ -1,19 +1,18 @@
-pragma solidity 0.8.7;
+pragma solidity 0.8.13;
 
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
- * @dev ERC20 token to represent a single slip for the lending box
+ * @dev ERC20 token to represent a single slip for the convertible bond box
  *
  */
 interface ISlip is IERC20 {
-
     /**
      * @dev returns the bond box address which owns this slip contract
      *  It should have admin permissions to call mint, burn, and redeem functions
      */
-    function bondBox() external view returns (address);
+    function boxOwner() external view returns (address);
 
     /**
      * @dev Mint `amount` tokens to `to`
@@ -32,15 +31,8 @@ interface ISlip is IERC20 {
     function burn(address from, uint256 amount) external;
 
     /**
-     * @dev Burn `amount` tokens from `from` and return the proportional
-     * value of the collateral token to `to`
-     * @param from The address to burn tokens from
-     * @param to The address to send collateral back to
-     * @param amount The amount of tokens to burn
+     * @dev allows owner to transfer ownership to a new owner. Implemented so that factory can transfer minting/burning ability to CBB after deployment
+     * @param newOwner The address of the CBB
      */
-    function redeem(
-        address from,
-        address to,
-        uint256 amount
-    ) external;
+    function changeOwner(address newOwner) external;
 }

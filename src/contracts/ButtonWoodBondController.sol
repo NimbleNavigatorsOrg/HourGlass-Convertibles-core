@@ -1,4 +1,4 @@
-pragma solidity 0.8.7;
+pragma solidity 0.8.13;
 
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
@@ -7,8 +7,10 @@ import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@uniswap/lib/contracts/libraries/TransferHelper.sol";
 import "../interfaces/IButtonWoodBondController.sol";
-import "../interfaces/ITrancheFactory.sol";
-import "../interfaces/ITranche.sol";
+import "@buttonwood-protocol/tranche/contracts/interfaces/ITrancheFactory.sol";
+import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
+
+import "forge-std/console2.sol";
 
 /**
  * @dev Controller for a ButtonTranche bond
@@ -16,7 +18,10 @@ import "../interfaces/ITranche.sol";
  * Invariants:
  *  - `totalDebt` should always equal the sum of all tranche tokens' `totalSupply()`
  */
-contract ButtonWoodBondController is IButtonWoodBondController, OwnableUpgradeable {
+contract ButtonWoodBondController is
+    IButtonWoodBondController,
+    OwnableUpgradeable
+{
     uint256 private constant TRANCHE_RATIO_GRANULARITY = 1000;
     // One tranche for A-Z
     uint256 private constant MAX_TRANCHE_COUNT = 26;
@@ -36,7 +41,7 @@ contract ButtonWoodBondController is IButtonWoodBondController, OwnableUpgradeab
     uint256 public override creationDate;
     uint256 public override maturityDate;
     bool public override isMature;
-    uint256 public totalDebt;
+    uint256 public override totalDebt;
 
     // Maximum amount of collateral that can be deposited into this bond
     // Used as a guardrail for initial launch.
@@ -62,34 +67,54 @@ contract ButtonWoodBondController is IButtonWoodBondController, OwnableUpgradeab
         uint256 _maturityDate,
         uint256 _depositLimit
     ) external initializer {
-        require(_trancheFactory != address(0), "BondController: invalid trancheFactory address");
-        require(_collateralToken != address(0), "BondController: invalid collateralToken address");
+        require(
+            _trancheFactory != address(0),
+            "BondController: invalid trancheFactory address"
+        );
+        require(
+            _collateralToken != address(0),
+            "BondController: invalid collateralToken address"
+        );
         require(_admin != address(0), "BondController: invalid admin address");
-        require(trancheRatios.length <= MAX_TRANCHE_COUNT, "BondController: invalid tranche count");
+        require(
+            trancheRatios.length <= MAX_TRANCHE_COUNT,
+            "BondController: invalid tranche count"
+        );
         __Ownable_init();
         transferOwnership(_admin);
 
         trancheCount = trancheRatios.length;
         collateralToken = _collateralToken;
-        string memory collateralSymbol = IERC20Metadata(collateralToken).symbol();
+        string memory collateralSymbol = IERC20Metadata(collateralToken)
+            .symbol();
 
         uint256 totalRatio;
         for (uint256 i = 0; i < trancheRatios.length; i++) {
             uint256 ratio = trancheRatios[i];
-            require(ratio <= TRANCHE_RATIO_GRANULARITY, "BondController: Invalid tranche ratio");
+            require(
+                ratio <= TRANCHE_RATIO_GRANULARITY,
+                "BondController: Invalid tranche ratio"
+            );
             totalRatio += ratio;
 
-            address trancheTokenAddress = ITrancheFactory(_trancheFactory).createTranche(
-                getTrancheName(collateralSymbol, i, trancheRatios.length),
-                getTrancheSymbol(collateralSymbol, i, trancheRatios.length),
-                _collateralToken
-            );
+            address trancheTokenAddress = ITrancheFactory(_trancheFactory)
+                .createTranche(
+                    getTrancheName(collateralSymbol, i, trancheRatios.length),
+                    getTrancheSymbol(collateralSymbol, i, trancheRatios.length),
+                    _collateralToken
+                );
             tranches.push(TrancheData(ITranche(trancheTokenAddress), ratio));
             trancheTokenAddresses[trancheTokenAddress] = true;
         }
 
-        require(totalRatio == TRANCHE_RATIO_GRANULARITY, "BondController: Invalid tranche ratios");
-        require(_maturityDate > block.timestamp, "BondController: Invalid maturity date");
+        require(
+            totalRatio == TRANCHE_RATIO_GRANULARITY,
+            "BondController: Invalid tranche ratios"
+        );
+        require(
+            _maturityDate > block.timestamp,
+            "BondController: Invalid maturity date"
+        );
         creationDate = block.timestamp;
         maturityDate = _maturityDate;
         depositLimit = _depositLimit;
@@ -103,19 +128,31 @@ contract ButtonWoodBondController is IButtonWoodBondController, OwnableUpgradeab
 
         // saving totalDebt in memory to minimize sloads
         uint256 _totalDebt = totalDebt;
-        require(_totalDebt > 0 || amount >= MINIMUM_FIRST_DEPOSIT, "BondController: invalid initial amount");
+
+        require(
+            _totalDebt > 0 || amount >= MINIMUM_FIRST_DEPOSIT,
+            "BondController: invalid initial amount"
+        );
         require(!isMature, "BondController: Already mature");
 
-        uint256 collateralBalance = IERC20(collateralToken).balanceOf(address(this));
-        require(depositLimit == 0 || collateralBalance + amount <= depositLimit, "BondController: Deposit limit");
+        uint256 collateralBalance = IERC20(collateralToken).balanceOf(
+            address(this)
+        );
+
+        require(
+            depositLimit == 0 || collateralBalance + amount <= depositLimit,
+            "BondController: Deposit limit"
+        );
 
         TrancheData[] memory _tranches = tranches;
 
         uint256 newDebt;
         uint256[] memory trancheValues = new uint256[](trancheCount);
+
         for (uint256 i = 0; i < _tranches.length; i++) {
             // NOTE: solidity 0.8 checks for over/underflow natively so no need for SafeMath
-            uint256 trancheValue = (amount * _tranches[i].ratio) / TRANCHE_RATIO_GRANULARITY;
+            uint256 trancheValue = (amount * _tranches[i].ratio) /
+                TRANCHE_RATIO_GRANULARITY;
 
             // if there is any collateral, we should scale by the debt:collateral ratio
             // note: if totalDebt == 0 then we're minting for the first time
@@ -128,9 +165,15 @@ contract ButtonWoodBondController is IButtonWoodBondController, OwnableUpgradeab
         }
         totalDebt += newDebt;
 
-        TransferHelper.safeTransferFrom(collateralToken, _msgSender(), address(this), amount);
+        TransferHelper.safeTransferFrom(
+            collateralToken,
+            _msgSender(),
+            address(this),
+            amount
+        );
         // saving feeBps in memory to minimize sloads
         uint256 _feeBps = feeBps;
+
         for (uint256 i = 0; i < trancheValues.length; i++) {
             uint256 trancheValue = trancheValues[i];
             // fee tranche tokens are minted and held by the contract
@@ -151,30 +194,58 @@ contract ButtonWoodBondController is IButtonWoodBondController, OwnableUpgradeab
      */
     function mature() external override {
         require(!isMature, "BondController: Already mature");
-        require(owner() == _msgSender() || maturityDate < block.timestamp, "BondController: Invalid call to mature");
+        require(
+            owner() == _msgSender() || maturityDate < block.timestamp,
+            "BondController: Invalid call to mature"
+        );
         isMature = true;
 
         TrancheData[] memory _tranches = tranches;
-        uint256 collateralBalance = IERC20(collateralToken).balanceOf(address(this));
+        uint256 collateralBalance = IERC20(collateralToken).balanceOf(
+            address(this)
+        );
         // Go through all tranches A-Y (not Z) delivering collateral if possible
-        for (uint256 i = 0; i < _tranches.length - 1 && collateralBalance > 0; i++) {
+        for (
+            uint256 i = 0;
+            i < _tranches.length - 1 && collateralBalance > 0;
+            i++
+        ) {
             ITranche _tranche = _tranches[i].token;
             // pay out the entire tranche token's owed collateral (equal to the supply of tranche tokens)
             // if there is not enough collateral to pay it out, pay as much as we have
-            uint256 amount = Math.min(_tranche.totalSupply(), collateralBalance);
+            uint256 amount = Math.min(
+                _tranche.totalSupply(),
+                collateralBalance
+            );
             collateralBalance -= amount;
 
-            TransferHelper.safeTransfer(collateralToken, address(_tranche), amount);
+            TransferHelper.safeTransfer(
+                collateralToken,
+                address(_tranche),
+                amount
+            );
 
             // redeem fees, sending output tokens to owner
-            _tranche.redeem(address(this), owner(), IERC20(_tranche).balanceOf(address(this)));
+            _tranche.redeem(
+                address(this),
+                owner(),
+                IERC20(_tranche).balanceOf(address(this))
+            );
         }
 
         // Transfer any remaining collaeral to the Z tranche
         if (collateralBalance > 0) {
             ITranche _tranche = _tranches[_tranches.length - 1].token;
-            TransferHelper.safeTransfer(collateralToken, address(_tranche), collateralBalance);
-            _tranche.redeem(address(this), owner(), IERC20(_tranche).balanceOf(address(this)));
+            TransferHelper.safeTransfer(
+                collateralToken,
+                address(_tranche),
+                collateralBalance
+            );
+            _tranche.redeem(
+                address(this),
+                owner(),
+                IERC20(_tranche).balanceOf(address(this))
+            );
         }
 
         emit Mature(_msgSender());
@@ -185,7 +256,10 @@ contract ButtonWoodBondController is IButtonWoodBondController, OwnableUpgradeab
      */
     function redeemMature(address tranche, uint256 amount) external override {
         require(isMature, "BondController: Bond is not mature");
-        require(trancheTokenAddresses[tranche], "BondController: Invalid tranche address");
+        require(
+            trancheTokenAddresses[tranche],
+            "BondController: Invalid tranche address"
+        );
 
         ITranche(tranche).redeem(_msgSender(), _msgSender(), amount);
         totalDebt -= amount;
@@ -199,7 +273,10 @@ contract ButtonWoodBondController is IButtonWoodBondController, OwnableUpgradeab
         require(!isMature, "BondController: Bond is already mature");
 
         TrancheData[] memory _tranches = tranches;
-        require(amounts.length == _tranches.length, "BondController: Invalid redeem amounts");
+        require(
+            amounts.length == _tranches.length,
+            "BondController: Invalid redeem amounts"
+        );
         uint256 total;
 
         for (uint256 i = 0; i < amounts.length; i++) {
@@ -208,17 +285,24 @@ contract ButtonWoodBondController is IButtonWoodBondController, OwnableUpgradeab
 
         for (uint256 i = 0; i < amounts.length; i++) {
             require(
-                (amounts[i] * TRANCHE_RATIO_GRANULARITY) / total == _tranches[i].ratio,
+                (amounts[i] * TRANCHE_RATIO_GRANULARITY) / total ==
+                    _tranches[i].ratio,
                 "BondController: Invalid redemption ratio"
             );
             _tranches[i].token.burn(_msgSender(), amounts[i]);
         }
 
-        uint256 collateralBalance = IERC20(collateralToken).balanceOf(address(this));
+        uint256 collateralBalance = IERC20(collateralToken).balanceOf(
+            address(this)
+        );
         // return as a proportion of the total debt redeemed
         uint256 returnAmount = (total * collateralBalance) / totalDebt;
         totalDebt -= total;
-        TransferHelper.safeTransfer(collateralToken, _msgSender(), returnAmount);
+        TransferHelper.safeTransfer(
+            collateralToken,
+            _msgSender(),
+            returnAmount
+        );
 
         emit Redeem(_msgSender(), amounts);
     }
@@ -247,7 +331,14 @@ contract ButtonWoodBondController is IButtonWoodBondController, OwnableUpgradeab
         uint256 _trancheCount
     ) internal pure returns (string memory) {
         return
-            string(abi.encodePacked("ButtonTranche ", collateralSymbol, " ", getTrancheLetter(index, _trancheCount)));
+            string(
+                abi.encodePacked(
+                    "ButtonTranche ",
+                    collateralSymbol,
+                    " ",
+                    getTrancheLetter(index, _trancheCount)
+                )
+            );
     }
 
     /**
@@ -262,7 +353,15 @@ contract ButtonWoodBondController is IButtonWoodBondController, OwnableUpgradeab
         uint256 index,
         uint256 _trancheCount
     ) internal pure returns (string memory) {
-        return string(abi.encodePacked("TRANCHE-", collateralSymbol, "-", getTrancheLetter(index, _trancheCount)));
+        return
+            string(
+                abi.encodePacked(
+                    "TRANCHE-",
+                    collateralSymbol,
+                    "-",
+                    getTrancheLetter(index, _trancheCount)
+                )
+            );
     }
 
     /**
@@ -271,7 +370,11 @@ contract ButtonWoodBondController is IButtonWoodBondController, OwnableUpgradeab
      * @param _trancheCount the total number of tranches
      * @return the string letter of the tranche index
      */
-    function getTrancheLetter(uint256 index, uint256 _trancheCount) internal pure returns (string memory) {
+    function getTrancheLetter(uint256 index, uint256 _trancheCount)
+        internal
+        pure
+        returns (string memory)
+    {
         bytes memory trancheLetters = bytes("ABCDEFGHIJKLMNOPQRSTUVWXY");
         bytes memory target = new bytes(1);
         if (index == _trancheCount - 1) {
