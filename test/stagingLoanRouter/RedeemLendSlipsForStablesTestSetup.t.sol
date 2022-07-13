@@ -185,7 +185,6 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
                 address(s_stableToken),
                 s_trancheIndex,
                 s_price,
-                s_owner,
                 s_cbb_owner
             )
         );
@@ -195,11 +194,6 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
 
         s_deployedConvertibleBondBox = s_deployedSB.convertibleBondBox();
         s_deployedCBBAddress = address(s_deployedConvertibleBondBox);
-
-        vm.prank(s_cbb_owner);
-        s_deployedConvertibleBondBox.cbbTransferOwnership(
-            address(s_deployedSB)
-        );
     }
 
     function setupTranches(
@@ -263,5 +257,75 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
         vm.stopPrank();
 
         s_isLend = _isLend;
+    }
+
+    function repayMaxAndUnwrapSimpleTestSetup (uint256 _swtbAmountRaw, uint256 _lendAmount) internal returns(uint256, uint256) {
+            _swtbAmountRaw = bound(_swtbAmountRaw, 1000000, s_maxUnderlyingMint);
+        (, uint256 minBorrowSlips) = s_stagingBoxLens.viewSimpleWrapTrancheBorrow(s_deployedSB, _swtbAmountRaw);
+
+        uint256 borrowerBorrowSlipBalanceBeforeSWTB = ISlip(s_deployedSB.borrowSlip()).balanceOf(s_borrower);
+
+        vm.prank(s_borrower);
+        StagingLoanRouter(s_stagingLoanRouter).simpleWrapTrancheBorrow(s_deployedSB, _swtbAmountRaw, minBorrowSlips);
+        
+        uint256 borrowerBorrowSlipBalanceAfterSWTB = ISlip(s_deployedSB.borrowSlip()).balanceOf(s_borrower);
+
+        assertFalse(_swtbAmountRaw == 0);
+
+        uint256 userStableTokenBalanceBeforeLend = IERC20(
+            s_deployedConvertibleBondBox.stableToken()
+        ).balanceOf(s_user);
+
+        _lendAmount = bound(_lendAmount, 
+        (s_deployedConvertibleBondBox.safeRatio() * s_deployedConvertibleBondBox.currentPrice()) 
+        / s_deployedConvertibleBondBox.s_priceGranularity(), 
+        userStableTokenBalanceBeforeLend);
+
+        IERC20(s_deployedConvertibleBondBox.stableToken()).approve(
+            address(s_deployedSB),
+            _lendAmount
+        );
+
+        vm.prank(s_user);
+        s_deployedSB.depositLend(s_lender, _lendAmount);
+
+        assertFalse(_lendAmount == 0);
+
+        uint256 sbStableTokenBalanceBeforeTrans = s_stableToken.balanceOf(address(s_owner));
+
+        vm.prank(s_owner);
+        s_deployedSB.transmitReInit(true);
+
+        uint256 borrowerBorrowSlipBalanceBeforeRedeem = ISlip(s_deployedSB.borrowSlip()).balanceOf(s_borrower);
+        uint256 maxArgForRedeemBorrowSlip = s_stagingBoxLens.viewMaxRedeemBorrowSlip(s_deployedSB);
+
+        if(borrowerBorrowSlipBalanceBeforeRedeem <= maxArgForRedeemBorrowSlip) {
+            vm.prank(s_borrower);
+            s_deployedSB.redeemBorrowSlip(borrowerBorrowSlipBalanceBeforeRedeem);
+        } else {
+            vm.prank(s_borrower);
+            s_deployedSB.redeemBorrowSlip(maxArgForRedeemBorrowSlip);
+            uint256 borrowerBorrowSlipBalanceAfterRedeem = ISlip(s_deployedSB.borrowSlip()).balanceOf(s_borrower);
+        
+            vm.prank(s_borrower);
+            s_deployedSB.withdrawBorrow(borrowerBorrowSlipBalanceAfterRedeem);
+            uint256 borrowerBorrowSlipBalanceAfterWithdraw = ISlip(s_deployedSB.borrowSlip()).balanceOf(s_borrower);
+        }
+
+        uint256 sbStableTokenBalanceBeforeRepay = s_stableToken.balanceOf(address(s_owner));
+        uint256 borrowRiskSlipBalanceBeforeRepay = ISlip(s_deployedSB.riskSlipAddress()).balanceOf(s_borrower);
+
+        vm.assume(borrowRiskSlipBalanceBeforeRepay >= s_deployedConvertibleBondBox.riskRatio());
+
+        s_stableToken.mint(s_borrower, s_maxMint);
+
+        (uint256 underlyingAmount, uint256 stablesOwed, uint256 stableFees, uint256 riskTranchePayout) = 
+        IStagingBoxLens(s_stagingBoxLens).viewRepayMaxAndUnwrapSimple(s_deployedSB, borrowRiskSlipBalanceBeforeRepay);
+
+        vm.startPrank(s_borrower);
+        ISlip(s_deployedSB.riskSlipAddress()).approve(address(s_stagingLoanRouter), type(uint256).max);
+        vm.stopPrank();
+
+        return (stablesOwed, borrowRiskSlipBalanceBeforeRepay);
     }
 }
