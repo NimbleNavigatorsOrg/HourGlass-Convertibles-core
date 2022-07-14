@@ -9,6 +9,21 @@ interface IStagingLoanRouter {
     error SlippageExceeded(uint256 expectedAmount, uint256 minAmount);
 
     /**
+     * @dev Wraps and tranches raw token and then deposits into staging box for a simple underlying bond (A/Z)
+     * @param _stagingBox The staging box tied to the Convertible Bond
+     * @param _amountRaw The amount of SafeTranche tokens to borrow against
+     * @param _minBorrowSlips The minimum expected borrowSlips for slippage protection
+     * Requirements:
+     *  - `msg.sender` must have `approved` `_amountRaw` collateral tokens to this contract
+     */
+
+    function simpleWrapTrancheBorrow(
+        IStagingBox _stagingBox,
+        uint256 _amountRaw,
+        uint256 _minBorrowSlips
+    ) external;
+
+    /**
      * @dev Wraps and tranches raw token and then deposits into staging box for any underlying bond
      * @param _stagingBox The staging box tied to the Convertible Bond
      * @param _amountRaw The amount of SafeTranche tokens to borrow against

@@ -13,13 +13,10 @@ import "forge-std/console2.sol";
 
 
 contract StagingLoanRouter is IStagingLoanRouter {
+    uint256 private constant trancheGran = 1000;
+
     /**
-     * @dev Wraps and tranches raw token and then deposits into staging box for a simple underlying bond (A/Z)
-     * @param _stagingBox The staging box tied to the Convertible Bond
-     * @param _amountRaw The amount of SafeTranche tokens to borrow against
-     * @param _minBorrowSlips The minimum expected borrowSlips for slippage protection
-     * Requirements:
-     *  - `msg.sender` must have `approved` `_amountRaw` collateral tokens to this contract
+     * @inheritdoc IStagingLoanRouter
      */
 
     function simpleWrapTrancheBorrow(
@@ -287,16 +284,25 @@ contract StagingLoanRouter is IStagingLoanRouter {
         );
         convertibleBondBox.repay(_stableAmount);
 
-        uint256 safeTrancheBalance = convertibleBondBox.safeTranche().balanceOf(address(this));
-        uint256 riskTrancheBalance = convertibleBondBox.riskTranche().balanceOf(address(this));
-        uint256 minimumTotal = min((safeTrancheBalance * convertibleBondBox.s_trancheGranularity()) / convertibleBondBox.safeRatio(), (riskTrancheBalance * convertibleBondBox.s_trancheGranularity()) / convertibleBondBox.riskRatio());
-
-        //call redeem on bond (ratio concern?)
-        uint256[] memory redeemAmounts = new uint256[](2);
-        redeemAmounts[0] = (
-            (minimumTotal * convertibleBondBox.safeRatio()) / convertibleBondBox.s_trancheGranularity()
+        uint256 safeTrancheBalance = convertibleBondBox.safeTranche().balanceOf(
+            address(this)
         );
-        redeemAmounts[1] = ((minimumTotal * convertibleBondBox.riskRatio()) / convertibleBondBox.s_trancheGranularity());
+        uint256 riskTrancheBalance = convertibleBondBox.riskTranche().balanceOf(
+            address(this)
+        );
+
+        uint256 safeRatio = convertibleBondBox.safeRatio();
+        uint256 riskRatio = convertibleBondBox.riskRatio();
+
+        uint256 minimumTotal = min(
+            (safeTrancheBalance * trancheGran) / safeRatio,
+            (riskTrancheBalance * trancheGran) / riskRatio
+        );
+
+        uint256[] memory redeemAmounts = new uint256[](2);
+        redeemAmounts[0] = ((minimumTotal * safeRatio) / trancheGran);
+        redeemAmounts[1] = ((minimumTotal * riskRatio) / trancheGran);
+
         bond.redeem(redeemAmounts);
 
         //unwrap rebasing collateral to msg.sender
@@ -349,15 +355,26 @@ contract StagingLoanRouter is IStagingLoanRouter {
         );
         convertibleBondBox.repayMax(_riskSlipAmount);
 
-        uint256 safeTrancheBalance = convertibleBondBox.safeTranche().balanceOf(address(this));
-        uint256 riskTrancheBalance = convertibleBondBox.riskTranche().balanceOf(address(this));
-        uint256 minimumTotal = min((safeTrancheBalance * convertibleBondBox.s_trancheGranularity()) / convertibleBondBox.safeRatio(), (riskTrancheBalance * convertibleBondBox.s_trancheGranularity()) / convertibleBondBox.riskRatio());
+        uint256 safeTrancheBalance = convertibleBondBox.safeTranche().balanceOf(
+            address(this)
+        );
+        uint256 riskTrancheBalance = convertibleBondBox.riskTranche().balanceOf(
+            address(this)
+        );
+
+        uint256 safeRatio = convertibleBondBox.safeRatio();
+        uint256 riskRatio = convertibleBondBox.riskRatio();
+
+        uint256 minimumTotal = min(
+            (safeTrancheBalance * trancheGran) / safeRatio,
+            (riskTrancheBalance * trancheGran) / riskRatio
+        );
 
         uint256[] memory redeemAmounts = new uint256[](2);
-        redeemAmounts[0] = (
-            (minimumTotal * convertibleBondBox.safeRatio()) / convertibleBondBox.s_trancheGranularity()
-        );
-        redeemAmounts[1] = ((minimumTotal * convertibleBondBox.riskRatio()) / convertibleBondBox.s_trancheGranularity());
+        redeemAmounts[0] = ((minimumTotal * safeRatio) / trancheGran);
+        redeemAmounts[1] = ((minimumTotal * riskRatio) / trancheGran);
+
+        bond.redeem(redeemAmounts);
 
         bond.redeem(redeemAmounts);
         //unwrap rebasing collateral and send underlying to msg.sender
