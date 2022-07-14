@@ -259,10 +259,13 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
         s_isLend = _isLend;
     }
 
-    function repayMaxAndUnwrapSimpleTestSetup (uint256 _swtbAmountRaw, uint256 _lendAmount) internal returns(uint256, uint256) {
+    function repayMaxAndUnwrapSimpleTestSetup (uint256 _swtbAmountRaw, uint256 _lendAmount) internal returns(uint256) {
             _swtbAmountRaw = bound(_swtbAmountRaw, 1000000, s_maxUnderlyingMint);
-        (, uint256 minBorrowSlips) = s_stagingBoxLens.viewSimpleWrapTrancheBorrow(s_deployedSB, _swtbAmountRaw);
+            console.log(_swtbAmountRaw, "_swtbAmountRaw");
+                            console.log(s_underlying.balanceOf(s_borrower), "borrowerUnderlyingBalanceBefore _swtbAmountRaw");
 
+        (, uint256 minBorrowSlips) = s_stagingBoxLens.viewSimpleWrapTrancheBorrow(s_deployedSB, _swtbAmountRaw);
+                            console.log(s_underlying.balanceOf(s_borrower), "borrowerUnderlyingBalanceAfter _swtbAmountRaw");
         uint256 borrowerBorrowSlipBalanceBeforeSWTB = ISlip(s_deployedSB.borrowSlip()).balanceOf(s_borrower);
 
         vm.prank(s_borrower);
@@ -319,15 +322,10 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
 
         s_stableToken.mint(s_borrower, s_maxMint);
 
-        (uint256 underlyingAmount, uint256 stablesOwed, uint256 stableFees, uint256 riskTranchePayout) = 
-        IStagingBoxLens(s_stagingBoxLens).viewRepayMaxAndUnwrapSimple(s_deployedSB, borrowRiskSlipBalanceBeforeRepay);
-
-        vm.assume(stablesOwed > 0);
-
         vm.startPrank(s_borrower);
         ISlip(s_deployedSB.riskSlipAddress()).approve(address(s_stagingLoanRouter), type(uint256).max);
         vm.stopPrank();
 
-        return (stablesOwed, borrowRiskSlipBalanceBeforeRepay);
+        return (borrowRiskSlipBalanceBeforeRepay);
     }
 }

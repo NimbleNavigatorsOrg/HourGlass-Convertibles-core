@@ -192,8 +192,6 @@ contract StagingLoanRouterSetup is Test {
             )
         );
 
-        console.log(address(s_deployedSB), "s_deployedSB");
-
         s_deployedConvertibleBondBox = s_deployedSB.convertibleBondBox();
         s_deployedCBBAddress = address(s_deployedConvertibleBondBox);
     }
