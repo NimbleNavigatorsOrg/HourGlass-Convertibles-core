@@ -10,6 +10,8 @@ import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
 import "@buttonwood-protocol/button-wrappers/contracts/interfaces/IButtonToken.sol";
 
 contract StagingLoanRouter is IStagingLoanRouter {
+    uint256 private constant trancheGran = 1000;
+
     /**
      * @inheritdoc IStagingLoanRouter
      */
@@ -279,13 +281,25 @@ contract StagingLoanRouter is IStagingLoanRouter {
         );
         convertibleBondBox.repay(_stableAmount);
 
-        //call redeem on bond (ratio concern?)
-        uint256[] memory redeemAmounts = new uint256[](2);
-        redeemAmounts[0] = (
-            convertibleBondBox.safeTranche().balanceOf(address(this))
+        uint256 safeTrancheBalance = convertibleBondBox.safeTranche().balanceOf(
+            address(this)
         );
-        redeemAmounts[1] = ((redeemAmounts[0] *
-            convertibleBondBox.riskRatio()) / convertibleBondBox.safeRatio());
+        uint256 riskTrancheBalance = convertibleBondBox.riskTranche().balanceOf(
+            address(this)
+        );
+
+        uint256 safeRatio = convertibleBondBox.safeRatio();
+        uint256 riskRatio = convertibleBondBox.riskRatio();
+
+        uint256 minimumTotal = min(
+            (safeTrancheBalance * trancheGran) / safeRatio,
+            (riskTrancheBalance * trancheGran) / riskRatio
+        );
+
+        uint256[] memory redeemAmounts = new uint256[](2);
+        redeemAmounts[0] = ((minimumTotal * safeRatio) / trancheGran);
+        redeemAmounts[1] = ((minimumTotal * riskRatio) / trancheGran);
+
         bond.redeem(redeemAmounts);
 
         //unwrap rebasing collateral to msg.sender
@@ -338,13 +352,25 @@ contract StagingLoanRouter is IStagingLoanRouter {
         );
         convertibleBondBox.repayMax(_riskSlipAmount);
 
-        //call redeem on bond (ratio concern?)
-        uint256[] memory redeemAmounts = new uint256[](2);
-        redeemAmounts[0] = (
-            convertibleBondBox.safeTranche().balanceOf(address(this))
+        uint256 safeTrancheBalance = convertibleBondBox.safeTranche().balanceOf(
+            address(this)
         );
-        redeemAmounts[1] = ((redeemAmounts[0] *
-            convertibleBondBox.riskRatio()) / convertibleBondBox.safeRatio());
+        uint256 riskTrancheBalance = convertibleBondBox.riskTranche().balanceOf(
+            address(this)
+        );
+
+        uint256 safeRatio = convertibleBondBox.safeRatio();
+        uint256 riskRatio = convertibleBondBox.riskRatio();
+
+        uint256 minimumTotal = min(
+            (safeTrancheBalance * trancheGran) / safeRatio,
+            (riskTrancheBalance * trancheGran) / riskRatio
+        );
+
+        uint256[] memory redeemAmounts = new uint256[](2);
+        redeemAmounts[0] = ((minimumTotal * safeRatio) / trancheGran);
+        redeemAmounts[1] = ((minimumTotal * riskRatio) / trancheGran);
+
         bond.redeem(redeemAmounts);
 
         //unwrap rebasing collateral to msg.sender
