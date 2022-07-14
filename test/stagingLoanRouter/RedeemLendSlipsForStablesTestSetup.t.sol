@@ -261,11 +261,7 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
 
     function repayMaxAndUnwrapSimpleTestSetup (uint256 _swtbAmountRaw, uint256 _lendAmount) internal returns(uint256) {
             _swtbAmountRaw = bound(_swtbAmountRaw, 1000000, s_maxUnderlyingMint);
-            console.log(_swtbAmountRaw, "_swtbAmountRaw");
-                            console.log(s_underlying.balanceOf(s_borrower), "borrowerUnderlyingBalanceBefore _swtbAmountRaw");
-
         (, uint256 minBorrowSlips) = s_stagingBoxLens.viewSimpleWrapTrancheBorrow(s_deployedSB, _swtbAmountRaw);
-                            console.log(s_underlying.balanceOf(s_borrower), "borrowerUnderlyingBalanceAfter _swtbAmountRaw");
         uint256 borrowerBorrowSlipBalanceBeforeSWTB = ISlip(s_deployedSB.borrowSlip()).balanceOf(s_borrower);
 
         vm.prank(s_borrower);

@@ -9,6 +9,9 @@ import "@uniswap/lib/contracts/libraries/TransferHelper.sol";
 import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
 import "@buttonwood-protocol/button-wrappers/contracts/interfaces/IButtonToken.sol";
 
+import "forge-std/console2.sol";
+
+
 contract StagingLoanRouter is IStagingLoanRouter {
     /**
      * @dev Wraps and tranches raw token and then deposits into staging box for a simple underlying bond (A/Z)
@@ -284,13 +287,16 @@ contract StagingLoanRouter is IStagingLoanRouter {
         );
         convertibleBondBox.repay(_stableAmount);
 
+        uint256 safeTrancheBalance = convertibleBondBox.safeTranche().balanceOf(address(this));
+        uint256 riskTrancheBalance = convertibleBondBox.riskTranche().balanceOf(address(this));
+        uint256 minimumTotal = min((safeTrancheBalance * convertibleBondBox.s_trancheGranularity()) / convertibleBondBox.safeRatio(), (riskTrancheBalance * convertibleBondBox.s_trancheGranularity()) / convertibleBondBox.riskRatio());
+
         //call redeem on bond (ratio concern?)
         uint256[] memory redeemAmounts = new uint256[](2);
         redeemAmounts[0] = (
-            convertibleBondBox.safeTranche().balanceOf(address(this))
+            (minimumTotal * convertibleBondBox.safeRatio()) / convertibleBondBox.s_trancheGranularity()
         );
-        redeemAmounts[1] = ((redeemAmounts[0] *
-            convertibleBondBox.riskRatio()) / convertibleBondBox.safeRatio());
+        redeemAmounts[1] = ((minimumTotal * convertibleBondBox.riskRatio()) / convertibleBondBox.s_trancheGranularity());
         bond.redeem(redeemAmounts);
 
         //unwrap rebasing collateral to msg.sender
@@ -343,16 +349,18 @@ contract StagingLoanRouter is IStagingLoanRouter {
         );
         convertibleBondBox.repayMax(_riskSlipAmount);
 
-        //call redeem on bond (ratio concern?)
+        uint256 safeTrancheBalance = convertibleBondBox.safeTranche().balanceOf(address(this));
+        uint256 riskTrancheBalance = convertibleBondBox.riskTranche().balanceOf(address(this));
+        uint256 minimumTotal = min((safeTrancheBalance * convertibleBondBox.s_trancheGranularity()) / convertibleBondBox.safeRatio(), (riskTrancheBalance * convertibleBondBox.s_trancheGranularity()) / convertibleBondBox.riskRatio());
+
         uint256[] memory redeemAmounts = new uint256[](2);
         redeemAmounts[0] = (
-            convertibleBondBox.safeTranche().balanceOf(address(this))
+            (minimumTotal * convertibleBondBox.safeRatio()) / convertibleBondBox.s_trancheGranularity()
         );
-        redeemAmounts[1] = ((redeemAmounts[0] *
-            convertibleBondBox.riskRatio()) / convertibleBondBox.safeRatio());
-        bond.redeem(redeemAmounts);
+        redeemAmounts[1] = ((minimumTotal * convertibleBondBox.riskRatio()) / convertibleBondBox.s_trancheGranularity());
 
-        //unwrap rebasing collateral to msg.sender
+        bond.redeem(redeemAmounts);
+        //unwrap rebasing collateral and send underlying to msg.sender
         wrapper.withdrawAllTo(msg.sender);
 
         //send unused stables back to msg.sender
