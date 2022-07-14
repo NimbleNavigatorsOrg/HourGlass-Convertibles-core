@@ -375,8 +375,6 @@ contract StagingLoanRouter is IStagingLoanRouter {
         redeemAmounts[1] = ((minimumTotal * riskRatio) / trancheGran);
 
         bond.redeem(redeemAmounts);
-
-        bond.redeem(redeemAmounts);
         //unwrap rebasing collateral and send underlying to msg.sender
         wrapper.withdrawAllTo(msg.sender);
 
