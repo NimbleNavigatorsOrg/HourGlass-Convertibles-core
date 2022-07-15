@@ -281,24 +281,21 @@ contract StagingLoanRouter is IStagingLoanRouter {
         );
         convertibleBondBox.repay(_stableAmount);
 
-        uint256 safeTrancheBalance = convertibleBondBox.safeTranche().balanceOf(
-            address(this)
-        );
-        uint256 riskTrancheBalance = convertibleBondBox.riskTranche().balanceOf(
-            address(this)
-        );
-
         uint256 safeRatio = convertibleBondBox.safeRatio();
         uint256 riskRatio = convertibleBondBox.riskRatio();
 
         uint256[] memory redeemAmounts = new uint256[](2);
-        redeemAmounts[0] = safeTrancheBalance;
-        redeemAmounts[1] = riskTrancheBalance;
+        redeemAmounts[0] = convertibleBondBox.safeTranche().balanceOf(
+            address(this)
+        );
+        redeemAmounts[1] = convertibleBondBox.riskTranche().balanceOf(
+            address(this)
+        );
 
         if (redeemAmounts[0] * riskRatio < redeemAmounts[1] * safeRatio) {
-            redeemAmounts[1] = (redeemAmounts[0] * trancheGran) / safeRatio;
+            redeemAmounts[1] = (redeemAmounts[0] * riskRatio) / safeRatio;
         } else {
-            redeemAmounts[0] = (redeemAmounts[1] * trancheGran) / riskRatio;
+            redeemAmounts[0] = (redeemAmounts[1] * safeRatio) / riskRatio;
         }
 
         redeemAmounts[0] -= redeemAmounts[0] % safeRatio;
@@ -356,25 +353,22 @@ contract StagingLoanRouter is IStagingLoanRouter {
         );
         convertibleBondBox.repayMax(_riskSlipAmount);
 
-        uint256 safeTrancheBalance = convertibleBondBox.safeTranche().balanceOf(
-            address(this)
-        );
-        uint256 riskTrancheBalance = convertibleBondBox.riskTranche().balanceOf(
-            address(this)
-        );
-
         uint256 safeRatio = convertibleBondBox.safeRatio();
         uint256 riskRatio = convertibleBondBox.riskRatio();
 
         uint256[] memory redeemAmounts = new uint256[](2);
 
-        redeemAmounts[0] = safeTrancheBalance;
-        redeemAmounts[1] = riskTrancheBalance;
+        redeemAmounts[0] = convertibleBondBox.safeTranche().balanceOf(
+            address(this)
+        );
+        redeemAmounts[1] = convertibleBondBox.riskTranche().balanceOf(
+            address(this)
+        );
 
         if (redeemAmounts[0] * riskRatio < redeemAmounts[1] * safeRatio) {
-            redeemAmounts[1] = (redeemAmounts[0] * trancheGran) / safeRatio;
+            redeemAmounts[1] = (redeemAmounts[0] * riskRatio) / safeRatio;
         } else {
-            redeemAmounts[0] = (redeemAmounts[1] * trancheGran) / riskRatio;
+            redeemAmounts[0] = (redeemAmounts[1] * safeRatio) / riskRatio;
         }
 
         redeemAmounts[0] -= redeemAmounts[0] % safeRatio;
