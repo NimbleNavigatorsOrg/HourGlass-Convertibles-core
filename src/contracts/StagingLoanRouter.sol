@@ -9,6 +9,9 @@ import "@uniswap/lib/contracts/libraries/TransferHelper.sol";
 import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
 import "@buttonwood-protocol/button-wrappers/contracts/interfaces/IButtonToken.sol";
 
+import "forge-std/console2.sol";
+
+
 contract StagingLoanRouter is IStagingLoanRouter {
     uint256 private constant trancheGran = 1000;
 
@@ -375,8 +378,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
         redeemAmounts[1] -= redeemAmounts[1] % riskRatio;
 
         bond.redeem(redeemAmounts);
-
-        //unwrap rebasing collateral to msg.sender
+        //unwrap rebasing collateral and send underlying to msg.sender
         wrapper.withdrawAllTo(msg.sender);
 
         //send unused stables back to msg.sender
