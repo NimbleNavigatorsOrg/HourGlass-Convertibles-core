@@ -291,14 +291,18 @@ contract StagingLoanRouter is IStagingLoanRouter {
         uint256 safeRatio = convertibleBondBox.safeRatio();
         uint256 riskRatio = convertibleBondBox.riskRatio();
 
-        uint256 minimumTotal = min(
-            (safeTrancheBalance * trancheGran) / safeRatio,
-            (riskTrancheBalance * trancheGran) / riskRatio
-        );
-
         uint256[] memory redeemAmounts = new uint256[](2);
-        redeemAmounts[0] = ((minimumTotal * safeRatio) / trancheGran);
-        redeemAmounts[1] = ((minimumTotal * riskRatio) / trancheGran);
+        redeemAmounts[0] = safeTrancheBalance;
+        redeemAmounts[1] = riskTrancheBalance;
+
+        if (redeemAmounts[0] * riskRatio < redeemAmounts[1] * safeRatio) {
+            redeemAmounts[1] = (redeemAmounts[0] * trancheGran) / safeRatio;
+        } else {
+            redeemAmounts[0] = (redeemAmounts[1] * trancheGran) / riskRatio;
+        }
+
+        redeemAmounts[0] -= redeemAmounts[0] % safeRatio;
+        redeemAmounts[1] -= redeemAmounts[1] % riskRatio;
 
         bond.redeem(redeemAmounts);
 
@@ -362,14 +366,19 @@ contract StagingLoanRouter is IStagingLoanRouter {
         uint256 safeRatio = convertibleBondBox.safeRatio();
         uint256 riskRatio = convertibleBondBox.riskRatio();
 
-        uint256 minimumTotal = min(
-            (safeTrancheBalance * trancheGran) / safeRatio,
-            (riskTrancheBalance * trancheGran) / riskRatio
-        );
-
         uint256[] memory redeemAmounts = new uint256[](2);
-        redeemAmounts[0] = ((minimumTotal * safeRatio) / trancheGran);
-        redeemAmounts[1] = ((minimumTotal * riskRatio) / trancheGran);
+
+        redeemAmounts[0] = safeTrancheBalance;
+        redeemAmounts[1] = riskTrancheBalance;
+
+        if (redeemAmounts[0] * riskRatio < redeemAmounts[1] * safeRatio) {
+            redeemAmounts[1] = (redeemAmounts[0] * trancheGran) / safeRatio;
+        } else {
+            redeemAmounts[0] = (redeemAmounts[1] * trancheGran) / riskRatio;
+        }
+
+        redeemAmounts[0] -= redeemAmounts[0] % safeRatio;
+        redeemAmounts[1] -= redeemAmounts[1] % riskRatio;
 
         bond.redeem(redeemAmounts);
 
