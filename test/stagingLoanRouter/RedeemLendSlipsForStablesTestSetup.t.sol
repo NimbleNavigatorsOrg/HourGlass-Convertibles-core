@@ -108,33 +108,16 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
 
         (uint256 data, bool success) = s_oracle.getData();
 
-        console.log("datame", data, success);
-
-        // s_stalenessThreshold = 1000;
-
-        // console.log("before chainlink oracle", address(s_oracle));
-
-        // s_chainlinkOracle = new ChainlinkOracle(address(s_oracle), s_stalenessThreshold);
-        //         console.log("after chainlink oracle");
-
-        //         (uint256 data2, bool success2) = s_chainlinkOracle.getData();
-        
-
-        // console.log("datame chain", data2, success2);
-
         s_underlying = new MockERC20("CollateralToken", "CT");
 
         // create buttonwood bond collateral token
         s_collateralToken = new ButtonToken();
-        // s_collateralToken = IRebasingERC20(s_collateralToken);
-
-        // console.log("before initialize s_collateralToken", address(s_chainlinkOracle));
-
 
         s_collateralToken.initialize(address(s_underlying), "UnderlyingToken", "UT", address(s_oracle));
 
+        s_maxUnderlyingMint = 200000000000000000000000;
 
-        console.log("after initialize s_collateralToken");
+        s_stagingBoxLens = new StagingBoxLens();
 
         // // create stable token
         s_stableToken = new MockERC20("StableToken", "ST");
@@ -189,9 +172,6 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
             )
         );
 
-        console.log(address(s_deployedSB), "s_deployedSB");
-
-
         s_deployedConvertibleBondBox = s_deployedSB.convertibleBondBox();
         s_deployedCBBAddress = address(s_deployedConvertibleBondBox);
     }
@@ -201,7 +181,7 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
         address _user,
         address _approvalAddress
     ) internal {
-        s_underlying.mint(_user, 200000000000000000000000);
+        s_underlying.mint(_user, s_maxUnderlyingMint);
 
         vm.prank(_user);
         s_underlying.approve(address(s_collateralToken), type(uint256).max);
@@ -232,8 +212,6 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
 
         s_stableToken.mint(s_owner, maxStableAmount);
 
-        s_maxUnderlyingMint = 200000000000000000000000;
-
         s_underlying.mint(s_borrower, s_maxUnderlyingMint);
 
         s_stagingLoanRouter = new StagingLoanRouter();
@@ -244,12 +222,10 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
         vm.prank(s_borrower);
         s_stableToken.approve(address(s_stagingLoanRouter), type(uint256).max);
 
-        s_stagingBoxLens = new StagingBoxLens();
-
-        vm.startPrank(_user);
-        s_safeTranche.approve(_approvalAddress, type(uint256).max);
-        s_riskTranche.approve(_approvalAddress, type(uint256).max);
-        s_stableToken.approve(_approvalAddress, type(uint256).max);
+        vm.startPrank(address(s_deployedSB));
+        s_safeTranche.approve(address(s_deployedConvertibleBondBox), type(uint256).max);
+        s_riskTranche.approve(address(s_deployedConvertibleBondBox), type(uint256).max);
+        s_stableToken.approve(address(s_deployedConvertibleBondBox), type(uint256).max);
         vm.stopPrank();
 
         vm.startPrank(s_user);
@@ -259,25 +235,21 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
         s_isLend = _isLend;
     }
 
-    function repayMaxAndUnwrapSimpleTestSetup (uint256 _swtbAmountRaw, uint256 _lendAmount) internal returns(uint256) {
-            _swtbAmountRaw = bound(_swtbAmountRaw, 1000000, s_maxUnderlyingMint);
-        (, uint256 minBorrowSlips) = s_stagingBoxLens.viewSimpleWrapTrancheBorrow(s_deployedSB, _swtbAmountRaw);
+    function repayMaxAndUnwrapSimpleTestSetup (uint256 _lendAmount) internal returns(uint256, uint256) {
+        (, uint256 minBorrowSlips) = s_stagingBoxLens.viewSimpleWrapTrancheBorrow(s_deployedSB, s_maxUnderlyingMint);
+
         uint256 borrowerBorrowSlipBalanceBeforeSWTB = ISlip(s_deployedSB.borrowSlip()).balanceOf(s_borrower);
-
         vm.prank(s_borrower);
-        StagingLoanRouter(s_stagingLoanRouter).simpleWrapTrancheBorrow(s_deployedSB, _swtbAmountRaw, minBorrowSlips);
-        
-        uint256 borrowerBorrowSlipBalanceAfterSWTB = ISlip(s_deployedSB.borrowSlip()).balanceOf(s_borrower);
+        StagingLoanRouter(s_stagingLoanRouter).simpleWrapTrancheBorrow(s_deployedSB, s_maxUnderlyingMint, 0);
 
-        assertFalse(_swtbAmountRaw == 0);
+        uint256 borrowerBorrowSlipBalanceAfterSWTB = ISlip(s_deployedSB.borrowSlip()).balanceOf(s_borrower);
 
         uint256 userStableTokenBalanceBeforeLend = IERC20(
             s_deployedConvertibleBondBox.stableToken()
         ).balanceOf(s_user);
-
         _lendAmount = bound(_lendAmount, 
         (s_deployedConvertibleBondBox.safeRatio() * s_deployedConvertibleBondBox.currentPrice()) 
-        / s_deployedConvertibleBondBox.s_priceGranularity(), 
+        / s_deployedConvertibleBondBox.s_priceGranularity() + 1, 
         userStableTokenBalanceBeforeLend);
 
         IERC20(s_deployedConvertibleBondBox.stableToken()).approve(
@@ -300,14 +272,16 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
 
         if(borrowerBorrowSlipBalanceBeforeRedeem <= maxArgForRedeemBorrowSlip) {
             vm.prank(s_borrower);
+            
             s_deployedSB.redeemBorrowSlip(borrowerBorrowSlipBalanceBeforeRedeem);
         } else {
             vm.prank(s_borrower);
             s_deployedSB.redeemBorrowSlip(maxArgForRedeemBorrowSlip);
             uint256 borrowerBorrowSlipBalanceAfterRedeem = ISlip(s_deployedSB.borrowSlip()).balanceOf(s_borrower);
-        
+            uint256 sbSafeTrancheBalanceBeforeRedeem = ITranche(s_deployedSB.safeTranche()).balanceOf(address(s_deployedSB));
+            
             vm.prank(s_borrower);
-            s_deployedSB.withdrawBorrow(borrowerBorrowSlipBalanceAfterRedeem);
+            s_deployedSB.withdrawBorrow(borrowerBorrowSlipBalanceAfterRedeem > sbSafeTrancheBalanceBeforeRedeem ? sbSafeTrancheBalanceBeforeRedeem : borrowerBorrowSlipBalanceAfterRedeem);
             uint256 borrowerBorrowSlipBalanceAfterWithdraw = ISlip(s_deployedSB.borrowSlip()).balanceOf(s_borrower);
         }
 
@@ -322,6 +296,21 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
         ISlip(s_deployedSB.riskSlipAddress()).approve(address(s_stagingLoanRouter), type(uint256).max);
         vm.stopPrank();
 
-        return (borrowRiskSlipBalanceBeforeRepay);
+        return (borrowRiskSlipBalanceBeforeRepay, _lendAmount);
+    }
+
+    function withinTolerance(uint256 num, uint256 num2, uint256 tolerance) view internal returns(bool) {
+        uint256 difference = 0;
+        num > num2 ? difference = num - num2 : difference = num2 - num;
+        return difference <= tolerance;
+    }
+
+    function squareRootOf(uint x) internal returns (uint y) {
+        uint z = (x + 1) / 2;
+        y = x;
+        while (z < y) {
+            y = z;
+            z = (x / z + z) / 2;
+        }
     }
 }

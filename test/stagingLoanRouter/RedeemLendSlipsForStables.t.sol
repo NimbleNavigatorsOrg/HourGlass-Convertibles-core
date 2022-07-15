@@ -9,105 +9,52 @@ import "forge-std/console2.sol";
 
 contract RedeemLendSlipsForStables is RedeemLendSlipsForStablesTestSetup {
 
-    function testRedeemLendSlipsForStablesTransfersUnderlyingFromMsgSender(uint256 _fuzzPrice, uint256 _swtbAmountRaw, uint256 _lendAmount) public {
+    function testRedeemLendSlipsForStablesTransfersUnderlyingFromMsgSender(uint256 _fuzzPrice, uint256 _lendAmount, uint256 _lendSlipAmount) public {
         setupStagingBox(_fuzzPrice);
-        setupTranches(false, address(s_deployedSB), s_deployedCBBAddress);
-        _swtbAmountRaw = bound(_swtbAmountRaw, 1000000, s_maxUnderlyingMint);
-        (, uint256 minBorrowSlips) = s_stagingBoxLens.viewSimpleWrapTrancheBorrow(s_deployedSB, _swtbAmountRaw);
+        setupTranches(false, s_owner, s_deployedCBBAddress);
+        (uint256 borrowRiskSlipBalanceBeforeRepay, uint256 lendAmount) = repayMaxAndUnwrapSimpleTestSetup(_lendAmount);
 
-        uint256 borrowerBorrowSlipBalanceBeforeSWTB = ISlip(s_deployedSB.borrowSlip()).balanceOf(s_borrower);
+        (uint256 underlyingAmount, uint256 stablesOwed, uint256 stableFees, uint256 riskTranchePayout) = 
+        IStagingBoxLens(s_stagingBoxLens).viewRepayMaxAndUnwrapSimple(s_deployedSB, borrowRiskSlipBalanceBeforeRepay);
 
-        console.log(_swtbAmountRaw, "_swtbAmountRaw");
-        console.log(borrowerBorrowSlipBalanceBeforeSWTB, "borrowerBorrowSlipBalanceBeforeSWTB");
+        vm.assume(stablesOwed > 0);
 
         vm.prank(s_borrower);
-        StagingLoanRouter(s_stagingLoanRouter).simpleWrapTrancheBorrow(s_deployedSB, _swtbAmountRaw, minBorrowSlips);
-        
-        uint256 borrowerBorrowSlipBalanceAfterSWTB = ISlip(s_deployedSB.borrowSlip()).balanceOf(s_borrower);
+        StagingLoanRouter(s_stagingLoanRouter).repayMaxAndUnwrapSimple(
+            s_deployedSB, 
+            stablesOwed,
+            borrowRiskSlipBalanceBeforeRepay
+            );
 
-        console.log(borrowerBorrowSlipBalanceAfterSWTB, "borrowerBorrowSlipBalanceAfterSWTB");
+        assertFalse(stablesOwed == 0);
+        assertFalse(borrowRiskSlipBalanceBeforeRepay == 0);
 
-        assertFalse(_swtbAmountRaw == 0);
+        vm.warp(s_maturityDate);
 
-        uint256 userStableTokenBalanceBeforeLend = IERC20(
-            s_deployedConvertibleBondBox.stableToken()
-        ).balanceOf(s_user);
+        uint256 lendSlipBalance = ISlip(s_deployedSB.lendSlip()).balanceOf(s_lender);
 
-        _lendAmount = bound(_lendAmount, 
-        (s_deployedConvertibleBondBox.safeRatio() * s_deployedConvertibleBondBox.currentPrice()) 
-        / s_deployedConvertibleBondBox.s_priceGranularity(), 
-        userStableTokenBalanceBeforeLend);
+        vm.startPrank(s_lender);
+        ISlip(s_deployedSB.lendSlip()).approve(address(s_stagingLoanRouter), type(uint256).max);
+        vm.stopPrank();
 
-        IERC20(s_deployedConvertibleBondBox.stableToken()).approve(
-            address(s_deployedSB),
-            _lendAmount
-        );
+        uint256 stableAmount = s_stagingBoxLens.viewRedeemLendSlipsForStables(s_deployedSB, lendSlipBalance);
 
-        vm.prank(s_user);
-        s_deployedSB.depositLend(s_lender, _lendAmount);
+        uint256 lenderStableBalanceBefore = s_stableToken.balanceOf(s_lender);
+        uint256 lenderLendSlipBalanceBefore = ISlip(s_deployedSB.lendSlip()).balanceOf(s_lender);
 
-        assertFalse(_lendAmount == 0);
+        uint256 cbbStableBalance = s_stableToken.balanceOf(address(s_deployedConvertibleBondBox));
 
-        uint256 sbStableTokenBalanceBeforeTrans = s_stableToken.balanceOf(address(s_owner));
-
-        vm.prank(s_owner);
-        s_deployedSB.transmitReInit(true);
-
-        uint256 borrowerBorrowSlipBalanceBeforeRedeem = ISlip(s_deployedSB.borrowSlip()).balanceOf(s_borrower);
-        console.log(borrowerBorrowSlipBalanceBeforeRedeem, "borrowerBorrowSlipBalanceBeforeRedeem");
-
-        uint256 sbRiskSlipBalanceBeforeRedeem = ISlip(riskSlipAddress()).balanceOf(address(s_deployedSB));
-
-        uint256 calculatedRiskSlipReturn = (borrowerBorrowSlipBalanceBeforeRedeem * s_deployedSB.riskRatio()) / s_deployedSB.safeRatio();
-        console.log(calculatedRiskSlipReturn, "calculatedRiskSlipReturn");
-        console.log(sbRiskSlipBalanceBeforeRedeem, "sbRiskSlipBalanceBeforeRedeem");
-
-        uint256 sbRiskSlipBalanceBeforeRedeem
-
-        if(calculatedRiskSlipReturn <= sbRiskSlipBalanceBeforeRedeem) {
-            vm.prank(s_borrower);
-            s_deployedSB.redeemBorrowSlip(borrowerBorrowSlipBalanceBeforeRedeem);
+        if(cbbStableBalance >= stableAmount) {
+            vm.prank(s_lender);
+            StagingLoanRouter(s_stagingLoanRouter).redeemLendSlipsForStables(s_deployedSB, lendSlipBalance);
         } else {
-            vm.prank(s_borrower);
-            s_deployedSB.redeemBorrowSlip(borrowerBorrowSlipBalanceBeforeRedeem);
+            uint256 maxRedeemableLendSlips = squareRootOf(cbbStableBalance * s_deployedConvertibleBondBox.s_repaidSafeSlips());
+            vm.startPrank(s_lender);
+            s_stagingLoanRouter.redeemLendSlipsForStables(s_deployedSB, s_deployedConvertibleBondBox.s_repaidSafeSlips());
+            vm.stopPrank();
         }
-        
 
-
-        uint256 borrowerBorrowSlipBalanceAfterRedeem = ISlip(s_deployedSB.borrowSlip()).balanceOf(s_borrower);
-        console.log(borrowerBorrowSlipBalanceAfterRedeem, "borrowerBorrowSlipBalanceAfterRedeem");
-
-
-
-        //TODO below code is for reference delete soon bear.
-        console2.log(ISlip(riskSlipAddress()).balanceOf(address(this)), " riskSlipAddress().balanceOf(address(this))");
-
-        TransferHelper.safeTransfer(
-            riskSlipAddress(),
-            _msgSender(),
-            (_borrowSlipAmount * riskRatio()) / safeRatio()
-        );
-
-
-
-        uint256 sbStableTokenBalanceBeforeRepay = s_stableToken.balanceOf(address(s_owner));
-        uint256 borrowRiskSlipBalanceBeforeRepay = ISlip(s_deployedSB.riskSlipAddress()).balanceOf(s_borrower);
-
-        s_stableToken.mint(s_borrower, s_maxMint);
-
-        StagingBoxLens s_deployedLens = new StagingBoxLens();
-
-        // (uint256 underlyingAmount, uint256 stablesOwed, uint256 stableFees, uint256 riskTranchePayout) = IStagingBoxLens(s_deployedLens).viewRepayMaxAndUnwrapSimple(s_deployedSB, borrowRiskSlipBalanceBeforeRepay);
-
-        // vm.prank(s_borrower);
-        // StagingLoanRouter(s_stagingLoanRouter).repayMaxAndUnwrapSimple(
-        //     s_deployedSB, 
-        //     stablesOwed,
-        //     borrowRiskSlipBalanceBeforeRepay
-        //     );
-
-
-        vm.warp(s_deployedConvertibleBondBox.maturityDate());
-
+        uint256 lenderStableBalanceAfter = s_stableToken.balanceOf(s_lender);
+        uint256 lenderLendSlipBalanceAfter = ISlip(s_deployedSB.lendSlip()).balanceOf(s_lender);
     }
 }

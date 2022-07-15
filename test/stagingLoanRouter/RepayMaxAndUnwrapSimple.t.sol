@@ -9,10 +9,10 @@ import "forge-std/console2.sol";
 
 contract RepayMaxAndUnwrapSimple is RedeemLendSlipsForStablesTestSetup {
 
-    function testRepayMaxAndUnwrapSimpleTransfersStablesFromMsgSender(uint256 _fuzzPrice, uint256 _swtbAmountRaw, uint256 _lendAmount) public {
+    function testRepayMaxAndUnwrapSimpleTransfersStablesFromMsgSender(uint256 _fuzzPrice, uint256 _lendAmount) public {
         setupStagingBox(_fuzzPrice);
-        setupTranches(false, address(s_deployedSB), s_deployedCBBAddress);
-        uint256 borrowRiskSlipBalanceBeforeRepay = repayMaxAndUnwrapSimpleTestSetup(_swtbAmountRaw, _lendAmount);
+        setupTranches(false, s_owner, s_deployedCBBAddress);
+        (uint256 borrowRiskSlipBalanceBeforeRepay, uint256 lendAmount) = repayMaxAndUnwrapSimpleTestSetup(_lendAmount);
 
         (uint256 underlyingAmount, uint256 stablesOwed, uint256 stableFees, uint256 riskTranchePayout) = 
         IStagingBoxLens(s_stagingBoxLens).viewRepayMaxAndUnwrapSimple(s_deployedSB, borrowRiskSlipBalanceBeforeRepay);
@@ -39,10 +39,10 @@ contract RepayMaxAndUnwrapSimple is RedeemLendSlipsForStablesTestSetup {
         assertFalse(borrowRiskSlipBalanceBeforeRepay == 0);
     }
 
-    function testRepayMaxAndUnwrapSimpleTransfersRiskSlipsToRouter(uint256 _fuzzPrice, uint256 _swtbAmountRaw, uint256 _lendAmount) public {
+    function testRepayMaxAndUnwrapSimpleTransfersRiskSlipsToRouter(uint256 _fuzzPrice, uint256 _lendAmount) public {
         setupStagingBox(_fuzzPrice);
-        setupTranches(false, address(s_deployedSB), s_deployedCBBAddress);
-        uint256 borrowRiskSlipBalanceBeforeRepay = repayMaxAndUnwrapSimpleTestSetup(_swtbAmountRaw, _lendAmount);
+        setupTranches(false, s_owner, s_deployedCBBAddress);
+        (uint256 borrowRiskSlipBalanceBeforeRepay, uint256 lendAmount) = repayMaxAndUnwrapSimpleTestSetup(_lendAmount);
 
         (uint256 underlyingAmount, uint256 stablesOwed, uint256 stableFees, uint256 riskTranchePayout) = 
         IStagingBoxLens(s_stagingBoxLens).viewRepayMaxAndUnwrapSimple(s_deployedSB, borrowRiskSlipBalanceBeforeRepay);
@@ -62,11 +62,6 @@ contract RepayMaxAndUnwrapSimple is RedeemLendSlipsForStablesTestSetup {
         uint256 borrowerRiskSlipBalanceAfter = ISlip(s_deployedSB.riskSlipAddress()).balanceOf(s_borrower);
         uint256 routerRiskSlipBalanceAfter = ISlip(s_deployedSB.riskSlipAddress()).balanceOf(address(s_stagingLoanRouter));
 
-        console.log(routerRiskSlipBalanceBefore, "routerRiskSlipBalanceBefore");
-        console.log(routerRiskSlipBalanceAfter, "routerRiskSlipBalanceAfter");
-        console.log(borrowRiskSlipBalanceBeforeRepay, "borrowRiskSlipBalanceBeforeRepay");
-
-
         assertEq(borrowerRiskSlipBalanceBefore - borrowRiskSlipBalanceBeforeRepay, borrowerRiskSlipBalanceAfter);
         assertEq(routerRiskSlipBalanceBefore, routerRiskSlipBalanceAfter);
 
@@ -74,10 +69,10 @@ contract RepayMaxAndUnwrapSimple is RedeemLendSlipsForStablesTestSetup {
         assertFalse(borrowRiskSlipBalanceBeforeRepay == 0);
     }
 
-    function testRepayMaxAndUnwrapSimpleSendsUnderlyingToMsgSender(uint256 _fuzzPrice, uint256 _swtbAmountRaw, uint256 _lendAmount) public {
+    function testRepayMaxAndUnwrapSimpleSendsUnderlyingToMsgSender(uint256 _fuzzPrice, uint256 _lendAmount) public {
         setupStagingBox(_fuzzPrice);
-        setupTranches(false, address(s_deployedSB), s_deployedCBBAddress);
-        uint256 borrowRiskSlipBalanceBeforeRepay = repayMaxAndUnwrapSimpleTestSetup(_swtbAmountRaw, _lendAmount);
+        setupTranches(false, s_owner, s_deployedCBBAddress);
+        (uint256 borrowRiskSlipBalanceBeforeRepay, uint256 lendAmount) = repayMaxAndUnwrapSimpleTestSetup(_lendAmount);
 
         (uint256 underlyingAmount, uint256 stablesOwed, uint256 stableFees, uint256 riskTranchePayout) = 
         IStagingBoxLens(s_stagingBoxLens).viewRepayMaxAndUnwrapSimple(s_deployedSB, borrowRiskSlipBalanceBeforeRepay);
@@ -89,8 +84,6 @@ contract RepayMaxAndUnwrapSimple is RedeemLendSlipsForStablesTestSetup {
         uint256 borrowerUnderlyingBalanceBefore = s_underlying.balanceOf(s_borrower);
         uint256 bondCollateralBalanceBefore = s_collateralToken.balanceOf(bond);
 
-        // multiply stablesOwed by number above one and warp time for final stable test
-
         vm.prank(s_borrower);
         StagingLoanRouter(s_stagingLoanRouter).repayMaxAndUnwrapSimple(
             s_deployedSB, 
@@ -101,27 +94,17 @@ contract RepayMaxAndUnwrapSimple is RedeemLendSlipsForStablesTestSetup {
         uint256 borrowerUnderlyingBalanceAfter = s_underlying.balanceOf(s_borrower);
         uint256 bondCollateralBalanceAfter = s_collateralToken.balanceOf(bond);
 
-                console.log(underlyingAmount, "underlyingAmount");
-                console.log(bondCollateralBalanceBefore + underlyingAmount, "bondCollateralBalanceBefore");
-                console.log(bondCollateralBalanceAfter, "bondCollateralBalanceAfter");
+        assertTrue(borrowerUnderlyingBalanceBefore + underlyingAmount <= borrowerUnderlyingBalanceAfter);
 
-                console.log(borrowerUnderlyingBalanceBefore, "borrowerUnderlyingBalanceBefore");
-
-                console.log(borrowerUnderlyingBalanceBefore +underlyingAmount, "borrowerUnderlyingBalance + underlying ");
-
-                console.log(borrowerUnderlyingBalanceAfter, "borrowerUnderlyingBalanceAfter");
-
-
-        assertEq(borrowerUnderlyingBalanceBefore + underlyingAmount, borrowerUnderlyingBalanceAfter);
-
+        assertTrue(withinTolerance(borrowerUnderlyingBalanceBefore + underlyingAmount, borrowerUnderlyingBalanceAfter, 200000));
         assertFalse(stablesOwed == 0);
         assertFalse(borrowRiskSlipBalanceBeforeRepay == 0);
     }
 
-    function testRepayMaxAndUnwrapSimpleTransfersExtraStablesBackToMsgSender(uint256 _fuzzPrice, uint256 _swtbAmountRaw, uint256 _lendAmount) public {
+    function testRepayMaxAndUnwrapSimpleTransfersExtraStablesBackToMsgSender(uint256 _fuzzPrice, uint256 _lendAmount) public {
         setupStagingBox(_fuzzPrice);
-        setupTranches(false, address(s_deployedSB), s_deployedCBBAddress);
-        uint256 borrowRiskSlipBalanceBeforeRepay = repayMaxAndUnwrapSimpleTestSetup(_swtbAmountRaw, _lendAmount);
+        setupTranches(false, s_owner, s_deployedCBBAddress);
+        (uint256 borrowRiskSlipBalanceBeforeRepay, uint256 lendAmount) = repayMaxAndUnwrapSimpleTestSetup(_lendAmount);
 
         (uint256 underlyingAmount, uint256 stablesOwed, uint256 stableFees, uint256 riskTranchePayout) = 
         IStagingBoxLens(s_stagingBoxLens).viewRepayMaxAndUnwrapSimple(s_deployedSB, borrowRiskSlipBalanceBeforeRepay);
