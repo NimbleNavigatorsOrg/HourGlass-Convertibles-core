@@ -157,7 +157,7 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
     }
 
     function setupStagingBox(uint256 _fuzzPrice) internal {
-        s_price = bound(_fuzzPrice, 1e7, s_priceGranularity);
+        s_price = bound(_fuzzPrice, 1, s_priceGranularity);
 
         s_deployedSB = StagingBox(
             stagingBoxFactory.createStagingBox(
