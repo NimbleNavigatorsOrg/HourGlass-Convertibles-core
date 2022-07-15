@@ -11,7 +11,6 @@ import "@buttonwood-protocol/button-wrappers/contracts/interfaces/IButtonToken.s
 
 import "forge-std/console2.sol";
 
-
 contract StagingLoanRouter is IStagingLoanRouter {
     uint256 private constant trancheGran = 1000;
 
