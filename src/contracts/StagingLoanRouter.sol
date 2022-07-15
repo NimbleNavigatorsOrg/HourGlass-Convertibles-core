@@ -375,9 +375,9 @@ contract StagingLoanRouter is IStagingLoanRouter {
         redeemAmounts[1] = riskTrancheBalance;
 
         if (redeemAmounts[0] * riskRatio < redeemAmounts[1] * safeRatio) {
-            redeemAmounts[1] = (redeemAmounts[0] * trancheGran) / safeRatio;
+            redeemAmounts[1] = (redeemAmounts[0] * riskRatio) / safeRatio;
         } else {
-            redeemAmounts[0] = (redeemAmounts[1] * trancheGran) / riskRatio;
+            redeemAmounts[0] = (redeemAmounts[1] * safeRatio) / riskRatio;
         }
 
         redeemAmounts[0] -= redeemAmounts[0] % safeRatio;

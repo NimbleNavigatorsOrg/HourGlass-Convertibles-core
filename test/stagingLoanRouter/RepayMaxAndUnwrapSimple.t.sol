@@ -14,10 +14,9 @@ contract RepayMaxAndUnwrapSimple is RedeemLendSlipsForStablesTestSetup {
         setupTranches(false, s_owner, s_deployedCBBAddress);
         (uint256 borrowRiskSlipBalanceBeforeRepay, uint256 lendAmount) = repayMaxAndUnwrapSimpleTestSetup(_lendAmount);
 
+        borrowRiskSlipBalanceBeforeRepay = bound(borrowRiskSlipBalanceBeforeRepay, s_deployedConvertibleBondBox.riskRatio(), borrowRiskSlipBalanceBeforeRepay);
         (uint256 underlyingAmount, uint256 stablesOwed, uint256 stableFees, uint256 riskTranchePayout) = 
         IStagingBoxLens(s_stagingBoxLens).viewRepayMaxAndUnwrapSimple(s_deployedSB, borrowRiskSlipBalanceBeforeRepay);
-
-        vm.assume(stablesOwed > 0);
 
         uint256 borrowerStableBalanceBefore = s_stableToken.balanceOf(s_borrower);
         uint256 stagingLoanRouterStableBalanceBefore = s_stableToken.balanceOf(address(s_stagingLoanRouter));
