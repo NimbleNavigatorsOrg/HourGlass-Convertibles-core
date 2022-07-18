@@ -52,8 +52,11 @@ contract ConvertibleBondBox is
                 given: penalty(),
                 maxPenalty: s_penaltyGranularity
             });
-        if (bond().isMature())
-            revert BondIsMature({given: bond().isMature(), required: false});
+        if (block.timestamp > maturityDate())
+            revert BondIsMature({
+                currentTime: block.timestamp,
+                maturity: maturityDate()
+            });
 
         emit Initialized(_owner);
     }
@@ -76,6 +79,13 @@ contract ConvertibleBondBox is
             });
         if (_initialPrice == 0)
             revert InitialPriceIsZero({given: 0, maxPrice: priceGranularity});
+
+        if (block.timestamp > maturityDate())
+            revert BondIsMature({
+                currentTime: block.timestamp,
+                maturity: maturityDate()
+            });
+
         s_initialPrice = _initialPrice;
 
         //set ConvertibleBondBox Start Date to be time when init() is called
@@ -384,8 +394,11 @@ contract ConvertibleBondBox is
      */
 
     function setFee(uint256 newFeeBps) external override onlyOwner {
-        if (bond().isMature())
-            revert BondIsMature({given: bond().isMature(), required: false});
+        if (block.timestamp > maturityDate())
+            revert BondIsMature({
+                currentTime: block.timestamp,
+                maturity: maturityDate()
+            });
         if (newFeeBps > maxFeeBPS)
             revert FeeTooLarge({input: newFeeBps, maximum: maxFeeBPS});
         feeBps = newFeeBps;
@@ -417,8 +430,11 @@ contract ConvertibleBondBox is
                 minStartDate: block.timestamp
             });
 
-        if (bond().isMature())
-            revert BondIsMature({given: bond().isMature(), required: false});
+        if (block.timestamp > maturityDate())
+            revert BondIsMature({
+                currentTime: block.timestamp,
+                maturity: maturityDate()
+            });
 
         //Transfer safeTranche to ConvertibleBondBox
         TransferHelper.safeTransferFrom(

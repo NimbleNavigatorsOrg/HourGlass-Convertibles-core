@@ -151,7 +151,6 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
     }
 
     function redeemBorrowSlip(uint256 _borrowSlipAmount) external override {
-        // Ensure CBB is reinitialized (may not be necessary)
         // Transfer `_borrowSlipAmount*riskRatio()/safeRatio()` of RiskSlips to msg.sender
         TransferHelper.safeTransfer(
             riskSlipAddress(),
@@ -174,8 +173,6 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
     }
 
     function redeemLendSlip(uint256 _lendSlipAmount) external override {
-        //- Ensure CBB is reinitialized (may not be necessary since reinitializer already covers)
-
         //- Transfer `_lendSlipAmount*priceGranularity()/initialPrice()`  of SafeSlips to msg.sender
         TransferHelper.safeTransfer(
             safeSlipAddress(),

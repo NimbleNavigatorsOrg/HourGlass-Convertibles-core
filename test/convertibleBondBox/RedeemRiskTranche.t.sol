@@ -67,8 +67,6 @@ contract RedeemRiskTranche is CBBSetup {
         );
         fee = bound(fee, 0, s_maxFeeBPS);
 
-        vm.warp(time);
-
         address borrowerAddress = address(1);
         address lenderAddress = address(2);
 
@@ -84,6 +82,8 @@ contract RedeemRiskTranche is CBBSetup {
 
         vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.setFee(fee);
+
+        vm.warp(time);
 
         riskSlipAmountToRedeem = bound(
             riskSlipAmountToRedeem,
@@ -129,8 +129,6 @@ contract RedeemRiskTranche is CBBSetup {
         );
         fee = bound(fee, 0, s_maxFeeBPS);
 
-        vm.warp(time);
-
         address borrowerAddress = address(1);
         address lenderAddress = address(2);
 
@@ -146,6 +144,8 @@ contract RedeemRiskTranche is CBBSetup {
 
         vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.setFee(fee);
+
+        vm.warp(time);
 
         riskSlipAmountToRedeem = bound(
             riskSlipAmountToRedeem,
@@ -208,8 +208,6 @@ contract RedeemRiskTranche is CBBSetup {
         );
         fee = bound(fee, 0, s_maxFeeBPS);
 
-        vm.warp(time);
-
         address borrowerAddress = address(1);
         address lenderAddress = address(2);
 
@@ -225,6 +223,8 @@ contract RedeemRiskTranche is CBBSetup {
 
         vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.setFee(fee);
+
+        vm.warp(time);
 
         riskSlipAmountToRedeem = bound(
             riskSlipAmountToRedeem,
@@ -268,8 +268,6 @@ contract RedeemRiskTranche is CBBSetup {
         );
         fee = bound(fee, 0, s_maxFeeBPS);
 
-        vm.warp(time);
-
         address borrowerAddress = address(1);
         address lenderAddress = address(2);
 
@@ -286,6 +284,7 @@ contract RedeemRiskTranche is CBBSetup {
         vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.setFee(fee);
 
+        vm.warp(time);
         riskSlipAmountToRedeem = bound(
             riskSlipAmountToRedeem,
             s_deployedConvertibleBondBox.riskRatio(),

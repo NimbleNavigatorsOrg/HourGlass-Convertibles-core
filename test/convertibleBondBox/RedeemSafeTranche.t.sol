@@ -18,15 +18,13 @@ contract RedeemSafeTranche is CBBSetup {
     //redeemSafeTranche()
 
     function testRedeemSafeTranche(uint256 amount, uint256 time) public {
-        time = bound(time, 0, s_endOfUnixTime - s_maturityDate);
+        time = bound(time, s_maturityDate, s_endOfUnixTime);
 
         amount = bound(
             amount,
             s_safeRatio,
             s_safeTranche.balanceOf(s_cbb_owner)
         );
-
-        vm.warp(s_maturityDate + time);
 
         vm.prank(s_cbb_owner);
         s_deployedConvertibleBondBox.reinitialize(s_price);
@@ -62,6 +60,8 @@ contract RedeemSafeTranche is CBBSetup {
 
         uint256 riskTranchePayout = (amount * zPenaltyTotal) /
             (safeSlipSupply - s_deployedConvertibleBondBox.s_repaidSafeSlips());
+
+        vm.warp(time);
         vm.startPrank(address(2));
         vm.expectEmit(true, true, true, true);
         emit RedeemSafeTranche(address(2), amount);

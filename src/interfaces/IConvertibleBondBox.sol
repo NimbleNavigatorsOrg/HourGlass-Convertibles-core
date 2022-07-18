@@ -39,7 +39,7 @@ interface IConvertibleBondBox is ICBBImmutableArgs {
     event FeeUpdate(uint256 newFee);
 
     error PenaltyTooHigh(uint256 given, uint256 maxPenalty);
-    error BondIsMature(bool given, bool required);
+    error BondIsMature(uint256 currentTime, uint256 maturity);
     error InitialPriceTooHigh(uint256 given, uint256 maxPrice);
     error InitialPriceIsZero(uint256 given, uint256 maxPrice);
     error ConvertibleBondBoxNotStarted(uint256 given, uint256 minStartDate);
