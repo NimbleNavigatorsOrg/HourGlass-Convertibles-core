@@ -120,9 +120,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
             _stagingBox
         );
 
-        //Transfer lendslips to router
-        TransferHelper.safeTransferFrom(
-            address(_stagingBox.lendSlip()),
+        _stagingBox.lendSlip().transferFrom(
             msg.sender,
             address(this),
             _lendSlipAmount
@@ -158,8 +156,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
         uint256 _lendSlipAmount
     ) external {
         //Transfer lendslips to router
-        TransferHelper.safeTransferFrom(
-            address(_stagingBox.lendSlip()),
+        _stagingBox.lendSlip().transferFrom(
             msg.sender,
             address(this),
             _lendSlipAmount
@@ -191,8 +188,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
         ) = fetchElasticStack(_stagingBox);
 
         //Transfer safeslips to router
-        TransferHelper.safeTransferFrom(
-            _stagingBox.safeSlipAddress(),
+        convertibleBondBox.safeSlip().transferFrom(
             msg.sender,
             address(this),
             _safeSlipAmount
@@ -299,8 +295,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
         );
 
         //Calculate RiskSlips (minus fees) and transfer to router
-        TransferHelper.safeTransferFrom(
-            _stagingBox.riskSlipAddress(),
+        convertibleBondBox.riskSlip().transferFrom(
             msg.sender,
             address(this),
             _riskSlipAmount
@@ -316,8 +311,8 @@ contract StagingLoanRouter is IStagingLoanRouter {
         _redeemTrancheImmatureUnwrap(_stagingBox);
 
         //send unpaid riskSlip back
-        TransferHelper.safeTransfer(
-            _stagingBox.riskSlipAddress(),
+
+        convertibleBondBox.riskSlip().transfer(
             msg.sender,
             IERC20(_stagingBox.riskSlipAddress()).balanceOf(address(this))
         );
@@ -345,8 +340,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
         );
 
         //Transfer risk slips to CBB
-        TransferHelper.safeTransferFrom(
-            _stagingBox.riskSlipAddress(),
+        convertibleBondBox.riskSlip().transferFrom(
             msg.sender,
             address(this),
             _riskSlipAmount
@@ -428,8 +422,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
         );
 
         //Transfer to router
-        TransferHelper.safeTransferFrom(
-            _stagingBox.riskSlipAddress(),
+        convertibleBondBox.riskSlip().transferFrom(
             msg.sender,
             address(this),
             _riskSlipAmount

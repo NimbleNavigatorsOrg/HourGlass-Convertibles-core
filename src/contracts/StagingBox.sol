@@ -53,16 +53,16 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
         }
 
         //- transfers `_safeTrancheAmount` of SafeTranche Tokens from msg.sender to SB
-        TransferHelper.safeTransferFrom(
-            address(safeTranche()),
+
+        safeTranche().transferFrom(
             _msgSender(),
             address(this),
             _safeTrancheAmount
         );
 
         //- transfers `_safeTrancheAmount * riskRatio() / safeRatio()`  of RiskTranches from msg.sender to SB
-        TransferHelper.safeTransferFrom(
-            address(riskTranche()),
+
+        riskTranche().transferFrom(
             _msgSender(),
             address(this),
             (_safeTrancheAmount * riskRatio()) / safeRatio()
@@ -102,15 +102,12 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
     function withdrawBorrow(uint256 _borrowSlipAmount) external override {
         //- Reverse of depositBorrow() function
         //- transfers `_borrowSlipAmount` of SafeTranche Tokens from SB to msg.sender
-        TransferHelper.safeTransfer(
-            address(safeTranche()),
-            _msgSender(),
-            (_borrowSlipAmount)
-        );
+
+        safeTranche().transfer(_msgSender(), (_borrowSlipAmount));
 
         //- transfers `_borrowSlipAmount*riskRatio()/safeRatio()` of RiskTranche Tokens from SB to msg.sender
-        TransferHelper.safeTransfer(
-            address(riskTranche()),
+
+        riskTranche().transfer(
             _msgSender(),
             (_borrowSlipAmount * riskRatio()) / safeRatio()
         );
@@ -152,8 +149,7 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
 
     function redeemBorrowSlip(uint256 _borrowSlipAmount) external override {
         // Transfer `_borrowSlipAmount*riskRatio()/safeRatio()` of RiskSlips to msg.sender
-        TransferHelper.safeTransfer(
-            riskSlipAddress(),
+        ISlip(riskSlipAddress()).transfer(
             _msgSender(),
             (_borrowSlipAmount * riskRatio()) / safeRatio()
         );
@@ -174,8 +170,7 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
 
     function redeemLendSlip(uint256 _lendSlipAmount) external override {
         //- Transfer `_lendSlipAmount*priceGranularity()/initialPrice()`  of SafeSlips to msg.sender
-        TransferHelper.safeTransfer(
-            safeSlipAddress(),
+        ISlip(safeSlipAddress()).transfer(
             _msgSender(),
             (_lendSlipAmount * priceGranularity()) / initialPrice()
         );

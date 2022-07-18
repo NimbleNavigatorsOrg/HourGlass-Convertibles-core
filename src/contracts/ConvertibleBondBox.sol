@@ -11,6 +11,8 @@ import "../interfaces/ISlip.sol";
 import "../../utils/CBBImmutableArgs.sol";
 import "../interfaces/IConvertibleBondBox.sol";
 
+import "forge-std/console2.sol";
+
 /**
  * @dev Convertible Bond Box for a ButtonTranche bond
  *
@@ -259,13 +261,7 @@ contract ConvertibleBondBox is
         //transfer fee to owner
         if (feeBps > 0 && _msgSender() != owner()) {
             uint256 feeSlip = (_riskSlipAmount * feeBps) / BPS;
-            TransferHelper.safeTransferFrom(
-                address(riskSlip()),
-                _msgSender(),
-                owner(),
-                feeSlip
-            );
-
+            riskSlip().transferFrom(_msgSender(), owner(), feeSlip);
             _riskSlipAmount -= feeSlip;
         }
 
@@ -275,11 +271,7 @@ contract ConvertibleBondBox is
             (s_penaltyGranularity);
 
         //transfer Z-tranches from ConvertibleBondBox to msg.sender
-        TransferHelper.safeTransfer(
-            address(riskTranche()),
-            _msgSender(),
-            zTranchePayout
-        );
+        riskTranche().transfer(_msgSender(), zTranchePayout);
 
         riskSlip().burn(_msgSender(), _riskSlipAmount);
 
@@ -306,13 +298,7 @@ contract ConvertibleBondBox is
         //transfer fee to owner
         if (feeBps > 0 && _msgSender() != owner()) {
             uint256 feeSlip = (_safeSlipAmount * feeBps) / BPS;
-            TransferHelper.safeTransferFrom(
-                address(safeSlip()),
-                _msgSender(),
-                owner(),
-                feeSlip
-            );
-
+            safeSlip().transferFrom(_msgSender(), owner(), feeSlip);
             _safeSlipAmount -= feeSlip;
         }
 
@@ -322,18 +308,13 @@ contract ConvertibleBondBox is
         safeSlip().burn(_msgSender(), _safeSlipAmount);
 
         //transfer safe-Tranche after maturity only
-        TransferHelper.safeTransfer(
-            address(safeTranche()),
-            _msgSender(),
-            (_safeSlipAmount)
-        );
+        safeTranche().transfer(_msgSender(), _safeSlipAmount);
 
         uint256 zPenaltyTotal = riskTranche().balanceOf(address(this)) -
             riskSlip().totalSupply();
 
         //transfer risk-Tranche penalty after maturity only
-        TransferHelper.safeTransfer(
-            address(riskTranche()),
+        riskTranche().transfer(
             _msgSender(),
             (_safeSlipAmount * zPenaltyTotal) /
                 (safeSlipSupply - s_repaidSafeSlips)
@@ -359,25 +340,17 @@ contract ConvertibleBondBox is
                 reqInput: safeRatio()
             });
 
-        address safeSlipTokenAddress = address(safeSlip());
-
         //transfer safeSlips to owner
         if (feeBps > 0 && _msgSender() != owner()) {
             uint256 feeSlip = (_safeSlipAmount * feeBps) / BPS;
-            TransferHelper.safeTransferFrom(
-                safeSlipTokenAddress,
-                _msgSender(),
-                owner(),
-                feeSlip
-            );
-
+            safeSlip().transferFrom(_msgSender(), owner(), feeSlip);
             _safeSlipAmount -= feeSlip;
         }
 
         uint256 stableBalance = stableToken().balanceOf(address(this));
 
         //burn safe-slips
-        ISlip(safeSlipTokenAddress).burn(_msgSender(), _safeSlipAmount);
+        safeSlip().burn(_msgSender(), _safeSlipAmount);
 
         //transfer stables
         TransferHelper.safeTransfer(
@@ -437,16 +410,14 @@ contract ConvertibleBondBox is
             });
 
         //Transfer safeTranche to ConvertibleBondBox
-        TransferHelper.safeTransferFrom(
-            address(safeTranche()),
+        safeTranche().transferFrom(
             _msgSender(),
             address(this),
             _safeSlipAmount
         );
 
         //Transfer riskTranche to ConvertibleBondBox
-        TransferHelper.safeTransferFrom(
-            address(riskTranche()),
+        riskTranche().transferFrom(
             _msgSender(),
             address(this),
             _riskSlipAmount
@@ -501,20 +472,12 @@ contract ConvertibleBondBox is
         );
 
         // Transfer safeTranches to msg.sender (increment state)
-        TransferHelper.safeTransfer(
-            address(safeTranche()),
-            _msgSender(),
-            _safeTranchePayout
-        );
+        safeTranche().transfer(_msgSender(), _safeTranchePayout);
 
         s_repaidSafeSlips += _safeTranchePayout;
 
         // Transfer riskTranches to msg.sender
-        TransferHelper.safeTransfer(
-            address(riskTranche()),
-            _msgSender(),
-            _riskTranchePayout
-        );
+        riskTranche().transfer(_msgSender(), _riskTranchePayout);
 
         // Burn riskSlips
         riskSlip().burn(_msgSender(), _riskTranchePayout);
