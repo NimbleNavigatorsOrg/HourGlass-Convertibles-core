@@ -200,4 +200,9 @@ interface IConvertibleBondBox is ICBBImmutableArgs {
      * Can only be called by the current owner.
      */
     function transferOwnership(address newOwner) external;
+
+    /**
+     * @dev Returns initialPrice of safeTranche.
+     */
+    function s_initialPrice() external view returns (uint256);
 }

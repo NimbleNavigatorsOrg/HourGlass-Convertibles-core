@@ -103,7 +103,7 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
 
         s_oracle = new MockOracle();
 
-        s_oracleData = 500;
+        s_oracleData = 1e8;
         s_oracle.setData(s_oracleData, true);
 
         (uint256 data, bool success) = s_oracle.getData();
@@ -288,7 +288,7 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
         uint256 sbStableTokenBalanceBeforeRepay = s_stableToken.balanceOf(address(s_owner));
         uint256 borrowRiskSlipBalanceBeforeRepay = ISlip(s_deployedSB.riskSlipAddress()).balanceOf(s_borrower);
 
-        vm.assume(borrowRiskSlipBalanceBeforeRepay >= s_deployedConvertibleBondBox.riskRatio());
+        vm.assume(borrowRiskSlipBalanceBeforeRepay >= s_deployedConvertibleBondBox.riskRatio() * 1000);
 
         s_stableToken.mint(s_borrower, s_maxMint);
 
@@ -299,9 +299,16 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
         return (borrowRiskSlipBalanceBeforeRepay, _lendAmount);
     }
 
-    function withinTolerance(uint256 num, uint256 num2, uint256 tolerance) view internal returns(bool) {
+    function withinTolerance(uint256 num, uint256 num2, uint256 percentTolerance) view internal returns(bool) {
         uint256 difference = 0;
-        num > num2 ? difference = num - num2 : difference = num2 - num;
+        uint256 tolerance = 0;
+        if(num >= num2) {
+            difference = num - num2;
+            tolerance = (num2 * percentTolerance) / 100;
+        } else {
+            difference = num2 - num;
+            tolerance = (num * percentTolerance) / 100;
+        }
         return difference <= tolerance;
     }
 
@@ -312,5 +319,41 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
             y = z;
             z = (x / z + z) / 2;
         }
+    }
+
+    function redeemLendSlipsForStablesTestSetup(uint256 _timeWarp, uint256 borrowRiskSlipBalanceBeforeRepay, uint256 _lendSlipAmount) internal returns(uint256, uint256) {
+                _timeWarp = bound(_timeWarp, block.timestamp, s_deployedConvertibleBondBox.maturityDate() - 1);
+        
+        vm.warp(_timeWarp);
+
+        (uint256 underlyingAmount, uint256 stablesOwed, uint256 stableFees, uint256 riskTranchePayout) = 
+        IStagingBoxLens(s_stagingBoxLens).viewRepayMaxAndUnwrapSimple(s_deployedSB, borrowRiskSlipBalanceBeforeRepay);
+
+        vm.assume(stablesOwed > 0);
+
+        vm.prank(s_borrower);
+        StagingLoanRouter(s_stagingLoanRouter).repayMaxAndUnwrapSimple(
+            s_deployedSB, 
+            stablesOwed,
+            borrowRiskSlipBalanceBeforeRepay
+            );
+
+        uint256 sbSafeSlipBalance = ISlip(s_deployedSB.safeSlipAddress()).balanceOf(address(s_deployedSB));
+        uint256 sbSafeSlipCalc = (s_deployedSB.initialPrice() * sbSafeSlipBalance) / s_deployedSB.priceGranularity();
+        uint256 lenderLendSlipBalance = ISlip(s_deployedSB.lendSlip()).balanceOf(s_lender);
+
+        uint256 upperBound = lenderLendSlipBalance <= sbSafeSlipCalc ? lenderLendSlipBalance : sbSafeSlipCalc;
+
+        vm.assume(upperBound > 400);
+
+        _lendSlipAmount = bound(_lendSlipAmount, 400, upperBound);
+
+        (uint256 safeSlipAmount) = StagingBoxLens(s_stagingBoxLens).viewRedeemLendSlipsForStables(s_deployedSB, _lendSlipAmount);
+
+        vm.startPrank(s_lender);
+        s_deployedSB.lendSlip().approve(address(s_stagingLoanRouter), type(uint256).max);
+        vm.stopPrank();
+
+        return (safeSlipAmount, _lendSlipAmount);
     }
 }
