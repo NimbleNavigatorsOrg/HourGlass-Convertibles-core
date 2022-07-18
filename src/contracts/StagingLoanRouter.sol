@@ -157,13 +157,6 @@ contract StagingLoanRouter is IStagingLoanRouter {
         IStagingBox _stagingBox,
         uint256 _lendSlipAmount
     ) external {
-        (
-            IConvertibleBondBox convertibleBondBox,
-            IButtonWoodBondController bond,
-            IButtonToken wrapper,
-
-        ) = fetchElasticStack(_stagingBox);
-
         //Transfer lendslips to router
         TransferHelper.safeTransferFrom(
             address(_stagingBox.lendSlip()),
@@ -179,7 +172,47 @@ contract StagingLoanRouter is IStagingLoanRouter {
         uint256 safeSlipAmount = IERC20(_stagingBox.safeSlipAddress())
             .balanceOf(address(this));
 
-        convertibleBondBox.redeemSafeTranche(safeSlipAmount);
+        _safeSlipsForTranchesUnwrap(_stagingBox, safeSlipAmount);
+    }
+
+    /**
+     * @inheritdoc IStagingLoanRouter
+     */
+
+    function redeemSafeSlipsForTranchesAndUnwrap(
+        IStagingBox _stagingBox,
+        uint256 _safeSlipAmount
+    ) external {
+        (
+            IConvertibleBondBox convertibleBondBox,
+            IButtonWoodBondController bond,
+            IButtonToken wrapper,
+
+        ) = fetchElasticStack(_stagingBox);
+
+        //Transfer safeslips to router
+        TransferHelper.safeTransferFrom(
+            _stagingBox.safeSlipAddress(),
+            msg.sender,
+            address(this),
+            _safeSlipAmount
+        );
+
+        _safeSlipsForTranchesUnwrap(_stagingBox, _safeSlipAmount);
+    }
+
+    function _safeSlipsForTranchesUnwrap(
+        IStagingBox _stagingBox,
+        uint256 _safeSlipAmount
+    ) internal {
+        (
+            IConvertibleBondBox convertibleBondBox,
+            IButtonWoodBondController bond,
+            IButtonToken wrapper,
+
+        ) = fetchElasticStack(_stagingBox);
+
+        convertibleBondBox.redeemSafeTranche(_safeSlipAmount);
 
         //redeem SafeTranche for underlying collateral
         uint256 safeTrancheAmount = convertibleBondBox.safeTranche().balanceOf(
