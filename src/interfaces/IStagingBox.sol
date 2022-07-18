@@ -4,14 +4,14 @@ pragma solidity ^0.8.13;
 import "../../utils/ISBImmutableArgs.sol";
 
 interface IStagingBox is ISBImmutableArgs {
-    event LendDeposit(address, uint256);
-    event BorrowDeposit(address, uint256);
-    event LendWithdrawal(address, uint256);
-    event BorrowWithdrawal(address, uint256);
-    event RedeemBorrowSlip(address, uint256);
-    event RedeemLendSlip(address, uint256);
-    event TrasmitReint(bool, uint256);
-    event Initialized(address index);
+    event LendDeposit(address lender, uint256 lendAmount);
+    event BorrowDeposit(address borrower, uint256 safeTrancheAmount);
+    event LendWithdrawal(address lender, uint256 lendSlipAmount);
+    event BorrowWithdrawal(address borrower, uint256 borrowSlipAmount);
+    event RedeemBorrowSlip(address caller, uint256 borrowSlipAmount);
+    event RedeemLendSlip(address caller, uint256 lendSlipAmount);
+    event TrasmitReint(bool isLend, uint256 transmitReinitAmount);
+    event Initialized(address owner);
 
     error InitialPriceTooHigh(uint256 given, uint256 maxPrice);
     error InitialPriceIsZero(uint256 given, uint256 maxPrice);

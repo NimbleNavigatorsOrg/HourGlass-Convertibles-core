@@ -79,17 +79,35 @@ contract StagingBoxLens is IStagingBoxLens {
         IStagingBox _stagingBox,
         uint256 _lendSlipAmount
     ) public view returns (uint256) {
-        (IConvertibleBondBox convertibleBondBox, , , ) = fetchElasticStack(
-            _stagingBox
-        );
-
         //calculate lendSlips to safeSlips w/ initialPrice
         uint256 safeSlipsAmount = (_lendSlipAmount *
             _stagingBox.priceGranularity()) / _stagingBox.initialPrice();
 
+        return _safeSlipsForStables(_stagingBox, safeSlipsAmount);
+    }
+
+    /**
+     * @inheritdoc IStagingBoxLens
+     */
+
+    function viewRedeemSafeSlipsForStables(
+        IStagingBox _stagingBox,
+        uint256 _safeSlipAmount
+    ) public view returns (uint256) {
+        return _safeSlipsForStables(_stagingBox, _safeSlipAmount);
+    }
+
+    function _safeSlipsForStables(
+        IStagingBox _stagingBox,
+        uint256 _safeSlipAmount
+    ) internal view returns (uint256) {
+        (IConvertibleBondBox convertibleBondBox, , , ) = fetchElasticStack(
+            _stagingBox
+        );
+
         //subtract fees
-        safeSlipsAmount -=
-            (safeSlipsAmount * convertibleBondBox.feeBps()) /
+        _safeSlipAmount -=
+            (_safeSlipAmount * convertibleBondBox.feeBps()) /
             convertibleBondBox.BPS();
 
         //calculate safeSlips to stables via math for CBB redeemStable
@@ -97,7 +115,7 @@ contract StagingBoxLens is IStagingBoxLens {
             address(convertibleBondBox)
         );
 
-        uint256 stableAmount = (safeSlipsAmount * cbbStableBalance) /
+        uint256 stableAmount = (_safeSlipAmount * cbbStableBalance) /
             convertibleBondBox.s_repaidSafeSlips();
 
         return stableAmount;
@@ -111,6 +129,28 @@ contract StagingBoxLens is IStagingBoxLens {
         IStagingBox _stagingBox,
         uint256 _lendSlipAmount
     ) public view returns (uint256, uint256) {
+        //calculate lendSlips to safeSlips w/ initialPrice
+        uint256 safeSlipsAmount = (_lendSlipAmount *
+            _stagingBox.priceGranularity()) / _stagingBox.initialPrice();
+
+        return _safeSlipRedeemUnwrap(_stagingBox, safeSlipsAmount);
+    }
+
+    /**
+     * @inheritdoc IStagingBoxLens
+     */
+
+    function viewRedeemSafeSlipsForTranches(
+        IStagingBox _stagingBox,
+        uint256 _safeSlipAmount
+    ) public view returns (uint256, uint256) {
+        return _safeSlipRedeemUnwrap(_stagingBox, _safeSlipAmount);
+    }
+
+    function _safeSlipRedeemUnwrap(
+        IStagingBox _stagingBox,
+        uint256 _safeSlipAmount
+    ) internal view returns (uint256, uint256) {
         (
             IConvertibleBondBox convertibleBondBox,
             ,
@@ -118,27 +158,23 @@ contract StagingBoxLens is IStagingBoxLens {
 
         ) = fetchElasticStack(_stagingBox);
 
-        //calculate lendSlips to safeSlips w/ initialPrice
-        uint256 safeSlipsAmount = (_lendSlipAmount *
-            _stagingBox.priceGranularity()) / _stagingBox.initialPrice();
-
         //subtract fees
-        safeSlipsAmount -=
-            (safeSlipsAmount * convertibleBondBox.feeBps()) /
+        _safeSlipAmount -=
+            (_safeSlipAmount * convertibleBondBox.feeBps()) /
             convertibleBondBox.BPS();
 
         //safeSlips = safeTranches
         //calculate safe tranches to rebasing collateral via balance of safeTranche address
         uint256 buttonAmount = (wrapper.balanceOf(
             address(_stagingBox.safeTranche())
-        ) * safeSlipsAmount) / _stagingBox.safeTranche().totalSupply();
+        ) * _safeSlipAmount) / _stagingBox.safeTranche().totalSupply();
 
         //calculate penalty riskTranche
         uint256 penaltyTrancheTotal = _stagingBox.riskTranche().balanceOf(
             address(convertibleBondBox)
         ) - IERC20(_stagingBox.riskSlipAddress()).totalSupply();
 
-        uint256 penaltyTrancheRedeemable = (safeSlipsAmount *
+        uint256 penaltyTrancheRedeemable = (_safeSlipAmount *
             penaltyTrancheTotal) /
             (IERC20(_stagingBox.safeSlipAddress()).totalSupply() -
                 convertibleBondBox.s_repaidSafeSlips());

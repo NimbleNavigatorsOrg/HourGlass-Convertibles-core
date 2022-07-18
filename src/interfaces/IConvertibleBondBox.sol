@@ -11,15 +11,32 @@ import "../../utils/ICBBImmutableArgs.sol";
  */
 
 interface IConvertibleBondBox is ICBBImmutableArgs {
-    event Lend(address, address, address, uint256, uint256);
-    event Borrow(address, address, address, uint256, uint256);
-    event RedeemStable(address, uint256, uint256);
-    event RedeemSafeTranche(address, uint256);
-    event RedeemRiskTranche(address, uint256);
-    event Repay(address, uint256, uint256, uint256);
-    event Initialized(address);
-    event ReInitialized(uint256, uint256);
-    event FeeUpdate(uint256);
+    event Lend(
+        address caller,
+        address borrower,
+        address lender,
+        uint256 stableAmount,
+        uint256 price
+    );
+    event Borrow(
+        address caller,
+        address borrower,
+        address lender,
+        uint256 stableAmount,
+        uint256 price
+    );
+    event RedeemStable(address caller, uint256 safeSlipAmount, uint256 price);
+    event RedeemSafeTranche(address caller, uint256 safeSlipAmount);
+    event RedeemRiskTranche(address caller, uint256 riskSlipAmount);
+    event Repay(
+        address caller,
+        uint256 stablesPaid,
+        uint256 riskTranchePayout,
+        uint256 price
+    );
+    event Initialized(address owner);
+    event ReInitialized(uint256 initialPrice, uint256 timestamp);
+    event FeeUpdate(uint256 newFee);
 
     error PenaltyTooHigh(uint256 given, uint256 maxPenalty);
     error BondIsMature(bool given, bool required);
