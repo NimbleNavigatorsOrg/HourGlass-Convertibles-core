@@ -338,8 +338,6 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
             borrowRiskSlipBalanceBeforeRepay
             );
 
-        vm.warp(s_deployedConvertibleBondBox.maturityDate() + 1);
-
         uint256 sbSafeSlipBalance = ISlip(s_deployedSB.safeSlipAddress()).balanceOf(address(s_deployedSB));
         uint256 sbSafeSlipCalc = (s_deployedSB.initialPrice() * sbSafeSlipBalance) / s_deployedSB.priceGranularity();
         uint256 lenderLendSlipBalance = ISlip(s_deployedSB.lendSlip()).balanceOf(s_lender);
