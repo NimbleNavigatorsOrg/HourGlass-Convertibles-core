@@ -91,17 +91,15 @@ contract StagingLoanRouter is IStagingLoanRouter {
         ) = fetchElasticStack(_stagingBox);
 
         //send back unused tranches to msg.sender
-        for (uint256 i = 0; i < bond.trancheCount(); i++) {
-            if (
-                i != convertibleBondBox.trancheIndex() &&
-                i != bond.trancheCount() - 1
-            ) {
+        uint256 trancheCount = bond.trancheCount();
+        uint256 trancheIndex = convertibleBondBox.trancheIndex();
+        for (uint256 i = 0; i < trancheCount; ) {
+            if (i != trancheIndex && i != trancheCount - 1) {
                 (ITranche tranche, ) = bond.tranches(i);
-                TransferHelper.safeTransfer(
-                    address(tranche),
-                    msg.sender,
-                    tranche.balanceOf(address(this))
-                );
+                tranche.transfer(msg.sender, tranche.balanceOf(address(this)));
+            }
+            unchecked {
+                ++i;
             }
         }
     }
