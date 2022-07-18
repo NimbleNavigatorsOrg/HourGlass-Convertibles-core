@@ -79,22 +79,22 @@ contract RepayMaxAndUnwrapSimple is RedeemLendSlipsForStablesTestSetup {
         assertFalse(borrowRiskSlipBalanceBeforeRepay == 0);
     }
 
-    function testRepayMaxAndUnwrapSimpleSendsUnderlyingToMsgSender(uint256 _fuzzPrice, uint256 _lendAmount, uint256 _timeWarp, uint256 _borrowSlipsToRedeem) public {
+    function testRepayMaxAndUnwrapSimpleSendsUnderlyingToMsgSender(uint256 _fuzzPrice, uint256 _lendAmount, uint256 _timeWarp) public {
         setupStagingBox(_fuzzPrice);
         setupTranches(false, s_owner, s_deployedCBBAddress);
         (uint256 borrowRiskSlipBalanceBeforeRepay, uint256 lendAmount) = repayMaxAndUnwrapSimpleTestSetup(_lendAmount);
-        borrowRiskSlipBalanceBeforeRepay = bound(borrowRiskSlipBalanceBeforeRepay, s_deployedConvertibleBondBox.riskRatio(), borrowRiskSlipBalanceBeforeRepay);
+        borrowRiskSlipBalanceBeforeRepay = bound(borrowRiskSlipBalanceBeforeRepay, s_deployedConvertibleBondBox.riskRatio() * 1000, borrowRiskSlipBalanceBeforeRepay);
 
-        _borrowSlipsToRedeem = bound(_borrowSlipsToRedeem, s_deployedConvertibleBondBox.riskRatio(), borrowRiskSlipBalanceBeforeRepay);
+        borrowRiskSlipBalanceBeforeRepay = bound(borrowRiskSlipBalanceBeforeRepay, s_deployedConvertibleBondBox.riskRatio() * 1000, borrowRiskSlipBalanceBeforeRepay);
 
-        _timeWarp = bound(_timeWarp, block.timestamp, s_deployedConvertibleBondBox.maturityDate());
+        _timeWarp = bound(_timeWarp, block.timestamp, s_deployedConvertibleBondBox.maturityDate() - 1);
+        
         vm.warp(_timeWarp);
 
         (uint256 underlyingAmount, uint256 stablesOwed, uint256 stableFees, uint256 riskTranchePayout) = 
-        IStagingBoxLens(s_stagingBoxLens).viewRepayMaxAndUnwrapSimple(s_deployedSB, _borrowSlipsToRedeem);
+        IStagingBoxLens(s_stagingBoxLens).viewRepayMaxAndUnwrapSimple(s_deployedSB, borrowRiskSlipBalanceBeforeRepay);
 
         vm.assume(stablesOwed > 0);
-        console.log(stablesOwed, "stablesOwed");
 
         address bond = address(s_deployedConvertibleBondBox.bond());
 
@@ -105,22 +105,16 @@ contract RepayMaxAndUnwrapSimple is RedeemLendSlipsForStablesTestSetup {
         StagingLoanRouter(s_stagingLoanRouter).repayMaxAndUnwrapSimple(
             s_deployedSB, 
             stablesOwed,
-            _borrowSlipsToRedeem
+            borrowRiskSlipBalanceBeforeRepay
             );
 
         uint256 borrowerUnderlyingBalanceAfter = s_underlying.balanceOf(s_borrower);
         uint256 bondCollateralBalanceAfter = s_collateralToken.balanceOf(bond);
 
-        console.log(_borrowSlipsToRedeem, "borrowRiskSlipBalanceBeforeRepay");
-        console.log(borrowerUnderlyingBalanceBefore, "borrowerUnderlyingBalanceBefore");
-        console.log(underlyingAmount, "underlyingAmount");
-        console.log(borrowerUnderlyingBalanceAfter, "borrowerUnderlyingBalanceAfter");
+        assertTrue(withinTolerance(borrowerUnderlyingBalanceBefore + underlyingAmount, borrowerUnderlyingBalanceAfter, 1));
 
-        assertTrue(borrowerUnderlyingBalanceBefore + underlyingAmount <= borrowerUnderlyingBalanceAfter);
-
-        // assertTrue(withinTolerance(borrowerUnderlyingBalanceBefore + underlyingAmount, borrowerUnderlyingBalanceAfter, 200000));
         assertFalse(stablesOwed == 0);
-        assertFalse(_borrowSlipsToRedeem == 0);
+        assertFalse(borrowRiskSlipBalanceBeforeRepay == 0);
     }
 
     function testRepayMaxAndUnwrapSimpleTransfersExtraStablesBackToMsgSender(uint256 _fuzzPrice, uint256 _lendAmount, uint256 _timeWarp, uint256 _borrowSlipsToRedeem) public {

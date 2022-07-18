@@ -103,7 +103,7 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
 
         s_oracle = new MockOracle();
 
-        s_oracleData = 500;
+        s_oracleData = 1e8;
         s_oracle.setData(s_oracleData, true);
 
         (uint256 data, bool success) = s_oracle.getData();
@@ -288,7 +288,7 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
         uint256 sbStableTokenBalanceBeforeRepay = s_stableToken.balanceOf(address(s_owner));
         uint256 borrowRiskSlipBalanceBeforeRepay = ISlip(s_deployedSB.riskSlipAddress()).balanceOf(s_borrower);
 
-        vm.assume(borrowRiskSlipBalanceBeforeRepay >= s_deployedConvertibleBondBox.riskRatio());
+        vm.assume(borrowRiskSlipBalanceBeforeRepay >= s_deployedConvertibleBondBox.riskRatio() * 1000);
 
         s_stableToken.mint(s_borrower, s_maxMint);
 
@@ -299,9 +299,16 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
         return (borrowRiskSlipBalanceBeforeRepay, _lendAmount);
     }
 
-    function withinTolerance(uint256 num, uint256 num2, uint256 tolerance) view internal returns(bool) {
+    function withinTolerance(uint256 num, uint256 num2, uint256 percentTolerance) view internal returns(bool) {
         uint256 difference = 0;
-        num > num2 ? difference = num - num2 : difference = num2 - num;
+        uint256 tolerance = 0;
+        if(num >= num2) {
+            difference = num - num2;
+            tolerance = (num2 * percentTolerance) / 100;
+        } else {
+            difference = num2 - num;
+            tolerance = (num * percentTolerance) / 100;
+        }
         return difference <= tolerance;
     }
 
