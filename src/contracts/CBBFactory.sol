@@ -94,7 +94,8 @@ contract CBBFactory is ICBBFactory {
             stableToken,
             trancheIndex,
             penalty,
-            msg.sender
+            msg.sender,
+            address(clone)
         );
         return address(clone);
     }
