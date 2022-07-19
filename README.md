@@ -35,7 +35,7 @@ You can join at the [Discord](https://discord.gg/DGWD2Sms) channel and follow us
 
 To install run: 
 ```
-git clone https://github.com/NimbleNavigatorsOrg/Forge-Lending-Box.git
+git clone https://github.com/NimbleNavigatorsOrg/ButtonConvertibles-core.git
 ```
 
 To run tests with [Foundry](https://github.com/foundry-rs/foundry) run:
