@@ -69,15 +69,6 @@ contract StagingBoxFactory is IStagingBoxFactory {
         //transfer ownership of CBB to SB
         convertibleBondBox.transferOwnership(deployedSB);
 
-        emit StagingBoxCreated(
-            convertibleBondBox,
-            slipFactory,
-            initialPrice,
-            cbbOwner,
-            msg.sender,
-            deployedSB
-        );
-
         return deployedSB;
     }
 
@@ -127,6 +118,15 @@ contract StagingBoxFactory is IStagingBoxFactory {
         //tansfer slips ownership to staging box
         ISlip(SlipData.lendSlip).changeOwner(address(clone));
         ISlip(SlipData.borrowSlip).changeOwner(address(clone));
+
+        emit StagingBoxCreated(
+            convertibleBondBox,
+            slipFactory,
+            initialPrice,
+            owner,
+            msg.sender,
+            address(clone)
+        );
 
         return address(clone);
     }
