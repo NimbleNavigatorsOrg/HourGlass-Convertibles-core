@@ -321,7 +321,7 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
         }
     }
 
-    function redeemLendSlipsForStablesTestSetup(uint256 _timeWarp, uint256 borrowRiskSlipBalanceBeforeRepay, uint256 _lendSlipAmount) internal returns(uint256, uint256) {
+    function redeemLendSlipsForStablesTestSetup(uint256 _timeWarp, uint256 borrowRiskSlipBalanceBeforeRepay, uint256 _lendSlipAmount, bool wantStables) internal returns(uint256) {
                 _timeWarp = bound(_timeWarp, block.timestamp, s_deployedConvertibleBondBox.maturityDate() - 1);
         
         vm.warp(_timeWarp);
@@ -331,12 +331,14 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
 
         vm.assume(stablesOwed > 0);
 
-        vm.prank(s_borrower);
-        StagingLoanRouter(s_stagingLoanRouter).repayMaxAndUnwrapSimple(
-            s_deployedSB, 
-            stablesOwed,
-            borrowRiskSlipBalanceBeforeRepay
+        if(wantStables) {
+            vm.prank(s_borrower);
+            StagingLoanRouter(s_stagingLoanRouter).repayMaxAndUnwrapSimple(
+                s_deployedSB, 
+                stablesOwed,
+                borrowRiskSlipBalanceBeforeRepay
             );
+        }
 
         uint256 sbSafeSlipBalance = ISlip(s_deployedSB.safeSlipAddress()).balanceOf(address(s_deployedSB));
         uint256 sbSafeSlipCalc = (s_deployedSB.initialPrice() * sbSafeSlipBalance) / s_deployedSB.priceGranularity();
@@ -348,12 +350,10 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
 
         _lendSlipAmount = bound(_lendSlipAmount, 400, upperBound);
 
-        (uint256 safeSlipAmount) = StagingBoxLens(s_stagingBoxLens).viewRedeemLendSlipsForStables(s_deployedSB, _lendSlipAmount);
-
         vm.startPrank(s_lender);
         s_deployedSB.lendSlip().approve(address(s_stagingLoanRouter), type(uint256).max);
         vm.stopPrank();
 
-        return (safeSlipAmount, _lendSlipAmount);
+        return _lendSlipAmount;
     }
 }
