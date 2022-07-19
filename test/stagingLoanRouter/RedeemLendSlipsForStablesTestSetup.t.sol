@@ -113,7 +113,12 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
         // create buttonwood bond collateral token
         s_collateralToken = new ButtonToken();
 
-        s_collateralToken.initialize(address(s_underlying), "UnderlyingToken", "UT", address(s_oracle));
+        s_collateralToken.initialize(
+            address(s_underlying),
+            "UnderlyingToken",
+            "UT",
+            address(s_oracle)
+        );
 
         s_maxUnderlyingMint = 200000000000000000000000;
 
@@ -160,7 +165,7 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
         s_price = bound(_fuzzPrice, 1, s_priceGranularity);
 
         s_deployedSB = StagingBox(
-            stagingBoxFactory.createStagingBox(
+            stagingBoxFactory.createStagingBoxWithCBB(
                 s_CBBFactory,
                 s_slipFactory,
                 s_buttonWoodBondController,
@@ -215,7 +220,7 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
         s_underlying.mint(s_borrower, s_maxUnderlyingMint);
 
         s_stagingLoanRouter = new StagingLoanRouter();
-        
+
         vm.prank(s_borrower);
         s_underlying.approve(address(s_stagingLoanRouter), type(uint256).max);
 
@@ -223,9 +228,18 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
         s_stableToken.approve(address(s_stagingLoanRouter), type(uint256).max);
 
         vm.startPrank(address(s_deployedSB));
-        s_safeTranche.approve(address(s_deployedConvertibleBondBox), type(uint256).max);
-        s_riskTranche.approve(address(s_deployedConvertibleBondBox), type(uint256).max);
-        s_stableToken.approve(address(s_deployedConvertibleBondBox), type(uint256).max);
+        s_safeTranche.approve(
+            address(s_deployedConvertibleBondBox),
+            type(uint256).max
+        );
+        s_riskTranche.approve(
+            address(s_deployedConvertibleBondBox),
+            type(uint256).max
+        );
+        s_stableToken.approve(
+            address(s_deployedConvertibleBondBox),
+            type(uint256).max
+        );
         vm.stopPrank();
 
         vm.startPrank(s_user);
@@ -235,22 +249,38 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
         s_isLend = _isLend;
     }
 
-    function repayMaxAndUnwrapSimpleTestSetup (uint256 _lendAmount) internal returns(uint256, uint256) {
-        (, uint256 minBorrowSlips) = s_stagingBoxLens.viewSimpleWrapTrancheBorrow(s_deployedSB, s_maxUnderlyingMint);
+    function repayMaxAndUnwrapSimpleTestSetup(uint256 _lendAmount)
+        internal
+        returns (uint256, uint256)
+    {
+        (, uint256 minBorrowSlips) = s_stagingBoxLens
+            .viewSimpleWrapTrancheBorrow(s_deployedSB, s_maxUnderlyingMint);
 
-        uint256 borrowerBorrowSlipBalanceBeforeSWTB = ISlip(s_deployedSB.borrowSlip()).balanceOf(s_borrower);
+        uint256 borrowerBorrowSlipBalanceBeforeSWTB = ISlip(
+            s_deployedSB.borrowSlip()
+        ).balanceOf(s_borrower);
         vm.prank(s_borrower);
-        StagingLoanRouter(s_stagingLoanRouter).simpleWrapTrancheBorrow(s_deployedSB, s_maxUnderlyingMint, 0);
+        StagingLoanRouter(s_stagingLoanRouter).simpleWrapTrancheBorrow(
+            s_deployedSB,
+            s_maxUnderlyingMint,
+            0
+        );
 
-        uint256 borrowerBorrowSlipBalanceAfterSWTB = ISlip(s_deployedSB.borrowSlip()).balanceOf(s_borrower);
+        uint256 borrowerBorrowSlipBalanceAfterSWTB = ISlip(
+            s_deployedSB.borrowSlip()
+        ).balanceOf(s_borrower);
 
         uint256 userStableTokenBalanceBeforeLend = IERC20(
             s_deployedConvertibleBondBox.stableToken()
         ).balanceOf(s_user);
-        _lendAmount = bound(_lendAmount, 
-        (s_deployedConvertibleBondBox.safeRatio() * s_deployedConvertibleBondBox.currentPrice()) 
-        / s_deployedConvertibleBondBox.s_priceGranularity() + 1, 
-        userStableTokenBalanceBeforeLend);
+        _lendAmount = bound(
+            _lendAmount,
+            (s_deployedConvertibleBondBox.safeRatio() *
+                s_deployedConvertibleBondBox.currentPrice()) /
+                s_deployedConvertibleBondBox.s_priceGranularity() +
+                1,
+            userStableTokenBalanceBeforeLend
+        );
 
         IERC20(s_deployedConvertibleBondBox.stableToken()).approve(
             address(s_deployedSB),
@@ -262,47 +292,81 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
 
         assertFalse(_lendAmount == 0);
 
-        uint256 sbStableTokenBalanceBeforeTrans = s_stableToken.balanceOf(address(s_owner));
+        uint256 sbStableTokenBalanceBeforeTrans = s_stableToken.balanceOf(
+            address(s_owner)
+        );
 
         vm.prank(s_owner);
         s_deployedSB.transmitReInit(true);
 
-        uint256 borrowerBorrowSlipBalanceBeforeRedeem = ISlip(s_deployedSB.borrowSlip()).balanceOf(s_borrower);
-        uint256 maxArgForRedeemBorrowSlip = s_stagingBoxLens.viewMaxRedeemBorrowSlip(s_deployedSB);
+        uint256 borrowerBorrowSlipBalanceBeforeRedeem = ISlip(
+            s_deployedSB.borrowSlip()
+        ).balanceOf(s_borrower);
+        uint256 maxArgForRedeemBorrowSlip = s_stagingBoxLens
+            .viewMaxRedeemBorrowSlip(s_deployedSB);
 
-        if(borrowerBorrowSlipBalanceBeforeRedeem <= maxArgForRedeemBorrowSlip) {
+        if (
+            borrowerBorrowSlipBalanceBeforeRedeem <= maxArgForRedeemBorrowSlip
+        ) {
             vm.prank(s_borrower);
-            
-            s_deployedSB.redeemBorrowSlip(borrowerBorrowSlipBalanceBeforeRedeem);
+
+            s_deployedSB.redeemBorrowSlip(
+                borrowerBorrowSlipBalanceBeforeRedeem
+            );
         } else {
             vm.prank(s_borrower);
             s_deployedSB.redeemBorrowSlip(maxArgForRedeemBorrowSlip);
-            uint256 borrowerBorrowSlipBalanceAfterRedeem = ISlip(s_deployedSB.borrowSlip()).balanceOf(s_borrower);
-            uint256 sbSafeTrancheBalanceBeforeRedeem = ITranche(s_deployedSB.safeTranche()).balanceOf(address(s_deployedSB));
-            
+            uint256 borrowerBorrowSlipBalanceAfterRedeem = ISlip(
+                s_deployedSB.borrowSlip()
+            ).balanceOf(s_borrower);
+            uint256 sbSafeTrancheBalanceBeforeRedeem = ITranche(
+                s_deployedSB.safeTranche()
+            ).balanceOf(address(s_deployedSB));
+
             vm.prank(s_borrower);
-            s_deployedSB.withdrawBorrow(borrowerBorrowSlipBalanceAfterRedeem > sbSafeTrancheBalanceBeforeRedeem ? sbSafeTrancheBalanceBeforeRedeem : borrowerBorrowSlipBalanceAfterRedeem);
-            uint256 borrowerBorrowSlipBalanceAfterWithdraw = ISlip(s_deployedSB.borrowSlip()).balanceOf(s_borrower);
+            s_deployedSB.withdrawBorrow(
+                borrowerBorrowSlipBalanceAfterRedeem >
+                    sbSafeTrancheBalanceBeforeRedeem
+                    ? sbSafeTrancheBalanceBeforeRedeem
+                    : borrowerBorrowSlipBalanceAfterRedeem
+            );
+            uint256 borrowerBorrowSlipBalanceAfterWithdraw = ISlip(
+                s_deployedSB.borrowSlip()
+            ).balanceOf(s_borrower);
         }
 
-        uint256 sbStableTokenBalanceBeforeRepay = s_stableToken.balanceOf(address(s_owner));
-        uint256 borrowRiskSlipBalanceBeforeRepay = ISlip(s_deployedSB.riskSlipAddress()).balanceOf(s_borrower);
+        uint256 sbStableTokenBalanceBeforeRepay = s_stableToken.balanceOf(
+            address(s_owner)
+        );
+        uint256 borrowRiskSlipBalanceBeforeRepay = ISlip(
+            s_deployedSB.riskSlipAddress()
+        ).balanceOf(s_borrower);
 
-        vm.assume(borrowRiskSlipBalanceBeforeRepay >= s_deployedConvertibleBondBox.riskRatio() * 1000);
+        vm.assume(
+            borrowRiskSlipBalanceBeforeRepay >=
+                s_deployedConvertibleBondBox.riskRatio() * 1000
+        );
 
         s_stableToken.mint(s_borrower, s_maxMint);
 
         vm.startPrank(s_borrower);
-        ISlip(s_deployedSB.riskSlipAddress()).approve(address(s_stagingLoanRouter), type(uint256).max);
+        ISlip(s_deployedSB.riskSlipAddress()).approve(
+            address(s_stagingLoanRouter),
+            type(uint256).max
+        );
         vm.stopPrank();
 
         return (borrowRiskSlipBalanceBeforeRepay, _lendAmount);
     }
 
-    function withinTolerance(uint256 num, uint256 num2, uint256 percentTolerance) view internal returns(bool) {
+    function withinTolerance(
+        uint256 num,
+        uint256 num2,
+        uint256 percentTolerance
+    ) internal view returns (bool) {
         uint256 difference = 0;
         uint256 tolerance = 0;
-        if(num >= num2) {
+        if (num >= num2) {
             difference = num - num2;
             tolerance = (num2 * percentTolerance) / 100;
         } else {
@@ -312,8 +376,8 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
         return difference <= tolerance;
     }
 
-    function squareRootOf(uint x) internal returns (uint y) {
-        uint z = (x + 1) / 2;
+    function squareRootOf(uint256 x) internal returns (uint256 y) {
+        uint256 z = (x + 1) / 2;
         y = x;
         while (z < y) {
             y = z;
@@ -321,37 +385,61 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
         }
     }
 
-    function redeemLendSlipsForStablesTestSetup(uint256 _timeWarp, uint256 borrowRiskSlipBalanceBeforeRepay, uint256 _lendSlipAmount, bool wantStables) internal returns(uint256) {
-                _timeWarp = bound(_timeWarp, block.timestamp, s_deployedConvertibleBondBox.maturityDate() - 1);
-        
+    function redeemLendSlipsForStablesTestSetup(
+        uint256 _timeWarp,
+        uint256 borrowRiskSlipBalanceBeforeRepay,
+        uint256 _lendSlipAmount,
+        bool wantStables
+    ) internal returns (uint256) {
+        _timeWarp = bound(
+            _timeWarp,
+            block.timestamp,
+            s_deployedConvertibleBondBox.maturityDate() - 1
+        );
+
         vm.warp(_timeWarp);
 
-        (uint256 underlyingAmount, uint256 stablesOwed, uint256 stableFees, uint256 riskTranchePayout) = 
-        IStagingBoxLens(s_stagingBoxLens).viewRepayMaxAndUnwrapSimple(s_deployedSB, borrowRiskSlipBalanceBeforeRepay);
+        (
+            uint256 underlyingAmount,
+            uint256 stablesOwed,
+            uint256 stableFees,
+            uint256 riskTranchePayout
+        ) = IStagingBoxLens(s_stagingBoxLens).viewRepayMaxAndUnwrapSimple(
+                s_deployedSB,
+                borrowRiskSlipBalanceBeforeRepay
+            );
 
         vm.assume(stablesOwed > 0);
 
-        if(wantStables) {
+        if (wantStables) {
             vm.prank(s_borrower);
             StagingLoanRouter(s_stagingLoanRouter).repayMaxAndUnwrapSimple(
-                s_deployedSB, 
+                s_deployedSB,
                 stablesOwed,
                 borrowRiskSlipBalanceBeforeRepay
             );
         }
 
-        uint256 sbSafeSlipBalance = ISlip(s_deployedSB.safeSlipAddress()).balanceOf(address(s_deployedSB));
-        uint256 sbSafeSlipCalc = (s_deployedSB.initialPrice() * sbSafeSlipBalance) / s_deployedSB.priceGranularity();
-        uint256 lenderLendSlipBalance = ISlip(s_deployedSB.lendSlip()).balanceOf(s_lender);
+        uint256 sbSafeSlipBalance = ISlip(s_deployedSB.safeSlipAddress())
+            .balanceOf(address(s_deployedSB));
+        uint256 sbSafeSlipCalc = (s_deployedSB.initialPrice() *
+            sbSafeSlipBalance) / s_deployedSB.priceGranularity();
+        uint256 lenderLendSlipBalance = ISlip(s_deployedSB.lendSlip())
+            .balanceOf(s_lender);
 
-        uint256 upperBound = lenderLendSlipBalance <= sbSafeSlipCalc ? lenderLendSlipBalance : sbSafeSlipCalc;
+        uint256 upperBound = lenderLendSlipBalance <= sbSafeSlipCalc
+            ? lenderLendSlipBalance
+            : sbSafeSlipCalc;
 
         vm.assume(upperBound > 400);
 
         _lendSlipAmount = bound(_lendSlipAmount, 400, upperBound);
 
         vm.startPrank(s_lender);
-        s_deployedSB.lendSlip().approve(address(s_stagingLoanRouter), type(uint256).max);
+        s_deployedSB.lendSlip().approve(
+            address(s_stagingLoanRouter),
+            type(uint256).max
+        );
         vm.stopPrank();
 
         return _lendSlipAmount;

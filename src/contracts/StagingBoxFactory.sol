@@ -38,7 +38,7 @@ contract StagingBoxFactory is IStagingBoxFactory {
      * @param cbbOwner The owner of the ConvertibleBondBox
      */
 
-    function createStagingBox(
+    function createStagingBoxWithCBB(
         CBBFactory cBBFactory,
         ISlipFactory slipFactory,
         IButtonWoodBondController bond,
@@ -59,6 +59,42 @@ contract StagingBoxFactory is IStagingBoxFactory {
             )
         );
 
+        address deployedSB = createStagingBoxOnly(
+            slipFactory,
+            convertibleBondBox,
+            initialPrice,
+            cbbOwner
+        );
+
+        //transfer ownership of CBB to SB
+        convertibleBondBox.transferOwnership(deployedSB);
+
+        emit StagingBoxCreated(
+            convertibleBondBox,
+            slipFactory,
+            initialPrice,
+            cbbOwner,
+            msg.sender,
+            deployedSB
+        );
+
+        return deployedSB;
+    }
+
+    /**
+     * @dev Initializer for Convertible Bond Box
+     * @param slipFactory The factory for the Slip-Tokens
+     * @param convertibleBondBox The CBB tied to the staging box being deployed
+     * @param initialPrice The initial price of the safe asset
+     * @param owner The owner of the StagingBox
+     */
+
+    function createStagingBoxOnly(
+        ISlipFactory slipFactory,
+        IConvertibleBondBox convertibleBondBox,
+        uint256 initialPrice,
+        address owner
+    ) public returns (address) {
         SlipPair memory SlipData = deploySlips(
             slipFactory,
             address(convertibleBondBox.safeSlip()),
@@ -86,23 +122,11 @@ contract StagingBoxFactory is IStagingBoxFactory {
 
         // clone staging box
         StagingBox clone = StagingBox(implementation.clone(data));
-        clone.initialize(cbbOwner);
+        clone.initialize(owner);
 
         //tansfer slips ownership to staging box
         ISlip(SlipData.lendSlip).changeOwner(address(clone));
         ISlip(SlipData.borrowSlip).changeOwner(address(clone));
-
-        //transfer ownership of CBB to SB
-        convertibleBondBox.transferOwnership(address(clone));
-
-        emit StagingBoxCreated(
-            convertibleBondBox,
-            slipFactory,
-            initialPrice,
-            cbbOwner,
-            msg.sender,
-            address(clone)
-        );
 
         return address(clone);
     }

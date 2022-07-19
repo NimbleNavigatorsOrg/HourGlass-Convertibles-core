@@ -180,7 +180,7 @@ contract StagingLoanRouterSetup is Test {
         s_price = bound(_fuzzPrice, 1, s_priceGranularity);
 
         s_deployedSB = StagingBox(
-            stagingBoxFactory.createStagingBox(
+            stagingBoxFactory.createStagingBoxWithCBB(
                 s_CBBFactory,
                 s_slipFactory,
                 s_buttonWoodBondController,

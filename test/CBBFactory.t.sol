@@ -43,7 +43,8 @@ contract CBBFactoryTest is Test {
         address s_stableToken,
         uint256 trancheIndex,
         uint256 penalty,
-        address creator
+        address creator,
+        address newCBBAddress
     );
 
     function setUp() public {
@@ -123,14 +124,15 @@ contract CBBFactoryTest is Test {
     }
 
     function testCreateCBBEmitsConvertibleBondBoxCreated() public {
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit(true, true, true, false);
         // The event we expect
 
         emit ConvertibleBondBoxCreated(
             address(s_stableToken),
             s_trancheIndex,
             s_penalty,
-            s_owner
+            s_owner,
+            address(0)
         );
         // The event we get
         vm.startPrank(s_owner);
