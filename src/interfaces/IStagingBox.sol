@@ -84,4 +84,10 @@ interface IStagingBox is ISBImmutableArgs {
      * Can only be called by the current owner.
      */
     function transferOwnership(address newOwner) external;
+
+    /**
+     * @dev Transfers ownership of the CBB contract to a new account (`newOwner`).
+     * Can only be called by the current owner.
+     */
+    function transferCBBOwnership(address newOwner) external;
 }

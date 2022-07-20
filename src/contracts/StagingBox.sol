@@ -227,4 +227,8 @@ contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
     {
         _transferOwnership(newOwner);
     }
+
+    function transferCBBOwnership(address newOwner) public override onlyOwner {
+        convertibleBondBox().transferOwnership(newOwner);
+    }
 }
