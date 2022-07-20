@@ -8,8 +8,6 @@ import "./ConvertibleBondBox.sol";
 import "../interfaces/ICBBFactory.sol";
 import "../interfaces/IStagingBoxFactory.sol";
 
-import "forge-std/console2.sol";
-
 contract StagingBoxFactory is IStagingBoxFactory {
     using ClonesWithImmutableArgs for address;
 

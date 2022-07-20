@@ -100,7 +100,7 @@ contract ConvertibleBondBox is
         uint256 _stableAmount
     ) external override {
         uint256 priceGranularity = s_priceGranularity;
-        uint256 price = this.currentPrice();
+        uint256 price = currentPrice();
 
         //Need to justify amounts
         if (_stableAmount < (safeRatio() * price) / priceGranularity)
@@ -139,7 +139,7 @@ contract ConvertibleBondBox is
                 reqInput: safeRatio()
             });
 
-        uint256 price = this.currentPrice();
+        uint256 price = currentPrice();
 
         uint256 zTrancheAmount = (_safeTrancheAmount * riskRatio()) /
             safeRatio();
@@ -167,7 +167,7 @@ contract ConvertibleBondBox is
      * @inheritdoc IConvertibleBondBox
      */
 
-    function currentPrice() external view override returns (uint256) {
+    function currentPrice() public view override returns (uint256) {
         //load storage variables into memory
         uint256 price = s_priceGranularity;
         uint256 maturityDate = maturityDate();
@@ -189,7 +189,7 @@ contract ConvertibleBondBox is
 
     function repay(uint256 _stableAmount) external override {
         //Load into memory
-        uint256 price = this.currentPrice();
+        uint256 price = currentPrice();
         uint256 priceGranularity = s_priceGranularity;
 
         if (_stableAmount < (safeRatio() * price) / priceGranularity)
@@ -214,7 +214,7 @@ contract ConvertibleBondBox is
 
     function repayMax(uint256 _riskSlipAmount) external override {
         // Load params into memory
-        uint256 price = this.currentPrice();
+        uint256 price = currentPrice();
 
         // check min input
         if (_riskSlipAmount < riskRatio())
@@ -353,7 +353,7 @@ contract ConvertibleBondBox is
             (_safeSlipAmount * stableBalance) / (s_repaidSafeSlips)
         );
 
-        emit RedeemStable(_msgSender(), _safeSlipAmount, this.currentPrice());
+        emit RedeemStable(_msgSender(), _safeSlipAmount, currentPrice());
     }
 
     /**
