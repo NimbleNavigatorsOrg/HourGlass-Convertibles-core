@@ -1,13 +1,8 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity 0.8.13;
 
-import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@uniswap/lib/contracts/libraries/TransferHelper.sol";
-import "clones-with-immutable-args/Clone.sol";
-import "../interfaces/IButtonWoodBondController.sol";
-import "../interfaces/ISlipFactory.sol";
-import "../interfaces/ISlip.sol";
 import "../../utils/CBBImmutableArgs.sol";
 import "../interfaces/IConvertibleBondBox.sol";
 
@@ -24,7 +19,6 @@ import "forge-std/console2.sol";
 
 contract ConvertibleBondBox is
     OwnableUpgradeable,
-    Clone,
     CBBImmutableArgs,
     IConvertibleBondBox
 {

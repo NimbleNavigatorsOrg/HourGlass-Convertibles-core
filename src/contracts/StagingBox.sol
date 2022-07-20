@@ -1,14 +1,9 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity 0.8.13;
 
-import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@uniswap/lib/contracts/libraries/TransferHelper.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import "../interfaces/ISlipFactory.sol";
-import "../interfaces/ISlip.sol";
 import "../../utils/SBImmutableArgs.sol";
-import "../interfaces/IConvertibleBondBox.sol";
 import "../interfaces/IStagingBox.sol";
 
 /**
@@ -18,7 +13,7 @@ import "../interfaces/IStagingBox.sol";
  *  - `initial Price must be < $1.00`
  */
 
-contract StagingBox is OwnableUpgradeable, Clone, SBImmutableArgs, IStagingBox {
+contract StagingBox is OwnableUpgradeable, SBImmutableArgs, IStagingBox {
     uint256 public s_reinitLendAmount = 0;
 
     function initialize(address _owner) external initializer {

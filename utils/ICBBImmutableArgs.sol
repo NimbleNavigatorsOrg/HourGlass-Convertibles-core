@@ -2,7 +2,6 @@
 pragma solidity ^0.8.7;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "clones-with-immutable-args/Clone.sol";
 import "../src/interfaces/ISlip.sol";
 import "../src/interfaces/IButtonWoodBondController.sol";
 
