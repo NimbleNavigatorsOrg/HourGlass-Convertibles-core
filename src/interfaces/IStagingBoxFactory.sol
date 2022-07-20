@@ -11,11 +11,19 @@ interface IStagingBoxFactory {
     // TODO: test this event
     event StagingBoxCreated(
         IConvertibleBondBox convertibleBondBox,
-        ISlipFactory slipFactory,
         uint256 initialPrice,
         address owner,
         address msgSender,
         address stagingBox
+    );
+
+    event StagingBoxReplaced(
+        IConvertibleBondBox convertibleBondBox,
+        uint256 initialPrice,
+        address owner,
+        address msgSender,
+        address oldStagingBox,
+        address newStagingBox
     );
 
     /// @notice Some parameters are invalid

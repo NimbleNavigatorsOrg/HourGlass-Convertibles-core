@@ -78,7 +78,6 @@ contract SBIntegrationSetup is Test {
     event FeeUpdate(uint256);
     event StagingBoxCreated(
         IConvertibleBondBox convertibleBondBox,
-        ISlipFactory slipFactory,
         uint256 initialPrice,
         address owner,
         address msgSender,

@@ -82,7 +82,6 @@ contract sbInitialize is SBIntegrationSetup {
         //TODO determine how to add the address to the expected emit without hardcoding the address.
         emit StagingBoxCreated(
             ConvertibleBondBox(s_deployedCBBAddress),
-            s_slipFactory,
             s_price,
             s_owner,
             s_user,
