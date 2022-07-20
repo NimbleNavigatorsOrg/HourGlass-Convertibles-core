@@ -78,7 +78,7 @@ interface IStagingLoanRouter {
     ) external;
 
     /**
-     * @dev redeems riskSlips for risTranches, redeems tranches for rebasing
+     * @dev redeems riskSlips for riskTranches, redeems tranches for rebasing
      * collateral, unwraps rebasing collateral
      * @param _stagingBox The staging box tied to the Convertible Bond
      * @param _riskSlipAmount The amount of riskSlips to be redeemed
