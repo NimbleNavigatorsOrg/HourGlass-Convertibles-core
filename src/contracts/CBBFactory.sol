@@ -3,15 +3,11 @@ pragma solidity 0.8.13;
 
 import "clones-with-immutable-args/ClonesWithImmutableArgs.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import "./ConvertibleBondBox.sol";
 import "../interfaces/ICBBFactory.sol";
-import "../interfaces/ISlipFactory.sol";
 import "../interfaces/ISlip.sol";
 
 contract CBBFactory is ICBBFactory {
-    using SafeERC20Upgradeable for IERC20Upgradeable;
     using ClonesWithImmutableArgs for address;
 
     address public immutable implementation;

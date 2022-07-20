@@ -3,16 +3,12 @@ pragma solidity 0.8.13;
 
 import "clones-with-immutable-args/ClonesWithImmutableArgs.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import "./StagingBox.sol";
-import "./CBBFactory.sol";
-import "../interfaces/IButtonWoodBondController.sol";
-import "../interfaces/IStagingBoxFactory.sol";
 import "../interfaces/IConvertibleBondBox.sol";
+import "../interfaces/ICBBFactory.sol";
+import "../interfaces/IStagingBoxFactory.sol";
 
 contract StagingBoxFactory is IStagingBoxFactory {
-    using SafeERC20Upgradeable for IERC20Upgradeable;
     using ClonesWithImmutableArgs for address;
 
     address public immutable implementation;
@@ -39,7 +35,7 @@ contract StagingBoxFactory is IStagingBoxFactory {
      */
 
     function createStagingBoxWithCBB(
-        CBBFactory cBBFactory,
+        ICBBFactory cBBFactory,
         ISlipFactory slipFactory,
         IButtonWoodBondController bond,
         uint256 penalty,
@@ -48,7 +44,7 @@ contract StagingBoxFactory is IStagingBoxFactory {
         uint256 initialPrice,
         address cbbOwner
     ) public returns (address) {
-        ConvertibleBondBox convertibleBondBox = ConvertibleBondBox(
+        IConvertibleBondBox convertibleBondBox = IConvertibleBondBox(
             cBBFactory.createConvertibleBondBox(
                 bond,
                 slipFactory,
