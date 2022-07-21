@@ -2,8 +2,6 @@
 pragma solidity 0.8.13;
 
 import "../interfaces/IStagingBox.sol";
-import "../interfaces/IConvertibleBondBox.sol";
-import "../interfaces/IButtonWoodBondController.sol";
 
 interface IStagingLoanRouter {
     error SlippageExceeded(uint256 expectedAmount, uint256 minAmount);
@@ -52,6 +50,20 @@ interface IStagingLoanRouter {
     ) external;
 
     /**
+     * @dev redeems safeSlips for tranches, redeems tranches for rebasing
+     * collateral, unwraps rebasing collateral, and then swaps for stableToken
+     * @param _stagingBox The staging box tied to the Convertible Bond
+     * @param _safeSlipAmount The amount of lendSlips to be redeemed
+     * Requirements:
+     *  - can only be called after maturity
+     */
+
+    function redeemSafeSlipsForTranchesAndUnwrap(
+        IStagingBox _stagingBox,
+        uint256 _safeSlipAmount
+    ) external;
+
+    /**
      * @dev redeems lendSlips for safeSlips and safeSlips for tranches, redeems tranches for rebasing
      * collateral, unwraps rebasing collateral, and then swaps for stableToken
      * @param _stagingBox The staging box tied to the Convertible Bond
@@ -66,7 +78,7 @@ interface IStagingLoanRouter {
     ) external;
 
     /**
-     * @dev redeems riskSlips for risTranches, redeems tranches for rebasing
+     * @dev redeems riskSlips for riskTranches, redeems tranches for rebasing
      * collateral, unwraps rebasing collateral
      * @param _stagingBox The staging box tied to the Convertible Bond
      * @param _riskSlipAmount The amount of riskSlips to be redeemed

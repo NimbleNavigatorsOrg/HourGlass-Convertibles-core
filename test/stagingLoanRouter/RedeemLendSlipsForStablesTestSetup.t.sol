@@ -20,7 +20,7 @@ import "@buttonwood-protocol/button-wrappers/contracts/mocks/MockOracle.sol";
 
 import "forge-std/console2.sol";
 
-contract StagingLoanRouterSetup is Test {
+contract RedeemLendSlipsForStablesTestSetup is Test {
     ButtonWoodBondController s_buttonWoodBondController;
     ConvertibleBondBox s_convertibleBondBox;
     IConvertibleBondBox s_deployedConvertibleBondBox;
@@ -98,46 +98,29 @@ contract StagingLoanRouterSetup is Test {
 
     function setUp() public virtual {
         //push numbers into array
-        s_ratios.push(200);
-        s_ratios.push(300);
-        s_ratios.push(500);
+        s_ratios.push(400);
+        s_ratios.push(600);
 
         s_oracle = new MockOracle();
 
-        s_oracleData = 500;
+        s_oracleData = 1e8;
         s_oracle.setData(s_oracleData, true);
-
-        (uint256 data, bool success) = s_oracle.getData();
-
-        console.log("datame", data, success);
-
-        // s_stalenessThreshold = 1000;
-
-        // console.log("before chainlink oracle", address(s_oracle));
-
-        // s_chainlinkOracle = new ChainlinkOracle(address(s_oracle), s_stalenessThreshold);
-        //         console.log("after chainlink oracle");
-
-        //         (uint256 data2, bool success2) = s_chainlinkOracle.getData();
-
-        // console.log("datame chain", data2, success2);
 
         s_underlying = new MockERC20("CollateralToken", "CT");
 
         // create buttonwood bond collateral token
         s_collateralToken = new ButtonToken();
-        // s_collateralToken = IRebasingERC20(s_collateralToken);
-
-        // console.log("before initialize s_collateralToken", address(s_chainlinkOracle));
 
         s_collateralToken.initialize(
             address(s_underlying),
-            "RebasingToken",
-            "bUT",
+            "UnderlyingToken",
+            "UT",
             address(s_oracle)
         );
 
-        console.log("after initialize s_collateralToken");
+        s_maxUnderlyingMint = 200000000000000000000000;
+
+        s_stagingBoxLens = new StagingBoxLens();
 
         // // create stable token
         s_stableToken = new MockERC20("StableToken", "ST");
@@ -196,8 +179,11 @@ contract StagingLoanRouterSetup is Test {
         s_deployedCBBAddress = address(s_deployedConvertibleBondBox);
     }
 
-    function setupTranches(address _user) internal {
-        s_underlying.mint(_user, 200000000000000000000000);
+    function setupTranches(
+        bool _isLend,
+        address _user
+    ) internal {
+        s_underlying.mint(_user, s_maxUnderlyingMint);
 
         vm.prank(_user);
         s_underlying.approve(address(s_collateralToken), type(uint256).max);
@@ -224,16 +210,176 @@ contract StagingLoanRouterSetup is Test {
             (s_safeTranche.balanceOf(_user) * s_price) /
             s_priceGranularity;
 
-        s_stableToken.mint(_user, maxStableAmount);
+        s_stableToken.mint(s_user, maxStableAmount);
 
-        s_maxUnderlyingMint = 200000000000000000000000;
+        s_stableToken.mint(s_owner, maxStableAmount);
 
-        s_underlying.mint(s_user, s_maxUnderlyingMint);
+        s_underlying.mint(s_borrower, s_maxUnderlyingMint);
 
         s_stagingLoanRouter = new StagingLoanRouter();
-        vm.prank(s_user);
+
+        vm.prank(s_borrower);
         s_underlying.approve(address(s_stagingLoanRouter), type(uint256).max);
 
-        s_stagingBoxLens = new StagingBoxLens();
+        vm.prank(s_borrower);
+        s_stableToken.approve(address(s_stagingLoanRouter), type(uint256).max);
+
+        vm.startPrank(address(s_deployedSB));
+        s_safeTranche.approve(
+            address(s_deployedConvertibleBondBox),
+            type(uint256).max
+        );
+        s_riskTranche.approve(
+            address(s_deployedConvertibleBondBox),
+            type(uint256).max
+        );
+        s_stableToken.approve(
+            address(s_deployedConvertibleBondBox),
+            type(uint256).max
+        );
+        vm.stopPrank();
+
+        vm.startPrank(s_user);
+        s_stableToken.approve(address(s_deployedSB), type(uint256).max);
+        vm.stopPrank();
+
+        s_isLend = _isLend;
+    }
+
+    function repayMaxAndUnwrapSimpleTestSetup (uint256 _lendAmount) internal returns(uint256, uint256) {
+        vm.prank(s_borrower);
+        StagingLoanRouter(s_stagingLoanRouter).simpleWrapTrancheBorrow(
+            s_deployedSB,
+            s_maxUnderlyingMint,
+            0
+        );
+
+        uint256 userStableTokenBalanceBeforeLend = IERC20(
+            s_deployedConvertibleBondBox.stableToken()
+        ).balanceOf(s_user);
+        _lendAmount = bound(
+            _lendAmount,
+            (s_deployedConvertibleBondBox.safeRatio() *
+                s_deployedConvertibleBondBox.currentPrice()) /
+                s_deployedConvertibleBondBox.s_priceGranularity() +
+                1,
+            userStableTokenBalanceBeforeLend
+        );
+
+        IERC20(s_deployedConvertibleBondBox.stableToken()).approve(
+            address(s_deployedSB),
+            _lendAmount
+        );
+
+        vm.prank(s_user);
+        s_deployedSB.depositLend(s_lender, _lendAmount);
+
+        assertFalse(_lendAmount == 0);
+
+        vm.prank(s_owner);
+        s_deployedSB.transmitReInit(true);
+
+        uint256 borrowerBorrowSlipBalanceBeforeRedeem = ISlip(
+            s_deployedSB.borrowSlip()
+        ).balanceOf(s_borrower);
+        uint256 maxArgForRedeemBorrowSlip = s_stagingBoxLens
+            .viewMaxRedeemBorrowSlip(s_deployedSB);
+
+        if (
+            borrowerBorrowSlipBalanceBeforeRedeem <= maxArgForRedeemBorrowSlip
+        ) {
+            vm.prank(s_borrower);
+
+            s_deployedSB.redeemBorrowSlip(
+                borrowerBorrowSlipBalanceBeforeRedeem
+            );
+        } else {
+            vm.prank(s_borrower);
+            s_deployedSB.redeemBorrowSlip(maxArgForRedeemBorrowSlip);
+            uint256 borrowerBorrowSlipBalanceAfterRedeem = ISlip(
+                s_deployedSB.borrowSlip()
+            ).balanceOf(s_borrower);
+            uint256 sbSafeTrancheBalanceBeforeRedeem = ITranche(
+                s_deployedSB.safeTranche()
+            ).balanceOf(address(s_deployedSB));
+
+            vm.prank(s_borrower);
+            s_deployedSB.withdrawBorrow(borrowerBorrowSlipBalanceAfterRedeem > sbSafeTrancheBalanceBeforeRedeem ? sbSafeTrancheBalanceBeforeRedeem : borrowerBorrowSlipBalanceAfterRedeem);
+        }
+
+        uint256 borrowRiskSlipBalanceBeforeRepay = ISlip(s_deployedSB.riskSlipAddress()).balanceOf(s_borrower);
+
+        vm.assume(
+            borrowRiskSlipBalanceBeforeRepay >=
+                s_deployedConvertibleBondBox.riskRatio() * 1000
+        );
+
+        s_stableToken.mint(s_borrower, s_maxMint);
+
+        vm.startPrank(s_borrower);
+        ISlip(s_deployedSB.riskSlipAddress()).approve(
+            address(s_stagingLoanRouter),
+            type(uint256).max
+        );
+        vm.stopPrank();
+
+        return (borrowRiskSlipBalanceBeforeRepay, _lendAmount);
+    }
+
+    function withinTolerance(uint256 num, uint256 num2, uint256 percentTolerance) pure internal returns(bool) {
+        uint256 difference = 0;
+        uint256 tolerance = 0;
+        if (num >= num2) {
+            difference = num - num2;
+            tolerance = (num2 * percentTolerance) / 100;
+        } else {
+            difference = num2 - num;
+            tolerance = (num * percentTolerance) / 100;
+        }
+        return difference <= tolerance;
+    }
+
+    function redeemLendSlipsForStablesTestSetup(uint256 _timeWarp, uint256 borrowRiskSlipBalanceBeforeRepay, uint256 _lendSlipAmount, bool wantStables) internal returns(uint256) {
+                _timeWarp = bound(_timeWarp, block.timestamp, s_deployedConvertibleBondBox.maturityDate() - 1);
+        
+        vm.warp(_timeWarp);
+
+        (, uint256 stablesOwed,,) = 
+        IStagingBoxLens(s_stagingBoxLens).viewRepayMaxAndUnwrapSimple(s_deployedSB, borrowRiskSlipBalanceBeforeRepay);
+
+        vm.assume(stablesOwed > 0);
+
+        if (wantStables) {
+            vm.prank(s_borrower);
+            StagingLoanRouter(s_stagingLoanRouter).repayMaxAndUnwrapSimple(
+                s_deployedSB,
+                stablesOwed,
+                borrowRiskSlipBalanceBeforeRepay
+            );
+        }
+
+        uint256 sbSafeSlipBalance = ISlip(s_deployedSB.safeSlipAddress())
+            .balanceOf(address(s_deployedSB));
+        uint256 sbSafeSlipCalc = (s_deployedSB.initialPrice() *
+            sbSafeSlipBalance) / s_deployedSB.priceGranularity();
+        uint256 lenderLendSlipBalance = ISlip(s_deployedSB.lendSlip())
+            .balanceOf(s_lender);
+
+        uint256 upperBound = lenderLendSlipBalance <= sbSafeSlipCalc
+            ? lenderLendSlipBalance
+            : sbSafeSlipCalc;
+
+        vm.assume(upperBound > 400);
+
+        _lendSlipAmount = bound(_lendSlipAmount, 400, upperBound);
+
+        vm.startPrank(s_lender);
+        s_deployedSB.lendSlip().approve(
+            address(s_stagingLoanRouter),
+            type(uint256).max
+        );
+        vm.stopPrank();
+
+        return _lendSlipAmount;
     }
 }

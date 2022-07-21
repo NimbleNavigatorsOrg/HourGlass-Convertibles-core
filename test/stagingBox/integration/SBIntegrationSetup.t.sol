@@ -47,7 +47,7 @@ contract SBIntegrationSetup is Test {
     uint256 constant s_endOfUnixTime = 2147483647;
     uint256 constant s_trancheGranularity = 1000;
     uint256 constant s_penaltyGranularity = 1000;
-    uint256 constant s_priceGranularity = 1e9;
+    uint256 constant s_priceGranularity = 1e8;
     uint256 constant s_BPS = 10_000;
     uint256 constant s_maxMint = 1e18;
     uint256 public constant s_maxFeeBPS = 50;
@@ -78,7 +78,6 @@ contract SBIntegrationSetup is Test {
     event FeeUpdate(uint256);
     event StagingBoxCreated(
         IConvertibleBondBox convertibleBondBox,
-        ISlipFactory slipFactory,
         uint256 initialPrice,
         address owner,
         address msgSender,
@@ -135,7 +134,7 @@ contract SBIntegrationSetup is Test {
         s_price = bound(_fuzzPrice, 1, s_priceGranularity);
 
         s_deployedSB = StagingBox(
-            stagingBoxFactory.createStagingBox(
+            stagingBoxFactory.createStagingBoxWithCBB(
                 s_CBBFactory,
                 s_slipFactory,
                 s_buttonWoodBondController,
@@ -143,18 +142,12 @@ contract SBIntegrationSetup is Test {
                 address(s_stableToken),
                 s_trancheIndex,
                 s_price,
-                s_owner,
                 s_cbb_owner
             )
         );
 
         s_deployedConvertibleBondBox = s_deployedSB.convertibleBondBox();
         s_deployedCBBAddress = address(s_deployedConvertibleBondBox);
-
-        vm.prank(s_cbb_owner);
-        s_deployedConvertibleBondBox.cbbTransferOwnership(
-            address(s_deployedSB)
-        );
     }
 
     function setupTranches(

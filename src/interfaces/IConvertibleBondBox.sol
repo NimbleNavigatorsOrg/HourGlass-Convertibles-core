@@ -1,9 +1,6 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity 0.8.13;
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@uniswap/lib/contracts/libraries/TransferHelper.sol";
-import "clones-with-immutable-args/Clone.sol";
 import "../../utils/ICBBImmutableArgs.sol";
 
 /**
@@ -11,18 +8,35 @@ import "../../utils/ICBBImmutableArgs.sol";
  */
 
 interface IConvertibleBondBox is ICBBImmutableArgs {
-    event Lend(address, address, address, uint256, uint256);
-    event Borrow(address, address, address, uint256, uint256);
-    event RedeemStable(address, uint256, uint256);
-    event RedeemSafeTranche(address, uint256);
-    event RedeemRiskTranche(address, uint256);
-    event Repay(address, uint256, uint256, uint256);
-    event Initialized(address);
-    event ReInitialized(uint256, uint256);
-    event FeeUpdate(uint256);
+    event Lend(
+        address caller,
+        address borrower,
+        address lender,
+        uint256 stableAmount,
+        uint256 price
+    );
+    event Borrow(
+        address caller,
+        address borrower,
+        address lender,
+        uint256 stableAmount,
+        uint256 price
+    );
+    event RedeemStable(address caller, uint256 safeSlipAmount, uint256 price);
+    event RedeemSafeTranche(address caller, uint256 safeSlipAmount);
+    event RedeemRiskTranche(address caller, uint256 riskSlipAmount);
+    event Repay(
+        address caller,
+        uint256 stablesPaid,
+        uint256 riskTranchePayout,
+        uint256 price
+    );
+    event Initialized(address owner);
+    event ReInitialized(uint256 initialPrice, uint256 timestamp);
+    event FeeUpdate(uint256 newFee);
 
     error PenaltyTooHigh(uint256 given, uint256 maxPenalty);
-    error BondIsMature(bool given, bool required);
+    error BondIsMature(uint256 currentTime, uint256 maturity);
     error InitialPriceTooHigh(uint256 given, uint256 maxPrice);
     error InitialPriceIsZero(uint256 given, uint256 maxPrice);
     error ConvertibleBondBoxNotStarted(uint256 given, uint256 minStartDate);
@@ -179,8 +193,13 @@ interface IConvertibleBondBox is ICBBImmutableArgs {
     function maxFeeBPS() external view returns (uint256);
 
     /**
-     * @dev Transfers ownership.
-     * @param _newOwner address of the new owner of SB
+     * @dev Transfers ownership of the contract to a new account (`newOwner`).
+     * Can only be called by the current owner.
      */
-    function cbbTransferOwnership(address _newOwner) external;
+    function transferOwnership(address newOwner) external;
+
+    /**
+     * @dev Returns initialPrice of safeTranche.
+     */
+    function s_initialPrice() external view returns (uint256);
 }

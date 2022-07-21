@@ -15,7 +15,6 @@ import "../../test/mocks/MockERC20.sol";
 import "./CBBSetup.sol";
 
 contract SetFee is CBBSetup {
-
     function testSetFee(uint256 newFee) public {
         newFee = bound(newFee, 0, s_maxFeeBPS);
         vm.prank(s_deployedConvertibleBondBox.owner());
@@ -35,11 +34,11 @@ contract SetFee is CBBSetup {
         newFee = bound(newFee, 0, s_BPS);
 
         vm.startPrank(s_deployedConvertibleBondBox.owner());
-        s_buttonWoodBondController.mature();
+        vm.warp(s_maturityDate + 1);
         bytes memory customError = abi.encodeWithSignature(
-            "BondIsMature(bool,bool)",
-            true,
-            false
+            "BondIsMature(uint256,uint256)",
+            block.timestamp,
+            s_maturityDate
         );
         vm.expectRevert(customError);
         s_deployedConvertibleBondBox.setFee(newFee);

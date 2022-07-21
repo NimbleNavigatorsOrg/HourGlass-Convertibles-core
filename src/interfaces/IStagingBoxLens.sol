@@ -2,8 +2,6 @@
 pragma solidity 0.8.13;
 
 import "../interfaces/IStagingBox.sol";
-import "../interfaces/IConvertibleBondBox.sol";
-import "../interfaces/IButtonWoodBondController.sol";
 
 interface IStagingBoxLens {
     /**
@@ -42,6 +40,18 @@ interface IStagingBoxLens {
     ) external view returns (uint256);
 
     /**
+     * @dev provides amount of stableTokens expected in return for redeeming safeSlips
+     * @param _stagingBox The staging box tied to the Convertible Bond
+     * @param _safeSlipAmount The amount of safeSlips to be redeemed
+     * Requirements:
+     */
+
+    function viewRedeemSafeSlipsForStables(
+        IStagingBox _stagingBox,
+        uint256 _safeSlipAmount
+    ) external view returns (uint256);
+
+    /**
      * @dev provides amount of unwrapped collateral tokens expected in return for redeeming lendSlips
      * @param _stagingBox The staging box tied to the Convertible Bond
      * @param _lendSlipAmount The amount of lendSlips to be redeemed
@@ -51,6 +61,18 @@ interface IStagingBoxLens {
     function viewRedeemLendSlipsForTranches(
         IStagingBox _stagingBox,
         uint256 _lendSlipAmount
+    ) external view returns (uint256, uint256);
+
+    /**
+     * @dev provides amount of unwrapped collateral tokens expected in return for redeeming safeSlips
+     * @param _stagingBox The staging box tied to the Convertible Bond
+     * @param _safeSlipAmount The amount of lendSlips to be redeemed
+     * Requirements:
+     */
+
+    function viewRedeemSafeSlipsForTranches(
+        IStagingBox _stagingBox,
+        uint256 _safeSlipAmount
     ) external view returns (uint256, uint256);
 
     /**
@@ -150,4 +172,15 @@ interface IStagingBoxLens {
             uint256,
             uint256
         );
+
+    /**
+     * @dev provides maximum input param for redeemBorrowSlip
+     * @param _stagingBox The staging box tied to the Convertible Bond
+     * Requirements:
+     */
+
+    function viewMaxRedeemBorrowSlip(IStagingBox _stagingBox)
+        external
+        view
+        returns (uint256);
 }

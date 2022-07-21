@@ -43,7 +43,8 @@ contract CBBFactoryTest is Test {
         address s_stableToken,
         uint256 trancheIndex,
         uint256 penalty,
-        address creator
+        address creator,
+        address newCBBAddress
     );
 
     function setUp() public {
@@ -95,7 +96,7 @@ contract CBBFactoryTest is Test {
         );
     }
 
-    function testFactoryCreatesConvertibleBondBox() public {
+    function testFactoryCreatesCBB() public {
         // wrap address in IConvertibleBondBox and make assertions on inital values
         ConvertibleBondBox deployedConvertibleBondBox = ConvertibleBondBox(
             s_deployedCBBAddress
@@ -122,17 +123,16 @@ contract CBBFactoryTest is Test {
         assertEq(deployedConvertibleBondBox.trancheIndex(), s_trancheIndex);
     }
 
-    function testCreateConvertibleBondBoxEmitsConvertibleBondBoxCreated()
-        public
-    {
-        vm.expectEmit(true, true, true, true);
+    function testCreateCBBEmitsConvertibleBondBoxCreated() public {
+        vm.expectEmit(true, true, true, false);
         // The event we expect
 
         emit ConvertibleBondBoxCreated(
             address(s_stableToken),
             s_trancheIndex,
             s_penalty,
-            s_owner
+            s_owner,
+            address(0)
         );
         // The event we get
         vm.startPrank(s_owner);
@@ -145,5 +145,16 @@ contract CBBFactoryTest is Test {
             s_owner
         );
         vm.stopPrank();
+    }
+
+    function testFailCBBTrancheIndexTooHigh() public {
+        s_CBBFactory.createConvertibleBondBox(
+            s_buttonWoodBondController,
+            s_slipFactory,
+            s_penalty,
+            address(s_stableToken),
+            s_buttonWoodBondController.trancheCount() - 1,
+            s_owner
+        );
     }
 }
