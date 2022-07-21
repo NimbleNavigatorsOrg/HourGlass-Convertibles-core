@@ -183,12 +183,6 @@ contract StagingLoanRouter is IStagingLoanRouter {
         IStagingBox _stagingBox,
         uint256 _safeSlipAmount
     ) external {
-        (
-            IConvertibleBondBox convertibleBondBox,
-            IButtonWoodBondController bond,
-            IButtonToken wrapper,
-
-        ) = fetchElasticStack(_stagingBox);
 
         //Transfer safeslips to router
         TransferHelper.safeTransferFrom(

@@ -11,10 +11,9 @@ contract RedeemLendSlipsForStables is RedeemLendSlipsForStablesTestSetup {
 
     function testRedeemLendSlipsForStablesTransfersLendSlipsFromMsgSender(uint256 _fuzzPrice, uint256 _lendAmount, uint256 _timeWarp, uint256 _lendSlipAmount) public {
         setupStagingBox(_fuzzPrice);
-        setupTranches(false, s_owner, s_deployedCBBAddress);
-        (uint256 borrowRiskSlipBalanceBeforeRepay, uint256 lendAmount) = repayMaxAndUnwrapSimpleTestSetup(_lendAmount);
+        setupTranches(false, s_owner);
+        (uint256 borrowRiskSlipBalanceBeforeRepay,) = repayMaxAndUnwrapSimpleTestSetup(_lendAmount);
         uint256 lendSlipAmount = redeemLendSlipsForStablesTestSetup(_timeWarp, borrowRiskSlipBalanceBeforeRepay, _lendSlipAmount, true);
-        uint256 safeSlipAmount = StagingBoxLens(s_stagingBoxLens).viewRedeemLendSlipsForStables(s_deployedSB, lendSlipAmount);
 
         uint256 lenderLendSlipBalanceBefore = ISlip(s_deployedSB.lendSlip()).balanceOf(address(s_lender));
 
@@ -29,8 +28,8 @@ contract RedeemLendSlipsForStables is RedeemLendSlipsForStablesTestSetup {
 
     function testRedeemLendSlipsForStablesTransfersStablesFromRouterToMsgSender(uint256 _fuzzPrice, uint256 _lendAmount, uint256 _timeWarp, uint256 _lendSlipAmount) public {
         setupStagingBox(_fuzzPrice);
-        setupTranches(false, s_owner, s_deployedCBBAddress);
-        (uint256 borrowRiskSlipBalanceBeforeRepay, uint256 lendAmount) = repayMaxAndUnwrapSimpleTestSetup(_lendAmount);
+        setupTranches(false, s_owner);
+        (uint256 borrowRiskSlipBalanceBeforeRepay,) = repayMaxAndUnwrapSimpleTestSetup(_lendAmount);
         uint256 lendSlipAmount = redeemLendSlipsForStablesTestSetup(_timeWarp, borrowRiskSlipBalanceBeforeRepay, _lendSlipAmount, true);
         uint256 safeSlipAmount = StagingBoxLens(s_stagingBoxLens).viewRedeemLendSlipsForStables(s_deployedSB, lendSlipAmount);
 
