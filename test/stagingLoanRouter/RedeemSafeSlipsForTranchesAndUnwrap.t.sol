@@ -11,8 +11,8 @@ contract RedeemSafeSlipsForTranchesAndUnwrap is RedeemLendSlipsForStablesTestSet
 
     function testRedeemSafeSlipsForTranchesAndUnwrapBurnsMsgSenderLendSlips(uint256 _fuzzPrice, uint256 _lendAmount, uint256 _timeWarp, uint256 _lendSlipAmount) public {
         setupStagingBox(_fuzzPrice);
-        setupTranches(false, s_owner, s_deployedCBBAddress);
-        (uint256 borrowRiskSlipBalanceBeforeRepay, uint256 lendAmount) = repayMaxAndUnwrapSimpleTestSetup(_lendAmount);
+        setupTranches(false, s_owner);
+        (uint256 borrowRiskSlipBalanceBeforeRepay,) = repayMaxAndUnwrapSimpleTestSetup(_lendAmount);
         uint256 lendSlipAmount = redeemLendSlipsForStablesTestSetup(_timeWarp, borrowRiskSlipBalanceBeforeRepay, _lendSlipAmount, false);
         vm.warp(s_deployedConvertibleBondBox.maturityDate() + 1);
 
@@ -29,16 +29,12 @@ contract RedeemSafeSlipsForTranchesAndUnwrap is RedeemLendSlipsForStablesTestSet
 
         vm.assume(safeSlipAmount > 400);
 
-        (uint256 underlyingAmount, uint256 buttonAmount) = StagingBoxLens(s_stagingBoxLens).viewRedeemLendSlipsForTranches(s_deployedSB, lendSlipAmount);
-
         vm.startPrank(s_lender);
         ISlip(s_deployedSB.safeSlipAddress()).approve(address(s_stagingLoanRouter), type(uint256).max);
         vm.stopPrank();
 
         vm.prank(s_lender);
         StagingLoanRouter(s_stagingLoanRouter).redeemSafeSlipsForTranchesAndUnwrap(s_deployedSB, safeSlipAmount);
-
-        uint256 safeSlipAmountAfter = ISlip(s_deployedSB.safeSlipAddress()).balanceOf(s_lender);
 
         uint256 lenderLendSlipBalanceAfter = ISlip(s_deployedSB.lendSlip()).balanceOf(address(s_lender));
         uint256 routerLendSlipBalanceAfter = ISlip(s_deployedSB.lendSlip()).balanceOf(address(s_stagingLoanRouter));
@@ -53,8 +49,8 @@ contract RedeemSafeSlipsForTranchesAndUnwrap is RedeemLendSlipsForStablesTestSet
 
     function testRedeemSafeSlipsForTranchesBurnsSafeSlipsFromMsgSender(uint256 _fuzzPrice, uint256 _lendAmount, uint256 _timeWarp, uint256 _lendSlipAmount) public {
         setupStagingBox(_fuzzPrice);
-        setupTranches(false, s_owner, s_deployedCBBAddress);
-        (uint256 borrowRiskSlipBalanceBeforeRepay, uint256 lendAmount) = repayMaxAndUnwrapSimpleTestSetup(_lendAmount);
+        setupTranches(false, s_owner);
+        (uint256 borrowRiskSlipBalanceBeforeRepay,) = repayMaxAndUnwrapSimpleTestSetup(_lendAmount);
         uint256 lendSlipAmount = redeemLendSlipsForStablesTestSetup(_timeWarp, borrowRiskSlipBalanceBeforeRepay, _lendSlipAmount, false);
         vm.warp(s_deployedConvertibleBondBox.maturityDate() + 1);
 
@@ -73,7 +69,7 @@ contract RedeemSafeSlipsForTranchesAndUnwrap is RedeemLendSlipsForStablesTestSet
 
         vm.assume(safeSlipAmount > 400);
 
-        (uint256 underlyingAmount, uint256 buttonAmount) = StagingBoxLens(s_stagingBoxLens).viewRedeemLendSlipsForTranches(s_deployedSB, lendSlipAmount);
+        (, uint256 buttonAmount) = StagingBoxLens(s_stagingBoxLens).viewRedeemLendSlipsForTranches(s_deployedSB, lendSlipAmount);
 
         vm.startPrank(s_lender);
         ISlip(s_deployedSB.safeSlipAddress()).approve(address(s_stagingLoanRouter), type(uint256).max);
@@ -98,8 +94,8 @@ contract RedeemSafeSlipsForTranchesAndUnwrap is RedeemLendSlipsForStablesTestSet
 
     function testRedeemSafeSlipsForTranchesReturnsUnderlyingToMsgSender(uint256 _fuzzPrice, uint256 _lendAmount, uint256 _timeWarp, uint256 _lendSlipAmount) public {
         setupStagingBox(_fuzzPrice);
-        setupTranches(false, s_owner, s_deployedCBBAddress);
-        (uint256 borrowRiskSlipBalanceBeforeRepay, uint256 lendAmount) = repayMaxAndUnwrapSimpleTestSetup(_lendAmount);
+        setupTranches(false, s_owner);
+        (uint256 borrowRiskSlipBalanceBeforeRepay,) = repayMaxAndUnwrapSimpleTestSetup(_lendAmount);
         uint256 lendSlipAmount = redeemLendSlipsForStablesTestSetup(_timeWarp, borrowRiskSlipBalanceBeforeRepay, _lendSlipAmount, false);
         vm.warp(s_deployedConvertibleBondBox.maturityDate() + 1);
 
@@ -114,9 +110,7 @@ contract RedeemSafeSlipsForTranchesAndUnwrap is RedeemLendSlipsForStablesTestSet
 
         vm.assume(safeSlipAmount > 400);
 
-        (uint256 underlyingAmount, uint256 buttonAmount) = StagingBoxLens(s_stagingBoxLens).viewRedeemLendSlipsForTranches(s_deployedSB, lendSlipAmount);
-
-        uint256 safeSlipBurnAmount = (lendSlipAmount * s_deployedSB.priceGranularity()) / s_deployedSB.initialPrice();
+        (uint256 underlyingAmount,) = StagingBoxLens(s_stagingBoxLens).viewRedeemLendSlipsForTranches(s_deployedSB, lendSlipAmount);
 
         vm.startPrank(s_lender);
         ISlip(s_deployedSB.safeSlipAddress()).approve(address(s_stagingLoanRouter), type(uint256).max);

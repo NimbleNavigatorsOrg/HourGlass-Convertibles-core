@@ -11,17 +11,14 @@ contract RedeemRiskSlipsForTranchesAndUnwrap is RedeemLendSlipsForStablesTestSet
 
     function testRedeemRiskSlipsForTranchesAndUnwrapBurnsMsgSenderRiskSlips(uint256 _fuzzPrice, uint256 _lendAmount) public {
         setupStagingBox(_fuzzPrice);
-        setupTranches(false, s_owner, s_deployedCBBAddress);
-        (uint256 borrowerRiskSlipBalanceBefore, uint256 lendAmount) = repayMaxAndUnwrapSimpleTestSetup(_lendAmount);
+        setupTranches(false, s_owner);
+        (uint256 borrowerRiskSlipBalanceBefore,) = repayMaxAndUnwrapSimpleTestSetup(_lendAmount);
 
         vm.warp(s_deployedConvertibleBondBox.maturityDate() + 1);
 
         s_deployedConvertibleBondBox.bond().mature();
 
         uint256 riskSlipRedeemAmount = bound(borrowerRiskSlipBalanceBefore, s_deployedConvertibleBondBox.riskRatio(), borrowerRiskSlipBalanceBefore);
-
-        (uint256 underlyingAmount, uint256 buttonAmount) = 
-        IStagingBoxLens(s_stagingBoxLens).viewRedeemRiskSlipsForTranches(s_deployedSB, borrowerRiskSlipBalanceBefore);
 
         vm.prank(s_borrower);
         StagingLoanRouter(s_stagingLoanRouter).redeemRiskSlipsForTranchesAndUnwrap(
@@ -36,8 +33,8 @@ contract RedeemRiskSlipsForTranchesAndUnwrap is RedeemLendSlipsForStablesTestSet
 
     function testRedeemRiskSlipsForTranchesAndUnwrapSendsUnderlyingToMsgSender(uint256 _fuzzPrice, uint256 _lendAmount) public {
         setupStagingBox(_fuzzPrice);
-        setupTranches(false, s_owner, s_deployedCBBAddress);
-        (uint256 borrowerRiskSlipBalanceBefore, uint256 lendAmount) = repayMaxAndUnwrapSimpleTestSetup(_lendAmount);
+        setupTranches(false, s_owner);
+        (uint256 borrowerRiskSlipBalanceBefore,) = repayMaxAndUnwrapSimpleTestSetup(_lendAmount);
 
         vm.warp(s_deployedConvertibleBondBox.maturityDate() + 1);
 
@@ -47,7 +44,7 @@ contract RedeemRiskSlipsForTranchesAndUnwrap is RedeemLendSlipsForStablesTestSet
 
         uint256 riskSlipRedeemAmount = bound(borrowerRiskSlipBalanceBefore, s_deployedConvertibleBondBox.riskRatio(), borrowerRiskSlipBalanceBefore);
 
-        (uint256 underlyingAmount, uint256 buttonAmount) = 
+        (uint256 underlyingAmount,) = 
         IStagingBoxLens(s_stagingBoxLens).viewRedeemRiskSlipsForTranches(s_deployedSB, riskSlipRedeemAmount);
 
         vm.prank(s_borrower);
@@ -64,8 +61,8 @@ contract RedeemRiskSlipsForTranchesAndUnwrap is RedeemLendSlipsForStablesTestSet
 
     function testRedeemRiskSlipsForTranchesAndUnwrapWithdrawsCollateralFromBond(uint256 _fuzzPrice, uint256 _lendAmount) public {
         setupStagingBox(_fuzzPrice);
-        setupTranches(false, s_owner, s_deployedCBBAddress);
-        (uint256 borrowerRiskSlipBalanceBefore, uint256 lendAmount) = repayMaxAndUnwrapSimpleTestSetup(_lendAmount);
+        setupTranches(false, s_owner);
+        (uint256 borrowerRiskSlipBalanceBefore,) = repayMaxAndUnwrapSimpleTestSetup(_lendAmount);
 
         vm.warp(s_deployedConvertibleBondBox.maturityDate() + 1);
 
@@ -75,7 +72,7 @@ contract RedeemRiskSlipsForTranchesAndUnwrap is RedeemLendSlipsForStablesTestSet
 
         uint256 riskSlipRedeemAmount = bound(borrowerRiskSlipBalanceBefore, s_deployedConvertibleBondBox.riskRatio(), borrowerRiskSlipBalanceBefore);
 
-        (uint256 underlyingAmount, uint256 buttonAmount) = 
+        (, uint256 buttonAmount) = 
         IStagingBoxLens(s_stagingBoxLens).viewRedeemRiskSlipsForTranches(s_deployedSB, riskSlipRedeemAmount);
 
         vm.prank(s_borrower);

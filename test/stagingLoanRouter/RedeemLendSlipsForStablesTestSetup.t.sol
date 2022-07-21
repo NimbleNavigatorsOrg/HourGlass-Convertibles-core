@@ -106,8 +106,6 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
         s_oracleData = 1e8;
         s_oracle.setData(s_oracleData, true);
 
-        (uint256 data, bool success) = s_oracle.getData();
-
         s_underlying = new MockERC20("CollateralToken", "CT");
 
         // create buttonwood bond collateral token
@@ -178,8 +176,7 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
 
     function setupTranches(
         bool _isLend,
-        address _user,
-        address _approvalAddress
+        address _user
     ) internal {
         s_underlying.mint(_user, s_maxUnderlyingMint);
 
@@ -236,12 +233,8 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
     }
 
     function repayMaxAndUnwrapSimpleTestSetup (uint256 _lendAmount) internal returns(uint256, uint256) {
-        (, uint256 minBorrowSlips) = s_stagingBoxLens.viewSimpleWrapTrancheBorrow(s_deployedSB, s_maxUnderlyingMint);
-
         vm.prank(s_borrower);
         StagingLoanRouter(s_stagingLoanRouter).simpleWrapTrancheBorrow(s_deployedSB, s_maxUnderlyingMint, 0);
-
-        uint256 borrowerBorrowSlipBalanceAfterSWTB = ISlip(s_deployedSB.borrowSlip()).balanceOf(s_borrower);
 
         uint256 userStableTokenBalanceBeforeLend = IERC20(
             s_deployedConvertibleBondBox.stableToken()

@@ -11,8 +11,8 @@ contract RepayAndUnwrapSimple is RedeemLendSlipsForStablesTestSetup {
 
     function testRepayAndUnwrapSimpleTransfersStablesFromMsgSenderToCBB(uint256 _fuzzPrice, uint256 _lendAmount, uint256 _timeWarp) public {
         setupStagingBox(_fuzzPrice);
-        setupTranches(false, s_owner, s_deployedCBBAddress);
-        (uint256 borrowRiskSlipBalanceBeforeRepay, uint256 lendAmount) = repayMaxAndUnwrapSimpleTestSetup(_lendAmount);
+        setupTranches(false, s_owner);
+        repayMaxAndUnwrapSimpleTestSetup(_lendAmount);
 
         _timeWarp = bound(_timeWarp, block.timestamp, s_deployedConvertibleBondBox.maturityDate());
         vm.warp(_timeWarp);
@@ -51,7 +51,7 @@ contract RepayAndUnwrapSimple is RedeemLendSlipsForStablesTestSetup {
 
     function testRepayAndUnwrapSimpleBurnsMsgSenderRiskSlipsAndSendsRemainderBack(uint256 _fuzzPrice, uint256 _lendAmount, uint256 _timeWarp) public {
         setupStagingBox(_fuzzPrice);
-        setupTranches(false, s_owner, s_deployedCBBAddress);
+        setupTranches(false, s_owner);
         repayMaxAndUnwrapSimpleTestSetup(_lendAmount);
 
         _timeWarp = bound(_timeWarp, block.timestamp, s_deployedConvertibleBondBox.maturityDate());
@@ -84,7 +84,7 @@ contract RepayAndUnwrapSimple is RedeemLendSlipsForStablesTestSetup {
 
     function testRepayAndUnwrapSimpleSendsUnderlyingToMsgSender(uint256 _fuzzPrice, uint256 _lendAmount, uint256 _timeWarp) public {
         setupStagingBox(_fuzzPrice);
-        setupTranches(false, s_owner, s_deployedCBBAddress);
+        setupTranches(false, s_owner);
         repayMaxAndUnwrapSimpleTestSetup(_lendAmount);
 
         _timeWarp = bound(_timeWarp, block.timestamp, s_deployedConvertibleBondBox.maturityDate());
