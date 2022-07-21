@@ -37,11 +37,11 @@ contract Initialize is CBBSetup {
 
     function testCannotInitializeBondIsMature() public {
         vm.startPrank(s_cbb_owner);
-        s_buttonWoodBondController.mature();
+        vm.warp(s_maturityDate + 1);
         bytes memory customError = abi.encodeWithSignature(
-            "BondIsMature(bool,bool)",
-            s_buttonWoodBondController.isMature(),
-            false
+            "BondIsMature(uint256,uint256)",
+            block.timestamp,
+            s_maturityDate
         );
         vm.expectRevert(customError);
         s_deployedCBBAddress = s_CBBFactory.createConvertibleBondBox(

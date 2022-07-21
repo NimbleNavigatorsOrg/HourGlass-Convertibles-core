@@ -14,7 +14,8 @@ interface ICBBFactory {
         address stableToken,
         uint256 trancheIndex,
         uint256 penalty,
-        address creator
+        address creator,
+        address newBondBoxAdress
     );
 
     /// @notice Some parameters are invalid

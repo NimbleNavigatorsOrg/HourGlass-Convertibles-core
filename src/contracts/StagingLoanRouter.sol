@@ -12,8 +12,6 @@ import "@buttonwood-protocol/button-wrappers/contracts/interfaces/IButtonToken.s
 import "forge-std/console2.sol";
 
 contract StagingLoanRouter is IStagingLoanRouter {
-    uint256 private constant trancheGran = 1000;
-
     /**
      * @inheritdoc IStagingLoanRouter
      */
@@ -93,17 +91,15 @@ contract StagingLoanRouter is IStagingLoanRouter {
         ) = fetchElasticStack(_stagingBox);
 
         //send back unused tranches to msg.sender
-        for (uint256 i = 0; i < bond.trancheCount(); i++) {
-            if (
-                i != convertibleBondBox.trancheIndex() &&
-                i != bond.trancheCount() - 1
-            ) {
+        uint256 trancheCount = bond.trancheCount();
+        uint256 trancheIndex = convertibleBondBox.trancheIndex();
+        for (uint256 i = 0; i < trancheCount; ) {
+            if (i != trancheIndex && i != trancheCount - 1) {
                 (ITranche tranche, ) = bond.tranches(i);
-                TransferHelper.safeTransfer(
-                    address(tranche),
-                    msg.sender,
-                    tranche.balanceOf(address(this))
-                );
+                tranche.transfer(msg.sender, tranche.balanceOf(address(this)));
+            }
+            unchecked {
+                ++i;
             }
         }
     }
@@ -120,9 +116,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
             _stagingBox
         );
 
-        //Transfer lendslips to router
-        TransferHelper.safeTransferFrom(
-            address(_stagingBox.lendSlip()),
+        _stagingBox.lendSlip().transferFrom(
             msg.sender,
             address(this),
             _lendSlipAmount
@@ -158,8 +152,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
         uint256 _lendSlipAmount
     ) external {
         //Transfer lendslips to router
-        TransferHelper.safeTransferFrom(
-            address(_stagingBox.lendSlip()),
+        _stagingBox.lendSlip().transferFrom(
             msg.sender,
             address(this),
             _lendSlipAmount
@@ -185,8 +178,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
     ) external {
 
         //Transfer safeslips to router
-        TransferHelper.safeTransferFrom(
-            _stagingBox.safeSlipAddress(),
+        convertibleBondBox.safeSlip().transferFrom(
             msg.sender,
             address(this),
             _safeSlipAmount
@@ -248,8 +240,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
         ) = fetchElasticStack(_stagingBox);
 
         //Transfer riskSlips to router
-        TransferHelper.safeTransferFrom(
-            _stagingBox.riskSlipAddress(),
+        convertibleBondBox.riskSlip().transferFrom(
             msg.sender,
             address(this),
             _riskSlipAmount
@@ -293,8 +284,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
         );
 
         //Calculate RiskSlips (minus fees) and transfer to router
-        TransferHelper.safeTransferFrom(
-            _stagingBox.riskSlipAddress(),
+        convertibleBondBox.riskSlip().transferFrom(
             msg.sender,
             address(this),
             _riskSlipAmount
@@ -310,8 +300,8 @@ contract StagingLoanRouter is IStagingLoanRouter {
         _redeemTrancheImmatureUnwrap(_stagingBox);
 
         //send unpaid riskSlip back
-        TransferHelper.safeTransfer(
-            _stagingBox.riskSlipAddress(),
+
+        convertibleBondBox.riskSlip().transfer(
             msg.sender,
             IERC20(_stagingBox.riskSlipAddress()).balanceOf(address(this))
         );
@@ -339,8 +329,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
         );
 
         //Transfer risk slips to CBB
-        TransferHelper.safeTransferFrom(
-            _stagingBox.riskSlipAddress(),
+        convertibleBondBox.riskSlip().transferFrom(
             msg.sender,
             address(this),
             _riskSlipAmount
@@ -422,8 +411,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
         );
 
         //Transfer to router
-        TransferHelper.safeTransferFrom(
-            _stagingBox.riskSlipAddress(),
+        convertibleBondBox.riskSlip().transferFrom(
             msg.sender,
             address(this),
             _riskSlipAmount

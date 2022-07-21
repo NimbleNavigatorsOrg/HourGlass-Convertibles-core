@@ -3,19 +3,17 @@ pragma solidity 0.8.13;
 
 import "clones-with-immutable-args/ClonesWithImmutableArgs.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import "./StagingBox.sol";
-import "./CBBFactory.sol";
-import "../interfaces/IButtonWoodBondController.sol";
+import "./ConvertibleBondBox.sol";
+import "../interfaces/ICBBFactory.sol";
 import "../interfaces/IStagingBoxFactory.sol";
-import "../interfaces/IConvertibleBondBox.sol";
 
 contract StagingBoxFactory is IStagingBoxFactory {
-    using SafeERC20Upgradeable for IERC20Upgradeable;
     using ClonesWithImmutableArgs for address;
 
     address public immutable implementation;
+
+    mapping(address => address) public CBBtoSB;
 
     struct SlipPair {
         address lendSlip;
@@ -27,7 +25,7 @@ contract StagingBoxFactory is IStagingBoxFactory {
     }
 
     /**
-     * @dev Initializer for Convertible Bond Box
+     * @dev Deploys a staging box with a CBB
      * @param cBBFactory The ConvertibleBondBox factory
      * @param slipFactory The factory for the Slip-Tokens
      * @param bond The buttonwood bond
@@ -38,8 +36,8 @@ contract StagingBoxFactory is IStagingBoxFactory {
      * @param cbbOwner The owner of the ConvertibleBondBox
      */
 
-    function createStagingBox(
-        CBBFactory cBBFactory,
+    function createStagingBoxWithCBB(
+        ICBBFactory cBBFactory,
         ISlipFactory slipFactory,
         IButtonWoodBondController bond,
         uint256 penalty,
@@ -57,6 +55,38 @@ contract StagingBoxFactory is IStagingBoxFactory {
                 trancheIndex,
                 address(this)
             )
+        );
+
+        address deployedSB = this.createStagingBoxOnly(
+            slipFactory,
+            convertibleBondBox,
+            initialPrice,
+            cbbOwner
+        );
+
+        //transfer ownership of CBB to SB
+        convertibleBondBox.transferOwnership(deployedSB);
+
+        return deployedSB;
+    }
+
+    /**
+     * @dev Deploys only a staging box
+     * @param slipFactory The factory for the Slip-Tokens
+     * @param convertibleBondBox The CBB tied to the staging box being deployed
+     * @param initialPrice The initial price of the safe asset
+     * @param owner The owner of the StagingBox
+     */
+
+    function createStagingBoxOnly(
+        ISlipFactory slipFactory,
+        ConvertibleBondBox convertibleBondBox,
+        uint256 initialPrice,
+        address owner
+    ) public returns (address) {
+        require(
+            msg.sender == convertibleBondBox.owner(),
+            "StagingBoxFactory: Deployer not owner of CBB"
         );
 
         SlipPair memory SlipData = deploySlips(
@@ -86,23 +116,34 @@ contract StagingBoxFactory is IStagingBoxFactory {
 
         // clone staging box
         StagingBox clone = StagingBox(implementation.clone(data));
-        clone.initialize(cbbOwner);
+        clone.initialize(owner);
 
         //tansfer slips ownership to staging box
         ISlip(SlipData.lendSlip).changeOwner(address(clone));
         ISlip(SlipData.borrowSlip).changeOwner(address(clone));
 
-        //transfer ownership of CBB to SB
-        convertibleBondBox.transferOwnership(address(clone));
+        address oldStagingBox = CBBtoSB[address(convertibleBondBox)];
 
-        emit StagingBoxCreated(
-            convertibleBondBox,
-            slipFactory,
-            initialPrice,
-            cbbOwner,
-            msg.sender,
-            address(clone)
-        );
+        if (oldStagingBox == address(0)) {
+            emit StagingBoxCreated(
+                convertibleBondBox,
+                initialPrice,
+                owner,
+                msg.sender,
+                address(clone)
+            );
+        } else {
+            emit StagingBoxReplaced(
+                convertibleBondBox,
+                initialPrice,
+                owner,
+                msg.sender,
+                oldStagingBox,
+                address(clone)
+            );
+        }
+
+        CBBtoSB[address(convertibleBondBox)] = address(clone);
 
         return address(clone);
     }

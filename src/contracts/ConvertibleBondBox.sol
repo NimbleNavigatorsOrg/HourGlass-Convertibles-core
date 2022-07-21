@@ -1,15 +1,12 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity 0.8.13;
 
-import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@uniswap/lib/contracts/libraries/TransferHelper.sol";
-import "clones-with-immutable-args/Clone.sol";
-import "../interfaces/IButtonWoodBondController.sol";
-import "../interfaces/ISlipFactory.sol";
-import "../interfaces/ISlip.sol";
 import "../../utils/CBBImmutableArgs.sol";
 import "../interfaces/IConvertibleBondBox.sol";
+
+import "forge-std/console2.sol";
 
 /**
  * @dev Convertible Bond Box for a ButtonTranche bond
@@ -22,7 +19,6 @@ import "../interfaces/IConvertibleBondBox.sol";
 
 contract ConvertibleBondBox is
     OwnableUpgradeable,
-    Clone,
     CBBImmutableArgs,
     IConvertibleBondBox
 {
@@ -30,7 +26,7 @@ contract ConvertibleBondBox is
     uint256 public override s_repaidSafeSlips = 0;
     uint256 public constant override s_trancheGranularity = 1000;
     uint256 public constant override s_penaltyGranularity = 1000;
-    uint256 public constant override s_priceGranularity = 1e9;
+    uint256 public constant override s_priceGranularity = 1e8;
     uint256 public override feeBps = 0;
 
     uint256 public s_initialPrice = 0;
@@ -52,8 +48,11 @@ contract ConvertibleBondBox is
                 given: penalty(),
                 maxPenalty: s_penaltyGranularity
             });
-        if (bond().isMature())
-            revert BondIsMature({given: bond().isMature(), required: false});
+        if (block.timestamp > maturityDate())
+            revert BondIsMature({
+                currentTime: block.timestamp,
+                maturity: maturityDate()
+            });
 
         emit Initialized(_owner);
     }
@@ -76,6 +75,13 @@ contract ConvertibleBondBox is
             });
         if (_initialPrice == 0)
             revert InitialPriceIsZero({given: 0, maxPrice: priceGranularity});
+
+        if (block.timestamp > maturityDate())
+            revert BondIsMature({
+                currentTime: block.timestamp,
+                maturity: maturityDate()
+            });
+
         s_initialPrice = _initialPrice;
 
         //set ConvertibleBondBox Start Date to be time when init() is called
@@ -94,7 +100,7 @@ contract ConvertibleBondBox is
         uint256 _stableAmount
     ) external override {
         uint256 priceGranularity = s_priceGranularity;
-        uint256 price = this.currentPrice();
+        uint256 price = currentPrice();
 
         //Need to justify amounts
         if (_stableAmount < (safeRatio() * price) / priceGranularity)
@@ -133,7 +139,7 @@ contract ConvertibleBondBox is
                 reqInput: safeRatio()
             });
 
-        uint256 price = this.currentPrice();
+        uint256 price = currentPrice();
 
         uint256 zTrancheAmount = (_safeTrancheAmount * riskRatio()) /
             safeRatio();
@@ -161,7 +167,7 @@ contract ConvertibleBondBox is
      * @inheritdoc IConvertibleBondBox
      */
 
-    function currentPrice() external view override returns (uint256) {
+    function currentPrice() public view override returns (uint256) {
         //load storage variables into memory
         uint256 price = s_priceGranularity;
         uint256 maturityDate = maturityDate();
@@ -183,7 +189,7 @@ contract ConvertibleBondBox is
 
     function repay(uint256 _stableAmount) external override {
         //Load into memory
-        uint256 price = this.currentPrice();
+        uint256 price = currentPrice();
         uint256 priceGranularity = s_priceGranularity;
 
         if (_stableAmount < (safeRatio() * price) / priceGranularity)
@@ -208,7 +214,7 @@ contract ConvertibleBondBox is
 
     function repayMax(uint256 _riskSlipAmount) external override {
         // Load params into memory
-        uint256 price = this.currentPrice();
+        uint256 price = currentPrice();
 
         // check min input
         if (_riskSlipAmount < riskRatio())
@@ -249,13 +255,7 @@ contract ConvertibleBondBox is
         //transfer fee to owner
         if (feeBps > 0 && _msgSender() != owner()) {
             uint256 feeSlip = (_riskSlipAmount * feeBps) / BPS;
-            TransferHelper.safeTransferFrom(
-                address(riskSlip()),
-                _msgSender(),
-                owner(),
-                feeSlip
-            );
-
+            riskSlip().transferFrom(_msgSender(), owner(), feeSlip);
             _riskSlipAmount -= feeSlip;
         }
 
@@ -265,11 +265,7 @@ contract ConvertibleBondBox is
             (s_penaltyGranularity);
 
         //transfer Z-tranches from ConvertibleBondBox to msg.sender
-        TransferHelper.safeTransfer(
-            address(riskTranche()),
-            _msgSender(),
-            zTranchePayout
-        );
+        riskTranche().transfer(_msgSender(), zTranchePayout);
 
         riskSlip().burn(_msgSender(), _riskSlipAmount);
 
@@ -296,13 +292,7 @@ contract ConvertibleBondBox is
         //transfer fee to owner
         if (feeBps > 0 && _msgSender() != owner()) {
             uint256 feeSlip = (_safeSlipAmount * feeBps) / BPS;
-            TransferHelper.safeTransferFrom(
-                address(safeSlip()),
-                _msgSender(),
-                owner(),
-                feeSlip
-            );
-
+            safeSlip().transferFrom(_msgSender(), owner(), feeSlip);
             _safeSlipAmount -= feeSlip;
         }
 
@@ -312,18 +302,13 @@ contract ConvertibleBondBox is
         safeSlip().burn(_msgSender(), _safeSlipAmount);
 
         //transfer safe-Tranche after maturity only
-        TransferHelper.safeTransfer(
-            address(safeTranche()),
-            _msgSender(),
-            (_safeSlipAmount)
-        );
+        safeTranche().transfer(_msgSender(), _safeSlipAmount);
 
         uint256 zPenaltyTotal = riskTranche().balanceOf(address(this)) -
             riskSlip().totalSupply();
 
         //transfer risk-Tranche penalty after maturity only
-        TransferHelper.safeTransfer(
-            address(riskTranche()),
+        riskTranche().transfer(
             _msgSender(),
             (_safeSlipAmount * zPenaltyTotal) /
                 (safeSlipSupply - s_repaidSafeSlips)
@@ -349,25 +334,17 @@ contract ConvertibleBondBox is
                 reqInput: safeRatio()
             });
 
-        address safeSlipTokenAddress = address(safeSlip());
-
         //transfer safeSlips to owner
         if (feeBps > 0 && _msgSender() != owner()) {
             uint256 feeSlip = (_safeSlipAmount * feeBps) / BPS;
-            TransferHelper.safeTransferFrom(
-                safeSlipTokenAddress,
-                _msgSender(),
-                owner(),
-                feeSlip
-            );
-
+            safeSlip().transferFrom(_msgSender(), owner(), feeSlip);
             _safeSlipAmount -= feeSlip;
         }
 
         uint256 stableBalance = stableToken().balanceOf(address(this));
 
         //burn safe-slips
-        ISlip(safeSlipTokenAddress).burn(_msgSender(), _safeSlipAmount);
+        safeSlip().burn(_msgSender(), _safeSlipAmount);
 
         //transfer stables
         TransferHelper.safeTransfer(
@@ -376,7 +353,7 @@ contract ConvertibleBondBox is
             (_safeSlipAmount * stableBalance) / (s_repaidSafeSlips)
         );
 
-        emit RedeemStable(_msgSender(), _safeSlipAmount, this.currentPrice());
+        emit RedeemStable(_msgSender(), _safeSlipAmount, currentPrice());
     }
 
     /**
@@ -384,8 +361,11 @@ contract ConvertibleBondBox is
      */
 
     function setFee(uint256 newFeeBps) external override onlyOwner {
-        if (bond().isMature())
-            revert BondIsMature({given: bond().isMature(), required: false});
+        if (block.timestamp > maturityDate())
+            revert BondIsMature({
+                currentTime: block.timestamp,
+                maturity: maturityDate()
+            });
         if (newFeeBps > maxFeeBPS)
             revert FeeTooLarge({input: newFeeBps, maximum: maxFeeBPS});
         feeBps = newFeeBps;
@@ -417,20 +397,21 @@ contract ConvertibleBondBox is
                 minStartDate: block.timestamp
             });
 
-        if (bond().isMature())
-            revert BondIsMature({given: bond().isMature(), required: false});
+        if (block.timestamp > maturityDate())
+            revert BondIsMature({
+                currentTime: block.timestamp,
+                maturity: maturityDate()
+            });
 
         //Transfer safeTranche to ConvertibleBondBox
-        TransferHelper.safeTransferFrom(
-            address(safeTranche()),
+        safeTranche().transferFrom(
             _msgSender(),
             address(this),
             _safeSlipAmount
         );
 
         //Transfer riskTranche to ConvertibleBondBox
-        TransferHelper.safeTransferFrom(
-            address(riskTranche()),
+        riskTranche().transferFrom(
             _msgSender(),
             address(this),
             _riskSlipAmount
@@ -485,20 +466,12 @@ contract ConvertibleBondBox is
         );
 
         // Transfer safeTranches to msg.sender (increment state)
-        TransferHelper.safeTransfer(
-            address(safeTranche()),
-            _msgSender(),
-            _safeTranchePayout
-        );
+        safeTranche().transfer(_msgSender(), _safeTranchePayout);
 
         s_repaidSafeSlips += _safeTranchePayout;
 
         // Transfer riskTranches to msg.sender
-        TransferHelper.safeTransfer(
-            address(riskTranche()),
-            _msgSender(),
-            _riskTranchePayout
-        );
+        riskTranche().transfer(_msgSender(), _riskTranchePayout);
 
         // Burn riskSlips
         riskSlip().burn(_msgSender(), _riskTranchePayout);
