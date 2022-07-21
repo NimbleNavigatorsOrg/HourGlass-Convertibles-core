@@ -47,7 +47,7 @@ contract SBIntegrationSetup is Test {
     uint256 constant s_endOfUnixTime = 2147483647;
     uint256 constant s_trancheGranularity = 1000;
     uint256 constant s_penaltyGranularity = 1000;
-    uint256 constant s_priceGranularity = 1e9;
+    uint256 constant s_priceGranularity = 1e8;
     uint256 constant s_BPS = 10_000;
     uint256 constant s_maxMint = 1e18;
     uint256 public constant s_maxFeeBPS = 50;

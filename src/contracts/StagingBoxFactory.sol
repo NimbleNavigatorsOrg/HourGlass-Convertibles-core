@@ -25,7 +25,7 @@ contract StagingBoxFactory is IStagingBoxFactory {
     }
 
     /**
-     * @dev Initializer for Convertible Bond Box
+     * @dev Deploys a staging box with a CBB
      * @param cBBFactory The ConvertibleBondBox factory
      * @param slipFactory The factory for the Slip-Tokens
      * @param bond The buttonwood bond
@@ -71,7 +71,7 @@ contract StagingBoxFactory is IStagingBoxFactory {
     }
 
     /**
-     * @dev Initializer for Convertible Bond Box
+     * @dev Deploys only a staging box
      * @param slipFactory The factory for the Slip-Tokens
      * @param convertibleBondBox The CBB tied to the staging box being deployed
      * @param initialPrice The initial price of the safe asset

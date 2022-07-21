@@ -26,7 +26,7 @@ contract ConvertibleBondBox is
     uint256 public override s_repaidSafeSlips = 0;
     uint256 public constant override s_trancheGranularity = 1000;
     uint256 public constant override s_penaltyGranularity = 1000;
-    uint256 public constant override s_priceGranularity = 1e9;
+    uint256 public constant override s_priceGranularity = 1e8;
     uint256 public override feeBps = 0;
 
     uint256 public s_initialPrice = 0;

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.13;
 import "./IConvertibleBondBox.sol";
-import "./ISlipFactory.sol";
 
 /**
  * @notice Interface for Convertible Bond Box factory contracts
