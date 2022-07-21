@@ -47,7 +47,7 @@ contract RepayMaxAndUnwrapSimple is RedeemLendSlipsForStablesTestSetup {
         assertFalse(_borrowSlipsToRedeem == 0);
     }
 
-    function testRepayMaxAndUnwrapSimpleTransfersRiskSlipsToRouter(uint256 _fuzzPrice, uint256 _lendAmount, uint256 _timeWarp, uint256 _borrowSlipsToRedeem) public {
+    function testRepayMaxAndUnwrapSimpleBurnsMsgSenderRiskSlips(uint256 _fuzzPrice, uint256 _lendAmount, uint256 _timeWarp, uint256 _borrowSlipsToRedeem) public {
         setupStagingBox(_fuzzPrice);
         setupTranches(false, s_owner, s_deployedCBBAddress);
         (uint256 borrowRiskSlipBalanceBeforeRepay, uint256 lendAmount) = repayMaxAndUnwrapSimpleTestSetup(_lendAmount);
@@ -114,8 +114,10 @@ contract RepayMaxAndUnwrapSimple is RedeemLendSlipsForStablesTestSetup {
         uint256 borrowerUnderlyingBalanceAfter = s_underlying.balanceOf(s_borrower);
         uint256 bondCollateralBalanceAfter = s_collateralToken.balanceOf(bond);
 
+        assertTrue(withinTolerance(bondCollateralBalanceBefore - underlyingAmount, bondCollateralBalanceAfter, 1));
         assertTrue(withinTolerance(borrowerUnderlyingBalanceBefore + underlyingAmount, borrowerUnderlyingBalanceAfter, 1));
 
+        assertFalse(underlyingAmount == 0);
         assertFalse(stablesOwed == 0);
         assertFalse(borrowRiskSlipBalanceBeforeRepay == 0);
     }
