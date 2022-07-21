@@ -26,6 +26,7 @@ contract RepayMaxAndUnwrapSimple is RedeemLendSlipsForStablesTestSetup {
 
         uint256 borrowerStableBalanceBefore = s_stableToken.balanceOf(s_borrower);
         uint256 stagingLoanRouterStableBalanceBefore = s_stableToken.balanceOf(address(s_stagingLoanRouter));
+        uint256 cbbStableBalanceBefore = s_stableToken.balanceOf(address(s_deployedConvertibleBondBox));
 
         vm.prank(s_borrower);
         StagingLoanRouter(s_stagingLoanRouter).repayMaxAndUnwrapSimple(
@@ -36,9 +37,11 @@ contract RepayMaxAndUnwrapSimple is RedeemLendSlipsForStablesTestSetup {
 
         uint256 borrowerStableBalanceAfter = s_stableToken.balanceOf(s_borrower);
         uint256 stagingLoanRouterStableBalanceAfter = s_stableToken.balanceOf(address(s_stagingLoanRouter));
+        uint256 cbbStableBalanceAfter = s_stableToken.balanceOf(address(s_deployedConvertibleBondBox));
 
         assertEq(borrowerStableBalanceBefore - stablesOwed, borrowerStableBalanceAfter);
         assertEq(stagingLoanRouterStableBalanceBefore, stagingLoanRouterStableBalanceAfter);
+        assertEq(cbbStableBalanceBefore + stablesOwed, cbbStableBalanceAfter);
 
         assertFalse(stablesOwed == 0);
         assertFalse(_borrowSlipsToRedeem == 0);
