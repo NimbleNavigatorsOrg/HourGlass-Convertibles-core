@@ -197,9 +197,7 @@ contract StagingLoanRouterSetup is Test {
     }
 
     function setupTranches(
-        bool _isLend,
-        address _user,
-        address _approvalAddress
+        address _user
     ) internal {
         s_underlying.mint(_user, 200000000000000000000000);
 

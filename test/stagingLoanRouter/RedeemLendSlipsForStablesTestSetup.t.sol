@@ -238,7 +238,6 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
     function repayMaxAndUnwrapSimpleTestSetup (uint256 _lendAmount) internal returns(uint256, uint256) {
         (, uint256 minBorrowSlips) = s_stagingBoxLens.viewSimpleWrapTrancheBorrow(s_deployedSB, s_maxUnderlyingMint);
 
-        uint256 borrowerBorrowSlipBalanceBeforeSWTB = ISlip(s_deployedSB.borrowSlip()).balanceOf(s_borrower);
         vm.prank(s_borrower);
         StagingLoanRouter(s_stagingLoanRouter).simpleWrapTrancheBorrow(s_deployedSB, s_maxUnderlyingMint, 0);
 
@@ -262,8 +261,6 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
 
         assertFalse(_lendAmount == 0);
 
-        uint256 sbStableTokenBalanceBeforeTrans = s_stableToken.balanceOf(address(s_owner));
-
         vm.prank(s_owner);
         s_deployedSB.transmitReInit(true);
 
@@ -282,10 +279,8 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
             
             vm.prank(s_borrower);
             s_deployedSB.withdrawBorrow(borrowerBorrowSlipBalanceAfterRedeem > sbSafeTrancheBalanceBeforeRedeem ? sbSafeTrancheBalanceBeforeRedeem : borrowerBorrowSlipBalanceAfterRedeem);
-            uint256 borrowerBorrowSlipBalanceAfterWithdraw = ISlip(s_deployedSB.borrowSlip()).balanceOf(s_borrower);
         }
 
-        uint256 sbStableTokenBalanceBeforeRepay = s_stableToken.balanceOf(address(s_owner));
         uint256 borrowRiskSlipBalanceBeforeRepay = ISlip(s_deployedSB.riskSlipAddress()).balanceOf(s_borrower);
 
         vm.assume(borrowRiskSlipBalanceBeforeRepay >= s_deployedConvertibleBondBox.riskRatio() * 1000);
@@ -299,7 +294,7 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
         return (borrowRiskSlipBalanceBeforeRepay, _lendAmount);
     }
 
-    function withinTolerance(uint256 num, uint256 num2, uint256 percentTolerance) view internal returns(bool) {
+    function withinTolerance(uint256 num, uint256 num2, uint256 percentTolerance) pure internal returns(bool) {
         uint256 difference = 0;
         uint256 tolerance = 0;
         if(num >= num2) {
@@ -312,21 +307,12 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
         return difference <= tolerance;
     }
 
-    function squareRootOf(uint x) internal returns (uint y) {
-        uint z = (x + 1) / 2;
-        y = x;
-        while (z < y) {
-            y = z;
-            z = (x / z + z) / 2;
-        }
-    }
-
     function redeemLendSlipsForStablesTestSetup(uint256 _timeWarp, uint256 borrowRiskSlipBalanceBeforeRepay, uint256 _lendSlipAmount, bool wantStables) internal returns(uint256) {
                 _timeWarp = bound(_timeWarp, block.timestamp, s_deployedConvertibleBondBox.maturityDate() - 1);
         
         vm.warp(_timeWarp);
 
-        (uint256 underlyingAmount, uint256 stablesOwed, uint256 stableFees, uint256 riskTranchePayout) = 
+        (, uint256 stablesOwed,,) = 
         IStagingBoxLens(s_stagingBoxLens).viewRepayMaxAndUnwrapSimple(s_deployedSB, borrowRiskSlipBalanceBeforeRepay);
 
         vm.assume(stablesOwed > 0);

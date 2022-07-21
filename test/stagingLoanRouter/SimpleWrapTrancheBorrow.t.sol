@@ -8,11 +8,11 @@ import "./StagingLoanRouterSetup.t.sol";
 
 import "forge-std/console2.sol";
 
-contract SimpleWrapTrancheBorrow is Test, StagingLoanRouterSetup {
+contract SimpleWrapTrancheBorrow is StagingLoanRouterSetup {
 
     function testSimpleWrapTrancheBorrowTransfersUnderlyingFromMsgSender(uint256 _fuzzPrice, uint256 _amountRaw) public {
         setupStagingBox(_fuzzPrice);
-        setupTranches(false, address(s_deployedSB), s_deployedCBBAddress);
+        setupTranches(address(s_deployedSB));
 
         _amountRaw = bound(_amountRaw, 1000000, s_maxUnderlyingMint);
         (, uint256 minBorrowSlips) = s_stagingBoxLens.viewSimpleWrapTrancheBorrow(s_deployedSB, _amountRaw);
@@ -35,7 +35,7 @@ contract SimpleWrapTrancheBorrow is Test, StagingLoanRouterSetup {
 
     function testSimpleWrapTrancheBorrowDepositsUnderlyingFromLoanRouterToWrapper(uint256 _fuzzPrice, uint256 _amountRaw) public {
         setupStagingBox(_fuzzPrice);
-        setupTranches(false, address(s_deployedSB), s_deployedCBBAddress);
+        setupTranches(address(s_deployedSB));
 
         _amountRaw = bound(_amountRaw, 1000000, s_maxUnderlyingMint);
         (, uint256 minBorrowSlips) = s_stagingBoxLens.viewSimpleWrapTrancheBorrow(s_deployedSB, _amountRaw);
@@ -61,7 +61,7 @@ contract SimpleWrapTrancheBorrow is Test, StagingLoanRouterSetup {
 
     function testSimpleWrapTrancheBorrowDepositsWrapperFromLoanRouterToBond(uint256 _fuzzPrice, uint256 _amountRaw) public {
         setupStagingBox(_fuzzPrice);
-        setupTranches(false, address(s_deployedSB), s_deployedCBBAddress);
+        setupTranches(address(s_deployedSB));
 
         _amountRaw = bound(_amountRaw, 1000000, s_maxUnderlyingMint);
         (, uint256 minBorrowSlips) = s_stagingBoxLens.viewSimpleWrapTrancheBorrow(s_deployedSB, _amountRaw);
@@ -89,7 +89,7 @@ contract SimpleWrapTrancheBorrow is Test, StagingLoanRouterSetup {
 
     function testCannotSimpleWrapTrancheBorrowSlippageExceeded(uint256 _fuzzPrice, uint256 _amountRaw) public {
         setupStagingBox(_fuzzPrice);
-        setupTranches(false, address(s_deployedSB), s_deployedCBBAddress);
+        setupTranches(address(s_deployedSB));
 
         _amountRaw = bound(_amountRaw, 1000000, s_maxUnderlyingMint);
         uint256 wrapperTransferAmount = _amountRaw/200000;

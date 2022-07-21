@@ -22,7 +22,7 @@ contract RepayAndUnwrapSimple is RedeemLendSlipsForStablesTestSetup {
 
         uint256 stableRepayAmount = bound(borrowerStableBalanceBefore, 1, (ISlip(s_deployedSB.safeSlipAddress()).totalSupply() * s_deployedConvertibleBondBox.currentPrice()) / s_deployedConvertibleBondBox.s_priceGranularity());
 
-        (uint256 underlyingAmount, uint256 stablesOwed, uint256 stableFees, uint256 riskTranchePayout) = 
+        (, uint256 stablesOwed,,) = 
         IStagingBoxLens(s_stagingBoxLens).viewRepayAndUnwrapSimple(s_deployedSB, stableRepayAmount);
 
         vm.assume(stablesOwed > 0);
@@ -39,7 +39,6 @@ contract RepayAndUnwrapSimple is RedeemLendSlipsForStablesTestSetup {
 
         uint256 borrowerStableBalanceAfter = s_stableToken.balanceOf(s_borrower);
         uint256 stagingLoanRouterStableBalanceAfter = s_stableToken.balanceOf(address(s_stagingLoanRouter));
-        uint256 borrowerRiskSlipBalanceAfter = ISlip(s_deployedSB.riskSlipAddress()).balanceOf(s_borrower);
         uint256 cbbStableBalanceAfter = s_stableToken.balanceOf(address(s_deployedConvertibleBondBox));
 
         assertEq(borrowerStableBalanceBefore - stablesOwed, borrowerStableBalanceAfter);
@@ -53,7 +52,7 @@ contract RepayAndUnwrapSimple is RedeemLendSlipsForStablesTestSetup {
     function testRepayAndUnwrapSimpleBurnsMsgSenderRiskSlipsAndSendsRemainderBack(uint256 _fuzzPrice, uint256 _lendAmount, uint256 _timeWarp) public {
         setupStagingBox(_fuzzPrice);
         setupTranches(false, s_owner, s_deployedCBBAddress);
-        (uint256 borrowRiskSlipBalanceBeforeRepay, uint256 lendAmount) = repayMaxAndUnwrapSimpleTestSetup(_lendAmount);
+        repayMaxAndUnwrapSimpleTestSetup(_lendAmount);
 
         _timeWarp = bound(_timeWarp, block.timestamp, s_deployedConvertibleBondBox.maturityDate());
         vm.warp(_timeWarp);
@@ -63,13 +62,10 @@ contract RepayAndUnwrapSimple is RedeemLendSlipsForStablesTestSetup {
 
         uint256 stableRepayAmount = bound(borrowerStableBalanceBefore, 1, (ISlip(s_deployedSB.safeSlipAddress()).totalSupply() * s_deployedConvertibleBondBox.currentPrice()) / s_deployedConvertibleBondBox.s_priceGranularity());
 
-        (uint256 underlyingAmount, uint256 stablesOwed, uint256 stableFees, uint256 riskTranchePayout) = 
+        (, uint256 stablesOwed,, uint256 riskTranchePayout) = 
         IStagingBoxLens(s_stagingBoxLens).viewRepayAndUnwrapSimple(s_deployedSB, stableRepayAmount);
 
         vm.assume(stablesOwed > 0);
-
-        uint256 stagingLoanRouterStableBalanceBefore = s_stableToken.balanceOf(address(s_stagingLoanRouter));
-        uint256 cbbStableBalanceBefore = s_stableToken.balanceOf(address(s_deployedConvertibleBondBox));
 
         vm.prank(s_borrower);
         StagingLoanRouter(s_stagingLoanRouter).repayAndUnwrapSimple(
@@ -78,11 +74,8 @@ contract RepayAndUnwrapSimple is RedeemLendSlipsForStablesTestSetup {
             borrowerRiskSlipBalanceBefore
             );
 
-        uint256 borrowerStableBalanceAfter = s_stableToken.balanceOf(s_borrower);
-        uint256 stagingLoanRouterStableBalanceAfter = s_stableToken.balanceOf(address(s_stagingLoanRouter));
         uint256 borrowerRiskSlipBalanceAfter = ISlip(s_deployedSB.riskSlipAddress()).balanceOf(s_borrower);
-        uint256 cbbStableBalanceAfter = s_stableToken.balanceOf(address(s_deployedConvertibleBondBox));
-
+        
         assertEq(borrowerRiskSlipBalanceBefore - riskTranchePayout, borrowerRiskSlipBalanceAfter);
 
         assertFalse(stablesOwed == 0);
@@ -92,7 +85,7 @@ contract RepayAndUnwrapSimple is RedeemLendSlipsForStablesTestSetup {
     function testRepayAndUnwrapSimpleSendsUnderlyingToMsgSender(uint256 _fuzzPrice, uint256 _lendAmount, uint256 _timeWarp) public {
         setupStagingBox(_fuzzPrice);
         setupTranches(false, s_owner, s_deployedCBBAddress);
-        (uint256 borrowRiskSlipBalanceBeforeRepay, uint256 lendAmount) = repayMaxAndUnwrapSimpleTestSetup(_lendAmount);
+        repayMaxAndUnwrapSimpleTestSetup(_lendAmount);
 
         _timeWarp = bound(_timeWarp, block.timestamp, s_deployedConvertibleBondBox.maturityDate());
         vm.warp(_timeWarp);
@@ -102,7 +95,7 @@ contract RepayAndUnwrapSimple is RedeemLendSlipsForStablesTestSetup {
 
         uint256 stableRepayAmount = bound(borrowerStableBalanceBefore, 1, (ISlip(s_deployedSB.safeSlipAddress()).totalSupply() * s_deployedConvertibleBondBox.currentPrice()) / s_deployedConvertibleBondBox.s_priceGranularity());
 
-        (uint256 underlyingAmount, uint256 stablesOwed, uint256 stableFees, uint256 riskTranchePayout) = 
+        (uint256 underlyingAmount, uint256 stablesOwed,,) = 
         IStagingBoxLens(s_stagingBoxLens).viewRepayAndUnwrapSimple(s_deployedSB, stableRepayAmount);
 
         vm.assume(stablesOwed > 0);

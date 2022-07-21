@@ -12,14 +12,14 @@ contract RepayMaxAndUnwrapSimple is RedeemLendSlipsForStablesTestSetup {
     function testRepayMaxAndUnwrapSimpleTransfersStablesFromMsgSender(uint256 _fuzzPrice, uint256 _lendAmount, uint256 _timeWarp, uint256 _borrowSlipsToRedeem) public {
         setupStagingBox(_fuzzPrice);
         setupTranches(false, s_owner, s_deployedCBBAddress);
-        (uint256 borrowRiskSlipBalanceBeforeRepay, uint256 lendAmount) = repayMaxAndUnwrapSimpleTestSetup(_lendAmount);
+        (uint256 borrowRiskSlipBalanceBeforeRepay,) = repayMaxAndUnwrapSimpleTestSetup(_lendAmount);
 
         _borrowSlipsToRedeem = bound(_borrowSlipsToRedeem, s_deployedConvertibleBondBox.riskRatio(), borrowRiskSlipBalanceBeforeRepay);
 
         _timeWarp = bound(_timeWarp, block.timestamp, s_deployedConvertibleBondBox.maturityDate());
         vm.warp(_timeWarp);
 
-        (uint256 underlyingAmount, uint256 stablesOwed, uint256 stableFees, uint256 riskTranchePayout) = 
+        (, uint256 stablesOwed,,) = 
         IStagingBoxLens(s_stagingBoxLens).viewRepayMaxAndUnwrapSimple(s_deployedSB, _borrowSlipsToRedeem);
 
         vm.assume(stablesOwed > 0);
@@ -50,7 +50,7 @@ contract RepayMaxAndUnwrapSimple is RedeemLendSlipsForStablesTestSetup {
     function testRepayMaxAndUnwrapSimpleBurnsMsgSenderRiskSlips(uint256 _fuzzPrice, uint256 _lendAmount, uint256 _timeWarp, uint256 _borrowSlipsToRedeem) public {
         setupStagingBox(_fuzzPrice);
         setupTranches(false, s_owner, s_deployedCBBAddress);
-        (uint256 borrowRiskSlipBalanceBeforeRepay, uint256 lendAmount) = repayMaxAndUnwrapSimpleTestSetup(_lendAmount);
+        (uint256 borrowRiskSlipBalanceBeforeRepay,) = repayMaxAndUnwrapSimpleTestSetup(_lendAmount);
         borrowRiskSlipBalanceBeforeRepay = bound(borrowRiskSlipBalanceBeforeRepay, s_deployedConvertibleBondBox.riskRatio(), borrowRiskSlipBalanceBeforeRepay);
 
         _borrowSlipsToRedeem = bound(_borrowSlipsToRedeem, s_deployedConvertibleBondBox.riskRatio(), borrowRiskSlipBalanceBeforeRepay);
@@ -58,7 +58,7 @@ contract RepayMaxAndUnwrapSimple is RedeemLendSlipsForStablesTestSetup {
         _timeWarp = bound(_timeWarp, block.timestamp, s_deployedConvertibleBondBox.maturityDate());
         vm.warp(_timeWarp);
 
-        (uint256 underlyingAmount, uint256 stablesOwed, uint256 stableFees, uint256 riskTranchePayout) = 
+        (, uint256 stablesOwed,,) = 
         IStagingBoxLens(s_stagingBoxLens).viewRepayMaxAndUnwrapSimple(s_deployedSB, _borrowSlipsToRedeem);
         vm.assume(stablesOwed > 0);
 
@@ -85,7 +85,7 @@ contract RepayMaxAndUnwrapSimple is RedeemLendSlipsForStablesTestSetup {
     function testRepayMaxAndUnwrapSimpleSendsUnderlyingToMsgSender(uint256 _fuzzPrice, uint256 _lendAmount, uint256 _timeWarp) public {
         setupStagingBox(_fuzzPrice);
         setupTranches(false, s_owner, s_deployedCBBAddress);
-        (uint256 borrowRiskSlipBalanceBeforeRepay, uint256 lendAmount) = repayMaxAndUnwrapSimpleTestSetup(_lendAmount);
+        (uint256 borrowRiskSlipBalanceBeforeRepay,) = repayMaxAndUnwrapSimpleTestSetup(_lendAmount);
         borrowRiskSlipBalanceBeforeRepay = bound(borrowRiskSlipBalanceBeforeRepay, s_deployedConvertibleBondBox.riskRatio() * 1000, borrowRiskSlipBalanceBeforeRepay);
 
         borrowRiskSlipBalanceBeforeRepay = bound(borrowRiskSlipBalanceBeforeRepay, s_deployedConvertibleBondBox.riskRatio() * 1000, borrowRiskSlipBalanceBeforeRepay);
@@ -94,7 +94,7 @@ contract RepayMaxAndUnwrapSimple is RedeemLendSlipsForStablesTestSetup {
         
         vm.warp(_timeWarp);
 
-        (uint256 underlyingAmount, uint256 stablesOwed, uint256 stableFees, uint256 riskTranchePayout) = 
+        (uint256 underlyingAmount, uint256 stablesOwed,,) = 
         IStagingBoxLens(s_stagingBoxLens).viewRepayMaxAndUnwrapSimple(s_deployedSB, borrowRiskSlipBalanceBeforeRepay);
 
         vm.assume(stablesOwed > 0);
@@ -125,7 +125,7 @@ contract RepayMaxAndUnwrapSimple is RedeemLendSlipsForStablesTestSetup {
     function testRepayMaxAndUnwrapSimpleTransfersExtraStablesBackToMsgSender(uint256 _fuzzPrice, uint256 _lendAmount, uint256 _timeWarp, uint256 _borrowSlipsToRedeem) public {
         setupStagingBox(_fuzzPrice);
         setupTranches(false, s_owner, s_deployedCBBAddress);
-        (uint256 borrowRiskSlipBalanceBeforeRepay, uint256 lendAmount) = repayMaxAndUnwrapSimpleTestSetup(_lendAmount);
+        (uint256 borrowRiskSlipBalanceBeforeRepay,) = repayMaxAndUnwrapSimpleTestSetup(_lendAmount);
         borrowRiskSlipBalanceBeforeRepay = bound(borrowRiskSlipBalanceBeforeRepay, s_deployedConvertibleBondBox.riskRatio(), borrowRiskSlipBalanceBeforeRepay);
 
         _borrowSlipsToRedeem = bound(_borrowSlipsToRedeem, s_deployedConvertibleBondBox.riskRatio(), borrowRiskSlipBalanceBeforeRepay);
@@ -133,7 +133,7 @@ contract RepayMaxAndUnwrapSimple is RedeemLendSlipsForStablesTestSetup {
         _timeWarp = bound(_timeWarp, block.timestamp, s_deployedConvertibleBondBox.maturityDate());
         vm.warp(_timeWarp);
 
-        (uint256 underlyingAmount, uint256 stablesOwed, uint256 stableFees, uint256 riskTranchePayout) = 
+        (, uint256 stablesOwed,,) = 
         IStagingBoxLens(s_stagingBoxLens).viewRepayMaxAndUnwrapSimple(s_deployedSB, _borrowSlipsToRedeem);
 
         uint256 extraStables = 15500;
