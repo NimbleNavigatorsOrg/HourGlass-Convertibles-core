@@ -9,13 +9,10 @@ import "forge-std/console2.sol";
 
 contract RepayAndUnwrapMature is RedeemLendSlipsForStablesTestSetup {
 
-    function testRepayAndUnwrapMatureTransfersStablesFromMsgSenderToCBB(uint256 _fuzzPrice, uint256 _lendAmount, uint256 _timeWarp) public {
+    function testRepayAndUnwrapMatureTransfersStablesFromMsgSenderToCBB(uint256 _fuzzPrice, uint256 _lendAmount) public {
         setupStagingBox(_fuzzPrice);
         setupTranches(false, s_owner, s_deployedCBBAddress);
         (uint256 borrowRiskSlipBalanceBeforeRepay, uint256 lendAmount) = repayMaxAndUnwrapSimpleTestSetup(_lendAmount);
-
-        _timeWarp = bound(_timeWarp, block.timestamp, s_deployedConvertibleBondBox.maturityDate());
-        vm.warp(_timeWarp);
 
         uint256 borrowerStableBalanceBefore = s_stableToken.balanceOf(s_borrower);
         uint256 borrowerRiskSlipBalanceBefore = ISlip(s_deployedSB.riskSlipAddress()).balanceOf(s_borrower);
@@ -23,11 +20,12 @@ contract RepayAndUnwrapMature is RedeemLendSlipsForStablesTestSetup {
         uint256 stableRepayAmount = bound(borrowerStableBalanceBefore, 1, (ISlip(s_deployedSB.safeSlipAddress()).totalSupply() * s_deployedConvertibleBondBox.currentPrice()) / s_deployedConvertibleBondBox.s_priceGranularity());
 
         vm.warp(s_maturityDate + 1);
+        s_deployedConvertibleBondBox.bond().mature();
 
         (uint256 underlyingAmount, uint256 stablesOwed, uint256 stableFees, uint256 riskTranchePayout) = 
         IStagingBoxLens(s_stagingBoxLens).viewRepayAndUnwrapMature(s_deployedSB, stableRepayAmount);
 
-        vm.assume(stablesOwed > 0);
+        vm.assume(stablesOwed >= (s_deployedConvertibleBondBox.safeRatio() * s_deployedConvertibleBondBox.currentPrice()) / s_deployedConvertibleBondBox.s_priceGranularity());
 
         uint256 stagingLoanRouterStableBalanceBefore = s_stableToken.balanceOf(address(s_stagingLoanRouter));
         uint256 cbbStableBalanceBefore = s_stableToken.balanceOf(address(s_deployedConvertibleBondBox));
@@ -36,7 +34,7 @@ contract RepayAndUnwrapMature is RedeemLendSlipsForStablesTestSetup {
         StagingLoanRouter(s_stagingLoanRouter).repayAndUnwrapMature(
             s_deployedSB, 
             stablesOwed,
-            borrowerRiskSlipBalanceBefore
+            riskTranchePayout
             );
 
         uint256 borrowerStableBalanceAfter = s_stableToken.balanceOf(s_borrower);
