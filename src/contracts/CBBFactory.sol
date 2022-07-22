@@ -38,7 +38,7 @@ contract CBBFactory is ICBBFactory {
      * @param owner The initial owner
      */
     function createConvertibleBondBox(
-        IButtonWoodBondController bond,
+        IBondController bond,
         ISlipFactory slipFactory,
         uint256 penalty,
         address stableToken,
@@ -125,7 +125,7 @@ contract CBBFactory is ICBBFactory {
         return SlipData;
     }
 
-    function getBondData(IButtonWoodBondController bond, uint256 trancheIndex)
+    function getBondData(IBondController bond, uint256 trancheIndex)
         private
         view
         returns (TranchePair memory)

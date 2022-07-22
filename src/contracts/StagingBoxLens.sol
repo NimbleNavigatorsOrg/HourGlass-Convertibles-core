@@ -44,7 +44,7 @@ contract StagingBoxLens is IStagingBoxLens {
     ) public view returns (uint256, uint256) {
         (
             IConvertibleBondBox convertibleBondBox,
-            IButtonWoodBondController bond,
+            IBondController bond,
             IButtonToken wrapper,
 
         ) = fetchElasticStack(_stagingBox);
@@ -246,7 +246,7 @@ contract StagingBoxLens is IStagingBoxLens {
     {
         (
             IConvertibleBondBox convertibleBondBox,
-            IButtonWoodBondController bond,
+            IBondController bond,
             IButtonToken wrapper,
 
         ) = fetchElasticStack(_stagingBox);
@@ -297,7 +297,7 @@ contract StagingBoxLens is IStagingBoxLens {
     {
         (
             IConvertibleBondBox convertibleBondBox,
-            IButtonWoodBondController bond,
+            IBondController bond,
             IButtonToken wrapper,
 
         ) = fetchElasticStack(_stagingBox);
@@ -477,14 +477,14 @@ contract StagingBoxLens is IStagingBoxLens {
         view
         returns (
             IConvertibleBondBox,
-            IButtonWoodBondController,
+            IBondController,
             IButtonToken,
             IERC20
         )
     {
         IConvertibleBondBox convertibleBondBox = _stagingBox
             .convertibleBondBox();
-        IButtonWoodBondController bond = convertibleBondBox.bond();
+        IBondController bond = convertibleBondBox.bond();
         IButtonToken wrapper = IButtonToken(bond.collateralToken());
         IERC20 underlying = IERC20(wrapper.underlying());
 

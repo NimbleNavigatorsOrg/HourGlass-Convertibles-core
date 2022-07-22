@@ -6,7 +6,7 @@ import "../../src/contracts/StagingBoxFactory.sol";
 import "../../src/contracts/CBBFactory.sol";
 import "../../src/contracts/ConvertibleBondBox.sol";
 import "../../src/interfaces/IConvertibleBondBox.sol";
-import "../../src/contracts/ButtonWoodBondController.sol";
+import "@buttonwood-protocol/tranche/contracts/BondController.sol";
 import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
 import "@buttonwood-protocol/tranche/contracts/Tranche.sol";
 import "@buttonwood-protocol/tranche/contracts/TrancheFactory.sol";
@@ -21,7 +21,7 @@ import "@buttonwood-protocol/button-wrappers/contracts/mocks/MockOracle.sol";
 import "forge-std/console2.sol";
 
 contract RedeemLendSlipsForStablesTestSetup is Test {
-    ButtonWoodBondController s_buttonWoodBondController;
+    BondController s_buttonWoodBondController;
     ConvertibleBondBox s_convertibleBondBox;
     IConvertibleBondBox s_deployedConvertibleBondBox;
     CBBFactory s_CBBFactory;
@@ -136,7 +136,7 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
         // // create s_slip factory
         s_slipFactory = new SlipFactory(address(s_slip));
 
-        s_buttonWoodBondController = new ButtonWoodBondController();
+        s_buttonWoodBondController = new BondController();
         s_convertibleBondBox = new ConvertibleBondBox();
         s_CBBFactory = new CBBFactory(address(s_convertibleBondBox));
 
@@ -179,10 +179,7 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
         s_deployedCBBAddress = address(s_deployedConvertibleBondBox);
     }
 
-    function setupTranches(
-        bool _isLend,
-        address _user
-    ) internal {
+    function setupTranches(bool _isLend, address _user) internal {
         s_underlying.mint(_user, s_maxUnderlyingMint);
 
         vm.prank(_user);
@@ -246,7 +243,10 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
         s_isLend = _isLend;
     }
 
-    function repayMaxAndUnwrapSimpleTestSetup (uint256 _lendAmount) internal returns(uint256, uint256) {
+    function repayMaxAndUnwrapSimpleTestSetup(uint256 _lendAmount)
+        internal
+        returns (uint256, uint256)
+    {
         vm.prank(s_borrower);
         StagingLoanRouter(s_stagingLoanRouter).simpleWrapTrancheBorrow(
             s_deployedSB,
@@ -304,10 +304,17 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
             ).balanceOf(address(s_deployedSB));
 
             vm.prank(s_borrower);
-            s_deployedSB.withdrawBorrow(borrowerBorrowSlipBalanceAfterRedeem > sbSafeTrancheBalanceBeforeRedeem ? sbSafeTrancheBalanceBeforeRedeem : borrowerBorrowSlipBalanceAfterRedeem);
+            s_deployedSB.withdrawBorrow(
+                borrowerBorrowSlipBalanceAfterRedeem >
+                    sbSafeTrancheBalanceBeforeRedeem
+                    ? sbSafeTrancheBalanceBeforeRedeem
+                    : borrowerBorrowSlipBalanceAfterRedeem
+            );
         }
 
-        uint256 borrowRiskSlipBalanceBeforeRepay = ISlip(s_deployedSB.riskSlipAddress()).balanceOf(s_borrower);
+        uint256 borrowRiskSlipBalanceBeforeRepay = ISlip(
+            s_deployedSB.riskSlipAddress()
+        ).balanceOf(s_borrower);
 
         vm.assume(
             borrowRiskSlipBalanceBeforeRepay >=
@@ -326,7 +333,11 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
         return (borrowRiskSlipBalanceBeforeRepay, _lendAmount);
     }
 
-    function withinTolerance(uint256 num, uint256 num2, uint256 percentTolerance) pure internal returns(bool) {
+    function withinTolerance(
+        uint256 num,
+        uint256 num2,
+        uint256 percentTolerance
+    ) internal pure returns (bool) {
         uint256 difference = 0;
         uint256 tolerance = 0;
         if (num >= num2) {
@@ -339,13 +350,25 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
         return difference <= tolerance;
     }
 
-    function redeemLendSlipsForStablesTestSetup(uint256 _timeWarp, uint256 borrowRiskSlipBalanceBeforeRepay, uint256 _lendSlipAmount, bool wantStables) internal returns(uint256) {
-                _timeWarp = bound(_timeWarp, block.timestamp, s_deployedConvertibleBondBox.maturityDate() - 1);
-        
+    function redeemLendSlipsForStablesTestSetup(
+        uint256 _timeWarp,
+        uint256 borrowRiskSlipBalanceBeforeRepay,
+        uint256 _lendSlipAmount,
+        bool wantStables
+    ) internal returns (uint256) {
+        _timeWarp = bound(
+            _timeWarp,
+            block.timestamp,
+            s_deployedConvertibleBondBox.maturityDate() - 1
+        );
+
         vm.warp(_timeWarp);
 
-        (, uint256 stablesOwed,,) = 
-        IStagingBoxLens(s_stagingBoxLens).viewRepayMaxAndUnwrapSimple(s_deployedSB, borrowRiskSlipBalanceBeforeRepay);
+        (, uint256 stablesOwed, , ) = IStagingBoxLens(s_stagingBoxLens)
+            .viewRepayMaxAndUnwrapSimple(
+                s_deployedSB,
+                borrowRiskSlipBalanceBeforeRepay
+            );
 
         vm.assume(stablesOwed > 0);
 

@@ -9,93 +9,152 @@ import "./StagingLoanRouterSetup.t.sol";
 import "forge-std/console2.sol";
 
 contract SimpleWrapTrancheBorrow is StagingLoanRouterSetup {
-
-    function testSimpleWrapTrancheBorrowTransfersUnderlyingFromMsgSender(uint256 _fuzzPrice, uint256 _amountRaw) public {
+    function testSimpleWrapTrancheBorrowTransfersUnderlyingFromMsgSender(
+        uint256 _fuzzPrice,
+        uint256 _amountRaw
+    ) public {
         setupStagingBox(_fuzzPrice);
         setupTranches(address(s_deployedSB));
 
         _amountRaw = bound(_amountRaw, 1000000, s_maxUnderlyingMint);
-        (, uint256 minBorrowSlips) = s_stagingBoxLens.viewSimpleWrapTrancheBorrow(s_deployedSB, _amountRaw);
+        (, uint256 minBorrowSlips) = s_stagingBoxLens
+            .viewSimpleWrapTrancheBorrow(s_deployedSB, _amountRaw);
 
         uint256 userUnderlyingBalanceBefore = s_underlying.balanceOf(s_user);
-        uint256 loanRouterUnderlyingBalanceBefore = s_underlying.balanceOf(address(s_stagingLoanRouter));
+        uint256 loanRouterUnderlyingBalanceBefore = s_underlying.balanceOf(
+            address(s_stagingLoanRouter)
+        );
 
         vm.prank(s_user);
-        StagingLoanRouter(s_stagingLoanRouter).simpleWrapTrancheBorrow(s_deployedSB, _amountRaw, minBorrowSlips);
+        StagingLoanRouter(s_stagingLoanRouter).simpleWrapTrancheBorrow(
+            s_deployedSB,
+            _amountRaw,
+            minBorrowSlips
+        );
 
         uint256 userUnderlyingBalanceAfter = s_underlying.balanceOf(s_user);
-        uint256 loanRouterUnderlyingBalanceAfter = s_underlying.balanceOf(address(s_stagingLoanRouter));
+        uint256 loanRouterUnderlyingBalanceAfter = s_underlying.balanceOf(
+            address(s_stagingLoanRouter)
+        );
 
-        assertEq(userUnderlyingBalanceBefore - _amountRaw, userUnderlyingBalanceAfter);
+        assertEq(
+            userUnderlyingBalanceBefore - _amountRaw,
+            userUnderlyingBalanceAfter
+        );
         assertEq(loanRouterUnderlyingBalanceAfter, 0);
-        assertEq(loanRouterUnderlyingBalanceBefore, loanRouterUnderlyingBalanceAfter);
+        assertEq(
+            loanRouterUnderlyingBalanceBefore,
+            loanRouterUnderlyingBalanceAfter
+        );
 
         assertFalse(_amountRaw == 0);
     }
 
-    function testSimpleWrapTrancheBorrowDepositsUnderlyingFromLoanRouterToWrapper(uint256 _fuzzPrice, uint256 _amountRaw) public {
+    function testSimpleWrapTrancheBorrowDepositsUnderlyingFromLoanRouterToWrapper(
+        uint256 _fuzzPrice,
+        uint256 _amountRaw
+    ) public {
         setupStagingBox(_fuzzPrice);
         setupTranches(address(s_deployedSB));
 
         _amountRaw = bound(_amountRaw, 1000000, s_maxUnderlyingMint);
-        (, uint256 minBorrowSlips) = s_stagingBoxLens.viewSimpleWrapTrancheBorrow(s_deployedSB, _amountRaw);
+        (, uint256 minBorrowSlips) = s_stagingBoxLens
+            .viewSimpleWrapTrancheBorrow(s_deployedSB, _amountRaw);
 
-        IConvertibleBondBox convertibleBondBox = s_deployedSB.convertibleBondBox();
-        IButtonWoodBondController bond = convertibleBondBox.bond();
+        IConvertibleBondBox convertibleBondBox = s_deployedSB
+            .convertibleBondBox();
+        IBondController bond = convertibleBondBox.bond();
         IButtonToken wrapper = IButtonToken(bond.collateralToken());
 
-        uint256 underlyingWrapperBalanceBefore = s_underlying.balanceOf(address(wrapper));
-        uint256 loanRouterUnderlyingBalanceBefore = s_underlying.balanceOf(address(s_stagingLoanRouter));
+        uint256 underlyingWrapperBalanceBefore = s_underlying.balanceOf(
+            address(wrapper)
+        );
+        uint256 loanRouterUnderlyingBalanceBefore = s_underlying.balanceOf(
+            address(s_stagingLoanRouter)
+        );
 
         vm.prank(s_user);
-        StagingLoanRouter(s_stagingLoanRouter).simpleWrapTrancheBorrow(s_deployedSB, _amountRaw, minBorrowSlips);
+        StagingLoanRouter(s_stagingLoanRouter).simpleWrapTrancheBorrow(
+            s_deployedSB,
+            _amountRaw,
+            minBorrowSlips
+        );
 
-        uint256 underlyingWrapperBalanceAfter = s_underlying.balanceOf(address(wrapper));
-        uint256 loanRouterUnderlyingBalanceAfter = s_underlying.balanceOf(address(s_stagingLoanRouter));
+        uint256 underlyingWrapperBalanceAfter = s_underlying.balanceOf(
+            address(wrapper)
+        );
+        uint256 loanRouterUnderlyingBalanceAfter = s_underlying.balanceOf(
+            address(s_stagingLoanRouter)
+        );
 
-        assertEq(underlyingWrapperBalanceBefore + _amountRaw, underlyingWrapperBalanceAfter);
+        assertEq(
+            underlyingWrapperBalanceBefore + _amountRaw,
+            underlyingWrapperBalanceAfter
+        );
         assertEq(loanRouterUnderlyingBalanceAfter, 0);
-        assertEq(loanRouterUnderlyingBalanceBefore, loanRouterUnderlyingBalanceAfter);
+        assertEq(
+            loanRouterUnderlyingBalanceBefore,
+            loanRouterUnderlyingBalanceAfter
+        );
         assertFalse(_amountRaw == 0);
     }
 
-    function testSimpleWrapTrancheBorrowDepositsWrapperFromLoanRouterToBond(uint256 _fuzzPrice, uint256 _amountRaw) public {
+    function testSimpleWrapTrancheBorrowDepositsWrapperFromLoanRouterToBond(
+        uint256 _fuzzPrice,
+        uint256 _amountRaw
+    ) public {
         setupStagingBox(_fuzzPrice);
         setupTranches(address(s_deployedSB));
 
         _amountRaw = bound(_amountRaw, 1000000, s_maxUnderlyingMint);
-        (, uint256 minBorrowSlips) = s_stagingBoxLens.viewSimpleWrapTrancheBorrow(s_deployedSB, _amountRaw);
-        uint256 wrapperTransferAmount = _amountRaw/200000;
+        (, uint256 minBorrowSlips) = s_stagingBoxLens
+            .viewSimpleWrapTrancheBorrow(s_deployedSB, _amountRaw);
+        uint256 wrapperTransferAmount = _amountRaw / 200000;
 
-        IConvertibleBondBox convertibleBondBox = s_deployedSB.convertibleBondBox();
-        IButtonWoodBondController bond = convertibleBondBox.bond();
+        IConvertibleBondBox convertibleBondBox = s_deployedSB
+            .convertibleBondBox();
+        IBondController bond = convertibleBondBox.bond();
         IButtonToken wrapper = IButtonToken(bond.collateralToken());
 
         uint256 bondWrapperBalanceBefore = wrapper.balanceOf(address(bond));
-        uint256 loanRouterWrapperBalanceBefore = wrapper.balanceOf(address(s_stagingLoanRouter));
+        uint256 loanRouterWrapperBalanceBefore = wrapper.balanceOf(
+            address(s_stagingLoanRouter)
+        );
 
         vm.prank(s_user);
-        StagingLoanRouter(s_stagingLoanRouter).simpleWrapTrancheBorrow(s_deployedSB, _amountRaw, minBorrowSlips);
+        StagingLoanRouter(s_stagingLoanRouter).simpleWrapTrancheBorrow(
+            s_deployedSB,
+            _amountRaw,
+            minBorrowSlips
+        );
 
         uint256 bondWrapperBalanceAfter = wrapper.balanceOf(address(bond));
-        uint256 loanRouterWrapperBalanceAfter = wrapper.balanceOf(address(s_stagingLoanRouter));
+        uint256 loanRouterWrapperBalanceAfter = wrapper.balanceOf(
+            address(s_stagingLoanRouter)
+        );
 
-        assertEq(bondWrapperBalanceBefore + wrapperTransferAmount, bondWrapperBalanceAfter);
+        assertEq(
+            bondWrapperBalanceBefore + wrapperTransferAmount,
+            bondWrapperBalanceAfter
+        );
         assertEq(loanRouterWrapperBalanceBefore, loanRouterWrapperBalanceAfter);
         assertEq(loanRouterWrapperBalanceAfter, 0);
 
         assertFalse(wrapperTransferAmount == 0);
     }
 
-    function testCannotSimpleWrapTrancheBorrowSlippageExceeded(uint256 _fuzzPrice, uint256 _amountRaw) public {
+    function testCannotSimpleWrapTrancheBorrowSlippageExceeded(
+        uint256 _fuzzPrice,
+        uint256 _amountRaw
+    ) public {
         setupStagingBox(_fuzzPrice);
         setupTranches(address(s_deployedSB));
 
         _amountRaw = bound(_amountRaw, 1000000, s_maxUnderlyingMint);
-        uint256 wrapperTransferAmount = _amountRaw/200000;
+        uint256 wrapperTransferAmount = _amountRaw / 200000;
 
-
-        IConvertibleBondBox convertibleBondBox = s_deployedSB.convertibleBondBox();
+        IConvertibleBondBox convertibleBondBox = s_deployedSB
+            .convertibleBondBox();
 
         uint256 safeTrancheAmount = (wrapperTransferAmount *
             convertibleBondBox.safeRatio()) /
@@ -112,6 +171,10 @@ contract SimpleWrapTrancheBorrow is StagingLoanRouterSetup {
             minBorrowSlips
         );
         vm.expectRevert(customError);
-        StagingLoanRouter(s_stagingLoanRouter).simpleWrapTrancheBorrow(s_deployedSB, _amountRaw, minBorrowSlips);
+        StagingLoanRouter(s_stagingLoanRouter).simpleWrapTrancheBorrow(
+            s_deployedSB,
+            _amountRaw,
+            minBorrowSlips
+        );
     }
 }

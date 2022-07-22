@@ -6,7 +6,7 @@ import "../../src/contracts/StagingBoxFactory.sol";
 import "../../src/contracts/CBBFactory.sol";
 import "../../src/contracts/ConvertibleBondBox.sol";
 import "../../src/interfaces/IConvertibleBondBox.sol";
-import "../../src/contracts/ButtonWoodBondController.sol";
+import "@buttonwood-protocol/tranche/contracts/BondController.sol";
 import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
 import "@buttonwood-protocol/tranche/contracts/Tranche.sol";
 import "@buttonwood-protocol/tranche/contracts/TrancheFactory.sol";
@@ -21,7 +21,7 @@ import "@buttonwood-protocol/button-wrappers/contracts/mocks/MockOracle.sol";
 import "forge-std/console2.sol";
 
 contract StagingLoanRouterSetup is Test {
-    ButtonWoodBondController s_buttonWoodBondController;
+    BondController s_buttonWoodBondController;
     ConvertibleBondBox s_convertibleBondBox;
     IConvertibleBondBox s_deployedConvertibleBondBox;
     CBBFactory s_CBBFactory;
@@ -153,7 +153,7 @@ contract StagingLoanRouterSetup is Test {
         // // create s_slip factory
         s_slipFactory = new SlipFactory(address(s_slip));
 
-        s_buttonWoodBondController = new ButtonWoodBondController();
+        s_buttonWoodBondController = new BondController();
         s_convertibleBondBox = new ConvertibleBondBox();
         s_CBBFactory = new CBBFactory(address(s_convertibleBondBox));
 
@@ -196,9 +196,7 @@ contract StagingLoanRouterSetup is Test {
         s_deployedCBBAddress = address(s_deployedConvertibleBondBox);
     }
 
-    function setupTranches(
-        address _user
-    ) internal {
+    function setupTranches(address _user) internal {
         s_underlying.mint(_user, 200000000000000000000000);
 
         vm.prank(_user);

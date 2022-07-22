@@ -3,9 +3,9 @@ pragma solidity 0.8.13;
 
 import "../interfaces/IStagingLoanRouter.sol";
 import "../interfaces/IConvertibleBondBox.sol";
-import "../interfaces/IButtonWoodBondController.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@uniswap/lib/contracts/libraries/TransferHelper.sol";
+import "@buttonwood-protocol/tranche/contracts/interfaces/IBondController.sol";
 import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
 import "@buttonwood-protocol/button-wrappers/contracts/interfaces/IButtonToken.sol";
 
@@ -23,7 +23,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
     ) public {
         (
             IConvertibleBondBox convertibleBondBox,
-            IButtonWoodBondController bond,
+            IBondController bond,
             IButtonToken wrapper,
             IERC20 underlying
         ) = fetchElasticStack(_stagingBox);
@@ -85,7 +85,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
 
         (
             IConvertibleBondBox convertibleBondBox,
-            IButtonWoodBondController bond,
+            IBondController bond,
             ,
 
         ) = fetchElasticStack(_stagingBox);
@@ -176,9 +176,9 @@ contract StagingLoanRouter is IStagingLoanRouter {
         IStagingBox _stagingBox,
         uint256 _safeSlipAmount
     ) external {
-        (
-            IConvertibleBondBox convertibleBondBox,,,
-        ) = fetchElasticStack(_stagingBox);
+        (IConvertibleBondBox convertibleBondBox, , , ) = fetchElasticStack(
+            _stagingBox
+        );
         //Transfer safeslips to router
         convertibleBondBox.safeSlip().transferFrom(
             msg.sender,
@@ -195,7 +195,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
     ) internal {
         (
             IConvertibleBondBox convertibleBondBox,
-            IButtonWoodBondController bond,
+            IBondController bond,
             IButtonToken wrapper,
 
         ) = fetchElasticStack(_stagingBox);
@@ -236,7 +236,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
     ) external {
         (
             IConvertibleBondBox convertibleBondBox,
-            IButtonWoodBondController bond,
+            IBondController bond,
             IButtonToken wrapper,
 
         ) = fetchElasticStack(_stagingBox);
@@ -357,7 +357,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
     function _redeemTrancheImmatureUnwrap(IStagingBox _stagingBox) internal {
         (
             IConvertibleBondBox convertibleBondBox,
-            IButtonWoodBondController bond,
+            IBondController bond,
             IButtonToken wrapper,
 
         ) = fetchElasticStack(_stagingBox);
@@ -399,7 +399,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
     ) external {
         (
             IConvertibleBondBox convertibleBondBox,
-            IButtonWoodBondController bond,
+            IBondController bond,
             IButtonToken wrapper,
 
         ) = fetchElasticStack(_stagingBox);
@@ -445,14 +445,14 @@ contract StagingLoanRouter is IStagingLoanRouter {
         view
         returns (
             IConvertibleBondBox,
-            IButtonWoodBondController,
+            IBondController,
             IButtonToken,
             IERC20
         )
     {
         IConvertibleBondBox convertibleBondBox = _stagingBox
             .convertibleBondBox();
-        IButtonWoodBondController bond = convertibleBondBox.bond();
+        IBondController bond = convertibleBondBox.bond();
         IButtonToken wrapper = IButtonToken(bond.collateralToken());
         IERC20 underlying = IERC20(wrapper.underlying());
 

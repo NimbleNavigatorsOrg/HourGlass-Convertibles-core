@@ -3,7 +3,7 @@ pragma solidity ^0.8.7;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../src/interfaces/ISlip.sol";
-import "../src/interfaces/IButtonWoodBondController.sol";
+import "@buttonwood-protocol/tranche/contracts/interfaces/IBondController.sol";
 
 interface ICBBImmutableArgs {
     /**
@@ -12,7 +12,7 @@ interface ICBBImmutableArgs {
      * @dev https://github.com/wighawag/clones-with-immutable-args
      * @return The underlying buttonwood bond
      */
-    function bond() external pure returns (IButtonWoodBondController);
+    function bond() external pure returns (IBondController);
 
     /**
      * @notice The safeSlip object
