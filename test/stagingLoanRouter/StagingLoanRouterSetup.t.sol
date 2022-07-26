@@ -230,7 +230,6 @@ contract StagingLoanRouterSetup is Test {
         s_underlying.mint(s_user, s_maxUnderlyingMint);
 
         s_stagingLoanRouter = new StagingLoanRouter();
-
         vm.prank(s_user);
         s_underlying.approve(address(s_stagingLoanRouter), type(uint256).max);
 
