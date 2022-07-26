@@ -13,8 +13,8 @@ import "../src/contracts/StagingBoxLens.sol";
 import "../src/contracts/StagingLoanRouter.sol";
 import "../test/mocks/MockERC20.sol";
 import "@buttonwood-protocol/tranche/contracts/interfaces/IBondFactory.sol";
-import "@buttonwood-protocol/button-wrappers/contracts/ButtonTokenFactory.sol";
-import "@buttonwood-protocol/button-wrappers/contracts/ButtonToken.sol";
+import "../test/external/button-wrappers/ButtonTokenFactory.sol";
+import "../test/external/button-wrappers/ButtonToken.sol";
 
 contract KovanAnvil is Script {
     IBondFactory s_bondFactory =

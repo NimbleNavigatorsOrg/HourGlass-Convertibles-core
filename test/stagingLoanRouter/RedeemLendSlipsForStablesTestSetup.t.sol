@@ -6,17 +6,16 @@ import "../../src/contracts/StagingBoxFactory.sol";
 import "../../src/contracts/CBBFactory.sol";
 import "../../src/contracts/ConvertibleBondBox.sol";
 import "../../src/interfaces/IConvertibleBondBox.sol";
-import "@buttonwood-protocol/tranche/contracts/BondController.sol";
-import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
-import "@buttonwood-protocol/tranche/contracts/Tranche.sol";
-import "@buttonwood-protocol/tranche/contracts/TrancheFactory.sol";
+import "../external/tranche/BondController.sol";
+import "../external/tranche/Tranche.sol";
+import "../external/tranche/TrancheFactory.sol";
 import "../../src/contracts/Slip.sol";
 import "../../src/contracts/SlipFactory.sol";
 import "../../src/contracts/StagingLoanRouter.sol";
 import "../../src/contracts/StagingBoxLens.sol";
 import "../mocks/MockERC20.sol";
-import "@buttonwood-protocol/button-wrappers/contracts/ButtonToken.sol";
-import "@buttonwood-protocol/button-wrappers/contracts/mocks/MockOracle.sol";
+import "../external/button-wrappers/ButtonToken.sol";
+import "../external/button-wrappers/MockOracle.sol";
 
 import "forge-std/console2.sol";
 

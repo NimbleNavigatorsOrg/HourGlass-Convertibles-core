@@ -5,8 +5,6 @@ import "forge-std/Test.sol";
 import "../../src/contracts/ConvertibleBondBox.sol";
 import "../../src/contracts/CBBFactory.sol";
 import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
-import "@buttonwood-protocol/tranche/contracts/Tranche.sol";
-import "@buttonwood-protocol/tranche/contracts/TrancheFactory.sol";
 import "../../src/contracts/Slip.sol";
 import "../../src/contracts/SlipFactory.sol";
 import "forge-std/console2.sol";
@@ -263,7 +261,6 @@ contract Lend is CBBSetup {
             s_deployedConvertibleBondBox.stableToken()
         ).balanceOf(s_deployedConvertibleBondBox.owner());
 
-        //TODO check that this prank is supposed to be there. And all others in this file!!!
         vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.lend(
             s_borrower,

@@ -4,10 +4,10 @@ pragma solidity 0.8.13;
 import "forge-std/Test.sol";
 import "../src/contracts/ConvertibleBondBox.sol";
 import "../src/contracts/CBBFactory.sol";
-import "@buttonwood-protocol/tranche/contracts/BondController.sol";
-import "@buttonwood-protocol/tranche/contracts/Tranche.sol";
+import "./external/tranche/BondController.sol";
+import "./external/tranche/Tranche.sol";
+import "./external/tranche/TrancheFactory.sol";
 import "@buttonwood-protocol/tranche/contracts/external/ERC20.sol";
-import "@buttonwood-protocol/tranche/contracts/TrancheFactory.sol";
 import "../src/contracts/Slip.sol";
 import "../src/contracts/SlipFactory.sol";
 

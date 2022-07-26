@@ -5,8 +5,6 @@ import "forge-std/Test.sol";
 import "../../src/contracts/ConvertibleBondBox.sol";
 import "../../src/contracts/CBBFactory.sol";
 import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
-import "@buttonwood-protocol/tranche/contracts/Tranche.sol";
-import "@buttonwood-protocol/tranche/contracts/TrancheFactory.sol";
 import "../../src/contracts/Slip.sol";
 import "../../src/contracts/SlipFactory.sol";
 import "forge-std/console2.sol";
@@ -262,7 +260,6 @@ contract Borrow is CBBSetup {
             s_deployedConvertibleBondBox.currentPrice()) /
             s_deployedConvertibleBondBox.s_priceGranularity();
 
-        //TODO see if we should expect this prank in all tests in this file.
         vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.borrow(
             s_borrower,
