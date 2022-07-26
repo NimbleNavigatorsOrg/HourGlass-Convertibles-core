@@ -4,7 +4,6 @@ pragma solidity ^0.8.7;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "clones-with-immutable-args/Clone.sol";
 import "../src/interfaces/ISlip.sol";
-import "../src/interfaces/IButtonWoodBondController.sol";
 import "./ICBBImmutableArgs.sol";
 
 /**
@@ -16,8 +15,8 @@ contract CBBImmutableArgs is Clone, ICBBImmutableArgs {
     /**
      * @inheritdoc ICBBImmutableArgs
      */
-    function bond() public pure override returns (IButtonWoodBondController) {
-        return IButtonWoodBondController(_getArgAddress(0));
+    function bond() public pure override returns (IBondController) {
+        return IBondController(_getArgAddress(0));
     }
 
     /**

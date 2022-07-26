@@ -7,7 +7,6 @@ import "./IConvertibleBondBox.sol";
  */
 
 interface IStagingBoxFactory {
-    // TODO: test this event
     event StagingBoxCreated(
         IConvertibleBondBox convertibleBondBox,
         uint256 initialPrice,

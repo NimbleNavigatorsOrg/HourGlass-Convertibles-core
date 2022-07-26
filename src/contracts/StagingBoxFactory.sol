@@ -39,7 +39,7 @@ contract StagingBoxFactory is IStagingBoxFactory {
     function createStagingBoxWithCBB(
         ICBBFactory cBBFactory,
         ISlipFactory slipFactory,
-        IButtonWoodBondController bond,
+        IBondController bond,
         uint256 penalty,
         address stableToken,
         uint256 trancheIndex,

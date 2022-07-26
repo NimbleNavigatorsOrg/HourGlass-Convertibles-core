@@ -4,17 +4,16 @@ pragma solidity 0.8.13;
 import "forge-std/Test.sol";
 import "../../src/contracts/ConvertibleBondBox.sol";
 import "../../src/contracts/CBBFactory.sol";
-import "../../src/contracts/ButtonWoodBondController.sol";
-import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
-import "@buttonwood-protocol/tranche/contracts/Tranche.sol";
-import "@buttonwood-protocol/tranche/contracts/TrancheFactory.sol";
+import "../external/tranche/BondController.sol";
+import "../external/tranche/Tranche.sol";
+import "../external/tranche/TrancheFactory.sol";
 import "../../src/contracts/Slip.sol";
 import "../../src/contracts/SlipFactory.sol";
 import "forge-std/console2.sol";
 import "../../test/mocks/MockERC20.sol";
 
 abstract contract CBBSetup is Test {
-    ButtonWoodBondController s_buttonWoodBondController;
+    BondController s_buttonWoodBondController;
     ConvertibleBondBox s_convertibleBondBox;
     ConvertibleBondBox s_deployedConvertibleBondBox;
     CBBFactory s_CBBFactory;
@@ -90,7 +89,7 @@ abstract contract CBBSetup is Test {
         // // create s_slip factory
         s_slipFactory = new SlipFactory(address(s_slip));
 
-        s_buttonWoodBondController = new ButtonWoodBondController();
+        s_buttonWoodBondController = new BondController();
         s_convertibleBondBox = new ConvertibleBondBox();
         s_CBBFactory = new CBBFactory(address(s_convertibleBondBox));
 

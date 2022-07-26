@@ -63,7 +63,7 @@ contract SimpleWrapTrancheBorrow is StagingLoanRouterSetup {
 
         IConvertibleBondBox convertibleBondBox = s_deployedSB
             .convertibleBondBox();
-        IButtonWoodBondController bond = convertibleBondBox.bond();
+        IBondController bond = convertibleBondBox.bond();
         IButtonToken wrapper = IButtonToken(bond.collateralToken());
 
         uint256 underlyingWrapperBalanceBefore = s_underlying.balanceOf(
@@ -113,7 +113,7 @@ contract SimpleWrapTrancheBorrow is StagingLoanRouterSetup {
 
         IConvertibleBondBox convertibleBondBox = s_deployedSB
             .convertibleBondBox();
-        IButtonWoodBondController bond = convertibleBondBox.bond();
+        IBondController bond = convertibleBondBox.bond();
         IButtonToken wrapper = IButtonToken(bond.collateralToken());
 
         uint256 bondWrapperBalanceBefore = wrapper.balanceOf(address(bond));

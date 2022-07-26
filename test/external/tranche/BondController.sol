@@ -1,4 +1,4 @@
-pragma solidity 0.8.13;
+pragma solidity ^0.8.3;
 
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
@@ -6,11 +6,9 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@uniswap/lib/contracts/libraries/TransferHelper.sol";
-import "../interfaces/IButtonWoodBondController.sol";
+import "@buttonwood-protocol/tranche/contracts/interfaces/IBondController.sol";
 import "@buttonwood-protocol/tranche/contracts/interfaces/ITrancheFactory.sol";
 import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
-
-import "forge-std/console2.sol";
 
 /**
  * @dev Controller for a ButtonTranche bond
@@ -18,10 +16,7 @@ import "forge-std/console2.sol";
  * Invariants:
  *  - `totalDebt` should always equal the sum of all tranche tokens' `totalSupply()`
  */
-contract ButtonWoodBondController is
-    IButtonWoodBondController,
-    OwnableUpgradeable
-{
+contract BondController is IBondController, OwnableUpgradeable {
     uint256 private constant TRANCHE_RATIO_GRANULARITY = 1000;
     // One tranche for A-Z
     uint256 private constant MAX_TRANCHE_COUNT = 26;
@@ -121,14 +116,13 @@ contract ButtonWoodBondController is
     }
 
     /**
-     * @inheritdoc IButtonWoodBondController
+     * @inheritdoc IBondController
      */
     function deposit(uint256 amount) external override {
         require(amount > 0, "BondController: invalid amount");
 
         // saving totalDebt in memory to minimize sloads
         uint256 _totalDebt = totalDebt;
-
         require(
             _totalDebt > 0 || amount >= MINIMUM_FIRST_DEPOSIT,
             "BondController: invalid initial amount"
@@ -138,7 +132,6 @@ contract ButtonWoodBondController is
         uint256 collateralBalance = IERC20(collateralToken).balanceOf(
             address(this)
         );
-
         require(
             depositLimit == 0 || collateralBalance + amount <= depositLimit,
             "BondController: Deposit limit"
@@ -148,7 +141,6 @@ contract ButtonWoodBondController is
 
         uint256 newDebt;
         uint256[] memory trancheValues = new uint256[](trancheCount);
-
         for (uint256 i = 0; i < _tranches.length; i++) {
             // NOTE: solidity 0.8 checks for over/underflow natively so no need for SafeMath
             uint256 trancheValue = (amount * _tranches[i].ratio) /
@@ -173,7 +165,6 @@ contract ButtonWoodBondController is
         );
         // saving feeBps in memory to minimize sloads
         uint256 _feeBps = feeBps;
-
         for (uint256 i = 0; i < trancheValues.length; i++) {
             uint256 trancheValue = trancheValues[i];
             // fee tranche tokens are minted and held by the contract
@@ -190,7 +181,7 @@ contract ButtonWoodBondController is
     }
 
     /**
-     * @inheritdoc IButtonWoodBondController
+     * @inheritdoc IBondController
      */
     function mature() external override {
         require(!isMature, "BondController: Already mature");
@@ -252,7 +243,7 @@ contract ButtonWoodBondController is
     }
 
     /**
-     * @inheritdoc IButtonWoodBondController
+     * @inheritdoc IBondController
      */
     function redeemMature(address tranche, uint256 amount) external override {
         require(isMature, "BondController: Bond is not mature");
@@ -267,7 +258,7 @@ contract ButtonWoodBondController is
     }
 
     /**
-     * @inheritdoc IButtonWoodBondController
+     * @inheritdoc IBondController
      */
     function redeem(uint256[] memory amounts) external override {
         require(!isMature, "BondController: Bond is already mature");
@@ -308,7 +299,7 @@ contract ButtonWoodBondController is
     }
 
     /**
-     * @inheritdoc IButtonWoodBondController
+     * @inheritdoc IBondController
      */
     function setFee(uint256 newFeeBps) external override onlyOwner {
         require(!isMature, "BondController: Invalid call to setFee");

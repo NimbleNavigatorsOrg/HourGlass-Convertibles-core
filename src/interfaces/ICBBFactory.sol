@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.13;
 
-import "./IButtonWoodBondController.sol";
+import "@buttonwood-protocol/tranche/contracts/interfaces/IBondController.sol";
 import "./ISlipFactory.sol";
 
 /**
@@ -22,7 +22,7 @@ interface ICBBFactory {
     error InvalidParams();
 
     function createConvertibleBondBox(
-        IButtonWoodBondController bond,
+        IBondController bond,
         ISlipFactory slipFactory,
         uint256 penalty,
         address stableToken,

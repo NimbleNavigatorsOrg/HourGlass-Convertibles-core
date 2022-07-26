@@ -171,8 +171,6 @@ contract ConvertibleBondBox is
         //load storage variables into memory
         uint256 price = s_priceGranularity;
         uint256 maturityDate = maturityDate();
-        //TODO replace math below with full math to enable larger deposit amounts
-        //TODO figure out how to calculate price when line 215 is smaller than line 216&&217
         if (block.timestamp < maturityDate) {
             price =
                 price -

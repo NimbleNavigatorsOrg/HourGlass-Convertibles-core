@@ -79,7 +79,6 @@ contract sbInitialize is SBIntegrationSetup {
 
         vm.prank(s_user);
         vm.expectEmit(true, false, false, false);
-        //TODO determine how to add the address to the expected emit without hardcoding the address.
         emit StagingBoxCreated(
             ConvertibleBondBox(s_deployedCBBAddress),
             s_price,
