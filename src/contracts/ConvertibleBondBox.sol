@@ -257,10 +257,8 @@ contract ConvertibleBondBox is
             _riskSlipAmount -= feeSlip;
         }
 
-        uint256 zTranchePayout = _riskSlipAmount;
-        zTranchePayout =
-            (zTranchePayout * (s_penaltyGranularity - penalty())) /
-            (s_penaltyGranularity);
+        uint256 zTranchePayout = (_riskSlipAmount *
+            (s_penaltyGranularity - penalty())) / (s_penaltyGranularity);
 
         //transfer Z-tranches from ConvertibleBondBox to msg.sender
         riskTranche().transfer(_msgSender(), zTranchePayout);
