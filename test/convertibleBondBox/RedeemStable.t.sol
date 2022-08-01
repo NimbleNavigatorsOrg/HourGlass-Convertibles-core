@@ -113,16 +113,6 @@ contract RedeemStable is CBBSetup {
         );
     }
 
-    function testCannotRedeemStableConvertibleBondBoxNotStarted() public {
-        bytes memory customError = abi.encodeWithSignature(
-            "ConvertibleBondBoxNotStarted(uint256,uint256)",
-            0,
-            block.timestamp
-        );
-        vm.expectRevert(customError);
-        s_deployedConvertibleBondBox.redeemStable(s_safeSlipAmount);
-    }
-
     function testCannotRedeemStableMinimumInput(
         uint256 time,
         uint256 safeSlipAmount

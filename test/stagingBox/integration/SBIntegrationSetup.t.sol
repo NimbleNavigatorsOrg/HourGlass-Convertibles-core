@@ -41,7 +41,7 @@ contract SBIntegrationSetup is Test {
     bool s_isLend;
     uint256 constant s_penalty = 500;
     uint256 constant s_trancheIndex = 0;
-    uint256 constant s_maturityDate = 1659246194;
+    uint256 constant s_maturityDate = 1664512517;
     uint256 constant s_safeSlipAmount = 10;
     uint256 constant s_endOfUnixTime = 2147483647;
     uint256 constant s_trancheGranularity = 1000;

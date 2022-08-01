@@ -318,12 +318,6 @@ contract ConvertibleBondBox is
      */
 
     function redeemStable(uint256 _safeSlipAmount) external override {
-        if (s_startDate == 0)
-            revert ConvertibleBondBoxNotStarted({
-                given: 0,
-                minStartDate: block.timestamp
-            });
-
         if (_safeSlipAmount < safeRatio())
             revert MinimumInput({
                 input: _safeSlipAmount,
