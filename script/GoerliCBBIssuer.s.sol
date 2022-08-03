@@ -29,7 +29,7 @@ contract GoerliCBBIssuer is Script {
         SlipFactory(0xD96D4AF92CA2E89E6e423C2aC7144A0c60412156);
 
     IBondController poorBond =
-        IBondController(0xE36A5a5CcAb4DaF557494Bb8c0838a5fF79dD677);
+        IBondController(0x0546eAFD1e4F8E2C113F5522BcBd207cd0B392F4);
 
     address public weenus = 0xaFF4481D10270F50f203E0763e2597776068CBc5;
 
