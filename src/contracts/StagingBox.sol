@@ -184,6 +184,10 @@ contract StagingBox is OwnableUpgradeable, SBImmutableArgs, IStagingBox {
             - if `_isLend` is false: calls CBB with balance of SafeTrancheAmount
         */
 
+        safeTranche().approve(address(convertibleBondBox()), type(uint256).max);
+        riskTranche().approve(address(convertibleBondBox()), type(uint256).max);
+        stableToken().approve(address(convertibleBondBox()), type(uint256).max);
+
         if (_isLend) {
             uint256 stableAmount = stableToken().balanceOf(address(this));
             s_reinitLendAmount = stableAmount;
