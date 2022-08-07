@@ -155,15 +155,15 @@ contract StagingBoxFactory is IStagingBoxFactory {
     ) private returns (SlipPair memory) {
         // clone deploy lend slip
         address lendSlipTokenAddress = slipFactory.createSlip(
-            IERC20Metadata(safeSlip).symbol(),
             "Staging-Lender-Slip",
+            IERC20Metadata(safeSlip).name(),
             safeSlip
         );
 
         //clone deployborrow slip
         address borrowSlipTokenAddress = slipFactory.createSlip(
-            IERC20Metadata(riskSlip).symbol(),
             "Staging-Borrower-Slip",
+            IERC20Metadata(riskSlip).name(),
             riskSlip
         );
 
