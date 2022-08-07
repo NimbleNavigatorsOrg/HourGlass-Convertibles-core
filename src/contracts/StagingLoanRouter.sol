@@ -108,6 +108,41 @@ contract StagingLoanRouter is IStagingLoanRouter {
      * @inheritdoc IStagingLoanRouter
      */
 
+    function simpleWithdrawBorrowUnwrap(
+        IStagingBox _stagingBox,
+        uint256 _borrowSlipAmount
+    ) external {
+        //transfer borrowSlips
+        _stagingBox.borrowSlip().transferFrom(
+            msg.sender,
+            address(this),
+            _borrowSlipAmount
+        );
+
+        //approve borrowSlips for StagingBox
+        if (
+            _stagingBox.borrowSlip().allowance(
+                address(this),
+                address(_stagingBox)
+            ) < _borrowSlipAmount
+        ) {
+            _stagingBox.borrowSlip().approve(
+                address(_stagingBox),
+                type(uint256).max
+            );
+        }
+
+        //withdraw borrowSlips for tranches
+        _stagingBox.withdrawBorrow(_borrowSlipAmount);
+
+        //redeem tranches with underlying bond & mature
+        _redeemTrancheImmatureUnwrap(_stagingBox);
+    }
+
+    /**
+     * @inheritdoc IStagingLoanRouter
+     */
+
     function redeemLendSlipsForStables(
         IStagingBox _stagingBox,
         uint256 _lendSlipAmount

@@ -72,6 +72,37 @@ contract StagingBoxLens is IStagingBoxLens {
      * @inheritdoc IStagingBoxLens
      */
 
+    function vieSimplewWithdrawBorrowUnwrap(
+        IStagingBox _stagingBox,
+        uint256 _borrowSlipAmount
+    ) public view returns (uint256, uint256) {
+        (
+            IConvertibleBondBox convertibleBondBox,
+            IBondController bond,
+            IButtonToken wrapper,
+
+        ) = fetchElasticStack(_stagingBox);
+
+        //calculate total amount of tranche tokens by dividing by safeRatio
+        uint256 trancheTotal = (_borrowSlipAmount *
+            convertibleBondBox.s_trancheGranularity()) /
+            convertibleBondBox.safeRatio();
+
+        ////multiply with CDR to get btn token amount
+        uint256 buttonAmount = (trancheTotal *
+            convertibleBondBox.collateralToken().balanceOf(address(bond))) /
+            bond.totalDebt();
+
+        //calculate underlying with ButtonTokenWrapper
+        uint256 underlyingAmount = wrapper.wrapperToUnderlying(buttonAmount);
+
+        return (underlyingAmount, buttonAmount);
+    }
+
+    /**
+     * @inheritdoc IStagingBoxLens
+     */
+
     function viewRedeemLendSlipsForStables(
         IStagingBox _stagingBox,
         uint256 _lendSlipAmount

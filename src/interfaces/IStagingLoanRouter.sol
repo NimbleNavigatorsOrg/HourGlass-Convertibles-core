@@ -37,6 +37,19 @@ interface IStagingLoanRouter {
     ) external;
 
     /**
+     * @dev withdraws borrowSlip and redeems w/ simple underlying bond (A/Z)
+     * @param _stagingBox The staging box tied to the Convertible Bond
+     * @param _borrowSlipAmount The amount of borrowSlips to be withdrawn
+     * Requirements:
+     *  - `msg.sender` must have `approved` `_borrowSlipAmount` BorrowSlip tokens to this contract
+     */
+
+    function simpleWithdrawBorrowUnwrap(
+        IStagingBox _stagingBox,
+        uint256 _borrowSlipAmount
+    ) external;
+
+    /**
      * @dev redeems lendSlips for safeSlips and safeSlips for stables
      * @param _stagingBox The staging box tied to the Convertible Bond
      * @param _lendSlipAmount The amount of lendSlips to be redeemed
