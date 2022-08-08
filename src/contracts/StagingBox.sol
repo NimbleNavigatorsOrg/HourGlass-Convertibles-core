@@ -5,7 +5,6 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@uniswap/lib/contracts/libraries/TransferHelper.sol";
 import "../../utils/SBImmutableArgs.sol";
 import "../interfaces/IStagingBox.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /**
  * @dev Staging Box for reinitializing a ConvertibleBondBox
@@ -188,17 +187,10 @@ contract StagingBox is OwnableUpgradeable, SBImmutableArgs, IStagingBox {
         safeTranche().approve(address(convertibleBondBox()), type(uint256).max);
         riskTranche().approve(address(convertibleBondBox()), type(uint256).max);
 
-        SafeERC20.safeApprove(
-            (stableToken()),
-            address(convertibleBondBox()),
-            type(uint256).max
-        );
-
         if (_isLend) {
             uint256 stableAmount = stableToken().balanceOf(address(this));
             s_reinitLendAmount = stableAmount;
             convertibleBondBox().reinitialize(initialPrice());
-
             convertibleBondBox().lend(
                 address(this),
                 address(this),

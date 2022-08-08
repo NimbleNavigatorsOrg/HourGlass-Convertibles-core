@@ -8,6 +8,7 @@ import "@uniswap/lib/contracts/libraries/TransferHelper.sol";
 import "@buttonwood-protocol/tranche/contracts/interfaces/IBondController.sol";
 import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
 import "@buttonwood-protocol/button-wrappers/contracts/interfaces/IButtonToken.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import "forge-std/console2.sol";
 
@@ -34,7 +35,12 @@ contract StagingLoanRouter is IStagingLoanRouter {
             address(this),
             _amountRaw
         );
-        underlying.approve(address(wrapper), _amountRaw);
+
+        if (
+            underlying.allowance(address(this), address(wrapper)) < _amountRaw
+        ) {
+            underlying.approve(address(wrapper), type(uint256).max);
+        }
         uint256 wrapperAmount = wrapper.deposit(_amountRaw);
 
         wrapper.approve(address(bond), type(uint256).max);
@@ -47,14 +53,29 @@ contract StagingLoanRouter is IStagingLoanRouter {
             address(this)
         );
 
-        _stagingBox.safeTranche().approve(
-            address(_stagingBox),
-            type(uint256).max
-        );
-        _stagingBox.riskTranche().approve(
-            address(_stagingBox),
-            type(uint256).max
-        );
+        if (
+            _stagingBox.safeTranche().allowance(
+                address(this),
+                address(_stagingBox)
+            ) < safeTrancheBalance
+        ) {
+            _stagingBox.safeTranche().approve(
+                address(_stagingBox),
+                type(uint256).max
+            );
+        }
+
+        if (
+            _stagingBox.riskTranche().allowance(
+                address(this),
+                address(_stagingBox)
+            ) < riskTrancheBalance
+        ) {
+            _stagingBox.riskTranche().approve(
+                address(_stagingBox),
+                type(uint256).max
+            );
+        }
 
         _stagingBox.depositBorrow(
             msg.sender,
@@ -328,10 +349,18 @@ contract StagingLoanRouter is IStagingLoanRouter {
         );
 
         //call repay function
-        convertibleBondBox.stableToken().approve(
-            address(convertibleBondBox),
-            _stableAmount
-        );
+        if (
+            convertibleBondBox.stableToken().allowance(
+                address(this),
+                address(convertibleBondBox)
+            ) < _stableAmount
+        ) {
+            SafeERC20.safeIncreaseAllowance(
+                (convertibleBondBox.stableToken()),
+                address(convertibleBondBox),
+                type(uint256).max - _stableAmount
+            );
+        }
         convertibleBondBox.repay(_stableAmount);
 
         _redeemTrancheImmatureUnwrap(_stagingBox);
@@ -373,10 +402,18 @@ contract StagingLoanRouter is IStagingLoanRouter {
         );
 
         //call repayMax function
-        convertibleBondBox.stableToken().approve(
-            address(convertibleBondBox),
-            _stableAmount
-        );
+        if (
+            convertibleBondBox.stableToken().allowance(
+                address(this),
+                address(convertibleBondBox)
+            ) < _stableAmount
+        ) {
+            SafeERC20.safeIncreaseAllowance(
+                (convertibleBondBox.stableToken()),
+                address(convertibleBondBox),
+                type(uint256).max - _stableAmount
+            );
+        }
         convertibleBondBox.repayMax(_riskSlipAmount);
 
         _redeemTrancheImmatureUnwrap(_stagingBox);
@@ -455,10 +492,18 @@ contract StagingLoanRouter is IStagingLoanRouter {
         );
 
         //call repay function
-        convertibleBondBox.stableToken().approve(
-            address(convertibleBondBox),
-            _stableAmount
-        );
+        if (
+            convertibleBondBox.stableToken().allowance(
+                address(this),
+                address(convertibleBondBox)
+            ) < _stableAmount
+        ) {
+            SafeERC20.safeIncreaseAllowance(
+                (convertibleBondBox.stableToken()),
+                address(convertibleBondBox),
+                type(uint256).max - _stableAmount
+            );
+        }
         convertibleBondBox.repay(_stableAmount);
 
         //call redeemMature on bond

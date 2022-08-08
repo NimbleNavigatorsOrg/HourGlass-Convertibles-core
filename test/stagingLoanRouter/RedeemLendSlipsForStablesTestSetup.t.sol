@@ -265,13 +265,13 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
             userStableTokenBalanceBeforeLend
         );
 
+        vm.startPrank(s_user);
         IERC20(s_deployedConvertibleBondBox.stableToken()).approve(
             address(s_deployedSB),
             _lendAmount
         );
-
-        vm.prank(s_user);
         s_deployedSB.depositLend(s_lender, _lendAmount);
+        vm.stopPrank();
 
         assertFalse(_lendAmount == 0);
 
