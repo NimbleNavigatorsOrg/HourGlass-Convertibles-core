@@ -10,13 +10,14 @@ interface IStagingBox is ISBImmutableArgs {
     event BorrowWithdrawal(address borrower, uint256 borrowSlipAmount);
     event RedeemBorrowSlip(address caller, uint256 borrowSlipAmount);
     event RedeemLendSlip(address caller, uint256 lendSlipAmount);
-    event TrasmitReint(bool isLend, uint256 transmitReinitAmount);
     event Initialized(address owner);
 
     error InitialPriceTooHigh(uint256 given, uint256 maxPrice);
     error InitialPriceIsZero(uint256 given, uint256 maxPrice);
     error WithdrawAmountTooHigh(uint256 requestAmount, uint256 maxAmount);
     error CBBReinitialized(bool state, bool requiredState);
+
+    function s_reinitLendAmount() external view returns (uint256);
 
     /**
      * @dev Deposits collateral for BorrowSlips
