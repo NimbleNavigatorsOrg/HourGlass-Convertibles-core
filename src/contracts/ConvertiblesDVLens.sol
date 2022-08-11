@@ -7,6 +7,16 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 
 contract ConvertiblesDVLens is IConvertiblesDVLens {
+    struct DecimalPair {
+        uint256 tranche;
+        uint256 stable;
+    }
+
+    struct CollateralBalance {
+        uint256 safeTrancheBalance;
+        uint256 riskTrancheBalance;
+    }
+
     function viewStagingStatsIBO(IStagingBox _stagingBox)
         external
         view
@@ -16,51 +26,53 @@ contract ConvertiblesDVLens is IConvertiblesDVLens {
             IConvertibleBondBox convertibleBondBox,
             IBondController bond
         ) = fetchElasticStack(_stagingBox);
-        (
-            uint256 safeTrancheCollateral,
-            uint256 riskTrancheCollateral
-        ) = calcTrancheCollateral(
-                convertibleBondBox,
-                bond,
-                _stagingBox.safeTranche().balanceOf(address(_stagingBox)),
-                _stagingBox.riskTranche().balanceOf(address(_stagingBox))
-            );
+        CollateralBalance memory trancheCollateral = calcTrancheCollateral(
+            convertibleBondBox,
+            bond,
+            _stagingBox.safeTranche().balanceOf(address(_stagingBox)),
+            _stagingBox.riskTranche().balanceOf(address(_stagingBox))
+        );
         uint256 stableBalance = _stagingBox.stableToken().balanceOf(
             address(_stagingBox)
         );
-        uint256 trancheDecimals = 10 **
-            ERC20(address(_stagingBox.safeTranche())).decimals();
-        uint256 stableDecimals = 10 **
-            ERC20(address(_stagingBox.stableToken())).decimals();
+
+        DecimalPair memory decimals = DecimalPair(
+            ERC20(address(_stagingBox.safeTranche())).decimals(),
+            ERC20(address(_stagingBox.stableToken())).decimals()
+        );
 
         StagingDataIBO memory data = StagingDataIBO(
             NumFixedPoint(
                 _stagingBox.lendSlip().totalSupply(),
-                trancheDecimals
+                decimals.tranche
             ),
             NumFixedPoint(
                 _stagingBox.borrowSlip().totalSupply(),
-                trancheDecimals
+                decimals.tranche
             ),
             NumFixedPoint(
                 _stagingBox.safeTranche().balanceOf(address(_stagingBox)),
-                trancheDecimals
+                decimals.tranche
             ),
             NumFixedPoint(
                 _stagingBox.riskTranche().balanceOf(address(_stagingBox)),
-                trancheDecimals
+                decimals.tranche
             ),
-            NumFixedPoint(safeTrancheCollateral, trancheDecimals),
-            NumFixedPoint(riskTrancheCollateral, trancheDecimals),
-            NumFixedPoint(stableBalance, stableDecimals),
+            NumFixedPoint(stableBalance, decimals.stable),
             NumFixedPoint(
-                (safeTrancheCollateral + riskTrancheCollateral) *
-                    stableDecimals +
-                    stableBalance *
-                    trancheDecimals,
-                trancheDecimals * stableDecimals
+                trancheCollateral.safeTrancheBalance,
+                decimals.tranche
             ),
-            NumFixedPoint(stableBalance, stableDecimals)
+            NumFixedPoint(
+                trancheCollateral.riskTrancheBalance,
+                decimals.tranche
+            ),
+            NumFixedPoint(
+                (trancheCollateral.safeTrancheBalance +
+                    trancheCollateral.riskTrancheBalance),
+                decimals.tranche
+            ),
+            NumFixedPoint(stableBalance, decimals.stable)
         );
 
         return data;
@@ -75,63 +87,86 @@ contract ConvertiblesDVLens is IConvertiblesDVLens {
             IConvertibleBondBox convertibleBondBox,
             IBondController bond
         ) = fetchElasticStack(_stagingBox);
-        (
-            uint256 safeTrancheCollateral,
-            uint256 riskTrancheCollateral
-        ) = calcTrancheCollateral(
-                convertibleBondBox,
-                bond,
-                _stagingBox.safeTranche().balanceOf(address(_stagingBox)),
-                _stagingBox.riskTranche().balanceOf(address(_stagingBox))
-            );
+        CollateralBalance memory trancheCollateral = calcTrancheCollateral(
+            convertibleBondBox,
+            bond,
+            _stagingBox.safeTranche().balanceOf(address(_stagingBox)),
+            _stagingBox.riskTranche().balanceOf(address(_stagingBox))
+        );
+        CollateralBalance memory slipCollateral = calcTrancheCollateral(
+            convertibleBondBox,
+            bond,
+            convertibleBondBox.safeSlip().balanceOf(address(_stagingBox)),
+            convertibleBondBox.riskSlip().balanceOf(address(_stagingBox))
+        );
         uint256 stableBalance = _stagingBox.stableToken().balanceOf(
             address(_stagingBox)
         );
 
-        uint256 trancheDecimals = 10 **
-            ERC20(address(_stagingBox.safeTranche())).decimals();
-        uint256 stableDecimals = 10 **
-            ERC20(address(_stagingBox.stableToken())).decimals();
+        DecimalPair memory decimals = DecimalPair(
+            ERC20(address(_stagingBox.safeTranche())).decimals(),
+            ERC20(address(_stagingBox.stableToken())).decimals()
+        );
 
         StagingDataActive memory data = StagingDataActive(
             NumFixedPoint(
                 _stagingBox.lendSlip().totalSupply(),
-                trancheDecimals
+                decimals.tranche
             ),
             NumFixedPoint(
                 _stagingBox.borrowSlip().totalSupply(),
-                trancheDecimals
+                decimals.tranche
             ),
             NumFixedPoint(
                 _stagingBox.safeTranche().balanceOf(address(_stagingBox)),
-                trancheDecimals
+                decimals.tranche
             ),
             NumFixedPoint(
                 _stagingBox.riskTranche().balanceOf(address(_stagingBox)),
-                trancheDecimals
+                decimals.tranche
             ),
-            NumFixedPoint(safeTrancheCollateral, trancheDecimals),
-            NumFixedPoint(riskTrancheCollateral, trancheDecimals),
-            NumFixedPoint(stableBalance, stableDecimals),
-            NumFixedPoint(
-                (safeTrancheCollateral + riskTrancheCollateral) *
-                    stableDecimals +
-                    stableBalance *
-                    trancheDecimals,
-                trancheDecimals * stableDecimals
-            ),
-            NumFixedPoint(_stagingBox.s_reinitLendAmount(), stableDecimals),
             NumFixedPoint(
                 _stagingBox.convertibleBondBox().safeSlip().balanceOf(
                     address(this)
                 ),
-                trancheDecimals
+                decimals.tranche
             ),
             NumFixedPoint(
                 _stagingBox.convertibleBondBox().riskSlip().balanceOf(
                     address(this)
                 ),
-                trancheDecimals
+                decimals.tranche
+            ),
+            NumFixedPoint(_stagingBox.s_reinitLendAmount(), decimals.stable),
+            NumFixedPoint(
+                stableBalance - _stagingBox.s_reinitLendAmount(),
+                decimals.stable
+            ),
+            NumFixedPoint(
+                trancheCollateral.safeTrancheBalance,
+                decimals.tranche
+            ),
+            NumFixedPoint(
+                trancheCollateral.riskTrancheBalance,
+                decimals.tranche
+            ),
+            NumFixedPoint(slipCollateral.safeTrancheBalance, decimals.tranche),
+            NumFixedPoint(slipCollateral.riskTrancheBalance, decimals.tranche),
+            NumFixedPoint(
+                ((trancheCollateral.safeTrancheBalance +
+                    trancheCollateral.riskTrancheBalance +
+                    slipCollateral.riskTrancheBalance) *
+                    10**decimals.stable +
+                    _stagingBox.s_reinitLendAmount() *
+                    10**decimals.tranche),
+                decimals.tranche + decimals.stable
+            ),
+            NumFixedPoint(
+                (stableBalance - _stagingBox.s_reinitLendAmount()) *
+                    10**decimals.tranche +
+                    slipCollateral.safeTrancheBalance *
+                    10**decimals.stable,
+                decimals.tranche + decimals.stable
             )
         );
         return data;
@@ -142,72 +177,74 @@ contract ConvertiblesDVLens is IConvertiblesDVLens {
         view
         returns (CBBDataActive memory)
     {
-        (
-            uint256 safeTrancheCollateral,
-            uint256 riskTrancheCollateral
-        ) = calcTrancheCollateral(
-                _convertibleBondBox,
-                _convertibleBondBox.bond(),
-                _convertibleBondBox.safeTranche().balanceOf(
-                    address(_convertibleBondBox)
-                ),
-                _convertibleBondBox.riskTranche().balanceOf(
-                    address(_convertibleBondBox)
-                )
-            );
+        CollateralBalance memory trancheCollateral = calcTrancheCollateral(
+            _convertibleBondBox,
+            _convertibleBondBox.bond(),
+            _convertibleBondBox.safeTranche().balanceOf(
+                address(_convertibleBondBox)
+            ),
+            _convertibleBondBox.riskTranche().balanceOf(
+                address(_convertibleBondBox)
+            )
+        );
         uint256 stableBalance = _convertibleBondBox.stableToken().balanceOf(
             address(_convertibleBondBox)
         );
 
-        uint256 trancheDecimals = 10 **
-            ERC20(address(_convertibleBondBox.safeTranche())).decimals();
-        uint256 stableDecimals = 10 **
-            ERC20(address(_convertibleBondBox.stableToken())).decimals();
+        DecimalPair memory decimals = DecimalPair(
+            ERC20(address(_convertibleBondBox.safeTranche())).decimals(),
+            ERC20(address(_convertibleBondBox.stableToken())).decimals()
+        );
+
+        //TODO: Check TVL-Lend Decimals + current Price
 
         CBBDataActive memory data = CBBDataActive(
             NumFixedPoint(
                 _convertibleBondBox.safeSlip().totalSupply(),
-                trancheDecimals
+                decimals.tranche
             ),
             NumFixedPoint(
                 _convertibleBondBox.riskSlip().totalSupply(),
-                trancheDecimals
+                decimals.tranche
             ),
             NumFixedPoint(
                 _convertibleBondBox.s_repaidSafeSlips(),
-                trancheDecimals
+                decimals.tranche
             ),
             NumFixedPoint(
                 _convertibleBondBox.safeTranche().balanceOf(
                     address(_convertibleBondBox)
                 ),
-                trancheDecimals
+                decimals.tranche
             ),
             NumFixedPoint(
                 _convertibleBondBox.riskTranche().balanceOf(
                     address(_convertibleBondBox)
                 ),
-                trancheDecimals
+                decimals.tranche
             ),
-            NumFixedPoint(safeTrancheCollateral, trancheDecimals),
-            NumFixedPoint(riskTrancheCollateral, trancheDecimals),
-            NumFixedPoint(stableBalance, stableDecimals),
+            NumFixedPoint(
+                trancheCollateral.safeTrancheBalance,
+                decimals.tranche
+            ),
+            NumFixedPoint(
+                trancheCollateral.riskTrancheBalance,
+                decimals.tranche
+            ),
+            NumFixedPoint(stableBalance, decimals.stable),
             NumFixedPoint(
                 _convertibleBondBox.currentPrice(),
                 _convertibleBondBox.s_priceGranularity()
             ),
             NumFixedPoint(
-                (safeTrancheCollateral + riskTrancheCollateral) *
-                    stableDecimals +
-                    stableBalance *
-                    trancheDecimals,
-                trancheDecimals * stableDecimals
+                trancheCollateral.riskTrancheBalance,
+                decimals.tranche
             ),
             NumFixedPoint(
                 (_convertibleBondBox.safeSlip().totalSupply() *
                     _convertibleBondBox.s_initialPrice()) /
                     _convertibleBondBox.s_priceGranularity(),
-                trancheDecimals
+                decimals.tranche
             )
         );
 
@@ -219,19 +256,16 @@ contract ConvertiblesDVLens is IConvertiblesDVLens {
         view
         returns (CBBDataMature memory)
     {
-        (
-            uint256 safeTrancheCollateral,
-            uint256 riskTrancheCollateral
-        ) = calcTrancheCollateral(
-                _convertibleBondBox,
-                _convertibleBondBox.bond(),
-                _convertibleBondBox.safeTranche().balanceOf(
-                    address(_convertibleBondBox)
-                ),
-                _convertibleBondBox.riskTranche().balanceOf(
-                    address(_convertibleBondBox)
-                )
-            );
+        CollateralBalance memory trancheCollateral = calcTrancheCollateral(
+            _convertibleBondBox,
+            _convertibleBondBox.bond(),
+            _convertibleBondBox.safeTranche().balanceOf(
+                address(_convertibleBondBox)
+            ),
+            _convertibleBondBox.riskTranche().balanceOf(
+                address(_convertibleBondBox)
+            )
+        );
         uint256 stableBalance = _convertibleBondBox.stableToken().balanceOf(
             address(_convertibleBondBox)
         );
@@ -240,69 +274,72 @@ contract ConvertiblesDVLens is IConvertiblesDVLens {
             .riskTranche()
             .balanceOf(address(_convertibleBondBox));
 
-        uint256 trancheDecimals = 10 **
-            ERC20(address(_convertibleBondBox.safeTranche())).decimals();
-        uint256 stableDecimals = 10 **
-            ERC20(address(_convertibleBondBox.stableToken())).decimals();
+        uint256 zPenaltyTrancheCollateral = ((riskTrancheBalance -
+            _convertibleBondBox.riskSlip().totalSupply()) *
+            trancheCollateral.riskTrancheBalance) / riskTrancheBalance;
+
+        DecimalPair memory decimals = DecimalPair(
+            ERC20(address(_convertibleBondBox.safeTranche())).decimals(),
+            ERC20(address(_convertibleBondBox.stableToken())).decimals()
+        );
+
+        //TODO: Check current price decimals
 
         CBBDataMature memory data = CBBDataMature(
             NumFixedPoint(
                 _convertibleBondBox.safeSlip().totalSupply(),
-                trancheDecimals
+                decimals.tranche
             ),
             NumFixedPoint(
                 _convertibleBondBox.riskSlip().totalSupply(),
-                trancheDecimals
+                decimals.tranche
             ),
             NumFixedPoint(
                 _convertibleBondBox.s_repaidSafeSlips(),
-                trancheDecimals
+                decimals.tranche
             ),
             NumFixedPoint(
                 _convertibleBondBox.safeTranche().balanceOf(
                     address(_convertibleBondBox)
                 ),
-                trancheDecimals
+                decimals.tranche
             ),
             NumFixedPoint(
                 _convertibleBondBox.riskSlip().totalSupply(),
-                trancheDecimals
+                decimals.tranche
             ),
             NumFixedPoint(
                 (riskTrancheBalance -
                     _convertibleBondBox.riskSlip().totalSupply()),
-                trancheDecimals
+                decimals.tranche
             ),
-            NumFixedPoint(safeTrancheCollateral, trancheDecimals),
+            NumFixedPoint(stableBalance, decimals.stable),
+            NumFixedPoint(
+                trancheCollateral.safeTrancheBalance,
+                decimals.tranche
+            ),
             NumFixedPoint(
                 (_convertibleBondBox.riskSlip().totalSupply() *
-                    riskTrancheCollateral) / riskTrancheBalance,
-                trancheDecimals
+                    trancheCollateral.riskTrancheBalance) / riskTrancheBalance,
+                decimals.tranche
             ),
-            NumFixedPoint(
-                ((riskTrancheBalance -
-                    _convertibleBondBox.riskSlip().totalSupply()) *
-                    riskTrancheCollateral) / riskTrancheBalance,
-                trancheDecimals
-            ),
-            NumFixedPoint(stableBalance, stableDecimals),
+            NumFixedPoint(zPenaltyTrancheCollateral, decimals.tranche),
             NumFixedPoint(
                 _convertibleBondBox.currentPrice(),
                 _convertibleBondBox.s_priceGranularity()
             ),
             NumFixedPoint(
-                (safeTrancheCollateral + riskTrancheCollateral) *
-                    stableDecimals +
-                    stableBalance *
-                    trancheDecimals,
-                trancheDecimals * stableDecimals
+                trancheCollateral.riskTrancheBalance -
+                    zPenaltyTrancheCollateral,
+                decimals.tranche
             ),
             NumFixedPoint(
-                safeTrancheCollateral *
-                    stableDecimals +
+                (trancheCollateral.safeTrancheBalance +
+                    zPenaltyTrancheCollateral) *
+                    10**decimals.stable +
                     stableBalance *
-                    trancheDecimals,
-                stableDecimals * trancheDecimals
+                    10**decimals.tranche,
+                decimals.stable + decimals.tranche
             )
         );
 
@@ -314,7 +351,7 @@ contract ConvertiblesDVLens is IConvertiblesDVLens {
         IBondController bond,
         uint256 safeTrancheAmount,
         uint256 riskTrancheAmount
-    ) internal view returns (uint256, uint256) {
+    ) internal view returns (CollateralBalance memory) {
         uint256 riskTrancheCollateral = 0;
         uint256 safeTrancheCollateral = 0;
 
@@ -359,7 +396,12 @@ contract ConvertiblesDVLens is IConvertiblesDVLens {
             (riskTrancheCollateral * riskTrancheAmount) /
             convertibleBondBox.riskTranche().totalSupply();
 
-        return (safeTrancheCollateral, riskTrancheCollateral);
+        CollateralBalance memory collateral = CollateralBalance(
+            safeTrancheCollateral,
+            riskTrancheCollateral
+        );
+
+        return collateral;
     }
 
     function fetchElasticStack(IStagingBox _stagingBox)

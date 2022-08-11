@@ -14,11 +14,11 @@ struct StagingDataIBO {
     NumFixedPoint borrowSlipSupply;
     NumFixedPoint safeTrancheBalance;
     NumFixedPoint riskTrancheBalance;
+    NumFixedPoint stableTokenBalance;
     NumFixedPoint safeTrancheCollateral;
     NumFixedPoint riskTrancheCollateral;
-    NumFixedPoint stableTokenBalance;
-    NumFixedPoint tvl;
-    NumFixedPoint tvb;
+    NumFixedPoint tvlBorrow;
+    NumFixedPoint tvlLend;
 }
 
 struct StagingDataActive {
@@ -26,13 +26,16 @@ struct StagingDataActive {
     NumFixedPoint borrowSlipSupply;
     NumFixedPoint safeTrancheBalance;
     NumFixedPoint riskTrancheBalance;
-    NumFixedPoint safeTrancheCollateral;
-    NumFixedPoint riskTrancheCollateral;
-    NumFixedPoint stableTokenBalance;
-    NumFixedPoint tvl;
-    NumFixedPoint tvb;
     NumFixedPoint safeSlipBalance;
     NumFixedPoint riskSlipBalance;
+    NumFixedPoint stableTokenBalanceBorrow;
+    NumFixedPoint stableTokenBalanceLend;
+    NumFixedPoint safeTrancheCollateral;
+    NumFixedPoint riskTrancheCollateral;
+    NumFixedPoint safeSlipCollateral;
+    NumFixedPoint riskSlipCollateral;
+    NumFixedPoint tvlBorrow;
+    NumFixedPoint tvlLend;
 }
 
 struct CBBDataActive {
@@ -41,12 +44,12 @@ struct CBBDataActive {
     NumFixedPoint repaidSafeSlips;
     NumFixedPoint safeTrancheBalance;
     NumFixedPoint riskTrancheBalance;
+    NumFixedPoint stableTokenBalance;
     NumFixedPoint safeTrancheCollateral;
     NumFixedPoint riskTrancheCollateral;
-    NumFixedPoint stableTokenBalance;
     NumFixedPoint currentPrice;
-    NumFixedPoint tvl;
-    NumFixedPoint tvb;
+    NumFixedPoint tvlBorrow;
+    NumFixedPoint tvlLend;
 }
 
 struct CBBDataMature {
@@ -56,13 +59,13 @@ struct CBBDataMature {
     NumFixedPoint safeTrancheBalance;
     NumFixedPoint riskTrancheBalance;
     NumFixedPoint zPenaltyTrancheBalance;
+    NumFixedPoint stableTokenBalance;
     NumFixedPoint safeTrancheCollateral;
     NumFixedPoint riskTrancheCollateral;
     NumFixedPoint zPenaltyTrancheCollateral;
-    NumFixedPoint stableTokenBalance;
     NumFixedPoint currentPrice;
-    NumFixedPoint tvl;
-    NumFixedPoint tvb;
+    NumFixedPoint tvlBorrow;
+    NumFixedPoint tvlLend;
 }
 
 interface IConvertiblesDVLens {
