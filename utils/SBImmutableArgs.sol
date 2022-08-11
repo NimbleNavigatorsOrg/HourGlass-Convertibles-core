@@ -107,4 +107,20 @@ contract SBImmutableArgs is Clone, ISBImmutableArgs {
     function priceGranularity() public pure returns (uint256) {
         return _getArgUint256(256);
     }
+
+    /**
+     * @inheritdoc ISBImmutableArgs
+     */
+
+    function trancheDecimals() public pure override returns (uint256) {
+        return _getArgUint256(288);
+    }
+
+    /**
+     * @inheritdoc ISBImmutableArgs
+     */
+
+    function stableDecimals() public pure override returns (uint256) {
+        return _getArgUint256(320);
+    }
 }

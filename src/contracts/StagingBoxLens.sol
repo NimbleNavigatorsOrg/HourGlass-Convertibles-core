@@ -62,7 +62,10 @@ contract StagingBoxLens is IStagingBoxLens {
 
         //calculate stabletoken amount w/ safeTrancheAmount & initialPrice
         uint256 stableLoanAmount = (safeTrancheAmount *
-            _stagingBox.initialPrice()) / _stagingBox.priceGranularity();
+            _stagingBox.initialPrice() *
+            _stagingBox.stableDecimals()) /
+            _stagingBox.priceGranularity() /
+            _stagingBox.trancheDecimals();
 
         return (stableLoanAmount, safeTrancheAmount);
     }
@@ -82,8 +85,14 @@ contract StagingBoxLens is IStagingBoxLens {
 
         ) = fetchElasticStack(_stagingBox);
 
+        uint256 safeTrancheAmount = (_borrowSlipAmount *
+            _stagingBox.priceGranularity() *
+            _stagingBox.trancheDecimals()) /
+            _stagingBox.initialPrice() /
+            _stagingBox.stableDecimals();
+
         //calculate total amount of tranche tokens by dividing by safeRatio
-        uint256 trancheTotal = (_borrowSlipAmount *
+        uint256 trancheTotal = (safeTrancheAmount *
             convertibleBondBox.s_trancheGranularity()) /
             convertibleBondBox.safeRatio();
 
@@ -108,7 +117,10 @@ contract StagingBoxLens is IStagingBoxLens {
     ) public view returns (uint256) {
         //calculate lendSlips to safeSlips w/ initialPrice
         uint256 safeSlipsAmount = (_lendSlipAmount *
-            _stagingBox.priceGranularity()) / _stagingBox.initialPrice();
+            _stagingBox.priceGranularity() *
+            _stagingBox.trancheDecimals()) /
+            _stagingBox.initialPrice() /
+            _stagingBox.stableDecimals();
 
         return _safeSlipsForStables(_stagingBox, safeSlipsAmount);
     }
@@ -158,7 +170,10 @@ contract StagingBoxLens is IStagingBoxLens {
     ) public view returns (uint256, uint256) {
         //calculate lendSlips to safeSlips w/ initialPrice
         uint256 safeSlipsAmount = (_lendSlipAmount *
-            _stagingBox.priceGranularity()) / _stagingBox.initialPrice();
+            _stagingBox.priceGranularity() *
+            _stagingBox.trancheDecimals()) /
+            _stagingBox.initialPrice() /
+            _stagingBox.stableDecimals();
 
         return _safeSlipRedeemUnwrap(_stagingBox, safeSlipsAmount);
     }
@@ -287,8 +302,10 @@ contract StagingBoxLens is IStagingBoxLens {
 
         //calculate safeTranches for stables w/ current price
         uint256 safeTranchePayout = (_stableAmount *
-            convertibleBondBox.s_priceGranularity()) /
-            convertibleBondBox.currentPrice();
+            convertibleBondBox.s_priceGranularity() *
+            convertibleBondBox.trancheDecimals()) /
+            convertibleBondBox.currentPrice() /
+            convertibleBondBox.stableDecimals();
 
         uint256 riskTranchePayout = (safeTranchePayout *
             convertibleBondBox.riskRatio()) / convertibleBondBox.safeRatio();
@@ -339,8 +356,10 @@ contract StagingBoxLens is IStagingBoxLens {
 
         //calculate repayment cost
         uint256 stablesOwed = (safeTranchePayout *
-            convertibleBondBox.currentPrice()) /
-            convertibleBondBox.s_priceGranularity();
+            convertibleBondBox.currentPrice() *
+            convertibleBondBox.stableDecimals()) /
+            convertibleBondBox.s_priceGranularity() /
+            convertibleBondBox.trancheDecimals();
 
         //calculate stable Fees
         uint256 stableFees = (stablesOwed * convertibleBondBox.feeBps()) /
@@ -390,15 +409,18 @@ contract StagingBoxLens is IStagingBoxLens {
             convertibleBondBox.BPS();
 
         //calculate tranches
-        //safeTranchepayout = _stableAmount @ maturity
-        uint256 riskTranchePayout = (_stableAmount * _stagingBox.riskRatio()) /
-            _stagingBox.safeRatio();
+        uint256 safeTranchepayout = (_stableAmount *
+            convertibleBondBox.trancheDecimals()) /
+            convertibleBondBox.stableDecimals();
+
+        uint256 riskTranchePayout = (safeTranchepayout *
+            _stagingBox.riskRatio()) / _stagingBox.safeRatio();
 
         //get collateral balance for safeTranche rebasing collateral output
         uint256 collateralBalanceSafe = wrapper.balanceOf(
             address(_stagingBox.safeTranche())
         );
-        uint256 buttonAmount = (_stableAmount * collateralBalanceSafe) /
+        uint256 buttonAmount = (safeTranchepayout * collateralBalanceSafe) /
             convertibleBondBox.safeTranche().totalSupply();
 
         //get collateral balance for riskTranche rebasing collateral output
@@ -442,20 +464,19 @@ contract StagingBoxLens is IStagingBoxLens {
 
         //Calculate tranches
         //riskTranche payout = riskSlipAmount
-        //safeTranche payout = stables owed
+        uint256 safeTranchePayout = (_riskSlipAmount *
+            _stagingBox.safeRatio()) / _stagingBox.riskRatio();
 
-        uint256 stablesOwed = (_riskSlipAmount * _stagingBox.safeRatio()) /
-            _stagingBox.riskRatio();
+        uint256 stablesOwed = (safeTranchePayout *
+            _stagingBox.stableDecimals()) / _stagingBox.trancheDecimals();
 
         //calculate stable Fees
         uint256 stableFees = (stablesOwed * convertibleBondBox.feeBps()) /
             convertibleBondBox.BPS();
 
         //get collateral balance for safeTranche rebasing collateral output
-        uint256 collateralBalanceSafe = wrapper.balanceOf(
-            address(_stagingBox.safeTranche())
-        );
-        uint256 buttonAmount = (stablesOwed * collateralBalanceSafe) /
+        uint256 buttonAmount = (safeTranchePayout *
+            wrapper.balanceOf(address(_stagingBox.safeTranche()))) /
             convertibleBondBox.safeTranche().totalSupply();
 
         //get collateral balance for riskTranche rebasing collateral output

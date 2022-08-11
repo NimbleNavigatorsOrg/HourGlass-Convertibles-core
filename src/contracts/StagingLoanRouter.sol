@@ -77,18 +77,21 @@ contract StagingLoanRouter is IStagingLoanRouter {
             );
         }
 
-        _stagingBox.depositBorrow(
-            msg.sender,
-            min(
-                safeTrancheBalance,
-                ((riskTrancheBalance * convertibleBondBox.safeRatio()) /
-                    convertibleBondBox.riskRatio())
-            )
-        );
+        uint256 borrowAmount = (min(
+            safeTrancheBalance,
+            ((riskTrancheBalance * convertibleBondBox.safeRatio()) /
+                convertibleBondBox.riskRatio())
+        ) *
+            _stagingBox.initialPrice() *
+            _stagingBox.stableDecimals()) /
+            _stagingBox.priceGranularity() /
+            _stagingBox.trancheDecimals();
 
-        if (safeTrancheBalance < _minBorrowSlips)
+        _stagingBox.depositBorrow(msg.sender, borrowAmount);
+
+        if (borrowAmount < _minBorrowSlips)
             revert SlippageExceeded({
-                expectedAmount: safeTrancheBalance,
+                expectedAmount: borrowAmount,
                 minAmount: _minBorrowSlips
             });
     }
