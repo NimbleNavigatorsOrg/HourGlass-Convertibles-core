@@ -73,7 +73,9 @@ contract CBBFactory is ICBBFactory {
                 TrancheSet.safeTranche,
                 TrancheSet.safeRatio,
                 TrancheSet.riskTranche,
-                TrancheSet.riskRatio
+                TrancheSet.riskRatio,
+                10**IERC20Metadata(collateralToken).decimals(),
+                10**IERC20Metadata(stableToken).decimals()
             )
         );
 

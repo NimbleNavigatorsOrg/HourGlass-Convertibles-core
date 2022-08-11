@@ -201,8 +201,11 @@ contract StagingBox is OwnableUpgradeable, SBImmutableArgs, IStagingBox {
         if (!_isLend) {
             uint256 safeTrancheBalance = safeTranche().balanceOf(address(this));
             s_reinitLendAmount =
-                (safeTrancheBalance * initialPrice()) /
-                priceGranularity();
+                (safeTrancheBalance *
+                    initialPrice() *
+                    convertibleBondBox().stableDecimals()) /
+                priceGranularity() /
+                convertibleBondBox().trancheDecimals();
 
             convertibleBondBox().reinitialize(initialPrice());
 

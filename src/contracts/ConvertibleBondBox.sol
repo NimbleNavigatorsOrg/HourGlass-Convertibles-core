@@ -109,15 +109,19 @@ contract ConvertibleBondBox is
                 reqInput: (safeRatio() * price) / priceGranularity
             });
 
-        uint256 mintAmount = (_stableAmount * priceGranularity) / price;
+        uint256 safeSlipAmount = (_stableAmount *
+            priceGranularity *
+            trancheDecimals()) /
+            price /
+            stableDecimals();
 
-        uint256 zTrancheAmount = (mintAmount * riskRatio()) / safeRatio();
+        uint256 zTrancheAmount = (safeSlipAmount * riskRatio()) / safeRatio();
 
         _atomicDeposit(
             _borrower,
             _lender,
             _stableAmount,
-            mintAmount,
+            safeSlipAmount,
             zTrancheAmount
         );
 
@@ -143,8 +147,9 @@ contract ConvertibleBondBox is
 
         uint256 zTrancheAmount = (_safeTrancheAmount * riskRatio()) /
             safeRatio();
-        uint256 stableAmount = (_safeTrancheAmount * price) /
-            s_priceGranularity;
+        uint256 stableAmount = (_safeTrancheAmount * price * stableDecimals()) /
+            s_priceGranularity /
+            trancheDecimals();
 
         _atomicDeposit(
             _borrower,
@@ -198,7 +203,11 @@ contract ConvertibleBondBox is
 
         //calculate inputs for internal redeem function
         uint256 stableFees = (_stableAmount * feeBps) / BPS;
-        uint256 safeTranchePayout = (_stableAmount * priceGranularity) / price;
+        uint256 safeTranchePayout = (_stableAmount *
+            priceGranularity *
+            trancheDecimals()) /
+            price /
+            stableDecimals();
         uint256 riskTranchePayout = (safeTranchePayout * riskRatio()) /
             safeRatio();
 
@@ -224,7 +233,9 @@ contract ConvertibleBondBox is
         // Calculate inputs for internal repay function
         uint256 safeTranchePayout = (_riskSlipAmount * safeRatio()) /
             riskRatio();
-        uint256 stablesOwed = (safeTranchePayout * price) / s_priceGranularity;
+        uint256 stablesOwed = (safeTranchePayout * price * stableDecimals()) /
+            s_priceGranularity /
+            trancheDecimals();
         uint256 stableFees = (stablesOwed * feeBps) / BPS;
 
         _repay(stablesOwed, stableFees, safeTranchePayout, _riskSlipAmount);
