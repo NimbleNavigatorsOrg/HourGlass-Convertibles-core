@@ -1,18 +1,25 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.13;
 
-import "forge-std/Test.sol";
-import "../../src/contracts/ConvertibleBondBox.sol";
-import "../../src/contracts/CBBFactory.sol";
-import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
-import "../../src/contracts/Slip.sol";
-import "../../src/contracts/SlipFactory.sol";
-import "forge-std/console2.sol";
-import "../../test/mocks/MockERC20.sol";
 import "./CBBSetup.sol";
-import "../../src/interfaces/ISlip.sol";
 
 contract RedeemRiskTranche is CBBSetup {
+    struct BeforeBalances {
+        uint256 borrowerRiskSlip;
+        uint256 borrowerRiskTranche;
+        uint256 ownerRiskSlip;
+        uint256 CBBRiskTranche;
+    }
+
+    struct RedeemAmounts {
+        uint256 feeSlip;
+        uint256 riskSlipAmount;
+        uint256 riskTranchePayout;
+    }
+
+    address s_borrowerAddress = address(1);
+    address s_lenderAddress = address(2);
+
     function testCannotRedeemRiskTrancheBondNotMatureYet(
         uint256 time,
         uint256 riskSlipAmount
@@ -34,274 +41,104 @@ contract RedeemRiskTranche is CBBSetup {
         uint256 riskSlipAmount
     ) public {
         time = bound(time, s_maturityDate, s_endOfUnixTime);
-        riskSlipAmount = bound(
-            riskSlipAmount,
-            0,
-            s_deployedConvertibleBondBox.riskRatio() - 1
-        );
+        riskSlipAmount = bound(riskSlipAmount, 0, 1e6 - 1);
         vm.warp(time);
 
         bytes memory customError = abi.encodeWithSignature(
             "MinimumInput(uint256,uint256)",
             riskSlipAmount,
-            s_deployedConvertibleBondBox.riskRatio()
+            1e6
         );
         vm.expectRevert(customError);
         s_deployedConvertibleBondBox.redeemRiskTranche(riskSlipAmount);
     }
 
-    function testRedeemRiskTrancheSendsRiskSlipTokenFeeToOwner(
+    function testRedeemRiskTranche(
         uint256 time,
         uint256 depositAmount,
         uint256 riskSlipAmountToRedeem,
         uint256 fee
     ) public {
         time = bound(time, s_maturityDate, s_endOfUnixTime);
+
         depositAmount = bound(
             depositAmount,
-            s_deployedConvertibleBondBox.safeRatio(),
-            s_safeTranche.balanceOf(s_deployedConvertibleBondBox.owner())
+            1e6,
+            s_safeTranche.balanceOf(address(this))
         );
         fee = bound(fee, 0, s_maxFeeBPS);
 
-        address borrowerAddress = address(1);
-        address lenderAddress = address(2);
+        vm.prank(s_cbb_owner);
+        s_deployedConvertibleBondBox.reinitialize(s_initialPrice);
 
-        vm.prank(s_deployedConvertibleBondBox.owner());
-        s_deployedConvertibleBondBox.reinitialize(s_price);
-
-        vm.prank(s_deployedConvertibleBondBox.owner());
         s_deployedConvertibleBondBox.borrow(
-            borrowerAddress,
-            lenderAddress,
+            s_borrowerAddress,
+            s_lenderAddress,
             depositAmount
         );
 
-        vm.prank(s_deployedConvertibleBondBox.owner());
+        vm.prank(s_cbb_owner);
         s_deployedConvertibleBondBox.setFee(fee);
 
         vm.warp(time);
 
-        riskSlipAmountToRedeem = bound(
-            riskSlipAmountToRedeem,
-            s_deployedConvertibleBondBox.riskRatio(),
-            s_deployedConvertibleBondBox.riskSlip().balanceOf(borrowerAddress)
+        BeforeBalances memory before = BeforeBalances(
+            s_riskSlip.balanceOf(s_borrowerAddress),
+            s_riskTranche.balanceOf(s_borrowerAddress),
+            s_riskSlip.balanceOf(s_cbb_owner),
+            s_riskTranche.balanceOf(s_deployedCBBAddress)
         );
-        uint256 ownerRiskSlipBalanceBeforeRedeem = s_deployedConvertibleBondBox
-            .riskSlip()
-            .balanceOf(s_deployedConvertibleBondBox.owner());
-        uint256 feeSlip = (riskSlipAmountToRedeem *
-            s_deployedConvertibleBondBox.feeBps()) / s_BPS;
-
-        vm.startPrank(borrowerAddress);
-        s_deployedConvertibleBondBox.riskSlip().approve(
-            address(s_deployedConvertibleBondBox),
-            type(uint256).max
-        );
-
-        s_deployedConvertibleBondBox.redeemRiskTranche(riskSlipAmountToRedeem);
-        vm.stopPrank();
-
-        uint256 ownerRiskSlipBalanceAfterRedeem = s_deployedConvertibleBondBox
-            .riskSlip()
-            .balanceOf(s_deployedConvertibleBondBox.owner());
-
-        assertEq(
-            ownerRiskSlipBalanceAfterRedeem,
-            ownerRiskSlipBalanceBeforeRedeem + feeSlip
-        );
-    }
-
-    function testRedeemRiskTrancheSendsRiskTrancheFromCBBToMsgSender(
-        uint256 time,
-        uint256 depositAmount,
-        uint256 riskSlipAmountToRedeem,
-        uint256 fee
-    ) public {
-        time = bound(time, s_maturityDate, s_endOfUnixTime);
-        depositAmount = bound(
-            depositAmount,
-            s_deployedConvertibleBondBox.safeRatio(),
-            s_safeTranche.balanceOf(s_cbb_owner)
-        );
-        fee = bound(fee, 0, s_maxFeeBPS);
-
-        address borrowerAddress = address(1);
-        address lenderAddress = address(2);
-
-        vm.prank(s_deployedConvertibleBondBox.owner());
-        s_deployedConvertibleBondBox.reinitialize(s_price);
-
-        vm.prank(s_deployedConvertibleBondBox.owner());
-        s_deployedConvertibleBondBox.borrow(
-            borrowerAddress,
-            lenderAddress,
-            depositAmount
-        );
-
-        vm.prank(s_deployedConvertibleBondBox.owner());
-        s_deployedConvertibleBondBox.setFee(fee);
-
-        vm.warp(time);
 
         riskSlipAmountToRedeem = bound(
             riskSlipAmountToRedeem,
-            s_deployedConvertibleBondBox.riskRatio(),
-            s_deployedConvertibleBondBox.riskSlip().balanceOf(borrowerAddress)
-        );
-        uint256 CBBRiskTrancheBalanceBeforeRedeem = ITranche(
-            s_deployedConvertibleBondBox.riskTranche()
-        ).balanceOf(address(s_deployedConvertibleBondBox));
-        uint256 BorrowerRiskTrancheBalanceBeforeRedeem = ITranche(
-            s_deployedConvertibleBondBox.riskTranche()
-        ).balanceOf(address(borrowerAddress));
-
-        uint256 feeSlip = (riskSlipAmountToRedeem *
-            s_deployedConvertibleBondBox.feeBps()) / s_BPS;
-
-        uint256 riskSlipAmountAfterFee = riskSlipAmountToRedeem - feeSlip;
-
-        uint256 zTranchePayout = (riskSlipAmountAfterFee *
-            (s_penaltyGranularity - s_deployedConvertibleBondBox.penalty())) /
-            (s_penaltyGranularity);
-
-        vm.startPrank(borrowerAddress);
-        s_deployedConvertibleBondBox.riskSlip().approve(
-            address(s_deployedConvertibleBondBox),
-            type(uint256).max
+            1e6,
+            before.borrowerRiskSlip
         );
 
-        s_deployedConvertibleBondBox.redeemRiskTranche(riskSlipAmountToRedeem);
-        vm.stopPrank();
+        uint256 feeSlip = (riskSlipAmountToRedeem * fee) / s_BPS;
 
-        uint256 CBBRiskTrancheBalanceAfterRedeem = ITranche(
-            s_deployedConvertibleBondBox.riskTranche()
-        ).balanceOf(address(s_deployedConvertibleBondBox));
-        uint256 BorrowerRiskTrancheBalanceAfterRedeem = ITranche(
-            s_deployedConvertibleBondBox.riskTranche()
-        ).balanceOf(address(borrowerAddress));
-
-        assertEq(
-            CBBRiskTrancheBalanceBeforeRedeem - zTranchePayout,
-            CBBRiskTrancheBalanceAfterRedeem
-        );
-        assertEq(
-            BorrowerRiskTrancheBalanceBeforeRedeem + zTranchePayout,
-            BorrowerRiskTrancheBalanceAfterRedeem
-        );
-    }
-
-    function testRedeemRiskTrancheBurnsRiskTrancheFromMsgSender(
-        uint256 time,
-        uint256 depositAmount,
-        uint256 riskSlipAmountToRedeem,
-        uint256 fee
-    ) public {
-        time = bound(time, s_maturityDate, s_endOfUnixTime);
-        depositAmount = bound(
-            depositAmount,
-            s_deployedConvertibleBondBox.safeRatio(),
-            s_safeTranche.balanceOf(s_deployedConvertibleBondBox.owner())
-        );
-        fee = bound(fee, 0, s_maxFeeBPS);
-
-        address borrowerAddress = address(1);
-        address lenderAddress = address(2);
-
-        vm.prank(s_deployedConvertibleBondBox.owner());
-        s_deployedConvertibleBondBox.reinitialize(s_price);
-
-        vm.prank(s_deployedConvertibleBondBox.owner());
-        s_deployedConvertibleBondBox.borrow(
-            borrowerAddress,
-            lenderAddress,
-            depositAmount
-        );
-
-        vm.prank(s_deployedConvertibleBondBox.owner());
-        s_deployedConvertibleBondBox.setFee(fee);
-
-        vm.warp(time);
-
-        riskSlipAmountToRedeem = bound(
+        RedeemAmounts memory adjustments = RedeemAmounts(
+            feeSlip,
             riskSlipAmountToRedeem,
-            s_deployedConvertibleBondBox.riskRatio(),
-            s_deployedConvertibleBondBox.riskSlip().balanceOf(borrowerAddress)
-        );
-        uint256 BorrowerRiskSlipBalanceBeforeRedeem = s_deployedConvertibleBondBox
-                .riskSlip()
-                .balanceOf(address(borrowerAddress));
-
-        vm.startPrank(borrowerAddress);
-        s_deployedConvertibleBondBox.riskSlip().approve(
-            address(s_deployedConvertibleBondBox),
-            type(uint256).max
+            ((riskSlipAmountToRedeem - feeSlip) *
+                (s_penaltyGranularity - s_penalty)) / s_penaltyGranularity
         );
 
-        s_deployedConvertibleBondBox.redeemRiskTranche(riskSlipAmountToRedeem);
-        vm.stopPrank();
-
-        uint256 BorrowerRiskSlipBalanceAfterRedeem = s_deployedConvertibleBondBox
-                .riskSlip()
-                .balanceOf(address(borrowerAddress));
-
-        assertEq(
-            BorrowerRiskSlipBalanceBeforeRedeem - riskSlipAmountToRedeem,
-            BorrowerRiskSlipBalanceAfterRedeem
-        );
-    }
-
-    function testRedeemRiskTrancheEmitsRedeemRiskTranche(
-        uint256 time,
-        uint256 depositAmount,
-        uint256 riskSlipAmountToRedeem,
-        uint256 fee
-    ) public {
-        time = bound(time, s_maturityDate, s_endOfUnixTime);
-        depositAmount = bound(
-            depositAmount,
-            s_deployedConvertibleBondBox.safeRatio(),
-            s_safeTranche.balanceOf(s_deployedConvertibleBondBox.owner())
-        );
-        fee = bound(fee, 0, s_maxFeeBPS);
-
-        address borrowerAddress = address(1);
-        address lenderAddress = address(2);
-
-        vm.prank(s_deployedConvertibleBondBox.owner());
-        s_deployedConvertibleBondBox.reinitialize(s_price);
-
-        vm.prank(s_deployedConvertibleBondBox.owner());
-        s_deployedConvertibleBondBox.borrow(
-            borrowerAddress,
-            lenderAddress,
-            depositAmount
-        );
-
-        vm.prank(s_deployedConvertibleBondBox.owner());
-        s_deployedConvertibleBondBox.setFee(fee);
-
-        vm.warp(time);
-        riskSlipAmountToRedeem = bound(
-            riskSlipAmountToRedeem,
-            s_deployedConvertibleBondBox.riskRatio(),
-            s_deployedConvertibleBondBox.riskSlip().balanceOf(borrowerAddress)
-        );
-
-        uint256 feeSlip = (riskSlipAmountToRedeem *
-            s_deployedConvertibleBondBox.feeBps()) / s_BPS;
-
-        uint256 riskSlipAmountAfterFee = riskSlipAmountToRedeem - feeSlip;
-
-        vm.startPrank(borrowerAddress);
-        s_deployedConvertibleBondBox.riskSlip().approve(
-            address(s_deployedConvertibleBondBox),
-            type(uint256).max
-        );
-
+        vm.startPrank(s_borrowerAddress);
+        s_riskSlip.approve(s_deployedCBBAddress, type(uint256).max);
         vm.expectEmit(true, true, true, true);
-        emit RedeemRiskTranche(borrowerAddress, riskSlipAmountAfterFee);
+        emit RedeemRiskTranche(
+            s_borrowerAddress,
+            adjustments.riskSlipAmount - adjustments.feeSlip
+        );
         s_deployedConvertibleBondBox.redeemRiskTranche(riskSlipAmountToRedeem);
         vm.stopPrank();
+
+        assertions(before, adjustments);
+    }
+
+    function assertions(
+        BeforeBalances memory before,
+        RedeemAmounts memory adjustments
+    ) internal {
+        assertEq(
+            before.ownerRiskSlip + adjustments.feeSlip,
+            s_riskSlip.balanceOf(s_cbb_owner)
+        );
+
+        assertEq(
+            before.CBBRiskTranche - adjustments.riskTranchePayout,
+            s_riskTranche.balanceOf(s_deployedCBBAddress)
+        );
+
+        assertEq(
+            before.borrowerRiskTranche + adjustments.riskTranchePayout,
+            s_riskTranche.balanceOf(s_borrowerAddress)
+        );
+
+        assertEq(
+            before.borrowerRiskSlip - adjustments.riskSlipAmount,
+            s_riskSlip.balanceOf(s_borrowerAddress)
+        );
     }
 }

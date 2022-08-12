@@ -1,14 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.13;
 
-import "forge-std/Test.sol";
-import "../../src/contracts/ConvertibleBondBox.sol";
-import "../../src/contracts/CBBFactory.sol";
-import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
-import "../../src/contracts/Slip.sol";
-import "../../src/contracts/SlipFactory.sol";
-import "forge-std/console2.sol";
-import "../../test/mocks/MockERC20.sol";
 import "./CBBSetup.sol";
 
 contract Frankenstein is CBBSetup {
@@ -28,7 +20,7 @@ contract Frankenstein is CBBSetup {
         );
         stableAmount = bound(
             stableAmount,
-            (amount * s_price) / s_priceGranularity,
+            (amount * s_initialPrice) / s_priceGranularity,
             1e20
         );
 
@@ -75,13 +67,13 @@ contract Frankenstein is CBBSetup {
             vm.stopPrank();
         }
 
-        vm.startPrank(s_deployedConvertibleBondBox.owner());
+        vm.startPrank(s_cbb_owner);
         vm.expectEmit(true, true, true, true);
-        emit ReInitialized(s_price, block.timestamp);
-        s_deployedConvertibleBondBox.reinitialize(s_price);
+        emit ReInitialized(s_initialPrice, block.timestamp);
+        s_deployedConvertibleBondBox.reinitialize(s_initialPrice);
         vm.stopPrank();
 
-        vm.prank(s_deployedConvertibleBondBox.owner());
+        vm.prank(s_cbb_owner);
         s_deployedConvertibleBondBox.borrow(
             address(borrower),
             address(lender),
@@ -91,11 +83,11 @@ contract Frankenstein is CBBSetup {
         //get slip approvals for all addresses
         for (uint160 i = 1; i < 11; i++) {
             vm.startPrank(address(i));
-            s_deployedConvertibleBondBox.riskSlip().approve(
+            s_safeSlip.approve(
                 address(s_deployedConvertibleBondBox),
                 type(uint256).max
             );
-            s_deployedConvertibleBondBox.riskSlip().approve(
+            s_riskSlip.approve(
                 address(s_deployedConvertibleBondBox),
                 type(uint256).max
             );
@@ -132,15 +124,14 @@ contract Frankenstein is CBBSetup {
             .riskSlip()
             .balanceOf(address(borrower)) / 2;
 
-        uint256 _stableAmount = (((riskSlipBalance * s_ratios[0]) /
-            s_ratios[2]) * _currentPrice) / s_priceGranularity;
+        uint256 _stableAmount = (((riskSlipBalance * s_safeRatio) /
+            s_riskRatio) * _currentPrice) / s_priceGranularity;
 
         uint256 safeTranchePayout = (_stableAmount * s_priceGranularity) /
             _currentPrice;
 
-        uint256 zTranchePaidFor = (safeTranchePayout *
-            s_deployedConvertibleBondBox.riskRatio()) /
-            s_deployedConvertibleBondBox.safeRatio();
+        uint256 zTranchePaidFor = (safeTranchePayout * s_riskRatio) /
+            s_safeRatio;
 
         vm.expectEmit(true, true, true, true);
         emit Repay(
@@ -151,7 +142,7 @@ contract Frankenstein is CBBSetup {
         );
 
         s_deployedConvertibleBondBox.repay(
-            (((riskSlipBalance * s_ratios[0]) / s_ratios[2]) * _currentPrice) /
+            (((riskSlipBalance * s_safeRatio) / s_riskRatio) * _currentPrice) /
                 s_priceGranularity
         );
         vm.stopPrank();
@@ -192,9 +183,7 @@ contract Frankenstein is CBBSetup {
 
         // Lender redeems half of remaining safeSlips for stables
         vm.startPrank(address(lender));
-        safeSlipBalance =
-            s_deployedConvertibleBondBox.safeSlip().balanceOf(address(lender)) /
-            2;
+        safeSlipBalance = s_safeSlip.balanceOf(address(lender)) / 2;
         vm.expectEmit(true, true, true, true);
         emit RedeemStable(
             address(lender),

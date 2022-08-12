@@ -1,33 +1,19 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.13;
 
-import "forge-std/Test.sol";
-import "../../src/contracts/ConvertibleBondBox.sol";
-import "../../src/contracts/CBBFactory.sol";
-import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
-import "../../src/contracts/Slip.sol";
-import "../../src/contracts/SlipFactory.sol";
-import "forge-std/console2.sol";
-import "../../test/mocks/MockERC20.sol";
 import "./CBBSetup.sol";
 
 contract RedeemStable is CBBSetup {
-    // testFail for redeemStable before any repay function
-
     // redeemStable()
 
     function testRedeemStable(uint256 safeSlipAmount) public {
         // initializing the CBB
         vm.prank(s_cbb_owner);
-        emit ReInitialized(s_price, block.timestamp);
-        s_deployedConvertibleBondBox.reinitialize(s_price);
+        emit ReInitialized(s_initialPrice, block.timestamp);
+        s_deployedConvertibleBondBox.reinitialize(s_initialPrice);
 
         vm.prank(s_cbb_owner);
-        s_deployedConvertibleBondBox.borrow(
-            address(1),
-            address(2),
-            s_depositLimit
-        );
+        s_deployedConvertibleBondBox.borrow(address(1), address(2), 100e18);
 
         //getting lender + borrower balances after initialization deposit
         uint256 userSafeSlipBalanceBeforeRedeem = s_deployedConvertibleBondBox
@@ -121,7 +107,7 @@ contract RedeemStable is CBBSetup {
         vm.warp(time);
 
         vm.startPrank(s_deployedConvertibleBondBox.owner());
-        s_deployedConvertibleBondBox.reinitialize(s_price);
+        s_deployedConvertibleBondBox.reinitialize(s_initialPrice);
         vm.stopPrank();
 
         safeSlipAmount = bound(
@@ -159,7 +145,7 @@ contract RedeemStable is CBBSetup {
         vm.warp(1);
 
         vm.startPrank(s_deployedConvertibleBondBox.owner());
-        s_deployedConvertibleBondBox.reinitialize(s_price);
+        s_deployedConvertibleBondBox.reinitialize(s_initialPrice);
 
         s_deployedConvertibleBondBox.borrow(borrower, lender, depositAmount);
 
