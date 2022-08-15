@@ -19,7 +19,7 @@ contract StagingBox is OwnableUpgradeable, SBImmutableArgs, IStagingBox {
     function initialize(address _owner) external initializer {
         require(
             _owner != address(0),
-            "ConvertibleBondBox: invalid owner address"
+            "StagingBox: invalid owner address"
         );
         //check if valid initialPrice immutable arg
         if (initialPrice() > priceGranularity())

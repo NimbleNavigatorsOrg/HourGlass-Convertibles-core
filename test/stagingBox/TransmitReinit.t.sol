@@ -1,95 +1,139 @@
 pragma solidity 0.8.13;
 
-import "forge-std/Test.sol";
-import "../../src/contracts/StagingBox.sol";
-import "../../src/contracts/StagingBoxFactory.sol";
-import "../../src/contracts/CBBFactory.sol";
-import "../../src/contracts/ConvertibleBondBox.sol";
-
 import "./integration/SBIntegrationSetup.t.sol";
 
 contract TransmitReinit is SBIntegrationSetup {
-    function testTransmitReInitLendSetsStorageVariables(uint256 fuzzPrice)
-        public
-    {
-        setupStagingBox(fuzzPrice);
-        setupTranches(true, address(s_deployedSB), s_deployedCBBAddress);
-
-        uint256 stableAmount = s_deployedSB.stableToken().balanceOf(
-            address(s_deployedSB)
-        );
-
-        vm.mockCall(
-            address(s_deployedConvertibleBondBox),
-            abi.encodeWithSelector(
-                s_deployedConvertibleBondBox.reinitialize.selector
-            ),
-            abi.encode(true)
-        );
-
-        vm.mockCall(
-            address(s_deployedConvertibleBondBox),
-            abi.encodeWithSelector(s_deployedConvertibleBondBox.lend.selector),
-            abi.encode(true)
-        );
-
-        vm.mockCall(
-            address(s_deployedConvertibleBondBox),
-            abi.encodeWithSelector(
-                s_deployedConvertibleBondBox.transferOwnership.selector
-            ),
-            abi.encode(true)
-        );
-
-        vm.startPrank(s_cbb_owner);
-        s_deployedSB.transmitReInit(s_isLend);
-        vm.stopPrank();
-
-        assertEq(stableAmount, s_deployedSB.s_reinitLendAmount());
-        assertEq(s_cbb_owner, s_deployedSB.owner());
+    struct BeforeBalances {
+        uint256 SBSafeTranche;
+        uint256 SBRiskTranche;
+        uint256 SBStableTokens;
+        uint256 SBSafeSlip;
+        uint256 SBRiskSlip;
+        uint256 CBBSafeTranche;
+        uint256 CBBRiskTranche;
     }
 
-    function testTransmitReInitBorrowSetsStorageVariables(uint256 fuzzPrice)
-        public
-    {
-        setupStagingBox(fuzzPrice);
-        setupTranches(false, address(s_deployedSB), s_deployedCBBAddress);
+    struct ReinitAmounts {
+        uint256 safeTrancheAmount;
+        uint256 riskTrancheAmount;
+        uint256 reinitLendAmount;
+    }
 
-        uint256 safeTrancheBalance = s_deployedSB.safeTranche().balanceOf(
-            address(s_deployedSB)
+    address s_borrower = address(1);
+    address s_lender = address(2);
+
+    function testTransmitReinit(
+        uint256 _fuzzPrice,
+        uint256 _borrowAmount,
+        uint256 _lendAmount
+    ) public {
+        setupStagingBox(_fuzzPrice);
+
+        uint256 maxBorrowAmount = (s_safeTranche.balanceOf(address(this)) *
+            s_deployedSB.initialPrice() *
+            s_deployedSB.stableDecimals()) /
+            s_deployedSB.priceGranularity() /
+            s_deployedSB.trancheDecimals();
+
+        uint256 minBorrowAmount = (1e15 *
+            s_deployedSB.initialPrice() *
+            s_deployedSB.stableDecimals()) /
+            s_deployedSB.priceGranularity() /
+            s_deployedSB.trancheDecimals();
+
+        _borrowAmount = bound(_borrowAmount, minBorrowAmount, maxBorrowAmount);
+
+        s_deployedSB.depositBorrow(s_borrower, _borrowAmount);
+
+        _lendAmount = bound(
+            _lendAmount,
+            1e6,
+            s_stableToken.balanceOf(address(this))
         );
-        uint256 expectedReinitLendAmount = (safeTrancheBalance *
-            s_deployedSB.initialPrice()) / s_deployedSB.priceGranularity();
 
-        vm.mockCall(
-            address(s_deployedConvertibleBondBox),
-            abi.encodeWithSelector(
-                s_deployedConvertibleBondBox.reinitialize.selector
-            ),
-            abi.encode(true)
+        s_deployedSB.depositLend(s_lender, _lendAmount);
+
+        BeforeBalances memory before = BeforeBalances(
+            s_safeTranche.balanceOf(s_deployedSBAddress),
+            s_riskTranche.balanceOf(s_deployedSBAddress),
+            s_stableToken.balanceOf(s_deployedSBAddress),
+            s_safeSlip.balanceOf(s_deployedSBAddress),
+            s_riskSlip.balanceOf(s_deployedSBAddress),
+            s_safeTranche.balanceOf(s_deployedCBBAddress),
+            s_riskTranche.balanceOf(s_deployedCBBAddress)
         );
 
-        vm.mockCall(
-            address(s_deployedConvertibleBondBox),
-            abi.encodeWithSelector(
-                s_deployedConvertibleBondBox.borrow.selector
-            ),
-            abi.encode(true)
-        );
+        bool isLend = s_SBLens.viewTransmitReInitBool(s_deployedSB);
 
-        vm.mockCall(
-            address(s_deployedConvertibleBondBox),
-            abi.encodeWithSelector(
-                s_deployedConvertibleBondBox.transferOwnership.selector
-            ),
-            abi.encode(true)
+        uint256 reinitLendAmount;
+        uint256 safeTrancheAmount;
+
+        if (isLend) {
+            reinitLendAmount = before.SBStableTokens;
+            safeTrancheAmount =
+                (reinitLendAmount *
+                    s_deployedSB.priceGranularity() *
+                    s_deployedSB.trancheDecimals()) /
+                s_deployedSB.initialPrice() /
+                s_deployedSB.stableDecimals();
+        } else {
+            reinitLendAmount =
+                (before.SBSafeTranche *
+                    s_deployedSB.initialPrice() *
+                    s_deployedSB.stableDecimals()) /
+                s_deployedSB.priceGranularity() /
+                s_deployedSB.trancheDecimals();
+            safeTrancheAmount = before.SBSafeTranche;
+        }
+
+        ReinitAmounts memory adjustments = ReinitAmounts(
+            safeTrancheAmount,
+            (safeTrancheAmount * s_riskRatio) / s_safeRatio,
+            reinitLendAmount
         );
 
         vm.startPrank(s_cbb_owner);
-        s_deployedSB.transmitReInit(s_isLend);
-        vm.stopPrank();
+        s_deployedSB.transmitReInit(isLend);
 
-        assertEq(expectedReinitLendAmount, s_deployedSB.s_reinitLendAmount());
-        assertEq(s_cbb_owner, s_deployedSB.owner());
+        assertions(before, adjustments);
+    }
+
+    function assertions(
+        BeforeBalances memory before,
+        ReinitAmounts memory adjustments
+    ) internal {
+        assertEq(
+            before.SBSafeTranche - adjustments.safeTrancheAmount,
+            s_safeTranche.balanceOf(s_deployedSBAddress)
+        );
+        assertEq(
+            before.SBRiskTranche - adjustments.riskTrancheAmount,
+            s_riskTranche.balanceOf(s_deployedSBAddress)
+        );
+        assertEq(
+            before.SBStableTokens,
+            s_stableToken.balanceOf(s_deployedSBAddress)
+        );
+        assertEq(
+            before.SBSafeSlip + adjustments.safeTrancheAmount,
+            s_safeSlip.balanceOf(s_deployedSBAddress)
+        );
+        assertEq(
+            before.SBRiskSlip + adjustments.riskTrancheAmount,
+            s_riskSlip.balanceOf(s_deployedSBAddress)
+        );
+        assertEq(
+            before.CBBSafeTranche + adjustments.safeTrancheAmount,
+            s_safeTranche.balanceOf(s_deployedCBBAddress)
+        );
+        assertEq(
+            before.CBBRiskTranche + adjustments.riskTrancheAmount,
+            s_riskTranche.balanceOf(s_deployedCBBAddress)
+        );
+        assertEq(
+            adjustments.reinitLendAmount,
+            s_deployedSB.s_reinitLendAmount()
+        );
+        assertEq(s_deployedConvertibleBondBox.owner(), s_cbb_owner);
     }
 }

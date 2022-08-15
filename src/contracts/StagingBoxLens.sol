@@ -24,9 +24,13 @@ contract StagingBoxLens is IStagingBoxLens {
             address(_stagingBox)
         );
         uint256 expectedStableLoan = (safeTrancheBalance *
-            _stagingBox.initialPrice()) / _stagingBox.priceGranularity();
+            _stagingBox.initialPrice() *
+            _stagingBox.stableDecimals()) /
+            _stagingBox.priceGranularity() /
+            _stagingBox.trancheDecimals();
 
-        if (expectedStableLoan > stableBalance) {
+        //if excess borrowDemand, call lend
+        if (expectedStableLoan >= stableBalance) {
             isLend = true;
         }
 

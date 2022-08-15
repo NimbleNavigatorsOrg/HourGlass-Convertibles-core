@@ -1,116 +1,68 @@
 pragma solidity 0.8.13;
 
-import "forge-std/Test.sol";
-import "../../src/contracts/StagingBox.sol";
-import "../../src/contracts/StagingBoxFactory.sol";
-import "../../src/contracts/CBBFactory.sol";
-import "../../src/contracts/ConvertibleBondBox.sol";
 import "./integration/SBIntegrationSetup.t.sol";
 
 contract WithdrawLend is SBIntegrationSetup {
-    function withdrawLendMints() private {
-        vm.startPrank(address(s_deployedSB));
-        s_deployedSB.lendSlip().mint(s_user, s_maxMint);
-        vm.stopPrank();
-
-        vm.startPrank(address(s_deployedConvertibleBondBox));
-        s_stableToken.mint(address(s_deployedSB), s_maxMint);
-        vm.stopPrank();
+    struct BeforeBalances {
+        uint256 lenderLendSlips;
+        uint256 lenderStableTokens;
+        uint256 SBStableTokens;
     }
 
-    function testWithdrawLendTransfersStableTokensFromStagingBoxToMsgSender(
-        uint256 _fuzzPrice,
-        uint256 _lendSlipAmount
-    ) public {
-        setupStagingBox(_fuzzPrice);
-        setupTranches(true, s_user, address(s_deployedSB));
-        withdrawLendMints();
-
-        uint256 sbStableTokenBalanceBeforeWithdraw = IERC20(
-            s_deployedConvertibleBondBox.stableToken()
-        ).balanceOf(address(s_deployedSB));
-        uint256 msgSenderStableTokenBalanceBeforeWithdraw = IERC20(
-            s_deployedConvertibleBondBox.stableToken()
-        ).balanceOf(s_user);
-
-        _lendSlipAmount = bound(
-            _lendSlipAmount,
-            1,
-            sbStableTokenBalanceBeforeWithdraw
-        );
-
-        vm.prank(s_user);
-        s_deployedSB.withdrawLend(_lendSlipAmount);
-
-        uint256 msgSenderStableTokenBalanceAfterWithdraw = IERC20(
-            s_deployedConvertibleBondBox.stableToken()
-        ).balanceOf(s_user);
-
-        assertEq(
-            msgSenderStableTokenBalanceBeforeWithdraw + _lendSlipAmount,
-            msgSenderStableTokenBalanceAfterWithdraw
-        );
-        assertFalse(_lendSlipAmount == 0);
+    struct LendAmounts {
+        uint256 stableAmount;
     }
 
-    function testWithdrawLendBurnsMsgSenderLenderSlips(
-        uint256 _fuzzPrice,
-        uint256 _lendSlipAmount
-    ) public {
+    address s_borrower = address(1);
+    address s_lender = address(2);
+
+    //TODO: Test fail path for withdraw amount too high
+
+    function testWithdrawLend(uint256 _fuzzPrice, uint256 _lendAmount) public {
         setupStagingBox(_fuzzPrice);
-        setupTranches(true, s_user, address(s_deployedSB));
-        withdrawLendMints();
 
-        uint256 sbStableTokenBalanceBeforeWithdraw = IERC20(
-            s_deployedConvertibleBondBox.stableToken()
-        ).balanceOf(address(s_deployedSB));
-        uint256 msgSenderLendSlipBalanceBeforeWithdraw = s_deployedSB
-            .lendSlip()
-            .balanceOf(s_user);
-
-        _lendSlipAmount = bound(
-            _lendSlipAmount,
-            1,
-            sbStableTokenBalanceBeforeWithdraw
+        s_deployedSB.depositLend(
+            s_lender,
+            s_stableToken.balanceOf(address(this))
         );
 
-        vm.prank(s_user);
-        s_deployedSB.withdrawLend(_lendSlipAmount);
-
-        uint256 msgSenderLendSlipBalanceAfterWithdraw = s_deployedSB
-            .lendSlip()
-            .balanceOf(s_user);
-
-        assertEq(
-            msgSenderLendSlipBalanceBeforeWithdraw - _lendSlipAmount,
-            msgSenderLendSlipBalanceAfterWithdraw
-        );
-        assertFalse(_lendSlipAmount == 0);
-    }
-
-    function testWithdrawLendEmitsLendWithdraw(
-        uint256 _fuzzPrice,
-        uint256 _lendSlipAmount
-    ) public {
-        setupStagingBox(_fuzzPrice);
-        setupTranches(true, s_user, address(s_deployedSB));
-        withdrawLendMints();
-
-        uint256 sbStableTokenBalanceBeforeWithdraw = IERC20(
-            s_deployedConvertibleBondBox.stableToken()
-        ).balanceOf(address(s_deployedSB));
-
-        _lendSlipAmount = bound(
-            _lendSlipAmount,
-            1,
-            sbStableTokenBalanceBeforeWithdraw
+        BeforeBalances memory before = BeforeBalances(
+            s_lendSlip.balanceOf(s_lender),
+            s_stableToken.balanceOf(s_lender),
+            s_stableToken.balanceOf(s_deployedSBAddress)
         );
 
-        vm.prank(s_user);
+        _lendAmount = bound(_lendAmount, 1, before.lenderLendSlips);
+
+        LendAmounts memory adjustments = LendAmounts(_lendAmount);
+
+        vm.startPrank(s_lender);
+        s_borrowSlip.approve(s_deployedSBAddress, type(uint256).max);
         vm.expectEmit(true, true, true, true);
-        emit LendWithdrawal(s_user, _lendSlipAmount);
-        s_deployedSB.withdrawLend(_lendSlipAmount);
+        emit LendWithdrawal(s_lender, _lendAmount);
+        s_deployedSB.withdrawLend(_lendAmount);
+        vm.stopPrank();
 
-        assertFalse(_lendSlipAmount == 0);
+        assertions(before, adjustments);
+    }
+
+    function assertions(
+        BeforeBalances memory before,
+        LendAmounts memory adjustments
+    ) internal {
+        assertEq(
+            before.lenderLendSlips - adjustments.stableAmount,
+            s_lendSlip.balanceOf(s_lender)
+        );
+
+        assertEq(
+            before.lenderStableTokens + adjustments.stableAmount,
+            s_stableToken.balanceOf(s_lender)
+        );
+
+        assertEq(
+            before.SBStableTokens - adjustments.stableAmount,
+            s_stableToken.balanceOf(s_deployedSBAddress)
+        );
     }
 }
