@@ -81,19 +81,20 @@ abstract contract CBBSetup is Test {
         );
         s_collateralToken.mint(address(this), 1000e18);
 
-        // // create stable token
+        // create stable token
         s_stableToken = new MockERC20("StableToken", "ST", s_stableDecimals);
         s_stableToken.mint(address(this), 10e18);
-        // // create tranche
+
+        // create tranche
         s_tranche = new Tranche();
 
-        // // create buttonwood tranche factory
+        // create buttonwood tranche factory
         s_trancheFactory = new TrancheFactory(address(s_tranche));
 
-        // // create s_slip
+        // create s_slip
         s_slip = new Slip();
 
-        // // create s_slip factory
+        // create s_slip factory
         s_slipFactory = new SlipFactory(address(s_slip));
 
         s_buttonWoodBondController = new BondController();

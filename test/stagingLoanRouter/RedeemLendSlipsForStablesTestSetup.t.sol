@@ -105,7 +105,7 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
         s_oracleData = 1e8;
         s_oracle.setData(s_oracleData, true);
 
-        s_underlying = new MockERC20("CollateralToken", "CT");
+        s_underlying = new MockERC20("CollateralToken", "CT", 18);
 
         // create buttonwood bond collateral token
         s_collateralToken = new ButtonToken();
@@ -122,7 +122,7 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
         s_stagingBoxLens = new StagingBoxLens();
 
         // // create stable token
-        s_stableToken = new MockERC20("StableToken", "ST");
+        s_stableToken = new MockERC20("StableToken", "ST", 18);
         // // create tranche
         s_tranche = new Tranche();
 
