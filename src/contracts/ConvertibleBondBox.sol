@@ -310,11 +310,8 @@ contract ConvertibleBondBox is
      */
 
     function redeemStable(uint256 _safeSlipAmount) external override {
-        if (_safeSlipAmount < safeRatio())
-            revert MinimumInput({
-                input: _safeSlipAmount,
-                reqInput: safeRatio()
-            });
+        if (_safeSlipAmount < 1e6)
+            revert MinimumInput({input: _safeSlipAmount, reqInput: 1e6});
 
         //transfer safeSlips to owner
         if (feeBps > 0 && _msgSender() != owner()) {
@@ -325,15 +322,16 @@ contract ConvertibleBondBox is
 
         uint256 stableBalance = stableToken().balanceOf(address(this));
 
-        //burn safe-slips
-        safeSlip().burn(_msgSender(), _safeSlipAmount);
-
         //transfer stables
         TransferHelper.safeTransfer(
             address(stableToken()),
             _msgSender(),
             (_safeSlipAmount * stableBalance) / (s_repaidSafeSlips)
         );
+
+        //burn safe-slips
+        safeSlip().burn(_msgSender(), _safeSlipAmount);
+        s_repaidSafeSlips -= _safeSlipAmount;
 
         emit RedeemStable(_msgSender(), _safeSlipAmount, currentPrice());
     }

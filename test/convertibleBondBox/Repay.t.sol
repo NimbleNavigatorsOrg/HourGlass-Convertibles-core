@@ -13,6 +13,7 @@ contract Repay is CBBSetup {
         uint256 CBBSafeTranche;
         uint256 CBBRiskTranche;
         uint256 CBBStables;
+        uint256 repaidSafeSlips;
     }
 
     struct RepayAmounts {
@@ -87,6 +88,8 @@ contract Repay is CBBSetup {
 
         time = bound(time, block.timestamp, s_endOfUnixTime);
 
+        vm.warp(time);
+
         BeforeBalances memory before = BeforeBalances(
             s_stableToken.balanceOf(s_borrower),
             s_safeTranche.balanceOf(s_borrower),
@@ -95,7 +98,8 @@ contract Repay is CBBSetup {
             s_stableToken.balanceOf(s_cbb_owner),
             s_safeTranche.balanceOf(s_deployedCBBAddress),
             s_riskTranche.balanceOf(s_deployedCBBAddress),
-            s_stableToken.balanceOf(s_deployedCBBAddress)
+            s_stableToken.balanceOf(s_deployedCBBAddress),
+            s_deployedConvertibleBondBox.s_repaidSafeSlips()
         );
 
         uint256 maxStablesOwed = (before.borrowerRiskSlip *
@@ -110,20 +114,18 @@ contract Repay is CBBSetup {
 
         uint256 stableFees = (stableAmount * fee) / s_BPS;
 
-        uint256 riskSlipAmount = (stableAmount *
+        uint256 safeTranchePayout = (stableAmount *
             s_deployedConvertibleBondBox.s_priceGranularity() *
-            s_deployedConvertibleBondBox.trancheDecimals() *
-            s_deployedConvertibleBondBox.riskRatio()) /
+            s_deployedConvertibleBondBox.trancheDecimals()) /
             s_deployedConvertibleBondBox.currentPrice() /
-            s_deployedConvertibleBondBox.stableDecimals() /
-            s_deployedConvertibleBondBox.safeRatio();
+            s_deployedConvertibleBondBox.stableDecimals();
 
         RepayAmounts memory adjustments = RepayAmounts(
             stableFees,
             stableAmount,
-            riskSlipAmount,
-            (riskSlipAmount * s_safeRatio) / s_riskRatio,
-            riskSlipAmount
+            (safeTranchePayout * s_riskRatio) / s_safeRatio,
+            safeTranchePayout,
+            (safeTranchePayout * s_riskRatio) / s_safeRatio
         );
 
         vm.startPrank(s_borrower);
@@ -132,7 +134,7 @@ contract Repay is CBBSetup {
         emit Repay(
             s_borrower,
             stableAmount,
-            riskSlipAmount,
+            (safeTranchePayout * s_riskRatio) / s_safeRatio,
             s_deployedConvertibleBondBox.currentPrice()
         );
         s_deployedConvertibleBondBox.repay(stableAmount);
@@ -160,6 +162,8 @@ contract Repay is CBBSetup {
 
         time = bound(time, block.timestamp, s_endOfUnixTime);
 
+        vm.warp(time);
+
         BeforeBalances memory before = BeforeBalances(
             s_stableToken.balanceOf(s_borrower),
             s_safeTranche.balanceOf(s_borrower),
@@ -168,7 +172,8 @@ contract Repay is CBBSetup {
             s_stableToken.balanceOf(s_cbb_owner),
             s_safeTranche.balanceOf(s_deployedCBBAddress),
             s_riskTranche.balanceOf(s_deployedCBBAddress),
-            s_stableToken.balanceOf(s_deployedCBBAddress)
+            s_stableToken.balanceOf(s_deployedCBBAddress),
+            s_deployedConvertibleBondBox.s_repaidSafeSlips()
         );
 
         riskSlipAmount = bound(riskSlipAmount, 1e6, before.borrowerRiskSlip);
@@ -250,6 +255,11 @@ contract Repay is CBBSetup {
         assertEq(
             before.CBBStables + adjustments.stablesRepaid,
             s_stableToken.balanceOf(s_deployedCBBAddress)
+        );
+
+        assertEq(
+            before.repaidSafeSlips + adjustments.safeTranchePayout,
+            s_deployedConvertibleBondBox.s_repaidSafeSlips()
         );
     }
 }

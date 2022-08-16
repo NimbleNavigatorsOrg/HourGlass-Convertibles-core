@@ -6,6 +6,10 @@ import "../interfaces/IConvertibleBondBox.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 
+/**
+ * @dev View functions only - for front-end use
+ */
+
 contract ConvertiblesDVLens is IConvertiblesDVLens {
     struct DecimalPair {
         uint256 tranche;
