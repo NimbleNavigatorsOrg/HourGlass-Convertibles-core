@@ -92,7 +92,8 @@ contract StagingBoxFactory is IStagingBoxFactory {
         SlipPair memory SlipData = deploySlips(
             slipFactory,
             address(convertibleBondBox.safeSlip()),
-            address(convertibleBondBox.riskSlip())
+            address(convertibleBondBox.riskSlip()),
+            address(convertibleBondBox.stableToken())
         );
 
         bytes memory data = bytes.concat(
@@ -110,7 +111,9 @@ contract StagingBoxFactory is IStagingBoxFactory {
                 convertibleBondBox.riskTranche(),
                 address(convertibleBondBox.riskSlip()),
                 convertibleBondBox.riskRatio(),
-                convertibleBondBox.s_priceGranularity()
+                convertibleBondBox.s_priceGranularity(),
+                convertibleBondBox.trancheDecimals(),
+                convertibleBondBox.stableDecimals()
             )
         );
 
@@ -151,20 +154,21 @@ contract StagingBoxFactory is IStagingBoxFactory {
     function deploySlips(
         ISlipFactory slipFactory,
         address safeSlip,
-        address riskSlip
+        address riskSlip,
+        address stableToken
     ) private returns (SlipPair memory) {
         // clone deploy lend slip
         address lendSlipTokenAddress = slipFactory.createSlip(
-            IERC20Metadata(safeSlip).symbol(),
             "Staging-Lender-Slip",
-            safeSlip
+            IERC20Metadata(safeSlip).name(),
+            stableToken
         );
 
         //clone deployborrow slip
         address borrowSlipTokenAddress = slipFactory.createSlip(
-            IERC20Metadata(riskSlip).symbol(),
             "Staging-Borrower-Slip",
-            riskSlip
+            IERC20Metadata(riskSlip).name(),
+            stableToken
         );
 
         SlipPair memory SlipData = SlipPair(

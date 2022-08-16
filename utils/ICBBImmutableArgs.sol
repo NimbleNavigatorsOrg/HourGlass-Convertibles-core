@@ -106,4 +106,22 @@ interface ICBBImmutableArgs {
      */
 
     function riskRatio() external pure returns (uint256);
+
+    /**
+     * @notice The decimals of tranche-tokens
+     * @dev using ClonesWithImmutableArgs pattern here to save gas
+     * @dev https://github.com/wighawag/clones-with-immutable-args
+     * @return The decimals of tranche-tokens
+     */
+
+    function trancheDecimals() external pure returns (uint256);
+
+    /**
+     * @notice The decimals of stable-tokens
+     * @dev using ClonesWithImmutableArgs pattern here to save gas
+     * @dev https://github.com/wighawag/clones-with-immutable-args
+     * @return The decimals of stable-tokens
+     */
+
+    function stableDecimals() external pure returns (uint256);
 }

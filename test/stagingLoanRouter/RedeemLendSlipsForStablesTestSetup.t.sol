@@ -52,7 +52,7 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
     bool s_isLend;
     uint256 constant s_penalty = 500;
     uint256 constant s_trancheIndex = 0;
-    uint256 constant s_maturityDate = 1659246194;
+    uint256 constant s_maturityDate = 1664512517;
     uint256 constant s_safeSlipAmount = 10;
     uint256 constant s_endOfUnixTime = 2147483647;
     uint256 constant s_trancheGranularity = 1000;
@@ -105,7 +105,7 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
         s_oracleData = 1e8;
         s_oracle.setData(s_oracleData, true);
 
-        s_underlying = new MockERC20("CollateralToken", "CT");
+        s_underlying = new MockERC20("CollateralToken", "CT", 18);
 
         // create buttonwood bond collateral token
         s_collateralToken = new ButtonToken();
@@ -122,7 +122,7 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
         s_stagingBoxLens = new StagingBoxLens();
 
         // // create stable token
-        s_stableToken = new MockERC20("StableToken", "ST");
+        s_stableToken = new MockERC20("StableToken", "ST", 18);
         // // create tranche
         s_tranche = new Tranche();
 
@@ -265,13 +265,13 @@ contract RedeemLendSlipsForStablesTestSetup is Test {
             userStableTokenBalanceBeforeLend
         );
 
+        vm.startPrank(s_user);
         IERC20(s_deployedConvertibleBondBox.stableToken()).approve(
             address(s_deployedSB),
             _lendAmount
         );
-
-        vm.prank(s_user);
         s_deployedSB.depositLend(s_lender, _lendAmount);
+        vm.stopPrank();
 
         assertFalse(_lendAmount == 0);
 

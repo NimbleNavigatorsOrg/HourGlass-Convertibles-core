@@ -30,7 +30,7 @@ contract CBBFactoryTest is Test {
     uint256 constant s_price = 5e8;
     uint256 constant s_startDate = 1654100749;
     uint256 constant s_trancheIndex = 0;
-    uint256 constant s_maturityDate = 1659246194;
+    uint256 constant s_maturityDate = 1664512517;
     uint256 constant s_depositLimit = 1000e9;
     uint256 constant s_trancheGranularity = 1000;
     uint256 constant s_penaltyGranularity = 1000;

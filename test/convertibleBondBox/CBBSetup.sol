@@ -11,6 +11,7 @@ import "../../src/contracts/Slip.sol";
 import "../../src/contracts/SlipFactory.sol";
 import "forge-std/console2.sol";
 import "../../test/mocks/MockERC20.sol";
+import "@openzeppelin/contracts/utils/math/Math.sol";
 
 abstract contract CBBSetup is Test {
     BondController s_buttonWoodBondController;
@@ -26,24 +27,26 @@ abstract contract CBBSetup is Test {
     TrancheFactory s_trancheFactory;
     Tranche s_tranche;
     Slip s_slip;
+    ISlip s_riskSlip;
+    ISlip s_safeSlip;
     SlipFactory s_slipFactory;
     ITranche s_safeTranche;
     ITranche s_riskTranche;
     uint256[] s_ratios;
-    uint256 s_depositLimit;
     uint256 s_safeRatio;
     uint256 s_riskRatio;
     uint256 constant s_penalty = 500;
-    uint256 constant s_price = 5e7;
+    uint256 constant s_initialPrice = 5e7;
     uint256 constant s_trancheIndex = 0;
-    uint256 constant s_maturityDate = 1659246194;
-    uint256 constant s_safeSlipAmount = 10;
+    uint256 constant s_maturityDate = 1664512517;
     uint256 constant s_endOfUnixTime = 2147483647;
     uint256 constant s_trancheGranularity = 1000;
     uint256 constant s_penaltyGranularity = 1000;
     uint256 constant s_priceGranularity = 1e8;
     uint256 constant s_BPS = 10_000;
     uint256 public constant s_maxFeeBPS = 50;
+    uint8 constant s_stableDecimals = 6;
+    uint8 constant s_collateralDecimals = 18;
     address s_deployedCBBAddress;
 
     event ConvertibleBondBoxCreated(
@@ -71,22 +74,27 @@ abstract contract CBBSetup is Test {
         s_ratios.push(500);
 
         // create buttonwood bond collateral token
-        s_collateralToken = new MockERC20("CollateralToken", "CT");
-        s_collateralToken.mint(s_cbb_owner, 1e18);
+        s_collateralToken = new MockERC20(
+            "CollateralToken",
+            "CT",
+            s_collateralDecimals
+        );
+        s_collateralToken.mint(address(this), 1000e18);
 
-        // // create stable token
-        s_stableToken = new MockERC20("StableToken", "ST");
-        s_stableToken.mint(s_cbb_owner, 10e18);
-        // // create tranche
+        // create stable token
+        s_stableToken = new MockERC20("StableToken", "ST", s_stableDecimals);
+        s_stableToken.mint(address(this), 10e18);
+
+        // create tranche
         s_tranche = new Tranche();
 
-        // // create buttonwood tranche factory
+        // create buttonwood tranche factory
         s_trancheFactory = new TrancheFactory(address(s_tranche));
 
-        // // create s_slip
+        // create s_slip
         s_slip = new Slip();
 
-        // // create s_slip factory
+        // create s_slip factory
         s_slipFactory = new SlipFactory(address(s_slip));
 
         s_buttonWoodBondController = new BondController();
@@ -99,7 +107,7 @@ abstract contract CBBSetup is Test {
             s_cbb_owner,
             s_ratios,
             s_maturityDate,
-            s_depositLimit
+            type(uint256).max
         );
 
         s_deployedCBBAddress = s_CBBFactory.createConvertibleBondBox(
@@ -111,14 +119,12 @@ abstract contract CBBSetup is Test {
             s_cbb_owner
         );
 
-        vm.prank(s_cbb_owner);
         s_collateralToken.approve(
             address(s_buttonWoodBondController),
             type(uint256).max
         );
 
-        vm.prank(s_cbb_owner);
-        s_buttonWoodBondController.deposit(1e18);
+        s_buttonWoodBondController.deposit(1000e18);
         (s_safeTranche, s_safeRatio) = s_buttonWoodBondController.tranches(
             s_trancheIndex
         );
@@ -126,16 +132,13 @@ abstract contract CBBSetup is Test {
             s_buttonWoodBondController.trancheCount() - 1
         );
 
-        vm.startPrank(s_cbb_owner);
         s_safeTranche.approve(s_deployedCBBAddress, type(uint256).max);
         s_riskTranche.approve(s_deployedCBBAddress, type(uint256).max);
         s_stableToken.approve(s_deployedCBBAddress, type(uint256).max);
-        vm.stopPrank();
 
         s_deployedConvertibleBondBox = ConvertibleBondBox(s_deployedCBBAddress);
 
-        s_depositLimit =
-            (s_safeTranche.balanceOf(s_cbb_owner) * s_price) /
-            s_priceGranularity;
+        s_safeSlip = s_deployedConvertibleBondBox.safeSlip();
+        s_riskSlip = s_deployedConvertibleBondBox.riskSlip();
     }
 }

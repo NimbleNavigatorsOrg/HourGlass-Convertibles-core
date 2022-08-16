@@ -1,145 +1,98 @@
 pragma solidity 0.8.13;
 
-import "forge-std/Test.sol";
-import "../../src/contracts/StagingBox.sol";
-import "../../src/contracts/StagingBoxFactory.sol";
-import "../../src/contracts/CBBFactory.sol";
-import "../../src/contracts/ConvertibleBondBox.sol";
 import "./integration/SBIntegrationSetup.t.sol";
 
 contract WithdrawBorrow is SBIntegrationSetup {
-    function WithdrawBorrowMints() private {
-        vm.startPrank(address(s_buttonWoodBondController));
-        s_safeTranche.mint(
-            address(s_deployedSB),
-            (s_maxMint / s_deployedSB.riskRatio()) * s_deployedSB.safeRatio()
-        );
-        vm.stopPrank();
-
-        vm.startPrank(address(s_buttonWoodBondController));
-        s_riskTranche.mint(address(s_deployedSB), s_maxMint);
-        vm.stopPrank();
-
-        vm.startPrank(address(s_deployedSB));
-        s_deployedSB.borrowSlip().mint(s_user, s_maxMint);
-        vm.stopPrank();
+    struct BeforeBalances {
+        uint256 borrowerBorrowSlips;
+        uint256 borrowerSafeTranche;
+        uint256 borrowerRiskTranche;
+        uint256 SBSafeTranche;
+        uint256 SBRiskTranche;
     }
 
-    function testTransfersSafeTrancheFromStagingBoxToMsgSender(
-        uint256 _fuzzPrice,
-        uint256 _borrowSlipAmount
-    ) public {
-        setupStagingBox(_fuzzPrice);
-        setupTranches(true, s_user, address(s_deployedSB));
-        WithdrawBorrowMints();
-
-        uint256 sbSafeTrancheBalanceBeforeWithdraw = ITranche(
-            s_deployedConvertibleBondBox.safeTranche()
-        ).balanceOf(address(s_deployedSB));
-        uint256 msgSenderSafeTrancheBalanceBeforeWithdraw = ITranche(
-            s_deployedConvertibleBondBox.safeTranche()
-        ).balanceOf(s_user);
-
-        _borrowSlipAmount = bound(
-            _borrowSlipAmount,
-            1,
-            sbSafeTrancheBalanceBeforeWithdraw
-        );
-
-        vm.prank(s_user);
-        s_deployedSB.withdrawBorrow(_borrowSlipAmount);
-
-        uint256 sbSafeTrancheBalanceAfterWithdraw = ITranche(
-            s_deployedConvertibleBondBox.safeTranche()
-        ).balanceOf(address(s_deployedSB));
-        uint256 msgSenderSafeTrancheBalanceAfterWithdraw = ITranche(
-            s_deployedConvertibleBondBox.safeTranche()
-        ).balanceOf(s_user);
-
-        assertEq(
-            sbSafeTrancheBalanceBeforeWithdraw - _borrowSlipAmount,
-            sbSafeTrancheBalanceAfterWithdraw
-        );
-        assertEq(
-            msgSenderSafeTrancheBalanceBeforeWithdraw + _borrowSlipAmount,
-            msgSenderSafeTrancheBalanceAfterWithdraw
-        );
-        assertFalse(_borrowSlipAmount == 0);
+    struct BorrowAmounts {
+        uint256 borrowSlipAmount;
+        uint256 safeTrancheAmount;
+        uint256 riskTrancheAmount;
     }
 
-    function testTransfersRiskTrancheFromStagingBoxToMsgSender(
-        uint256 _fuzzPrice,
-        uint256 _borrowSlipAmount
-    ) public {
+    address s_borrower = address(1);
+    address s_lender = address(2);
+
+    function testWithdrawBorrow(uint256 _fuzzPrice, uint256 _borrowAmount)
+        public
+    {
         setupStagingBox(_fuzzPrice);
-        setupTranches(true, s_user, address(s_deployedSB));
-        WithdrawBorrowMints();
 
-        uint256 sbSafeTrancheBalanceBeforeWithdraw = ITranche(
-            s_deployedConvertibleBondBox.safeTranche()
-        ).balanceOf(address(s_deployedSB));
+        uint256 maxBorrowAmount = (s_safeTranche.balanceOf(address(this)) *
+            s_deployedSB.initialPrice() *
+            s_deployedSB.stableDecimals()) /
+            s_deployedSB.priceGranularity() /
+            s_deployedSB.trancheDecimals();
 
-        uint256 sbRiskTrancheBalanceBeforeWithdraw = ITranche(
-            s_deployedConvertibleBondBox.riskTranche()
-        ).balanceOf(address(s_deployedSB));
-        uint256 msgSenderRiskTrancheBalanceBeforeWithdraw = ITranche(
-            s_deployedConvertibleBondBox.riskTranche()
-        ).balanceOf(s_user);
+        s_deployedSB.depositBorrow(s_borrower, maxBorrowAmount);
 
-        _borrowSlipAmount = bound(
-            _borrowSlipAmount,
-            1,
-            sbSafeTrancheBalanceBeforeWithdraw
+        BeforeBalances memory before = BeforeBalances(
+            s_borrowSlip.balanceOf(s_borrower),
+            s_safeTranche.balanceOf(s_borrower),
+            s_riskTranche.balanceOf(s_borrower),
+            s_safeTranche.balanceOf(s_deployedSBAddress),
+            s_riskTranche.balanceOf(s_deployedSBAddress)
         );
 
-        uint256 riskTrancheAmount = (_borrowSlipAmount *
-            s_deployedConvertibleBondBox.riskRatio()) /
-            s_deployedConvertibleBondBox.safeRatio();
+        _borrowAmount = bound(_borrowAmount, 1, before.borrowerBorrowSlips);
 
-        vm.prank(s_user);
-        s_deployedSB.withdrawBorrow(_borrowSlipAmount);
+        uint256 safeTrancheAmount = (_borrowAmount *
+            s_deployedSB.priceGranularity() *
+            s_deployedSB.trancheDecimals()) /
+            s_deployedSB.initialPrice() /
+            s_deployedSB.stableDecimals();
 
-        uint256 sbRiskTrancheBalanceAfterWithdraw = ITranche(
-            s_deployedConvertibleBondBox.riskTranche()
-        ).balanceOf(address(s_deployedSB));
-        uint256 msgSenderRiskTrancheBalanceAfterWithdraw = ITranche(
-            s_deployedConvertibleBondBox.riskTranche()
-        ).balanceOf(s_user);
-
-        assertEq(
-            sbRiskTrancheBalanceBeforeWithdraw - riskTrancheAmount,
-            sbRiskTrancheBalanceAfterWithdraw
-        );
-        assertEq(
-            msgSenderRiskTrancheBalanceBeforeWithdraw + riskTrancheAmount,
-            msgSenderRiskTrancheBalanceAfterWithdraw
-        );
-        assertFalse(riskTrancheAmount == 0);
-    }
-
-    function testEmitsBorrowWithdrawal(
-        uint256 _fuzzPrice,
-        uint256 _borrowSlipAmount
-    ) public {
-        setupStagingBox(_fuzzPrice);
-        setupTranches(true, s_user, address(s_deployedSB));
-        WithdrawBorrowMints();
-
-        uint256 sbSafeTrancheBalanceBeforeWithdraw = ITranche(
-            s_deployedConvertibleBondBox.safeTranche()
-        ).balanceOf(address(s_deployedSB));
-
-        _borrowSlipAmount = bound(
-            _borrowSlipAmount,
-            1,
-            sbSafeTrancheBalanceBeforeWithdraw
+        BorrowAmounts memory adjustments = BorrowAmounts(
+            _borrowAmount,
+            safeTrancheAmount,
+            (safeTrancheAmount * s_riskRatio) / s_safeRatio
         );
 
-        vm.prank(s_user);
+        vm.startPrank(s_borrower);
+        s_borrowSlip.approve(s_deployedSBAddress, type(uint256).max);
+
         vm.expectEmit(true, true, true, true);
-        emit BorrowWithdrawal(s_user, _borrowSlipAmount);
-        s_deployedSB.withdrawBorrow(_borrowSlipAmount);
+        emit BorrowWithdrawal(s_borrower, _borrowAmount);
+        s_deployedSB.withdrawBorrow(_borrowAmount);
+        vm.stopPrank();
 
-        assertFalse(_borrowSlipAmount == 0);
+        assertions(before, adjustments);
+    }
+
+    function assertions(
+        BeforeBalances memory before,
+        BorrowAmounts memory adjustments
+    ) internal {
+        assertEq(
+            before.borrowerBorrowSlips - adjustments.borrowSlipAmount,
+            s_borrowSlip.balanceOf(s_borrower)
+        );
+
+        assertEq(
+            before.borrowerSafeTranche + adjustments.safeTrancheAmount,
+            s_safeTranche.balanceOf(s_borrower)
+        );
+
+        assertEq(
+            before.borrowerRiskTranche + adjustments.riskTrancheAmount,
+            s_riskTranche.balanceOf(s_borrower)
+        );
+
+        assertEq(
+            before.SBSafeTranche - adjustments.safeTrancheAmount,
+            s_safeTranche.balanceOf(s_deployedSBAddress)
+        );
+
+        assertEq(
+            before.SBRiskTranche - adjustments.riskTrancheAmount,
+            s_riskTranche.balanceOf(s_deployedSBAddress)
+        );
     }
 }

@@ -28,6 +28,19 @@ interface IStagingBoxLens {
     ) external view returns (uint256, uint256);
 
     /**
+     * @dev provides amount of raw collateral tokens expected in return for withdrawing borrowslips
+     * @param _stagingBox The staging box tied to the Convertible Bond
+     * @param _borrowSlipAmount The amount of borrowSlips to be withdrawn
+     * Requirements:
+     * - for A-Z convertible only
+     */
+
+    function vieSimplewWithdrawBorrowUnwrap(
+        IStagingBox _stagingBox,
+        uint256 _borrowSlipAmount
+    ) external view returns (uint256, uint256);
+
+    /**
      * @dev provides amount of stableTokens expected in return for redeeming lendSlips
      * @param _stagingBox The staging box tied to the Convertible Bond
      * @param _lendSlipAmount The amount of lendSlips to be redeemed

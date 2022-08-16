@@ -1,129 +1,96 @@
 pragma solidity 0.8.13;
 
-import "forge-std/Test.sol";
-import "../../src/contracts/StagingBox.sol";
-import "../../src/contracts/StagingBoxFactory.sol";
-import "../../src/contracts/CBBFactory.sol";
-import "../../src/contracts/ConvertibleBondBox.sol";
 import "./integration/SBIntegrationSetup.t.sol";
 
 contract RedeemLendSlip is SBIntegrationSetup {
-    function redeemLendSlipMints() private {
-        vm.startPrank(address(s_deployedSB));
-        s_deployedSB.lendSlip().mint(s_user, s_maxMint);
-        vm.stopPrank();
-
-        vm.startPrank(address(s_deployedConvertibleBondBox));
-        ISlip(s_deployedSB.safeSlipAddress()).mint(
-            address(s_deployedSB),
-            type(uint256).max
-        );
-        vm.stopPrank();
+    struct BeforeBalances {
+        uint256 lenderLendSlips;
+        uint256 lenderSafeSlips;
+        uint256 SBSafeSlips;
     }
 
-    function testRedeemLendSlipTransfersSafeSlipFromStagingBoxToMsgSender(
-        uint256 _fuzzPrice,
-        uint256 _lendSlipAmount
-    ) public {
-        setupStagingBox(_fuzzPrice);
-        setupTranches(true, s_user, address(s_deployedSB));
-        redeemLendSlipMints();
-
-        uint256 msgSenderLendSlipBalanceBeforeRedeem = s_deployedSB
-            .lendSlip()
-            .balanceOf(s_user);
-        uint256 msgSenderSafeSlipBalanceBeforeRedeem = ISlip(
-            s_deployedSB.safeSlipAddress()
-        ).balanceOf(s_user);
-        uint256 stagingBoxSafeSlipBalanceBeforeRedeem = ISlip(
-            s_deployedSB.safeSlipAddress()
-        ).balanceOf(address(s_deployedSB));
-
-        _lendSlipAmount = bound(
-            _lendSlipAmount,
-            s_deployedSB.initialPrice(),
-            msgSenderLendSlipBalanceBeforeRedeem
-        );
-
-        uint256 lendSlipTransferAmount = (_lendSlipAmount *
-            s_deployedSB.priceGranularity()) / s_deployedSB.initialPrice();
-
-        vm.prank(s_user);
-        s_deployedSB.redeemLendSlip(_lendSlipAmount);
-
-        uint256 msgSenderSafeSlipBalanceAfterRedeem = ISlip(
-            s_deployedSB.safeSlipAddress()
-        ).balanceOf(s_user);
-        uint256 stagingBoxSafeSlipBalanceAfterRedeem = ISlip(
-            s_deployedSB.safeSlipAddress()
-        ).balanceOf(address(s_deployedSB));
-
-        assertEq(
-            msgSenderSafeSlipBalanceBeforeRedeem + lendSlipTransferAmount,
-            msgSenderSafeSlipBalanceAfterRedeem
-        );
-        assertEq(
-            stagingBoxSafeSlipBalanceBeforeRedeem - lendSlipTransferAmount,
-            stagingBoxSafeSlipBalanceAfterRedeem
-        );
-        assertFalse(lendSlipTransferAmount == 0);
+    struct LendAmounts {
+        uint256 lendSlipAmount;
+        uint256 safeSlipAmount;
     }
 
-    function testRedeemLendSlipBurnsMsgSenderLendSlip(
-        uint256 _fuzzPrice,
-        uint256 _lendSlipAmount
-    ) public {
+    address s_borrower = address(1);
+    address s_lender = address(2);
+
+    function testRedeemLendSlip(uint256 _fuzzPrice, uint256 _lendAmount)
+        public
+    {
         setupStagingBox(_fuzzPrice);
-        setupTranches(true, s_user, address(s_deployedSB));
-        redeemLendSlipMints();
 
-        uint256 msgSenderLendSlipBalanceBeforeRedeem = s_deployedSB
-            .lendSlip()
-            .balanceOf(s_user);
+        uint256 maxBorrowAmount = (s_safeTranche.balanceOf(address(this)) *
+            s_deployedSB.initialPrice() *
+            s_deployedSB.stableDecimals()) /
+            s_deployedSB.priceGranularity() /
+            s_deployedSB.trancheDecimals();
 
-        _lendSlipAmount = bound(
-            _lendSlipAmount,
-            1,
-            msgSenderLendSlipBalanceBeforeRedeem
+        s_deployedSB.depositBorrow(s_borrower, maxBorrowAmount);
+
+        s_deployedSB.depositLend(
+            s_lender,
+            s_stableToken.balanceOf(address(this))
         );
 
-        vm.prank(s_user);
-        s_deployedSB.redeemLendSlip(_lendSlipAmount);
+        bool isLend = s_SBLens.viewTransmitReInitBool(s_deployedSB);
 
-        uint256 msgSenderSafeSlipBalanceAfterRedeem = s_deployedSB
-            .lendSlip()
-            .balanceOf(s_user);
+        vm.prank(s_cbb_owner);
+        s_deployedSB.transmitReInit(isLend);
 
-        assertEq(
-            msgSenderLendSlipBalanceBeforeRedeem - _lendSlipAmount,
-            msgSenderSafeSlipBalanceAfterRedeem
-        );
-        assertFalse(_lendSlipAmount == 0);
-    }
-
-    function testRedeemLendSlipEmits(
-        uint256 _fuzzPrice,
-        uint256 _lendSlipAmount
-    ) public {
-        setupStagingBox(_fuzzPrice);
-        setupTranches(true, s_user, address(s_deployedSB));
-        redeemLendSlipMints();
-
-        uint256 msgSenderLendSlipBalanceBeforeRedeem = s_deployedSB
-            .lendSlip()
-            .balanceOf(s_user);
-
-        _lendSlipAmount = bound(
-            _lendSlipAmount,
-            1,
-            msgSenderLendSlipBalanceBeforeRedeem
+        BeforeBalances memory before = BeforeBalances(
+            s_lendSlip.balanceOf(s_lender),
+            s_safeSlip.balanceOf(s_lender),
+            s_safeSlip.balanceOf(s_deployedSBAddress)
         );
 
-        vm.prank(s_user);
+        uint256 maxLendAmount = Math.min(
+            before.lenderLendSlips,
+            (before.SBSafeSlips *
+                s_deployedSB.initialPrice() *
+                s_deployedSB.stableDecimals()) /
+                s_deployedSB.priceGranularity() /
+                s_deployedSB.trancheDecimals()
+        );
+
+        _lendAmount = bound(_lendAmount, 1, maxLendAmount);
+
+        LendAmounts memory adjustments = LendAmounts(
+            _lendAmount,
+            (_lendAmount *
+                s_deployedSB.priceGranularity() *
+                s_deployedSB.trancheDecimals()) /
+                s_deployedSB.initialPrice() /
+                s_deployedSB.stableDecimals()
+        );
+
+        vm.prank(s_lender);
         vm.expectEmit(true, true, true, true);
-        emit RedeemLendSlip(s_user, _lendSlipAmount);
-        s_deployedSB.redeemLendSlip(_lendSlipAmount);
+        emit RedeemLendSlip(s_lender, _lendAmount);
+        s_deployedSB.redeemLendSlip(_lendAmount);
 
-        assertFalse(_lendSlipAmount == 0);
+        assertions(before, adjustments);
+    }
+
+    function assertions(
+        BeforeBalances memory before,
+        LendAmounts memory adjustments
+    ) internal {
+        assertEq(
+            before.lenderLendSlips - adjustments.lendSlipAmount,
+            s_lendSlip.balanceOf(s_lender)
+        );
+
+        assertEq(
+            before.lenderSafeSlips + adjustments.safeSlipAmount,
+            s_safeSlip.balanceOf(s_lender)
+        );
+
+        assertEq(
+            before.SBSafeSlips - adjustments.safeSlipAmount,
+            s_safeSlip.balanceOf(s_deployedSBAddress)
+        );
     }
 }

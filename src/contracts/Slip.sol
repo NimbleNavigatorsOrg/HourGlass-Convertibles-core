@@ -80,9 +80,6 @@ contract Slip is ISlip, ERC20, Initializable {
      *
      * Uses the same number of decimals as the collateral token
      *
-     * NOTE: This information is only used for _display_ purposes: it in
-     * no way affects any of the arithmetic of the contract, including
-     * {IERC20-balanceOf} and {IERC20-transfer}.
      */
 
     function decimals() public view override returns (uint8) {

@@ -1,20 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.13;
 
-import "forge-std/Test.sol";
-import "../../src/contracts/ConvertibleBondBox.sol";
-import "../../src/contracts/CBBFactory.sol";
-import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
-import "../../src/contracts/Slip.sol";
-import "../../src/contracts/SlipFactory.sol";
-import "forge-std/console2.sol";
-import "../../test/mocks/MockERC20.sol";
 import "./CBBSetup.sol";
 
 contract SetFee is CBBSetup {
     function testSetFee(uint256 newFee) public {
         newFee = bound(newFee, 0, s_maxFeeBPS);
-        vm.prank(s_deployedConvertibleBondBox.owner());
+        vm.prank(s_cbb_owner);
         vm.expectEmit(true, true, true, true);
         emit FeeUpdate(newFee);
         s_deployedConvertibleBondBox.setFee(newFee);
@@ -30,8 +22,8 @@ contract SetFee is CBBSetup {
     function testCannotSetFeeBondIsMature(uint256 newFee) public {
         newFee = bound(newFee, 0, s_BPS);
 
-        vm.startPrank(s_deployedConvertibleBondBox.owner());
-        vm.warp(s_maturityDate + 1);
+        vm.startPrank(s_cbb_owner);
+        vm.warp(s_maturityDate);
         bytes memory customError = abi.encodeWithSignature(
             "BondIsMature(uint256,uint256)",
             block.timestamp,
@@ -44,7 +36,7 @@ contract SetFee is CBBSetup {
 
     function testCannotSetFeeFeeTooLarge(uint256 newFee) public {
         newFee = bound(newFee, s_BPS, type(uint256).max);
-        vm.prank(s_deployedConvertibleBondBox.owner());
+        vm.prank(s_cbb_owner);
         bytes memory customError = abi.encodeWithSignature(
             "FeeTooLarge(uint256,uint256)",
             newFee,
@@ -52,5 +44,6 @@ contract SetFee is CBBSetup {
         );
         vm.expectRevert(customError);
         s_deployedConvertibleBondBox.setFee(newFee);
+        vm.stopPrank();
     }
 }

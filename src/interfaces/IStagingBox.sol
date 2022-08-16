@@ -10,7 +10,6 @@ interface IStagingBox is ISBImmutableArgs {
     event BorrowWithdrawal(address borrower, uint256 borrowSlipAmount);
     event RedeemBorrowSlip(address caller, uint256 borrowSlipAmount);
     event RedeemLendSlip(address caller, uint256 lendSlipAmount);
-    event TrasmitReint(bool isLend, uint256 transmitReinitAmount);
     event Initialized(address owner);
 
     error InitialPriceTooHigh(uint256 given, uint256 maxPrice);
@@ -18,16 +17,17 @@ interface IStagingBox is ISBImmutableArgs {
     error WithdrawAmountTooHigh(uint256 requestAmount, uint256 maxAmount);
     error CBBReinitialized(bool state, bool requiredState);
 
+    function s_reinitLendAmount() external view returns (uint256);
+
     /**
      * @dev Deposits collateral for BorrowSlips
      * @param _borrower The recipent address of the BorrowSlips
-     * @param _safeTrancheAmount The amount of SafeTranche tokens to borrow against
+     * @param _borrowAmount The amount of stableTokens to be borrowed
      * Requirements:
      *  - `msg.sender` must have `approved` `stableAmount` stable tokens to this contract
      */
 
-    function depositBorrow(address _borrower, uint256 _safeTrancheAmount)
-        external;
+    function depositBorrow(address _borrower, uint256 _borrowAmount) external;
 
     /**
      * @dev deposit _lendAmount of stable-tokens for LendSlips

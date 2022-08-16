@@ -76,7 +76,7 @@ contract ConvertibleBondBox is
         if (_initialPrice == 0)
             revert InitialPriceIsZero({given: 0, maxPrice: priceGranularity});
 
-        if (block.timestamp > maturityDate())
+        if (block.timestamp >= maturityDate())
             revert BondIsMature({
                 currentTime: block.timestamp,
                 maturity: maturityDate()
@@ -102,22 +102,22 @@ contract ConvertibleBondBox is
         uint256 priceGranularity = s_priceGranularity;
         uint256 price = currentPrice();
 
-        //Need to justify amounts
-        if (_stableAmount < (safeRatio() * price) / priceGranularity)
-            revert MinimumInput({
-                input: _stableAmount,
-                reqInput: (safeRatio() * price) / priceGranularity
-            });
+        if (_stableAmount < 1e6)
+            revert MinimumInput({input: _stableAmount, reqInput: 1e6});
 
-        uint256 mintAmount = (_stableAmount * priceGranularity) / price;
+        uint256 safeSlipAmount = (_stableAmount *
+            priceGranularity *
+            trancheDecimals()) /
+            price /
+            stableDecimals();
 
-        uint256 zTrancheAmount = (mintAmount * riskRatio()) / safeRatio();
+        uint256 zTrancheAmount = (safeSlipAmount * riskRatio()) / safeRatio();
 
         _atomicDeposit(
             _borrower,
             _lender,
             _stableAmount,
-            mintAmount,
+            safeSlipAmount,
             zTrancheAmount
         );
 
@@ -133,18 +133,16 @@ contract ConvertibleBondBox is
         address _lender,
         uint256 _safeTrancheAmount
     ) external override {
-        if (_safeTrancheAmount < safeRatio())
-            revert MinimumInput({
-                input: _safeTrancheAmount,
-                reqInput: safeRatio()
-            });
+        if (_safeTrancheAmount < 1e6)
+            revert MinimumInput({input: _safeTrancheAmount, reqInput: 1e6});
 
         uint256 price = currentPrice();
 
         uint256 zTrancheAmount = (_safeTrancheAmount * riskRatio()) /
             safeRatio();
-        uint256 stableAmount = (_safeTrancheAmount * price) /
-            s_priceGranularity;
+        uint256 stableAmount = (_safeTrancheAmount * price * stableDecimals()) /
+            s_priceGranularity /
+            trancheDecimals();
 
         _atomicDeposit(
             _borrower,
@@ -190,15 +188,16 @@ contract ConvertibleBondBox is
         uint256 price = currentPrice();
         uint256 priceGranularity = s_priceGranularity;
 
-        if (_stableAmount < (safeRatio() * price) / priceGranularity)
-            revert MinimumInput({
-                input: _stableAmount,
-                reqInput: (safeRatio() * price) / priceGranularity
-            });
+        if (_stableAmount < 1e6)
+            revert MinimumInput({input: _stableAmount, reqInput: 1e6});
 
         //calculate inputs for internal redeem function
         uint256 stableFees = (_stableAmount * feeBps) / BPS;
-        uint256 safeTranchePayout = (_stableAmount * priceGranularity) / price;
+        uint256 safeTranchePayout = (_stableAmount *
+            priceGranularity *
+            trancheDecimals()) /
+            price /
+            stableDecimals();
         uint256 riskTranchePayout = (safeTranchePayout * riskRatio()) /
             safeRatio();
 
@@ -215,16 +214,15 @@ contract ConvertibleBondBox is
         uint256 price = currentPrice();
 
         // check min input
-        if (_riskSlipAmount < riskRatio())
-            revert MinimumInput({
-                input: _riskSlipAmount,
-                reqInput: riskRatio()
-            });
+        if (_riskSlipAmount < 1e6)
+            revert MinimumInput({input: _riskSlipAmount, reqInput: 1e6});
 
         // Calculate inputs for internal repay function
         uint256 safeTranchePayout = (_riskSlipAmount * safeRatio()) /
             riskRatio();
-        uint256 stablesOwed = (safeTranchePayout * price) / s_priceGranularity;
+        uint256 stablesOwed = (safeTranchePayout * price * stableDecimals()) /
+            s_priceGranularity /
+            trancheDecimals();
         uint256 stableFees = (stablesOwed * feeBps) / BPS;
 
         _repay(stablesOwed, stableFees, safeTranchePayout, _riskSlipAmount);
@@ -244,11 +242,8 @@ contract ConvertibleBondBox is
                 currentTime: block.timestamp
             });
 
-        if (_riskSlipAmount < riskRatio())
-            revert MinimumInput({
-                input: _riskSlipAmount,
-                reqInput: riskRatio()
-            });
+        if (_riskSlipAmount < 1e6)
+            revert MinimumInput({input: _riskSlipAmount, reqInput: 1e6});
 
         //transfer fee to owner
         if (feeBps > 0 && _msgSender() != owner()) {
@@ -257,10 +252,8 @@ contract ConvertibleBondBox is
             _riskSlipAmount -= feeSlip;
         }
 
-        uint256 zTranchePayout = _riskSlipAmount;
-        zTranchePayout =
-            (zTranchePayout * (s_penaltyGranularity - penalty())) /
-            (s_penaltyGranularity);
+        uint256 zTranchePayout = (_riskSlipAmount *
+            (s_penaltyGranularity - penalty())) / (s_penaltyGranularity);
 
         //transfer Z-tranches from ConvertibleBondBox to msg.sender
         riskTranche().transfer(_msgSender(), zTranchePayout);
@@ -281,11 +274,8 @@ contract ConvertibleBondBox is
                 currentTime: block.timestamp
             });
 
-        if (_safeSlipAmount < safeRatio())
-            revert MinimumInput({
-                input: _safeSlipAmount,
-                reqInput: safeRatio()
-            });
+        if (_safeSlipAmount < 1e6)
+            revert MinimumInput({input: _safeSlipAmount, reqInput: 1e6});
 
         //transfer fee to owner
         if (feeBps > 0 && _msgSender() != owner()) {
@@ -320,17 +310,8 @@ contract ConvertibleBondBox is
      */
 
     function redeemStable(uint256 _safeSlipAmount) external override {
-        if (s_startDate == 0)
-            revert ConvertibleBondBoxNotStarted({
-                given: 0,
-                minStartDate: block.timestamp
-            });
-
-        if (_safeSlipAmount < safeRatio())
-            revert MinimumInput({
-                input: _safeSlipAmount,
-                reqInput: safeRatio()
-            });
+        if (_safeSlipAmount < 1e6)
+            revert MinimumInput({input: _safeSlipAmount, reqInput: 1e6});
 
         //transfer safeSlips to owner
         if (feeBps > 0 && _msgSender() != owner()) {
@@ -341,15 +322,16 @@ contract ConvertibleBondBox is
 
         uint256 stableBalance = stableToken().balanceOf(address(this));
 
-        //burn safe-slips
-        safeSlip().burn(_msgSender(), _safeSlipAmount);
-
         //transfer stables
         TransferHelper.safeTransfer(
             address(stableToken()),
             _msgSender(),
             (_safeSlipAmount * stableBalance) / (s_repaidSafeSlips)
         );
+
+        //burn safe-slips
+        safeSlip().burn(_msgSender(), _safeSlipAmount);
+        s_repaidSafeSlips -= _safeSlipAmount;
 
         emit RedeemStable(_msgSender(), _safeSlipAmount, currentPrice());
     }
@@ -359,7 +341,7 @@ contract ConvertibleBondBox is
      */
 
     function setFee(uint256 newFeeBps) external override onlyOwner {
-        if (block.timestamp > maturityDate())
+        if (block.timestamp >= maturityDate())
             revert BondIsMature({
                 currentTime: block.timestamp,
                 maturity: maturityDate()
@@ -395,7 +377,7 @@ contract ConvertibleBondBox is
                 minStartDate: block.timestamp
             });
 
-        if (block.timestamp > maturityDate())
+        if (block.timestamp >= maturityDate())
             revert BondIsMature({
                 currentTime: block.timestamp,
                 maturity: maturityDate()

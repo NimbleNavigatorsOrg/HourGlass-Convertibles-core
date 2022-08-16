@@ -73,7 +73,9 @@ contract CBBFactory is ICBBFactory {
                 TrancheSet.safeTranche,
                 TrancheSet.safeRatio,
                 TrancheSet.riskTranche,
-                TrancheSet.riskRatio
+                TrancheSet.riskRatio,
+                10**IERC20Metadata(collateralToken).decimals(),
+                10**IERC20Metadata(stableToken).decimals()
             )
         );
 
@@ -109,14 +111,14 @@ contract CBBFactory is ICBBFactory {
         ).symbol();
 
         address safeSlipAddress = slipFactory.createSlip(
-            string(abi.encodePacked("SLIP-", collateralSymbolSafe)),
             "Safe-CBB-Slip",
+            string(abi.encodePacked("SLIP-", collateralSymbolSafe)),
             address(safeTranche)
         );
 
         address riskSlipAddress = slipFactory.createSlip(
-            string(abi.encodePacked("SLIP-", collateralSymbolRisk)),
             "Risk-CBB-Slip",
+            string(abi.encodePacked("SLIP-", collateralSymbolRisk)),
             address(riskTranche)
         );
 

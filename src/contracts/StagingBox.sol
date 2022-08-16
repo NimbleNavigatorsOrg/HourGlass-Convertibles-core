@@ -19,7 +19,7 @@ contract StagingBox is OwnableUpgradeable, SBImmutableArgs, IStagingBox {
     function initialize(address _owner) external initializer {
         require(
             _owner != address(0),
-            "ConvertibleBondBox: invalid owner address"
+            "StagingBox: invalid owner address"
         );
         //check if valid initialPrice immutable arg
         if (initialPrice() > priceGranularity())
@@ -38,7 +38,7 @@ contract StagingBox is OwnableUpgradeable, SBImmutableArgs, IStagingBox {
         emit Initialized(_owner);
     }
 
-    function depositBorrow(address _borrower, uint256 _safeTrancheAmount)
+    function depositBorrow(address _borrower, uint256 _borrowAmount)
         external
         override
     {
@@ -49,10 +49,16 @@ contract StagingBox is OwnableUpgradeable, SBImmutableArgs, IStagingBox {
 
         //- transfers `_safeTrancheAmount` of SafeTranche Tokens from msg.sender to SB
 
+        uint256 safeTrancheAmount = (_borrowAmount *
+            priceGranularity() *
+            trancheDecimals()) /
+            initialPrice() /
+            stableDecimals();
+
         safeTranche().transferFrom(
             _msgSender(),
             address(this),
-            _safeTrancheAmount
+            safeTrancheAmount
         );
 
         //- transfers `_safeTrancheAmount * riskRatio() / safeRatio()`  of RiskTranches from msg.sender to SB
@@ -60,14 +66,14 @@ contract StagingBox is OwnableUpgradeable, SBImmutableArgs, IStagingBox {
         riskTranche().transferFrom(
             _msgSender(),
             address(this),
-            (_safeTrancheAmount * riskRatio()) / safeRatio()
+            (safeTrancheAmount * riskRatio()) / safeRatio()
         );
 
         //- mints `_safeTrancheAmount` of BorrowerSlips to `_borrower`
-        borrowSlip().mint(_borrower, _safeTrancheAmount);
+        borrowSlip().mint(_borrower, _borrowAmount);
 
         //add event stuff
-        emit BorrowDeposit(_borrower, _safeTrancheAmount);
+        emit BorrowDeposit(_borrower, _borrowAmount);
     }
 
     function depositLend(address _lender, uint256 _lendAmount)
@@ -98,13 +104,19 @@ contract StagingBox is OwnableUpgradeable, SBImmutableArgs, IStagingBox {
         //- Reverse of depositBorrow() function
         //- transfers `_borrowSlipAmount` of SafeTranche Tokens from SB to msg.sender
 
-        safeTranche().transfer(_msgSender(), (_borrowSlipAmount));
+        uint256 safeTrancheAmount = (_borrowSlipAmount *
+            priceGranularity() *
+            trancheDecimals()) /
+            initialPrice() /
+            stableDecimals();
+
+        safeTranche().transfer(_msgSender(), (safeTrancheAmount));
 
         //- transfers `_borrowSlipAmount*riskRatio()/safeRatio()` of RiskTranche Tokens from SB to msg.sender
 
         riskTranche().transfer(
             _msgSender(),
-            (_borrowSlipAmount * riskRatio()) / safeRatio()
+            (safeTrancheAmount * riskRatio()) / safeRatio()
         );
 
         //- burns `_borrowSlipAmount` of msg.sender’s BorrowSlips
@@ -146,14 +158,20 @@ contract StagingBox is OwnableUpgradeable, SBImmutableArgs, IStagingBox {
         // Transfer `_borrowSlipAmount*riskRatio()/safeRatio()` of RiskSlips to msg.sender
         ISlip(riskSlipAddress()).transfer(
             _msgSender(),
-            (_borrowSlipAmount * riskRatio()) / safeRatio()
+            ((_borrowSlipAmount *
+                priceGranularity() *
+                riskRatio() *
+                trancheDecimals()) /
+                initialPrice() /
+                safeRatio() /
+                stableDecimals())
         );
 
         // Transfer `_borrowSlipAmount*initialPrice()/priceGranularity()` of StableToken to msg.sender
         TransferHelper.safeTransfer(
             address(stableToken()),
             _msgSender(),
-            (_borrowSlipAmount * initialPrice()) / priceGranularity()
+            _borrowSlipAmount
         );
 
         // burns `_borrowSlipAmount` of msg.sender’s BorrowSlips
@@ -167,7 +185,9 @@ contract StagingBox is OwnableUpgradeable, SBImmutableArgs, IStagingBox {
         //- Transfer `_lendSlipAmount*priceGranularity()/initialPrice()`  of SafeSlips to msg.sender
         ISlip(safeSlipAddress()).transfer(
             _msgSender(),
-            (_lendSlipAmount * priceGranularity()) / initialPrice()
+            (_lendSlipAmount * priceGranularity() * trancheDecimals()) /
+                initialPrice() /
+                stableDecimals()
         );
 
         //- burns `_lendSlipAmount` of msg.sender’s LendSlips
@@ -184,11 +204,13 @@ contract StagingBox is OwnableUpgradeable, SBImmutableArgs, IStagingBox {
             - if `_isLend` is false: calls CBB with balance of SafeTrancheAmount
         */
 
+        safeTranche().approve(address(convertibleBondBox()), type(uint256).max);
+        riskTranche().approve(address(convertibleBondBox()), type(uint256).max);
+
         if (_isLend) {
             uint256 stableAmount = stableToken().balanceOf(address(this));
             s_reinitLendAmount = stableAmount;
             convertibleBondBox().reinitialize(initialPrice());
-
             convertibleBondBox().lend(
                 address(this),
                 address(this),
@@ -199,8 +221,9 @@ contract StagingBox is OwnableUpgradeable, SBImmutableArgs, IStagingBox {
         if (!_isLend) {
             uint256 safeTrancheBalance = safeTranche().balanceOf(address(this));
             s_reinitLendAmount =
-                (safeTrancheBalance * initialPrice()) /
-                priceGranularity();
+                (safeTrancheBalance * initialPrice() * stableDecimals()) /
+                priceGranularity() /
+                trancheDecimals();
 
             convertibleBondBox().reinitialize(initialPrice());
 

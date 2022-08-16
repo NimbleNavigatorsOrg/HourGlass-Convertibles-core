@@ -1,192 +1,103 @@
 pragma solidity 0.8.13;
 
-import "forge-std/Test.sol";
-import "../../src/contracts/StagingBox.sol";
-import "../../src/contracts/StagingBoxFactory.sol";
-import "../../src/contracts/CBBFactory.sol";
-import "../../src/contracts/ConvertibleBondBox.sol";
 import "./integration/SBIntegrationSetup.t.sol";
-import "../../src/interfaces/ISlip.sol";
 
 contract RedeemBorrowSlip is SBIntegrationSetup {
-    function redeemBorrowSetupMints() private {
-        vm.startPrank(address(s_deployedConvertibleBondBox));
-        s_deployedConvertibleBondBox.riskSlip().mint(
-            address(s_deployedSB),
-            type(uint256).max
-        );
-        vm.stopPrank();
-
-        vm.startPrank(address(s_deployedSB));
-        s_deployedSB.borrowSlip().mint(
-            s_user,
-            (s_maxMint / s_deployedSB.riskRatio()) * s_deployedSB.safeRatio()
-        );
-        vm.stopPrank();
-
-        vm.startPrank(address(s_deployedSB));
-        s_stableToken.mint(address(s_deployedSB), s_maxMint);
-        vm.stopPrank();
+    struct BeforeBalances {
+        uint256 borrowerBorrowSlips;
+        uint256 borrowerRiskSlips;
+        uint256 borrowerStableTokens;
+        uint256 SBRiskSlips;
+        uint256 SBStableTokens;
     }
 
-    function testRedeemBorrowSlipTransfersRiskSlipsFromStagingBoxToMsgSender(
-        uint256 _fuzzPrice,
-        uint256 _borrowSlipAmount
-    ) public {
-        setupStagingBox(_fuzzPrice);
-        setupTranches(true, s_user, address(s_deployedSB));
-        redeemBorrowSetupMints();
-
-        uint256 msgSenderBorrowSlipBalanceBeforeRedeem = s_deployedSB
-            .borrowSlip()
-            .balanceOf(s_user);
-
-        uint256 stagingBoxRiskSlipBalanceBeforeRedeem = s_deployedConvertibleBondBox
-                .riskSlip()
-                .balanceOf(address(s_deployedSB));
-        uint256 msgSenderRiskSlipBalanceBeforeRedeem = s_deployedConvertibleBondBox
-                .riskSlip()
-                .balanceOf(s_user);
-
-        _borrowSlipAmount = bound(
-            _borrowSlipAmount,
-            s_deployedConvertibleBondBox.safeRatio(),
-            msgSenderBorrowSlipBalanceBeforeRedeem
-        );
-
-        uint256 riskSlipTransferAmount = (_borrowSlipAmount *
-            s_deployedConvertibleBondBox.riskRatio()) /
-            s_deployedConvertibleBondBox.safeRatio();
-
-        vm.prank(s_user);
-        s_deployedSB.redeemBorrowSlip(_borrowSlipAmount);
-
-        uint256 stagingBoxRiskSlipBalanceAfterRedeem = s_deployedConvertibleBondBox
-                .riskSlip()
-                .balanceOf(address(s_deployedSB));
-        uint256 msgSenderRiskSlipBalanceAfterRedeem = s_deployedConvertibleBondBox
-                .riskSlip()
-                .balanceOf(s_user);
-
-        assertEq(
-            stagingBoxRiskSlipBalanceBeforeRedeem - riskSlipTransferAmount,
-            stagingBoxRiskSlipBalanceAfterRedeem
-        );
-        assertEq(
-            msgSenderRiskSlipBalanceBeforeRedeem + riskSlipTransferAmount,
-            msgSenderRiskSlipBalanceAfterRedeem
-        );
-
-        assertFalse(riskSlipTransferAmount == 0);
+    struct BorrowAmounts {
+        uint256 riskSlipAmount;
+        uint256 borrowSlipAmount;
     }
 
-    function testRedeemBorrowSlipTransfersStableTokensFromStagingBoxToMsgSender(
-        uint256 _fuzzPrice,
-        uint256 _borrowSlipAmount
-    ) public {
+    address s_borrower = address(1);
+    address s_lender = address(2);
+
+    function testRedeemBorrowSlip(uint256 _fuzzPrice, uint256 _borrowAmount)
+        public
+    {
         setupStagingBox(_fuzzPrice);
-        setupTranches(true, s_user, address(s_deployedSB));
-        redeemBorrowSetupMints();
 
-        uint256 msgSenderBorrowSlipBalanceBeforeRedeem = s_deployedSB
-            .borrowSlip()
-            .balanceOf(s_user);
+        uint256 maxBorrowAmount = (s_safeTranche.balanceOf(address(this)) *
+            s_deployedSB.initialPrice() *
+            s_deployedSB.stableDecimals()) /
+            s_deployedSB.priceGranularity() /
+            s_deployedSB.trancheDecimals();
 
-        uint256 stagingBoxStableTokenBalanceBeforeRedeem = IERC20(
-            s_deployedConvertibleBondBox.stableToken()
-        ).balanceOf(address(s_deployedSB));
-        uint256 msgSenderStableTokenBalanceBeforeRedeem = IERC20(
-            s_deployedConvertibleBondBox.stableToken()
-        ).balanceOf(s_user);
+        s_deployedSB.depositBorrow(s_borrower, maxBorrowAmount);
 
-        _borrowSlipAmount = bound(
-            _borrowSlipAmount,
-            s_deployedSB.priceGranularity(),
-            msgSenderBorrowSlipBalanceBeforeRedeem
+        s_deployedSB.depositLend(
+            s_lender,
+            s_stableToken.balanceOf(address(this))
         );
 
-        uint256 stableTokenTransferAmount = (_borrowSlipAmount *
-            s_deployedSB.initialPrice()) / s_deployedSB.priceGranularity();
+        bool isLend = s_SBLens.viewTransmitReInitBool(s_deployedSB);
 
-        vm.prank(s_user);
-        s_deployedSB.redeemBorrowSlip(_borrowSlipAmount);
+        vm.prank(s_cbb_owner);
+        s_deployedSB.transmitReInit(isLend);
 
-        uint256 stagingBoxStableTokenBalanceAfterRedeem = IERC20(
-            s_deployedConvertibleBondBox.stableToken()
-        ).balanceOf(address(s_deployedSB));
-        uint256 msgSenderStableTokenBalanceAfterRedeem = IERC20(
-            s_deployedConvertibleBondBox.stableToken()
-        ).balanceOf(s_user);
-
-        assertEq(
-            stagingBoxStableTokenBalanceBeforeRedeem -
-                stableTokenTransferAmount,
-            stagingBoxStableTokenBalanceAfterRedeem
-        );
-        assertEq(
-            msgSenderStableTokenBalanceBeforeRedeem + stableTokenTransferAmount,
-            msgSenderStableTokenBalanceAfterRedeem
+        BeforeBalances memory before = BeforeBalances(
+            s_borrowSlip.balanceOf(s_borrower),
+            s_riskSlip.balanceOf(s_borrower),
+            s_stableToken.balanceOf(s_borrower),
+            s_riskSlip.balanceOf(s_deployedSBAddress),
+            s_stableToken.balanceOf(s_deployedSBAddress)
         );
 
-        assertFalse(stableTokenTransferAmount == 0);
-    }
+        _borrowAmount = bound(_borrowAmount, 1, before.borrowerBorrowSlips);
 
-    function testRedeemBorrowBurnsMsgSenderBorrowSlips(
-        uint256 _fuzzPrice,
-        uint256 _borrowSlipAmount
-    ) public {
-        setupStagingBox(_fuzzPrice);
-        setupTranches(true, s_user, address(s_deployedSB));
-        redeemBorrowSetupMints();
-
-        uint256 msgSenderBorrowSlipBalanceBeforeRedeem = s_deployedSB
-            .borrowSlip()
-            .balanceOf(s_user);
-
-        _borrowSlipAmount = bound(
-            _borrowSlipAmount,
-            1,
-            msgSenderBorrowSlipBalanceBeforeRedeem
+        BorrowAmounts memory adjustments = BorrowAmounts(
+            (_borrowAmount *
+                s_deployedSB.priceGranularity() *
+                s_deployedSB.riskRatio() *
+                s_deployedSB.trancheDecimals()) /
+                s_deployedSB.initialPrice() /
+                s_deployedSB.safeRatio() /
+                s_deployedSB.stableDecimals(),
+            _borrowAmount
         );
 
-        vm.prank(s_user);
-        s_deployedSB.redeemBorrowSlip(_borrowSlipAmount);
-
-        uint256 msgSenderBorrowSlipBalanceAfterRedeem = s_deployedSB
-            .borrowSlip()
-            .balanceOf(s_user);
-
-        assertEq(
-            msgSenderBorrowSlipBalanceBeforeRedeem - _borrowSlipAmount,
-            msgSenderBorrowSlipBalanceAfterRedeem
-        );
-
-        assertFalse(_borrowSlipAmount == 0);
-    }
-
-    function testRedeemBorrowEmitsRedeemBorrowSlip(
-        uint256 _fuzzPrice,
-        uint256 _borrowSlipAmount
-    ) public {
-        setupStagingBox(_fuzzPrice);
-        setupTranches(true, s_user, address(s_deployedSB));
-        redeemBorrowSetupMints();
-
-        uint256 msgSenderBorrowSlipBalanceBeforeRedeem = s_deployedSB
-            .borrowSlip()
-            .balanceOf(s_user);
-
-        _borrowSlipAmount = bound(
-            _borrowSlipAmount,
-            1,
-            msgSenderBorrowSlipBalanceBeforeRedeem
-        );
-
-        vm.prank(s_user);
+        vm.prank(s_borrower);
         vm.expectEmit(true, true, true, true);
-        emit RedeemBorrowSlip(s_user, _borrowSlipAmount);
-        s_deployedSB.redeemBorrowSlip(_borrowSlipAmount);
+        emit RedeemBorrowSlip(s_borrower, _borrowAmount);
+        s_deployedSB.redeemBorrowSlip(_borrowAmount);
 
-        assertFalse(_borrowSlipAmount == 0);
+        assertions(before, adjustments);
+    }
+
+    function assertions(
+        BeforeBalances memory before,
+        BorrowAmounts memory adjustments
+    ) internal {
+        assertEq(
+            before.borrowerBorrowSlips - adjustments.borrowSlipAmount,
+            s_borrowSlip.balanceOf(s_borrower)
+        );
+
+        assertEq(
+            before.borrowerRiskSlips + adjustments.riskSlipAmount,
+            s_riskSlip.balanceOf(s_borrower)
+        );
+
+        assertEq(
+            before.borrowerStableTokens + adjustments.borrowSlipAmount,
+            s_stableToken.balanceOf(s_borrower)
+        );
+
+        assertEq(
+            before.SBRiskSlips - adjustments.riskSlipAmount,
+            s_riskSlip.balanceOf(s_deployedSBAddress)
+        );
+
+        assertEq(
+            before.SBStableTokens - adjustments.borrowSlipAmount,
+            s_stableToken.balanceOf(s_deployedSBAddress)
+        );
     }
 }

@@ -100,4 +100,20 @@ contract CBBImmutableArgs is Clone, ICBBImmutableArgs {
     function riskRatio() public pure override returns (uint256) {
         return _getArgUint256(268);
     }
+
+    /**
+     * @inheritdoc ICBBImmutableArgs
+     */
+
+    function trancheDecimals() public pure override returns (uint256) {
+        return _getArgUint256(300);
+    }
+
+    /**
+     * @inheritdoc ICBBImmutableArgs
+     */
+
+    function stableDecimals() public pure override returns (uint256) {
+        return _getArgUint256(332);
+    }
 }
