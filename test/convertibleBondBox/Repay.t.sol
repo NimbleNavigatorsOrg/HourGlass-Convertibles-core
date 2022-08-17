@@ -77,6 +77,7 @@ contract Repay is CBBSetup {
         initialSetup();
 
         fee = bound(fee, 0, s_maxFeeBPS);
+        fee = bound(fee, 0, s_maxFeeBPS);
         vm.prank(s_cbb_owner);
         s_deployedConvertibleBondBox.setFee(fee);
 
@@ -128,6 +129,8 @@ contract Repay is CBBSetup {
             (safeTranchePayout * s_riskRatio) / s_safeRatio
         );
 
+        vm.startPrank(s_borrower);
+        s_stableToken.approve(s_deployedCBBAddress, type(uint256).max);
         vm.startPrank(s_borrower);
         s_stableToken.approve(s_deployedCBBAddress, type(uint256).max);
         vm.expectEmit(true, true, true, true);
