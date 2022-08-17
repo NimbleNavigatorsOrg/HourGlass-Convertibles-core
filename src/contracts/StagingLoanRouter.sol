@@ -9,6 +9,7 @@ import "@buttonwood-protocol/tranche/contracts/interfaces/IBondController.sol";
 import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
 import "@buttonwood-protocol/button-wrappers/contracts/interfaces/IButtonToken.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/utils/math/Math.sol";
 
 import "forge-std/console2.sol";
 
@@ -77,7 +78,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
             );
         }
 
-        uint256 borrowAmount = (min(
+        uint256 borrowAmount = (Math.min(
             safeTrancheBalance,
             ((riskTrancheBalance * convertibleBondBox.safeRatio()) /
                 convertibleBondBox.riskRatio())
@@ -330,6 +331,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
     function repayAndUnwrapSimple(
         IStagingBox _stagingBox,
         uint256 _stableAmount,
+        uint256 _stableFees,
         uint256 _riskSlipAmount
     ) external {
         (IConvertibleBondBox convertibleBondBox, , , ) = fetchElasticStack(
@@ -341,7 +343,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
             address(convertibleBondBox.stableToken()),
             msg.sender,
             address(this),
-            _stableAmount
+            _stableAmount + _stableFees
         );
 
         //Calculate RiskSlips (minus fees) and transfer to router
@@ -356,12 +358,12 @@ contract StagingLoanRouter is IStagingLoanRouter {
             convertibleBondBox.stableToken().allowance(
                 address(this),
                 address(convertibleBondBox)
-            ) < _stableAmount
+            ) < _stableAmount + _stableFees
         ) {
             SafeERC20.safeIncreaseAllowance(
                 (convertibleBondBox.stableToken()),
                 address(convertibleBondBox),
-                type(uint256).max - _stableAmount
+                type(uint256).max - _stableAmount - _stableFees
             );
         }
         convertibleBondBox.repay(_stableAmount);
@@ -383,6 +385,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
     function repayMaxAndUnwrapSimple(
         IStagingBox _stagingBox,
         uint256 _stableAmount,
+        uint256 _stableFees,
         uint256 _riskSlipAmount
     ) external {
         (IConvertibleBondBox convertibleBondBox, , , ) = fetchElasticStack(
@@ -394,7 +397,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
             address(convertibleBondBox.stableToken()),
             msg.sender,
             address(this),
-            _stableAmount
+            _stableAmount + _stableFees
         );
 
         //Transfer risk slips to CBB
@@ -409,12 +412,12 @@ contract StagingLoanRouter is IStagingLoanRouter {
             convertibleBondBox.stableToken().allowance(
                 address(this),
                 address(convertibleBondBox)
-            ) < _stableAmount
+            ) < _stableAmount + _stableFees
         ) {
             SafeERC20.safeIncreaseAllowance(
                 (convertibleBondBox.stableToken()),
                 address(convertibleBondBox),
-                type(uint256).max - _stableAmount
+                type(uint256).max - _stableAmount - _stableFees
             );
         }
         convertibleBondBox.repayMax(_riskSlipAmount);
@@ -470,6 +473,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
     function repayAndUnwrapMature(
         IStagingBox _stagingBox,
         uint256 _stableAmount,
+        uint256 _stableFees,
         uint256 _riskSlipAmount
     ) external {
         (
@@ -484,7 +488,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
             address(convertibleBondBox.stableToken()),
             msg.sender,
             address(this),
-            _stableAmount
+            _stableAmount + _stableFees
         );
 
         //Transfer to router
@@ -499,12 +503,12 @@ contract StagingLoanRouter is IStagingLoanRouter {
             convertibleBondBox.stableToken().allowance(
                 address(this),
                 address(convertibleBondBox)
-            ) < _stableAmount
+            ) < _stableAmount + _stableFees
         ) {
             SafeERC20.safeIncreaseAllowance(
                 (convertibleBondBox.stableToken()),
                 address(convertibleBondBox),
-                type(uint256).max - _stableAmount
+                type(uint256).max - _stableAmount - _stableFees
             );
         }
         convertibleBondBox.repay(_stableAmount);
@@ -512,11 +516,12 @@ contract StagingLoanRouter is IStagingLoanRouter {
         //call redeemMature on bond
         bond.redeemMature(
             address(convertibleBondBox.safeTranche()),
-            _stableAmount
+            convertibleBondBox.safeTranche().balanceOf(address(this))
         );
+
         bond.redeemMature(
             address(convertibleBondBox.riskTranche()),
-            _riskSlipAmount
+            convertibleBondBox.riskTranche().balanceOf(address(this))
         );
 
         //unwrap rebasing collateral to msg.sender
@@ -540,9 +545,5 @@ contract StagingLoanRouter is IStagingLoanRouter {
         IERC20 underlying = IERC20(wrapper.underlying());
 
         return (convertibleBondBox, bond, wrapper, underlying);
-    }
-
-    function min(uint256 a, uint256 b) private pure returns (uint256) {
-        return a <= b ? a : b;
     }
 }

@@ -5,6 +5,7 @@ import "../interfaces/IStagingBoxLens.sol";
 import "../interfaces/IConvertibleBondBox.sol";
 import "@buttonwood-protocol/button-wrappers/contracts/interfaces/IButtonToken.sol";
 
+
 contract StagingBoxLens is IStagingBoxLens {
     /**
      * @inheritdoc IStagingBoxLens
@@ -56,10 +57,10 @@ contract StagingBoxLens is IStagingBoxLens {
         uint256 buttonAmount = wrapper.underlyingToWrapper(_amountRaw);
 
         //calculate safeTranche (borrowSlip amount) amount with tranche ratio & CDR
-        uint256 bondCollateralBalance = IERC20(bond.collateralToken())
-            .balanceOf(address(bond));
+        uint256 bondCollateralBalance = wrapper.balanceOf(address(bond));
+
         uint256 safeTrancheAmount = (buttonAmount *
-            _stagingBox.safeRatio() *
+            convertibleBondBox.safeRatio() *
             bond.totalDebt()) /
             bondCollateralBalance /
             convertibleBondBox.s_trancheGranularity();
@@ -78,7 +79,7 @@ contract StagingBoxLens is IStagingBoxLens {
      * @inheritdoc IStagingBoxLens
      */
 
-    function vieSimplewWithdrawBorrowUnwrap(
+    function viewSimpleWithdrawBorrowUnwrap(
         IStagingBox _stagingBox,
         uint256 _borrowSlipAmount
     ) public view returns (uint256, uint256) {
@@ -487,6 +488,7 @@ contract StagingBoxLens is IStagingBoxLens {
         uint256 collateralBalanceRisk = wrapper.balanceOf(
             address(_stagingBox.riskTranche())
         );
+
         buttonAmount +=
             (_riskSlipAmount * collateralBalanceRisk) /
             convertibleBondBox.riskTranche().totalSupply();

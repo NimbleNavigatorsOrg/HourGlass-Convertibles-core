@@ -35,13 +35,17 @@ contract TransmitReinit is SBIntegrationSetup {
             s_deployedSB.priceGranularity() /
             s_deployedSB.trancheDecimals();
 
-        uint256 minBorrowAmount = (1e15 *
+        uint256 minBorrowAmount = (1e6 *
             s_deployedSB.initialPrice() *
             s_deployedSB.stableDecimals()) /
             s_deployedSB.priceGranularity() /
             s_deployedSB.trancheDecimals();
 
-        _borrowAmount = bound(_borrowAmount, minBorrowAmount, maxBorrowAmount);
+        _borrowAmount = bound(
+            _borrowAmount,
+            Math.max(minBorrowAmount, 1),
+            maxBorrowAmount
+        );
 
         s_deployedSB.depositBorrow(s_borrower, _borrowAmount);
 

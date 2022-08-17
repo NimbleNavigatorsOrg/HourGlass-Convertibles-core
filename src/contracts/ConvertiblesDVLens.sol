@@ -192,8 +192,6 @@ contract ConvertiblesDVLens is IConvertiblesDVLens {
             ERC20(address(_convertibleBondBox.stableToken())).decimals()
         );
 
-        //TODO: Check TVL-Lend Decimals + current Price
-
         CBBDataActive memory data = CBBDataActive(
             NumFixedPoint(
                 _convertibleBondBox.safeSlip().totalSupply(),
@@ -228,10 +226,11 @@ contract ConvertiblesDVLens is IConvertiblesDVLens {
             ),
             NumFixedPoint(simTrancheCollateral.risk, decimals.tranche),
             NumFixedPoint(
-                (_convertibleBondBox.safeSlip().totalSupply() *
-                    _convertibleBondBox.currentPrice()) /
-                    _convertibleBondBox.s_priceGranularity(),
-                decimals.tranche
+                (simTrancheCollateral.risk *
+                    (10**decimals.stable) +
+                    stableBalance *
+                    (10**decimals.tranche)),
+                decimals.tranche + decimals.stable
             )
         );
 
@@ -269,8 +268,6 @@ contract ConvertiblesDVLens is IConvertiblesDVLens {
             ERC20(address(_convertibleBondBox.safeTranche())).decimals(),
             ERC20(address(_convertibleBondBox.stableToken())).decimals()
         );
-
-        //TODO: Check current price decimals
 
         CBBDataMature memory data = CBBDataMature(
             NumFixedPoint(

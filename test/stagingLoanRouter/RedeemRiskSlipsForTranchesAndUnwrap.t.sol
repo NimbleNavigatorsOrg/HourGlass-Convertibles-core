@@ -3,57 +3,125 @@ pragma solidity 0.8.13;
 import "./StagingLoanRouterSetup.t.sol";
 
 contract RedeemRiskSlipsForTranchesAndUnwrap is StagingLoanRouterSetup {
-    // function testRedeemRiskSlipsForTranchesAndUnwrapBurnsMsgSenderRiskSlips(uint256 _fuzzPrice, uint256 _lendAmount) public {
-    //     setupStagingBox(_fuzzPrice);
-    //     setupTranches(false, s_owner);
-    //     (uint256 borrowerRiskSlipBalanceBefore,) = repayMaxAndUnwrapSimpleTestSetup(_lendAmount);
-    //     vm.warp(s_deployedConvertibleBondBox.maturityDate() + 1);
-    //     s_deployedConvertibleBondBox.bond().mature();
-    //     uint256 riskSlipRedeemAmount = bound(borrowerRiskSlipBalanceBefore, s_deployedConvertibleBondBox.riskRatio(), borrowerRiskSlipBalanceBefore);
-    //     vm.prank(s_borrower);
-    //     StagingLoanRouter(s_stagingLoanRouter).redeemRiskSlipsForTranchesAndUnwrap(
-    //         s_deployedSB,
-    //         riskSlipRedeemAmount
-    //         );
-    //     uint256 borrowerRiskSlipBalanceAfter = ISlip(s_deployedSB.riskSlipAddress()).balanceOf(s_borrower);
-    //     assertEq(borrowerRiskSlipBalanceBefore - riskSlipRedeemAmount, borrowerRiskSlipBalanceAfter);
-    // }
-    // function testRedeemRiskSlipsForTranchesAndUnwrapSendsUnderlyingToMsgSender(uint256 _fuzzPrice, uint256 _lendAmount) public {
-    //     setupStagingBox(_fuzzPrice);
-    //     setupTranches(false, s_owner);
-    //     (uint256 borrowerRiskSlipBalanceBefore,) = repayMaxAndUnwrapSimpleTestSetup(_lendAmount);
-    //     vm.warp(s_deployedConvertibleBondBox.maturityDate() + 1);
-    //     s_deployedConvertibleBondBox.bond().mature();
-    //     uint256 borrowerUnderlyingBalanceBefore = s_underlying.balanceOf(s_borrower);
-    //     uint256 riskSlipRedeemAmount = bound(borrowerRiskSlipBalanceBefore, s_deployedConvertibleBondBox.riskRatio(), borrowerRiskSlipBalanceBefore);
-    //     (uint256 underlyingAmount,) =
-    //     IStagingBoxLens(s_stagingBoxLens).viewRedeemRiskSlipsForTranches(s_deployedSB, riskSlipRedeemAmount);
-    //     vm.prank(s_borrower);
-    //     StagingLoanRouter(s_stagingLoanRouter).redeemRiskSlipsForTranchesAndUnwrap(
-    //         s_deployedSB,
-    //         riskSlipRedeemAmount
-    //         );
-    //     uint256 borrowerUnderlyingBalanceAfter = s_underlying.balanceOf(s_borrower);
-    //     assertTrue(withinTolerance(borrowerUnderlyingBalanceBefore + underlyingAmount, borrowerUnderlyingBalanceAfter, 1));
-    //     assertFalse(underlyingAmount == 0);
-    // }
-    // function testRedeemRiskSlipsForTranchesAndUnwrapWithdrawsCollateralFromBond(uint256 _fuzzPrice, uint256 _lendAmount) public {
-    //     setupStagingBox(_fuzzPrice);
-    //     setupTranches(false, s_owner);
-    //     (uint256 borrowerRiskSlipBalanceBefore,) = repayMaxAndUnwrapSimpleTestSetup(_lendAmount);
-    //     vm.warp(s_deployedConvertibleBondBox.maturityDate() + 1);
-    //     s_deployedConvertibleBondBox.bond().mature();
-    //     uint256 riskTrancheCollateralBalanceBefore = s_collateralToken.balanceOf(address(s_deployedConvertibleBondBox.riskTranche()));
-    //     uint256 riskSlipRedeemAmount = bound(borrowerRiskSlipBalanceBefore, s_deployedConvertibleBondBox.riskRatio(), borrowerRiskSlipBalanceBefore);
-    //     (, uint256 buttonAmount) =
-    //     IStagingBoxLens(s_stagingBoxLens).viewRedeemRiskSlipsForTranches(s_deployedSB, riskSlipRedeemAmount);
-    //     vm.prank(s_borrower);
-    //     StagingLoanRouter(s_stagingLoanRouter).redeemRiskSlipsForTranchesAndUnwrap(
-    //         s_deployedSB,
-    //         riskSlipRedeemAmount
-    //         );
-    //     uint256 riskTrancheCollateralBalanceAfter = s_collateralToken.balanceOf(address(s_deployedConvertibleBondBox.riskTranche()));
-    //     assertTrue(withinTolerance(riskTrancheCollateralBalanceBefore - buttonAmount, riskTrancheCollateralBalanceAfter, 1));
-    //     assertFalse(buttonAmount == 0);
-    // }
+    struct BeforeBalances {
+        uint256 borrowerRiskSlip;
+        uint256 borrowerCollateral;
+    }
+
+    struct RedeemAmounts {
+        uint256 riskSlipAmount;
+        uint256 collateralAmount;
+    }
+
+    function initialSetup(uint256 data) internal {
+        vm.startPrank(s_borrower);
+        s_stagingLoanRouter.simpleWrapTrancheBorrow(
+            s_deployedSB,
+            s_collateralToken.balanceOf(s_borrower),
+            0
+        );
+        vm.stopPrank();
+
+        vm.startPrank(s_lender);
+        s_deployedSB.depositLend(
+            s_lender,
+            (s_stableToken.balanceOf(s_lender) / 100)
+        );
+        vm.stopPrank();
+
+        vm.startPrank(s_cbb_owner);
+        s_deployedSB.transmitReInit(
+            s_SBLens.viewTransmitReInitBool(s_deployedSB)
+        );
+        vm.stopPrank();
+
+        {
+            uint256 maxRedeemableBorrowSlips = Math.min(
+                s_deployedSB.s_reinitLendAmount(),
+                s_borrowSlip.balanceOf(s_borrower)
+            );
+
+            vm.startPrank(s_borrower);
+            s_deployedSB.redeemBorrowSlip(maxRedeemableBorrowSlips);
+            vm.stopPrank();
+        }
+
+        uint256 maxRedeemableLendSlips = (s_safeSlip.balanceOf(
+            s_deployedSBAddress
+        ) *
+            s_deployedSB.initialPrice() *
+            s_deployedSB.stableDecimals()) /
+            s_deployedSB.priceGranularity() /
+            s_deployedSB.trancheDecimals();
+
+        vm.startPrank(s_lender);
+        s_deployedSB.redeemLendSlip(maxRedeemableLendSlips / 2);
+        vm.stopPrank();
+
+        vm.warp(s_maturityDate + 1);
+
+        data = bound(
+            data,
+            (s_initMockData * 9) / 10,
+            (s_initMockData * 11) / 10
+        );
+
+        s_mockOracle.setData(data, true);
+
+        s_buttonWoodBondController.mature();
+    }
+
+    function testRiskSlipRedeemTrancheAndUnwrap(
+        uint256 riskSlipAmount,
+        uint256 data
+    ) public {
+        initialSetup(data);
+
+        riskSlipAmount = bound(
+            riskSlipAmount,
+            1e6,
+            s_riskSlip.balanceOf(s_borrower)
+        );
+
+        (uint256 collateralAmount, ) = s_SBLens.viewRedeemRiskSlipsForTranches(
+            s_deployedSB,
+            riskSlipAmount
+        );
+
+        BeforeBalances memory before = BeforeBalances(
+            s_riskSlip.balanceOf(s_borrower),
+            s_collateralToken.balanceOf(s_borrower)
+        );
+
+        RedeemAmounts memory adjustments = RedeemAmounts(
+            riskSlipAmount,
+            collateralAmount
+        );
+
+        vm.startPrank(s_borrower);
+        s_stagingLoanRouter.redeemRiskSlipsForTranchesAndUnwrap(
+            s_deployedSB,
+            riskSlipAmount
+        );
+        vm.stopPrank();
+
+        assertions(before, adjustments);
+    }
+
+    function assertions(
+        BeforeBalances memory before,
+        RedeemAmounts memory adjustments
+    ) internal {
+        assertApproxEqRel(
+            before.borrowerCollateral + adjustments.collateralAmount,
+            s_collateralToken.balanceOf(s_borrower),
+            1e15
+        );
+
+        assertApproxEqRel(
+            before.borrowerRiskSlip - adjustments.riskSlipAmount,
+            s_riskSlip.balanceOf(s_borrower),
+            1e15
+        );
+    }
 }

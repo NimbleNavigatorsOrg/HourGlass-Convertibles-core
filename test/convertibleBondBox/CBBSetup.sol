@@ -37,7 +37,7 @@ abstract contract CBBSetup is Test {
     uint256 s_riskRatio;
     uint256 constant s_penalty = 500;
     uint256 constant s_initialPrice = 5e7;
-    uint256 constant s_trancheIndex = 0;
+    uint256 s_trancheIndex = 1;
     uint256 constant s_maturityDate = 1664512517;
     uint256 constant s_endOfUnixTime = 2147483647;
     uint256 constant s_trancheGranularity = 1000;
@@ -79,11 +79,14 @@ abstract contract CBBSetup is Test {
             "CT",
             s_collateralDecimals
         );
-        s_collateralToken.mint(address(this), 1000e18);
+        s_collateralToken.mint(
+            address(this),
+            10000 * (10**s_collateralDecimals)
+        );
 
         // create stable token
         s_stableToken = new MockERC20("StableToken", "ST", s_stableDecimals);
-        s_stableToken.mint(address(this), 10e18);
+        s_stableToken.mint(address(this), 10000 * (10**s_stableDecimals));
 
         // create tranche
         s_tranche = new Tranche();
@@ -124,7 +127,9 @@ abstract contract CBBSetup is Test {
             type(uint256).max
         );
 
-        s_buttonWoodBondController.deposit(1000e18);
+        s_buttonWoodBondController.deposit(
+            s_collateralToken.balanceOf(address(this))
+        );
         (s_safeTranche, s_safeRatio) = s_buttonWoodBondController.tranches(
             s_trancheIndex
         );
