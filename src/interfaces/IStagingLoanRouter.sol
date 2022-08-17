@@ -108,6 +108,7 @@ interface IStagingLoanRouter {
      * @dev repays stable tokens to CBB and unwraps collateral into underlying
      * @param _stagingBox The staging box tied to the Convertible Bond
      * @param _stableAmount The amount of stableTokens to be repaid
+     * @param _stableFees The amount of stableToken fees
      * @param _riskSlipAmount The amount of riskSlips to be repaid with
      * Requirements:
      *  - can only be called prior to maturity
@@ -117,6 +118,7 @@ interface IStagingLoanRouter {
     function repayAndUnwrapSimple(
         IStagingBox _stagingBox,
         uint256 _stableAmount,
+        uint256 _stableFees,
         uint256 _riskSlipAmount
     ) external;
 
@@ -124,6 +126,7 @@ interface IStagingLoanRouter {
      * @dev repays of users riskSlips w/ stable tokens to CBB and unwraps collateral into underlying
      * @param _stagingBox The staging box tied to the Convertible Bond
      * @param _stableAmount The amount of stableTokens to be repaid
+     * @param _stableFees The amount of stableToken fees
      * @param _riskSlipAmount The amount of risk slips being repaid for
      * Requirements:
      *  - can only be called prior to maturity
@@ -133,6 +136,7 @@ interface IStagingLoanRouter {
     function repayMaxAndUnwrapSimple(
         IStagingBox _stagingBox,
         uint256 _stableAmount,
+        uint256 _stableFees,
         uint256 _riskSlipAmount
     ) external;
 
@@ -140,6 +144,7 @@ interface IStagingLoanRouter {
      * @dev repays stable tokens to CBB and unwraps collateral into underlying
      * @param _stagingBox The staging box tied to the Convertible Bond
      * @param _stableAmount The amount of stableTokens to be repaid
+     * @param _stableFees The amount of stableToken fees
      * @param _riskSlipAmount The amount of riskSlips to be repaid with
      * Requirements:
      *  - can only be called after maturity
@@ -148,6 +153,7 @@ interface IStagingLoanRouter {
     function repayAndUnwrapMature(
         IStagingBox _stagingBox,
         uint256 _stableAmount,
+        uint256 _stableFees,
         uint256 _riskSlipAmount
     ) external;
 }

@@ -35,13 +35,17 @@ contract TransmitReinit is SBIntegrationSetup {
             s_deployedSB.priceGranularity() /
             s_deployedSB.trancheDecimals();
 
-        uint256 minBorrowAmount = (1e15 *
+        uint256 minBorrowAmount = (1e6 *
             s_deployedSB.initialPrice() *
             s_deployedSB.stableDecimals()) /
             s_deployedSB.priceGranularity() /
             s_deployedSB.trancheDecimals();
 
-        _borrowAmount = bound(_borrowAmount, minBorrowAmount, maxBorrowAmount);
+        _borrowAmount = bound(
+            _borrowAmount,
+            Math.max(minBorrowAmount, 1),
+            maxBorrowAmount
+        );
 
         s_deployedSB.depositBorrow(s_borrower, _borrowAmount);
 
@@ -122,9 +126,17 @@ contract TransmitReinit is SBIntegrationSetup {
             before.SBRiskSlip + adjustments.riskTrancheAmount,
             s_riskSlip.balanceOf(s_deployedSBAddress)
         );
-        assertEq(
-            before.CBBSafeTranche + adjustments.safeTrancheAmount,
-            s_safeTranche.balanceOf(s_deployedCBBAddress)
+
+        s_deployedSB.depositLend(s_lender, _lendAmount);
+
+        BeforeBalances memory before = BeforeBalances(
+            s_safeTranche.balanceOf(s_deployedSBAddress),
+            s_riskTranche.balanceOf(s_deployedSBAddress),
+            s_stableToken.balanceOf(s_deployedSBAddress),
+            s_safeSlip.balanceOf(s_deployedSBAddress),
+            s_riskSlip.balanceOf(s_deployedSBAddress),
+            s_safeTranche.balanceOf(s_deployedCBBAddress),
+            s_riskTranche.balanceOf(s_deployedCBBAddress)
         );
         assertEq(
             before.CBBRiskTranche + adjustments.riskTrancheAmount,

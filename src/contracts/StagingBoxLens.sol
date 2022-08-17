@@ -56,10 +56,10 @@ contract StagingBoxLens is IStagingBoxLens {
         uint256 buttonAmount = wrapper.underlyingToWrapper(_amountRaw);
 
         //calculate safeTranche (borrowSlip amount) amount with tranche ratio & CDR
-        uint256 bondCollateralBalance = IERC20(bond.collateralToken())
-            .balanceOf(address(bond));
+        uint256 bondCollateralBalance = wrapper.balanceOf(address(bond));
+
         uint256 safeTrancheAmount = (buttonAmount *
-            _stagingBox.safeRatio() *
+            convertibleBondBox.safeRatio() *
             bond.totalDebt()) /
             bondCollateralBalance /
             convertibleBondBox.s_trancheGranularity();
@@ -67,8 +67,10 @@ contract StagingBoxLens is IStagingBoxLens {
         //calculate stabletoken amount w/ safeTrancheAmount & initialPrice
         uint256 stableLoanAmount = (safeTrancheAmount *
             _stagingBox.initialPrice() *
+            _stagingBox.stableDecimals() *
             _stagingBox.stableDecimals()) /
             _stagingBox.priceGranularity() /
+            _stagingBox.trancheDecimals() /
             _stagingBox.trancheDecimals();
 
         return (stableLoanAmount, safeTrancheAmount);
@@ -78,7 +80,7 @@ contract StagingBoxLens is IStagingBoxLens {
      * @inheritdoc IStagingBoxLens
      */
 
-    function vieSimplewWithdrawBorrowUnwrap(
+    function viewSimpleWithdrawBorrowUnwrap(
         IStagingBox _stagingBox,
         uint256 _borrowSlipAmount
     ) public view returns (uint256, uint256) {
@@ -122,8 +124,10 @@ contract StagingBoxLens is IStagingBoxLens {
         //calculate lendSlips to safeSlips w/ initialPrice
         uint256 safeSlipsAmount = (_lendSlipAmount *
             _stagingBox.priceGranularity() *
+            _stagingBox.trancheDecimals() *
             _stagingBox.trancheDecimals()) /
             _stagingBox.initialPrice() /
+            _stagingBox.stableDecimals() /
             _stagingBox.stableDecimals();
 
         return _safeSlipsForStables(_stagingBox, safeSlipsAmount);
@@ -175,8 +179,10 @@ contract StagingBoxLens is IStagingBoxLens {
         //calculate lendSlips to safeSlips w/ initialPrice
         uint256 safeSlipsAmount = (_lendSlipAmount *
             _stagingBox.priceGranularity() *
+            _stagingBox.trancheDecimals() *
             _stagingBox.trancheDecimals()) /
             _stagingBox.initialPrice() /
+            _stagingBox.stableDecimals() /
             _stagingBox.stableDecimals();
 
         return _safeSlipRedeemUnwrap(_stagingBox, safeSlipsAmount);
@@ -307,8 +313,10 @@ contract StagingBoxLens is IStagingBoxLens {
         //calculate safeTranches for stables w/ current price
         uint256 safeTranchePayout = (_stableAmount *
             convertibleBondBox.s_priceGranularity() *
+            convertibleBondBox.trancheDecimals() *
             convertibleBondBox.trancheDecimals()) /
             convertibleBondBox.currentPrice() /
+            convertibleBondBox.stableDecimals() /
             convertibleBondBox.stableDecimals();
 
         uint256 riskTranchePayout = (safeTranchePayout *
@@ -361,8 +369,10 @@ contract StagingBoxLens is IStagingBoxLens {
         //calculate repayment cost
         uint256 stablesOwed = (safeTranchePayout *
             convertibleBondBox.currentPrice() *
+            convertibleBondBox.stableDecimals() *
             convertibleBondBox.stableDecimals()) /
             convertibleBondBox.s_priceGranularity() /
+            convertibleBondBox.trancheDecimals() /
             convertibleBondBox.trancheDecimals();
 
         //calculate stable Fees
@@ -487,6 +497,7 @@ contract StagingBoxLens is IStagingBoxLens {
         uint256 collateralBalanceRisk = wrapper.balanceOf(
             address(_stagingBox.riskTranche())
         );
+
         buttonAmount +=
             (_riskSlipAmount * collateralBalanceRisk) /
             convertibleBondBox.riskTranche().totalSupply();

@@ -35,7 +35,7 @@ interface IStagingBoxLens {
      * - for A-Z convertible only
      */
 
-    function vieSimplewWithdrawBorrowUnwrap(
+    function viewSimpleWithdrawBorrowUnwrap(
         IStagingBox _stagingBox,
         uint256 _borrowSlipAmount
     ) external view returns (uint256, uint256);

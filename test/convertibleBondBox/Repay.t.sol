@@ -77,6 +77,7 @@ contract Repay is CBBSetup {
         initialSetup();
 
         fee = bound(fee, 0, s_maxFeeBPS);
+        fee = bound(fee, 0, s_maxFeeBPS);
         vm.prank(s_cbb_owner);
         s_deployedConvertibleBondBox.setFee(fee);
 
@@ -128,6 +129,8 @@ contract Repay is CBBSetup {
             (safeTranchePayout * s_riskRatio) / s_safeRatio
         );
 
+        vm.startPrank(s_borrower);
+        s_stableToken.approve(s_deployedCBBAddress, type(uint256).max);
         vm.startPrank(s_borrower);
         s_stableToken.approve(s_deployedCBBAddress, type(uint256).max);
         vm.expectEmit(true, true, true, true);
@@ -198,7 +201,7 @@ contract Repay is CBBSetup {
 
         vm.startPrank(s_borrower);
         s_stableToken.approve(s_deployedCBBAddress, type(uint256).max);
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit(true, true, true, false);
         emit Repay(
             s_borrower,
             stablesOwed,
@@ -215,51 +218,60 @@ contract Repay is CBBSetup {
         BeforeBalances memory before,
         RepayAmounts memory adjustments
     ) internal {
-        assertEq(
+        assertApproxEqRel(
             before.borrowerStables -
                 adjustments.stablesRepaid -
                 adjustments.stablesFee,
-            s_stableToken.balanceOf(s_borrower)
+            s_stableToken.balanceOf(s_borrower),
+            1e15
         );
 
-        assertEq(
+        assertApproxEqRel(
             before.borrowerSafeTranche + adjustments.safeTranchePayout,
-            s_safeTranche.balanceOf(s_borrower)
+            s_safeTranche.balanceOf(s_borrower),
+            1e15
         );
 
-        assertEq(
+        assertApproxEqRel(
             before.borrowerRiskSlip - adjustments.riskSlipAmount,
-            s_riskSlip.balanceOf(s_borrower)
+            s_riskSlip.balanceOf(s_borrower),
+            1e15
         );
 
-        assertEq(
+        assertApproxEqRel(
             before.borrowerRiskTranche + adjustments.riskTranchePayout,
-            s_riskTranche.balanceOf(s_borrower)
+            s_riskTranche.balanceOf(s_borrower),
+            1e15
         );
 
-        assertEq(
+        assertApproxEqRel(
             before.ownerStables + adjustments.stablesFee,
-            s_stableToken.balanceOf(s_cbb_owner)
+            s_stableToken.balanceOf(s_cbb_owner),
+            1e15
         );
 
-        assertEq(
+        assertApproxEqRel(
             before.CBBSafeTranche - adjustments.safeTranchePayout,
-            s_safeTranche.balanceOf(s_deployedCBBAddress)
+            s_safeTranche.balanceOf(s_deployedCBBAddress),
+            1e15
         );
 
-        assertEq(
+        assertApproxEqRel(
             before.CBBRiskTranche - adjustments.riskTranchePayout,
-            s_riskTranche.balanceOf(s_deployedCBBAddress)
+            s_riskTranche.balanceOf(s_deployedCBBAddress),
+            1e15
         );
 
-        assertEq(
+        assertApproxEqRel(
             before.CBBStables + adjustments.stablesRepaid,
-            s_stableToken.balanceOf(s_deployedCBBAddress)
+            s_stableToken.balanceOf(s_deployedCBBAddress),
+            1e15
         );
 
-        assertEq(
+        assertApproxEqRel(
             before.repaidSafeSlips + adjustments.safeTranchePayout,
-            s_deployedConvertibleBondBox.s_repaidSafeSlips()
+            s_deployedConvertibleBondBox.s_repaidSafeSlips(),
+            1e15
         );
     }
 }
