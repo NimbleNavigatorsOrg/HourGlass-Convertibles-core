@@ -22,20 +22,21 @@ import "../test/external/button-wrappers/ButtonToken.sol";
 
 contract GoerliCBBIssuer is Script {
     CBBFactory convertiblesFactory =
-        CBBFactory(0x876e563786eA903e1B1F59E339aE34152d84aDB1);
+        CBBFactory(0x94760138F9F6728388cacE7eaA7547382902c46A);
     StagingBoxFactory stagingFactory =
-        StagingBoxFactory(0xC12803558f756C726DeE05a0BC8A04c7a8c32b0f);
+        StagingBoxFactory(0xe34D69cc7A07bFbADf4c6dAc3352c74826c013D7);
     SlipFactory slipFactory =
         SlipFactory(0xD96D4AF92CA2E89E6e423C2aC7144A0c60412156);
     StagingLoanRouter slr =
-        StagingLoanRouter(0xA081Eb692C431749D8fa6D45FBEC726703dFe66d);
+        StagingLoanRouter(0x60E8271E19e63b8f1591A1f57226f50e218C8664);
     StagingBoxLens sbLens =
-        StagingBoxLens(0xdfe5010d0AfBb0b988087C43792De3212A23318a);
+        StagingBoxLens(0x119c9541e1fe46a42e8cbd9A458677A8262F10fC);
 
     address public trancheFact = 0xE0De6e1a505b69D2987fAe7230db96682d26Dfca;
-    address public poorToken = 0xb7BF564674dCdA1067Cfe6AbE4775e151E91Bc1B;
-    address public buttonPoor = 0x434995Ff76c3f06267aD42Cc5B646DbfEF9351E0;
+    address public Token = 0xd10A82cba40695B5FDCb37d81Dcf48CE6c9FcDB1;
+    address public button = 0x5A07FB993C30F04DD2908411b46A871BAdB88A45;
     address public mockAmpl = 0x0E70417aa5F2A2b605e74Ab79637003C0e516Aa3;
+    address public stableCoin = 0xaFF4481D10270F50f203E0763e2597776068CBc5;
     address public weenus = 0xaFF4481D10270F50f203E0763e2597776068CBc5;
 
     address public recipientA = 0x53462C34c2Da0aC7cF391E305327f2C566D40d8D;
@@ -51,25 +52,28 @@ contract GoerliCBBIssuer is Script {
     function run() public {
         vm.startBroadcast();
 
+        // MockERC20(Token).mint(msg.sender, 15e24);
+        // IERC20(Token).approve(address(slr), 15e24);
+
         //Deploy & Initialize BondController
         uint256[] memory ratios = new uint256[](2);
         ratios[0] = 200;
         ratios[1] = 800;
 
-        BondController poorBond = new BondController();
-        poorBond.init(
+        BondController Bond = new BondController();
+        Bond.init(
             trancheFact,
-            buttonPoor,
+            button,
             msg.sender,
             ratios,
             block.timestamp + 2592e3,
             type(uint256).max
         );
 
-        BondController poorBondMature = new BondController();
-        poorBondMature.init(
+        BondController BondMature = new BondController();
+        BondMature.init(
             trancheFact,
-            buttonPoor,
+            button,
             msg.sender,
             ratios,
             block.timestamp + 300,
@@ -98,12 +102,12 @@ contract GoerliCBBIssuer is Script {
 
         //create IBO CBBs + SBs
         for (uint8 i = 0; i < repeatCount; i++) {
-            address createdSBPoor = stagingFactory.createStagingBoxWithCBB(
+            address createdSB = stagingFactory.createStagingBoxWithCBB(
                 (convertiblesFactory),
                 (slipFactory),
-                poorBond,
+                Bond,
                 i + basePenalty,
-                weenus,
+                stableCoin,
                 0,
                 basePrice + (i * 1e6),
                 msg.sender
@@ -114,17 +118,17 @@ contract GoerliCBBIssuer is Script {
             //     (slipFactory),
             //     mockAmplBond,
             //     i + basePenalty,
-            //     weenus,
+            //     stableCoin,
             //     0,
             //     basePrice + (i * 1e6),
             //     msg.sender
             // );
 
-            console2.log(createdSBPoor, "SB-IBO-Poor", i);
+            console2.log(createdSB, "SB-IBO", i);
 
             console2.log(
-                address(StagingBox(createdSBPoor).convertibleBondBox()),
-                "CBB-IBO-Poor",
+                address(StagingBox(createdSB).convertibleBondBox()),
+                "CBB-IBO",
                 i
             );
             // console2.log(createdSBAmpl, "SB-IBO-AMPL", i);
@@ -135,62 +139,69 @@ contract GoerliCBBIssuer is Script {
             // );
         }
 
-        //create active Bonds (poorToken only)
+        //create active Bonds (Token only)
 
         for (uint8 i = 0; i < repeatCount; i++) {
-            address createdSBPoor = stagingFactory.createStagingBoxWithCBB(
+            address createdSB = stagingFactory.createStagingBoxWithCBB(
                 (convertiblesFactory),
                 (slipFactory),
-                poorBond,
+                Bond,
                 i + basePenalty,
-                weenus,
+                stableCoin,
                 0,
                 basePrice + (i * 1e6),
                 msg.sender
             );
 
-            IERC20(weenus).approve(createdSBPoor, type(uint256).max);
-            IERC20(poorToken).approve(address(slr), type(uint256).max);
+            IERC20(stableCoin).approve(createdSB, type(uint256).max);
+            IERC20(Token).approve(address(slr), type(uint256).max);
 
             //make lendDeposits to 3 parties
 
-            StagingBox(createdSBPoor).depositLend(msg.sender, 100e18);
-            StagingBox(createdSBPoor).depositLend(recipientA, 100e18);
-            StagingBox(createdSBPoor).depositLend(recipientB, 100e18);
+            StagingBox(createdSB).depositLend(
+                msg.sender,
+                100 * (10**ERC20(stableCoin).decimals())
+            );
+            StagingBox(createdSB).depositLend(
+                recipientA,
+                100 * (10**ERC20(stableCoin).decimals())
+            );
+            StagingBox(createdSB).depositLend(
+                recipientB,
+                100 * (10**ERC20(stableCoin).decimals())
+            );
 
             //make borrowDeposits & distribute to 3 parties
 
             slr.simpleWrapTrancheBorrow(
-                IStagingBox(createdSBPoor),
-                10000e18,
+                IStagingBox(createdSB),
+                100 * (10**ERC20(Token).decimals()),
                 0
             );
-            uint256 poorBorrowSlipDistributionAmount = StagingBox(createdSBPoor)
+            uint256 BorrowSlipDistributionAmount = StagingBox(createdSB)
                 .borrowSlip()
                 .balanceOf(msg.sender) / 3;
-            StagingBox(createdSBPoor).borrowSlip().transfer(
+            StagingBox(createdSB).borrowSlip().transfer(
                 recipientA,
-                poorBorrowSlipDistributionAmount
+                BorrowSlipDistributionAmount
             );
-            StagingBox(createdSBPoor).borrowSlip().transfer(
+            StagingBox(createdSB).borrowSlip().transfer(
                 recipientB,
-                poorBorrowSlipDistributionAmount
+                BorrowSlipDistributionAmount
             );
 
             //transmitReinit
 
-            bool poorBool = sbLens.viewTransmitReInitBool(
-                IStagingBox(createdSBPoor)
-            );
+            bool Bool = sbLens.viewTransmitReInitBool(IStagingBox(createdSB));
 
-            StagingBox(createdSBPoor).transmitReInit(poorBool);
+            StagingBox(createdSB).transmitReInit(Bool);
 
             //repeat for AMPL-Token
 
-            console2.log(createdSBPoor, "SB-ACTIVE-Poor", i);
+            console2.log(createdSB, "SB-ACTIVE", i);
             console2.log(
-                address(StagingBox(createdSBPoor).convertibleBondBox()),
-                "CBB-ACTIVE-Poor",
+                address(StagingBox(createdSB).convertibleBondBox()),
+                "CBB-ACTIVE",
                 i
             );
         }
@@ -198,52 +209,63 @@ contract GoerliCBBIssuer is Script {
         //create Mature Bonds
 
         for (uint8 i = 0; i < repeatCount; i++) {
-            address createdSBPoor = stagingFactory.createStagingBoxWithCBB(
+            address createdSB = stagingFactory.createStagingBoxWithCBB(
                 (convertiblesFactory),
                 (slipFactory),
-                poorBondMature,
+                BondMature,
                 i + basePenalty,
-                weenus,
+                stableCoin,
                 0,
                 basePrice + (i * 1e6),
                 msg.sender
             );
 
-            IERC20(weenus).approve(createdSBPoor, type(uint256).max);
-            IERC20(poorToken).approve(address(slr), type(uint256).max);
+            IERC20(stableCoin).approve(createdSB, type(uint256).max);
+            IERC20(Token).approve(address(slr), type(uint256).max);
 
             //make lendDeposits to 3 parties
 
-            StagingBox(createdSBPoor).depositLend(msg.sender, 100e18);
-            StagingBox(createdSBPoor).depositLend(recipientA, 100e18);
-            StagingBox(createdSBPoor).depositLend(recipientB, 100e18);
+            StagingBox(createdSB).depositLend(
+                msg.sender,
+                100 * (10**ERC20(stableCoin).decimals())
+            );
+            StagingBox(createdSB).depositLend(
+                recipientA,
+                100 * (10**ERC20(stableCoin).decimals())
+            );
+            StagingBox(createdSB).depositLend(
+                recipientB,
+                100 * (10**ERC20(stableCoin).decimals())
+            );
 
             //make borrowDeposits & distribute to 3 parties
 
-            slr.simpleWrapTrancheBorrow(IStagingBox(createdSBPoor), 500e18, 0);
-            uint256 poorBorrowSlipDistributionAmount = StagingBox(createdSBPoor)
+            slr.simpleWrapTrancheBorrow(
+                IStagingBox(createdSB),
+                100 * (10**ERC20(Token).decimals()),
+                0
+            );
+            uint256 BorrowSlipDistributionAmount = StagingBox(createdSB)
                 .borrowSlip()
                 .balanceOf(msg.sender) / 3;
-            StagingBox(createdSBPoor).borrowSlip().transfer(
+            StagingBox(createdSB).borrowSlip().transfer(
                 recipientA,
-                poorBorrowSlipDistributionAmount
+                BorrowSlipDistributionAmount
             );
-            StagingBox(createdSBPoor).borrowSlip().transfer(
+            StagingBox(createdSB).borrowSlip().transfer(
                 recipientB,
-                poorBorrowSlipDistributionAmount
+                BorrowSlipDistributionAmount
             );
 
             //transmitReInit
-            bool poorBool = sbLens.viewTransmitReInitBool(
-                IStagingBox(createdSBPoor)
-            );
+            bool Bool = sbLens.viewTransmitReInitBool(IStagingBox(createdSB));
 
-            StagingBox(createdSBPoor).transmitReInit(poorBool);
+            StagingBox(createdSB).transmitReInit(Bool);
 
-            console2.log(createdSBPoor, "SB-MATURE-Poor", i);
+            console2.log(createdSB, "SB-MATURE", i);
             console2.log(
-                address(StagingBox(createdSBPoor).convertibleBondBox()),
-                "CBB-MATURE-Poor",
+                address(StagingBox(createdSB).convertibleBondBox()),
+                "CBB-MATURE",
                 i
             );
         }

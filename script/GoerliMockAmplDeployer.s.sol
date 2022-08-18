@@ -27,7 +27,7 @@ contract GoerliBatchDeployer is Script {
         vm.startBroadcast();
 
         //deploy poor token & mint to msg.sender
-        MockERC20 mockAMPL = new MockERC20("mockAMPL", "mockAMPL");
+        MockERC20 mockAMPL = new MockERC20("mockAMPL", "mockAMPL", 18);
         mockAMPL.mint(msg.sender, 15e24);
         mockAMPL.mint(0x53462C34c2Da0aC7cF391E305327f2C566D40d8D, 15e24);
         mockAMPL.mint(0xEcA6c389fb76f92cc68223C01498FA83Ec3CE02F, 15e24);

@@ -6,6 +6,7 @@ import "forge-std/Script.sol";
 import "../src/contracts/Slip.sol";
 import "../src/contracts/SlipFactory.sol";
 import "../src/contracts/ConvertibleBondBox.sol";
+import "../src/contracts/ConvertiblesDVLens.sol";
 import "../src/contracts/CBBFactory.sol";
 import "../src/contracts/StagingBox.sol";
 import "../src/contracts/StagingBoxFactory.sol";
@@ -26,45 +27,65 @@ contract GoerliBatchDeployer is Script {
     function run() public {
         vm.startBroadcast();
 
-        //deploy buttonwood artifacts
-        Tranche baseTranche = new Tranche();
-        TrancheFactory trancheFact = new TrancheFactory(address(baseTranche));
+        // //deploy buttonwood artifacts
+        // Tranche baseTranche = new Tranche();
+        // TrancheFactory trancheFact = new TrancheFactory(address(baseTranche));
 
-        //deploy poor token & mint to msg.sender
-        MockERC20 poorToken = new MockERC20("PoorToken", "goerliPOOR");
-        poorToken.mint(msg.sender, 15e24);
+        {
+            //deploy poor token & mint to msg.sender
+            MockERC20 poorToken = new MockERC20("Poor", "goerliPOOR", 8);
+            poorToken.mint(msg.sender, 15e6 * (10**poorToken.decimals()));
 
-        //deploy mock oracle
-        MockOracle poorPriceOracle = new MockOracle();
-        poorPriceOracle.setData(5e7, true);
+            //deploy poor token & mint to msg.sender
+            MockERC20 peasantToken = new MockERC20("Peasant", "goerliPSNT", 18);
+            peasantToken.mint(msg.sender, 15e6 * (10**peasantToken.decimals()));
 
-        //deploy buttonToken & initialize
-        ButtonToken buttonPoor = new ButtonToken();
-        buttonPoor.initialize(
-            address(poorToken),
-            "ButtonPoor",
-            "btnPOOR",
-            address(poorPriceOracle)
-        );
+            //deploy poor token & mint to msg.sender
+            MockERC20 poorStable = new MockERC20(
+                "PoorStable",
+                "goerliPRSTBLE",
+                6
+            );
+            poorStable.mint(msg.sender, 15e6 * (10**poorStable.decimals()));
 
-        //Deploy & Initialize BondController
-        uint256[] memory ratios = new uint256[](2);
-        ratios[0] = 200;
-        ratios[1] = 800;
+            //deploy mock oracle
+            MockOracle poorPriceOracle = new MockOracle();
+            poorPriceOracle.setData(5e7, true);
 
-        BondController poorBond = new BondController();
-        poorBond.init(
-            address(trancheFact),
-            address(buttonPoor),
-            msg.sender,
-            ratios,
-            block.timestamp + 2592e3,
-            type(uint256).max
-        );
+            //deploy mock oracle
+            MockOracle peasantPriceOracle = new MockOracle();
+            peasantPriceOracle.setData(3e7, true);
+
+            //deploy buttonToken & initialize
+            ButtonToken buttonPoor = new ButtonToken();
+            buttonPoor.initialize(
+                address(poorToken),
+                "ButtonPoor",
+                "btnPOOR",
+                address(poorPriceOracle)
+            );
+
+            //deploy buttonToken & initialize
+            ButtonToken buttonPeasant = new ButtonToken();
+            buttonPoor.initialize(
+                address(peasantToken),
+                "ButtonPeasant",
+                "btnPSNT",
+                address(peasantPriceOracle)
+            );
+
+            console2.log(address(poorPriceOracle), "poorPriceOracle");
+            console2.log(address(peasantPriceOracle), "peasantPriceOracle");
+            // console2.log(address(trancheFact), "TrancheFactory");
+            console2.log(address(poorToken), "PoorToken");
+            console2.log(address(buttonPoor), "ButtonPoor");
+            console2.log(address(peasantToken), "peasantToken");
+            console2.log(address(buttonPeasant), "ButtonPeasant");
+        }
 
         // //deploy slips + slip factory
-        Slip deployedSlip = new Slip();
-        SlipFactory slipFactory = new SlipFactory(address(deployedSlip));
+        // Slip deployedSlip = new Slip();
+        // SlipFactory slipFactory = new SlipFactory(address(deployedSlip));
 
         //deploy CBB + CBB factory
         ConvertibleBondBox deployedCBB = new ConvertibleBondBox();
@@ -76,23 +97,19 @@ contract GoerliBatchDeployer is Script {
             address(deployedStagingBox)
         );
 
-        //deploy staging box router + lens
+        // deploy staging box router + lens
         StagingLoanRouter stagingLoanRouter = new StagingLoanRouter();
         StagingBoxLens stagingBoxLens = new StagingBoxLens();
+        ConvertiblesDVLens DVLens = new ConvertiblesDVLens();
 
         vm.stopBroadcast();
 
-        console2.log(address(poorPriceOracle), "poorPriceOracle");
-        console2.log(address(trancheFact), "TrancheFactory");
-        console2.log(address(poorToken), "poorToken");
-        console2.log(address(buttonPoor), "buttonPoor");
-        console2.log(address(poorBond), "poorBond");
-
-        console2.log(address(deployedSlip), "deployedSlip");
-        console2.log(address(slipFactory), "slipFactory");
+        // console2.log(address(deployedSlip), "deployedSlip");
+        // console2.log(address(slipFactory), "slipFactory");
         console2.log(address(cbbFactory), "ConvertiblesFactory");
         console2.log(address(sbFactory), "StagingBoxFactory");
         console2.log(address(stagingLoanRouter), "StagingLoanRouter");
         console2.log(address(stagingBoxLens), "StagingBoxLens");
+        console2.log(address(DVLens), "ConvertiblesDVLens");
     }
 }
