@@ -5,7 +5,6 @@ import "../interfaces/IStagingBoxLens.sol";
 import "../interfaces/IConvertibleBondBox.sol";
 import "@buttonwood-protocol/button-wrappers/contracts/interfaces/IButtonToken.sol";
 
-
 contract StagingBoxLens is IStagingBoxLens {
     /**
      * @inheritdoc IStagingBoxLens
