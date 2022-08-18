@@ -35,7 +35,7 @@ contract KovanAnvil is Script {
         vm.startBroadcast();
 
         // create mock FORTH token and mint to self
-        MockERC20 anvilForth = new MockERC20("ForgeForth", "fgFORTH");
+        MockERC20 anvilForth = new MockERC20("ForgeForth", "fgFORTH", 18);
 
         // //deploy slips + slip factory
         Slip deployedSlip = new Slip();

@@ -31,7 +31,7 @@ contract GoerliBatchDeployer is Script {
         TrancheFactory trancheFact = new TrancheFactory(address(baseTranche));
 
         //deploy poor token & mint to msg.sender
-        MockERC20 poorToken = new MockERC20("PoorToken", "goerliPOOR");
+        MockERC20 poorToken = new MockERC20("PoorToken", "goerliPOOR", 18);
         poorToken.mint(msg.sender, 15e24);
 
         //deploy mock oracle
