@@ -126,17 +126,9 @@ contract TransmitReinit is SBIntegrationSetup {
             before.SBRiskSlip + adjustments.riskTrancheAmount,
             s_riskSlip.balanceOf(s_deployedSBAddress)
         );
-
-        s_deployedSB.depositLend(s_lender, _lendAmount);
-
-        BeforeBalances memory before = BeforeBalances(
-            s_safeTranche.balanceOf(s_deployedSBAddress),
-            s_riskTranche.balanceOf(s_deployedSBAddress),
-            s_stableToken.balanceOf(s_deployedSBAddress),
-            s_safeSlip.balanceOf(s_deployedSBAddress),
-            s_riskSlip.balanceOf(s_deployedSBAddress),
-            s_safeTranche.balanceOf(s_deployedCBBAddress),
-            s_riskTranche.balanceOf(s_deployedCBBAddress)
+        assertEq(
+            before.CBBSafeTranche + adjustments.safeTrancheAmount,
+            s_safeTranche.balanceOf(s_deployedCBBAddress)
         );
         assertEq(
             before.CBBRiskTranche + adjustments.riskTrancheAmount,

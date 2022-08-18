@@ -67,10 +67,8 @@ contract StagingBoxLens is IStagingBoxLens {
         //calculate stabletoken amount w/ safeTrancheAmount & initialPrice
         uint256 stableLoanAmount = (safeTrancheAmount *
             _stagingBox.initialPrice() *
-            _stagingBox.stableDecimals() *
             _stagingBox.stableDecimals()) /
             _stagingBox.priceGranularity() /
-            _stagingBox.trancheDecimals() /
             _stagingBox.trancheDecimals();
 
         return (stableLoanAmount, safeTrancheAmount);
@@ -124,10 +122,8 @@ contract StagingBoxLens is IStagingBoxLens {
         //calculate lendSlips to safeSlips w/ initialPrice
         uint256 safeSlipsAmount = (_lendSlipAmount *
             _stagingBox.priceGranularity() *
-            _stagingBox.trancheDecimals() *
             _stagingBox.trancheDecimals()) /
             _stagingBox.initialPrice() /
-            _stagingBox.stableDecimals() /
             _stagingBox.stableDecimals();
 
         return _safeSlipsForStables(_stagingBox, safeSlipsAmount);
@@ -179,10 +175,8 @@ contract StagingBoxLens is IStagingBoxLens {
         //calculate lendSlips to safeSlips w/ initialPrice
         uint256 safeSlipsAmount = (_lendSlipAmount *
             _stagingBox.priceGranularity() *
-            _stagingBox.trancheDecimals() *
             _stagingBox.trancheDecimals()) /
             _stagingBox.initialPrice() /
-            _stagingBox.stableDecimals() /
             _stagingBox.stableDecimals();
 
         return _safeSlipRedeemUnwrap(_stagingBox, safeSlipsAmount);
@@ -313,10 +307,8 @@ contract StagingBoxLens is IStagingBoxLens {
         //calculate safeTranches for stables w/ current price
         uint256 safeTranchePayout = (_stableAmount *
             convertibleBondBox.s_priceGranularity() *
-            convertibleBondBox.trancheDecimals() *
             convertibleBondBox.trancheDecimals()) /
             convertibleBondBox.currentPrice() /
-            convertibleBondBox.stableDecimals() /
             convertibleBondBox.stableDecimals();
 
         uint256 riskTranchePayout = (safeTranchePayout *
@@ -369,10 +361,8 @@ contract StagingBoxLens is IStagingBoxLens {
         //calculate repayment cost
         uint256 stablesOwed = (safeTranchePayout *
             convertibleBondBox.currentPrice() *
-            convertibleBondBox.stableDecimals() *
             convertibleBondBox.stableDecimals()) /
             convertibleBondBox.s_priceGranularity() /
-            convertibleBondBox.trancheDecimals() /
             convertibleBondBox.trancheDecimals();
 
         //calculate stable Fees

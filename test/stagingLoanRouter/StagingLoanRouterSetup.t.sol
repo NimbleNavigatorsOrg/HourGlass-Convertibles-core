@@ -98,7 +98,6 @@ contract StagingLoanRouterSetup is CBBSetup {
         s_stagingLoanRouter = new StagingLoanRouter();
 
         vm.prank(s_cbb_owner);
-        vm.prank(s_cbb_owner);
         s_deployedSB = StagingBox(
             stagingBoxFactory.createStagingBoxWithCBB(
                 s_CBBFactory,

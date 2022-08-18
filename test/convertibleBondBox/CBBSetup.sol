@@ -12,7 +12,6 @@ import "../../src/contracts/SlipFactory.sol";
 import "forge-std/console2.sol";
 import "../../test/mocks/MockERC20.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
-import "@openzeppelin/contracts/utils/math/Math.sol";
 
 abstract contract CBBSetup is Test {
     BondController s_buttonWoodBondController;
@@ -28,8 +27,6 @@ abstract contract CBBSetup is Test {
     TrancheFactory s_trancheFactory;
     Tranche s_tranche;
     Slip s_slip;
-    ISlip s_riskSlip;
-    ISlip s_safeSlip;
     ISlip s_riskSlip;
     ISlip s_safeSlip;
     SlipFactory s_slipFactory;
@@ -48,8 +45,6 @@ abstract contract CBBSetup is Test {
     uint256 constant s_priceGranularity = 1e8;
     uint256 constant s_BPS = 10_000;
     uint256 public constant s_maxFeeBPS = 50;
-    uint8 constant s_stableDecimals = 6;
-    uint8 constant s_collateralDecimals = 18;
     uint8 constant s_stableDecimals = 6;
     uint8 constant s_collateralDecimals = 18;
     address s_deployedCBBAddress;
