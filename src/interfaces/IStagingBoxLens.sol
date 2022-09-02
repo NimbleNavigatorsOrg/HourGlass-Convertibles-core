@@ -41,6 +41,42 @@ interface IStagingBoxLens {
     ) external view returns (uint256, uint256);
 
     /**
+     * @dev provides amount of stable tokens expected in return for withdrawing lendSlips
+     * @param _stagingBox The staging box tied to the Convertible Bond
+     * @param _lendSlipAmount The amount of lendSlips to be withdrawn
+     * Requirements:
+     */
+
+    function viewWithdrawLendSlip(
+        IStagingBox _stagingBox,
+        uint256 _lendSlipAmount
+    ) external view returns (uint256);
+
+    /**
+     * @dev provides amount of riskSlips and stableToken loan in return for borrowSlips
+     * @param _stagingBox The staging box tied to the Convertible Bond
+     * @param _borrowSlipAmount The amount of borrowSlips to be redeemed
+     * Requirements:
+     */
+
+    function viewRedeemBorrowSlipForRiskSlip(
+        IStagingBox _stagingBox,
+        uint256 _borrowSlipAmount
+    ) external view returns (uint256, uint256);
+
+    /**
+     * @dev provides amount of safeSlips expected in return for redeeming lendSlips
+     * @param _stagingBox The staging box tied to the Convertible Bond
+     * @param _lendSlipAmount The amount of lendSlips to be redeemed
+     * Requirements:
+     */
+
+    function viewRedeemLendSlipForSafeSlip(
+        IStagingBox _stagingBox,
+        uint256 _lendSlipAmount
+    ) external view returns (uint256);
+
+    /**
      * @dev provides amount of stableTokens expected in return for redeeming lendSlips
      * @param _stagingBox The staging box tied to the Convertible Bond
      * @param _lendSlipAmount The amount of lendSlips to be redeemed

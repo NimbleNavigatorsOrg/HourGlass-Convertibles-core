@@ -24,7 +24,7 @@ contract GoerliCBBIssuer is Script {
     CBBFactory convertiblesFactory =
         CBBFactory(0x26391A112CeeB898E195f4ec91F186310e29aEA2);
     StagingBoxFactory stagingFactory =
-        StagingBoxFactory(0x9CC7765FDe7EC1A5b8399FDc6b323F2D6f2Eb023);
+        StagingBoxFactory(0x67896B9f66325849Da948F8D1f0c897688DAd643);
     SlipFactory slipFactory =
         SlipFactory(0xD96D4AF92CA2E89E6e423C2aC7144A0c60412156);
     StagingLoanRouter slr =
@@ -34,9 +34,13 @@ contract GoerliCBBIssuer is Script {
 
     address public trancheFact = 0xE0De6e1a505b69D2987fAe7230db96682d26Dfca;
 
-    //PoorTokenDetails
-    address public token = 0xC5743Ed645F30659148FEf1C4315b76c6C165cFD;
-    address public button = 0xf037cb06C5FeF11Fa599D52B181e726AaE3Aeb77;
+    //WETH Token Details
+    address public token = 0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6;
+    address public button = 0x084c3A0929Bc6D6C38B2C53e880e340528468571;
+
+    // //PoorTokenDetails
+    // address public token = 0xC5743Ed645F30659148FEf1C4315b76c6C165cFD;
+    // address public button = 0xf037cb06C5FeF11Fa599D52B181e726AaE3Aeb77;
 
     // //PeasantTokenDetails
     // address public token = 0xE7E0744803fEcdea6f2FCbC03a4804c825D0C2d4;
@@ -50,7 +54,7 @@ contract GoerliCBBIssuer is Script {
     address public recipientA = 0x53462C34c2Da0aC7cF391E305327f2C566D40d8D;
     address public recipientB = 0xEcA6c389fb76f92cc68223C01498FA83Ec3CE02F;
 
-    uint256 public basePrice = 70e6;
+    uint256 public basePrice = 72e6;
     uint256 public basePenalty = 10;
 
     uint8 public repeatCount = 1;
@@ -72,6 +76,16 @@ contract GoerliCBBIssuer is Script {
             msg.sender,
             ratios,
             block.timestamp + 2592e3,
+            type(uint256).max
+        );
+
+        BondController bondActive = new BondController();
+        bondActive.init(
+            trancheFact,
+            button,
+            msg.sender,
+            ratios,
+            block.timestamp + (2592e3) * 2,
             type(uint256).max
         );
 
@@ -113,7 +127,7 @@ contract GoerliCBBIssuer is Script {
             address createdSB = stagingFactory.createStagingBoxWithCBB(
                 (convertiblesFactory),
                 (slipFactory),
-                bond,
+                bondActive,
                 i + basePenalty,
                 stableCoin,
                 0,
@@ -141,9 +155,11 @@ contract GoerliCBBIssuer is Script {
 
             //make borrowDeposits & distribute to 3 parties
 
+            uint256 tokenBalance = IERC20(token).balanceOf(msg.sender);
+
             slr.simpleWrapTrancheBorrow(
                 IStagingBox(createdSB),
-                500 * (10**ERC20(token).decimals()),
+                tokenBalance / 3,
                 0
             );
             uint256 borrowSlipDistributionAmount = StagingBox(createdSB)
@@ -210,9 +226,11 @@ contract GoerliCBBIssuer is Script {
 
             //make borrowDeposits & distribute to 3 parties
 
+            uint256 tokenBalance = IERC20(token).balanceOf(msg.sender);
+
             slr.simpleWrapTrancheBorrow(
                 IStagingBox(createdSB),
-                500 * (10**ERC20(token).decimals()),
+                tokenBalance / 3,
                 0
             );
             uint256 borrowSlipDistributionAmount = StagingBox(createdSB)

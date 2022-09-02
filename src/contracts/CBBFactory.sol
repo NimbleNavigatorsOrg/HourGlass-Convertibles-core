@@ -112,13 +112,13 @@ contract CBBFactory is ICBBFactory {
 
         address safeSlipAddress = slipFactory.createSlip(
             "Safe-CBB-Slip",
-            string(abi.encodePacked("SLIP-", collateralSymbolSafe)),
+            string(abi.encodePacked("SAFE-SLIP-", collateralSymbolSafe)),
             address(safeTranche)
         );
 
         address riskSlipAddress = slipFactory.createSlip(
             "Risk-CBB-Slip",
-            string(abi.encodePacked("SLIP-", collateralSymbolRisk)),
+            string(abi.encodePacked("RISK-SLIP-", collateralSymbolRisk)),
             address(riskTranche)
         );
 

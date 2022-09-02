@@ -122,8 +122,14 @@ contract ConvertiblesDVLens is IConvertiblesDVLens {
                 address(_stagingBox)
             ),
             _stagingBox.s_reinitLendAmount(),
-            _stagingBox.stableToken().balanceOf(address(_stagingBox)) -
-                _stagingBox.s_reinitLendAmount(),
+            (
+                _stagingBox.stableToken().balanceOf(address(_stagingBox)) >
+                    _stagingBox.s_reinitLendAmount()
+                    ? _stagingBox.stableToken().balanceOf(
+                        address(_stagingBox)
+                    ) - _stagingBox.s_reinitLendAmount()
+                    : 0
+            ),
             _stagingBox.stableToken().balanceOf(address(_stagingBox))
         );
 
@@ -338,42 +344,44 @@ contract ConvertiblesDVLens is IConvertiblesDVLens {
             .collateralToken()
             .balanceOf(address(bond));
 
-        if (bond.isMature()) {
-            riskTrancheCollateral = convertibleBondBox
-                .collateralToken()
-                .balanceOf(address(convertibleBondBox.riskTranche()));
+        if (collateralBalance > 0) {
+            if (bond.isMature()) {
+                riskTrancheCollateral = convertibleBondBox
+                    .collateralToken()
+                    .balanceOf(address(convertibleBondBox.riskTranche()));
 
-            safeTrancheCollateral = convertibleBondBox
-                .collateralToken()
-                .balanceOf(address(convertibleBondBox.safeTranche()));
-        } else {
-            for (
-                uint256 i = 0;
-                i < bond.trancheCount() - 1 && collateralBalance > 0;
-                i++
-            ) {
-                (ITranche tranche, ) = bond.tranches(i);
-                uint256 amount = Math.min(
-                    tranche.totalSupply(),
-                    collateralBalance
-                );
-                collateralBalance -= amount;
+                safeTrancheCollateral = convertibleBondBox
+                    .collateralToken()
+                    .balanceOf(address(convertibleBondBox.safeTranche()));
+            } else {
+                for (
+                    uint256 i = 0;
+                    i < bond.trancheCount() - 1 && collateralBalance > 0;
+                    i++
+                ) {
+                    (ITranche tranche, ) = bond.tranches(i);
+                    uint256 amount = Math.min(
+                        tranche.totalSupply(),
+                        collateralBalance
+                    );
+                    collateralBalance -= amount;
 
-                if (i == convertibleBondBox.trancheIndex()) {
-                    safeTrancheCollateral = amount;
+                    if (i == convertibleBondBox.trancheIndex()) {
+                        safeTrancheCollateral = amount;
+                    }
                 }
+
+                riskTrancheCollateral = collateralBalance;
             }
 
-            riskTrancheCollateral = collateralBalance;
+            safeTrancheCollateral =
+                (safeTrancheCollateral * safeTrancheAmount) /
+                convertibleBondBox.safeTranche().totalSupply();
+
+            riskTrancheCollateral =
+                (riskTrancheCollateral * riskTrancheAmount) /
+                convertibleBondBox.riskTranche().totalSupply();
         }
-
-        safeTrancheCollateral =
-            (safeTrancheCollateral * safeTrancheAmount) /
-            convertibleBondBox.safeTranche().totalSupply();
-
-        riskTrancheCollateral =
-            (riskTrancheCollateral * riskTrancheAmount) /
-            convertibleBondBox.riskTranche().totalSupply();
 
         CollateralBalance memory collateral = CollateralBalance(
             safeTrancheCollateral,

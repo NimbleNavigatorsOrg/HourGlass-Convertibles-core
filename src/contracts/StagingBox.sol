@@ -17,10 +17,7 @@ contract StagingBox is OwnableUpgradeable, SBImmutableArgs, IStagingBox {
     uint256 public s_reinitLendAmount = 0;
 
     function initialize(address _owner) external initializer {
-        require(
-            _owner != address(0),
-            "StagingBox: invalid owner address"
-        );
+        require(_owner != address(0), "StagingBox: invalid owner address");
         //check if valid initialPrice immutable arg
         if (initialPrice() > priceGranularity())
             revert InitialPriceTooHigh({
@@ -131,11 +128,12 @@ contract StagingBox is OwnableUpgradeable, SBImmutableArgs, IStagingBox {
 
         //revert check for _lendSlipAmount after CBB reinitialized
         if (convertibleBondBox().s_startDate() != 0) {
-            uint256 reinitAmount = s_reinitLendAmount;
-            if (_lendSlipAmount < reinitAmount) {
+            uint256 maxWithdrawAmount = stableToken().balanceOf(address(this)) -
+                s_reinitLendAmount;
+            if (_lendSlipAmount > maxWithdrawAmount) {
                 revert WithdrawAmountTooHigh({
                     requestAmount: _lendSlipAmount,
-                    maxAmount: reinitAmount
+                    maxAmount: maxWithdrawAmount
                 });
             }
         }
@@ -176,6 +174,9 @@ contract StagingBox is OwnableUpgradeable, SBImmutableArgs, IStagingBox {
 
         // burns `_borrowSlipAmount` of msg.sender’s BorrowSlips
         borrowSlip().burn(_msgSender(), _borrowSlipAmount);
+
+        //decrement s_reinitLendAmount
+        s_reinitLendAmount -= _borrowSlipAmount;
 
         //event stuff
         emit RedeemBorrowSlip(_msgSender(), _borrowSlipAmount);

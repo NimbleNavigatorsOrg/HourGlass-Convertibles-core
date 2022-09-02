@@ -57,10 +57,16 @@ contract StagingBoxLens is IStagingBoxLens {
 
         //calculate safeTranche (borrowSlip amount) amount with tranche ratio & CDR
         uint256 bondCollateralBalance = wrapper.balanceOf(address(bond));
+        uint256 bondDebt = bond.totalDebt();
+
+        if (bondDebt == 0) {
+            bondDebt = buttonAmount;
+            bondCollateralBalance = buttonAmount;
+        }
 
         uint256 safeTrancheAmount = (buttonAmount *
             convertibleBondBox.safeRatio() *
-            bond.totalDebt()) /
+            bondDebt) /
             bondCollateralBalance /
             convertibleBondBox.s_trancheGranularity();
 
@@ -101,14 +107,69 @@ contract StagingBoxLens is IStagingBoxLens {
             convertibleBondBox.safeRatio();
 
         ////multiply with CDR to get btn token amount
-        uint256 buttonAmount = (trancheTotal *
-            convertibleBondBox.collateralToken().balanceOf(address(bond))) /
-            bond.totalDebt();
+        uint256 buttonAmount = 0;
+        if (bond.totalDebt() > 0) {
+            buttonAmount =
+                (trancheTotal *
+                    convertibleBondBox.collateralToken().balanceOf(
+                        address(bond)
+                    )) /
+                bond.totalDebt();
+        }
 
         //calculate underlying with ButtonTokenWrapper
         uint256 underlyingAmount = wrapper.wrapperToUnderlying(buttonAmount);
 
         return (underlyingAmount, buttonAmount);
+    }
+
+    /**
+     * @inheritdoc IStagingBoxLens
+     */
+
+    function viewWithdrawLendSlip(
+        IStagingBox _stagingBox,
+        uint256 _lendSlipAmount
+    ) external view returns (uint256) {
+        return _lendSlipAmount;
+    }
+
+    /**
+     * @inheritdoc IStagingBoxLens
+     */
+
+    function viewRedeemBorrowSlipForRiskSlip(
+        IStagingBox _stagingBox,
+        uint256 _borrowSlipAmount
+    ) external view returns (uint256, uint256) {
+        uint256 loanAmount = _borrowSlipAmount;
+
+        uint256 riskSlipAmount = (loanAmount *
+            _stagingBox.priceGranularity() *
+            _stagingBox.riskRatio() *
+            _stagingBox.trancheDecimals()) /
+            _stagingBox.initialPrice() /
+            _stagingBox.safeRatio() /
+            _stagingBox.stableDecimals();
+
+        return (riskSlipAmount, loanAmount);
+    }
+
+    /**
+     * @inheritdoc IStagingBoxLens
+     */
+
+    function viewRedeemLendSlipForSafeSlip(
+        IStagingBox _stagingBox,
+        uint256 _lendSlipAmount
+    ) external view returns (uint256) {
+        uint256 safeSlipAmount = (_lendSlipAmount *
+            _stagingBox.priceGranularity() *
+            _stagingBox.trancheDecimals()) /
+            _stagingBox.initialPrice() /
+            _stagingBox.stableDecimals();
+
+        return (safeSlipAmount);
     }
 
     /**
@@ -158,8 +219,13 @@ contract StagingBoxLens is IStagingBoxLens {
             address(convertibleBondBox)
         );
 
-        uint256 stableAmount = (_safeSlipAmount * cbbStableBalance) /
-            convertibleBondBox.s_repaidSafeSlips();
+        uint256 stableAmount = 0;
+
+        if (convertibleBondBox.s_repaidSafeSlips() > 0) {
+            stableAmount =
+                (_safeSlipAmount * cbbStableBalance) /
+                convertibleBondBox.s_repaidSafeSlips();
+        }
 
         return stableAmount;
     }
@@ -316,11 +382,15 @@ contract StagingBoxLens is IStagingBoxLens {
 
         //get collateral balance for rebasing collateral output
         uint256 collateralBalance = wrapper.balanceOf(address(bond));
-        uint256 buttonAmount = (safeTranchePayout *
-            convertibleBondBox.s_trancheGranularity() *
-            collateralBalance) /
-            convertibleBondBox.safeRatio() /
-            bond.totalDebt();
+        uint256 buttonAmount = 0;
+        if (bond.totalDebt() > 0) {
+            buttonAmount =
+                (safeTranchePayout *
+                    convertibleBondBox.s_trancheGranularity() *
+                    collateralBalance) /
+                convertibleBondBox.safeRatio() /
+                bond.totalDebt();
+        }
 
         // convert rebasing collateral to collateralToken qty via wrapper
         uint256 underlyingAmount = wrapper.wrapperToUnderlying(buttonAmount);
@@ -371,11 +441,16 @@ contract StagingBoxLens is IStagingBoxLens {
 
         //get collateral balance for rebasing collateral output
         uint256 collateralBalance = wrapper.balanceOf(address(bond));
-        uint256 buttonAmount = (safeTranchePayout *
-            convertibleBondBox.s_trancheGranularity() *
-            collateralBalance) /
-            convertibleBondBox.safeRatio() /
-            bond.totalDebt();
+        uint256 buttonAmount = 0;
+
+        if (bond.totalDebt() > 0) {
+            buttonAmount =
+                (safeTranchePayout *
+                    convertibleBondBox.s_trancheGranularity() *
+                    collateralBalance) /
+                convertibleBondBox.safeRatio() /
+                bond.totalDebt();
+        }
 
         // convert rebasing collateral to collateralToken qty via wrapper
         uint256 underlyingAmount = wrapper.wrapperToUnderlying(buttonAmount);
