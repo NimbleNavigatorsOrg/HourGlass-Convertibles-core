@@ -9,6 +9,7 @@ contract RedeemBorrowSlip is SBIntegrationSetup {
         uint256 borrowerStableTokens;
         uint256 SBRiskSlips;
         uint256 SBStableTokens;
+        uint256 reinitLendAmount;
     }
 
     struct BorrowAmounts {
@@ -47,7 +48,8 @@ contract RedeemBorrowSlip is SBIntegrationSetup {
             s_riskSlip.balanceOf(s_borrower),
             s_stableToken.balanceOf(s_borrower),
             s_riskSlip.balanceOf(s_deployedSBAddress),
-            s_stableToken.balanceOf(s_deployedSBAddress)
+            s_stableToken.balanceOf(s_deployedSBAddress),
+            s_deployedSB.s_reinitLendAmount()
         );
 
         _borrowAmount = bound(_borrowAmount, 1, before.borrowerBorrowSlips);
@@ -98,6 +100,11 @@ contract RedeemBorrowSlip is SBIntegrationSetup {
         assertEq(
             before.SBStableTokens - adjustments.borrowSlipAmount,
             s_stableToken.balanceOf(s_deployedSBAddress)
+        );
+
+        assertEq(
+            before.reinitLendAmount - adjustments.borrowSlipAmount,
+            s_deployedSB.s_reinitLendAmount()
         );
     }
 }
