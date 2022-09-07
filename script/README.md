@@ -18,7 +18,12 @@ Finally, complete a borrow as follows, again replacing the $variables:
 cast send $stagingLoanRouterAddress "simpleWrapTrancheBorrow(address,uint256,uint256)" $stagingBoxAddress $amount $amountMin --rpc-url $LOCAL_HOST_URL  --private-key $PRIVATE_KEY0 
 ```
 
-To run the batch deployer, run the following, replacing your private key: 
+To run the CBB issuer, run the following, replacing your private key: 
 ```
 forge script script/GoerliCBBIssuer.s.sol --rpc-url $LOCAL_HOST_URL --private-key $PRIVATE_KEY_PERSONAL --broadcast --verify --etherscan-api-key 4DZZ49ARAJ8SXIC42GCWG3DF1WEEIJNQEI  -vvvv
+```
+
+To run the batch deployer: 
+```
+forge script script/GoerliBatchDeployer.s.sol --rpc-url $GOERLI_RPC_URL --private-key $PRIVATE_KEY_PERSONAL 
 ```

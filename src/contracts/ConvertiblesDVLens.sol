@@ -122,14 +122,8 @@ contract ConvertiblesDVLens is IConvertiblesDVLens {
                 address(_stagingBox)
             ),
             _stagingBox.s_reinitLendAmount(),
-            (
-                _stagingBox.stableToken().balanceOf(address(_stagingBox)) >
-                    _stagingBox.s_reinitLendAmount()
-                    ? _stagingBox.stableToken().balanceOf(
-                        address(_stagingBox)
-                    ) - _stagingBox.s_reinitLendAmount()
-                    : 0
-            ),
+            (_stagingBox.stableToken().balanceOf(address(_stagingBox)) -
+                _stagingBox.s_reinitLendAmount()),
             _stagingBox.stableToken().balanceOf(address(_stagingBox))
         );
 

@@ -90,9 +90,9 @@ contract GoerliBatchDeployer is Script {
         // Slip deployedSlip = new Slip();
         // SlipFactory slipFactory = new SlipFactory(address(deployedSlip));
 
-        // //deploy CBB + CBB factory
-        // ConvertibleBondBox deployedCBB = new ConvertibleBondBox();
-        // CBBFactory cbbFactory = new CBBFactory(address(deployedCBB));
+        //deploy CBB + CBB factory
+        ConvertibleBondBox deployedCBB = new ConvertibleBondBox();
+        CBBFactory cbbFactory = new CBBFactory(address(deployedCBB));
 
         //staging box + staging box factory
         StagingBox deployedStagingBox = new StagingBox();
@@ -110,7 +110,7 @@ contract GoerliBatchDeployer is Script {
         // console2.log(address(deployedSlip), "deployedSlip");
         // console2.log(address(slipFactory), "slipFactory");
         console2.log(address(sbFactory), "StagingBoxFactory");
-        // console2.log(address(cbbFactory), "ConvertiblesFactory");
+        console2.log(address(cbbFactory), "ConvertiblesFactory");
         // console2.log(address(stagingLoanRouter), "StagingLoanRouter");
         // console2.log(address(stagingBoxLens), "StagingBoxLens");
         // console2.log(address(DVLens), "DVLens");

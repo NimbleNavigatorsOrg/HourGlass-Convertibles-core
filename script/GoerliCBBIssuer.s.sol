@@ -22,29 +22,29 @@ import "../test/external/button-wrappers/ButtonToken.sol";
 
 contract GoerliCBBIssuer is Script {
     CBBFactory convertiblesFactory =
-        CBBFactory(0x26391A112CeeB898E195f4ec91F186310e29aEA2);
+        CBBFactory(0x476e7e6222AffffA6EfFBA67a1850644b7976609);
     StagingBoxFactory stagingFactory =
-        StagingBoxFactory(0x67896B9f66325849Da948F8D1f0c897688DAd643);
+        StagingBoxFactory(0x58980A96Be34Fd4515D982F7247CAb9D224B59B8);
     SlipFactory slipFactory =
         SlipFactory(0xD96D4AF92CA2E89E6e423C2aC7144A0c60412156);
     StagingLoanRouter slr =
         StagingLoanRouter(0x0162EbDEff59094a693af794644D929Ef6f1f3A3);
     StagingBoxLens sbLens =
-        StagingBoxLens(0x303372d4beBe0Da7CF08033A2D80095Cf64F419A);
+        StagingBoxLens(0x5054300d1a213CacBd96f837733775585045C99B);
 
     address public trancheFact = 0xE0De6e1a505b69D2987fAe7230db96682d26Dfca;
 
-    //WETH Token Details
-    address public token = 0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6;
-    address public button = 0x084c3A0929Bc6D6C38B2C53e880e340528468571;
+    // //WETH Token Details
+    // address public token = 0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6;
+    // address public button = 0x084c3A0929Bc6D6C38B2C53e880e340528468571;
 
     // //PoorTokenDetails
     // address public token = 0xC5743Ed645F30659148FEf1C4315b76c6C165cFD;
     // address public button = 0xf037cb06C5FeF11Fa599D52B181e726AaE3Aeb77;
 
-    // //PeasantTokenDetails
-    // address public token = 0xE7E0744803fEcdea6f2FCbC03a4804c825D0C2d4;
-    // address public button = 0x4FE19a2AEf89929FDA832f250b4e6d3E3e736f89;
+    //PeasantTokenDetails
+    address public token = 0xE7E0744803fEcdea6f2FCbC03a4804c825D0C2d4;
+    address public button = 0x4FE19a2AEf89929FDA832f250b4e6d3E3e736f89;
 
     address public stableCoin = 0xd3AB6Dc80c5a157397D9718a6AA778F30D82f70B;
 

@@ -93,8 +93,6 @@ contract StagingBoxFactory is IStagingBoxFactory {
             slipFactory,
             address(convertibleBondBox.safeTranche()),
             address(convertibleBondBox.riskTranche()),
-            address(convertibleBondBox.safeSlip()),
-            address(convertibleBondBox.riskSlip()),
             address(convertibleBondBox.stableToken())
         );
 
@@ -157,8 +155,6 @@ contract StagingBoxFactory is IStagingBoxFactory {
         ISlipFactory slipFactory,
         address safeTranche,
         address riskTranche,
-        address safeSlip,
-        address riskSlip,
         address stableToken
     ) private returns (SlipPair memory) {
         string memory collateralSymbolSafe = IERC20Metadata(
