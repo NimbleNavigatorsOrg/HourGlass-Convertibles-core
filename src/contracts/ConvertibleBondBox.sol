@@ -73,24 +73,27 @@ contract ConvertibleBondBox is
         _;
     }
 
-    function initialize(address _owner) external initializer {
+    function initialize(address _owner)
+        external
+        initializer
+        beforeBondMature
+    {
         require(
             _owner != address(0),
             "ConvertibleBondBox: invalid owner address"
         );
-        __Ownable_init();
-        transferOwnership(_owner);
 
-        if (penalty() > s_trancheGranularity)
+        // Revert if penalty too high
+        if (penalty() > s_penaltyGranularity) {
             revert PenaltyTooHigh({
                 given: penalty(),
                 maxPenalty: s_penaltyGranularity
             });
-        if (block.timestamp > maturityDate())
-            revert BondIsMature({
-                currentTime: block.timestamp,
-                maturity: maturityDate()
-            });
+        }
+
+        // Set owner
+        __Ownable_init();
+        transferOwnership(_owner);
 
         emit Initialized(_owner);
     }
