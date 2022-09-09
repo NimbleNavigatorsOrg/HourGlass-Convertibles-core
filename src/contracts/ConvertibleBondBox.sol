@@ -16,7 +16,6 @@ import "forge-std/console2.sol";
  *  - penalty ratio must be < 1.0
  *  - safeTranche index must not be Z-tranche
  */
-
 contract ConvertibleBondBox is
     OwnableUpgradeable,
     CBBImmutableArgs,
@@ -60,7 +59,6 @@ contract ConvertibleBondBox is
     /**
      * @inheritdoc IConvertibleBondBox
      */
-
     function reinitialize(uint256 _initialPrice)
         external
         reinitializer(2)
@@ -93,7 +91,6 @@ contract ConvertibleBondBox is
     /**
      * @inheritdoc IConvertibleBondBox
      */
-
     function lend(
         address _borrower,
         address _lender,
@@ -127,7 +124,6 @@ contract ConvertibleBondBox is
     /**
      * @inheritdoc IConvertibleBondBox
      */
-
     function borrow(
         address _borrower,
         address _lender,
@@ -164,7 +160,6 @@ contract ConvertibleBondBox is
     /**
      * @inheritdoc IConvertibleBondBox
      */
-
     function currentPrice() public view override returns (uint256) {
         //load storage variables into memory
         uint256 price = s_priceGranularity;
@@ -182,7 +177,6 @@ contract ConvertibleBondBox is
     /**
      * @inheritdoc IConvertibleBondBox
      */
-
     function repay(uint256 _stableAmount) external override {
         //Load into memory
         uint256 price = currentPrice();
@@ -208,7 +202,6 @@ contract ConvertibleBondBox is
     /**
      * @inheritdoc IConvertibleBondBox
      */
-
     function repayMax(uint256 _riskSlipAmount) external override {
         // Load params into memory
         uint256 price = currentPrice();
@@ -234,7 +227,6 @@ contract ConvertibleBondBox is
     /**
      * @inheritdoc IConvertibleBondBox
      */
-
     function redeemRiskTranche(uint256 _riskSlipAmount) external override {
         if (block.timestamp < maturityDate())
             revert BondNotMatureYet({
@@ -266,7 +258,6 @@ contract ConvertibleBondBox is
     /**
      * @inheritdoc IConvertibleBondBox
      */
-
     function redeemSafeTranche(uint256 _safeSlipAmount) external override {
         if (block.timestamp < maturityDate())
             revert BondNotMatureYet({
@@ -308,7 +299,6 @@ contract ConvertibleBondBox is
     /**
      * @inheritdoc IConvertibleBondBox
      */
-
     function redeemStable(uint256 _safeSlipAmount) external override {
         if (_safeSlipAmount < 1e6)
             revert MinimumInput({input: _safeSlipAmount, reqInput: 1e6});
@@ -339,7 +329,6 @@ contract ConvertibleBondBox is
     /**
      * @inheritdoc IConvertibleBondBox
      */
-
     function setFee(uint256 newFeeBps) external override onlyOwner {
         if (block.timestamp >= maturityDate())
             revert BondIsMature({
@@ -355,7 +344,6 @@ contract ConvertibleBondBox is
     /**
      * @inheritdoc IConvertibleBondBox
      */
-
     function transferOwnership(address newOwner)
         public
         override(IConvertibleBondBox, OwnableUpgradeable)

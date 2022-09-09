@@ -12,7 +12,6 @@ import "../interfaces/IStagingBox.sol";
  * Invariants:
  *  - `initial Price must be < $1.00`
  */
-
 contract StagingBox is OwnableUpgradeable, SBImmutableArgs, IStagingBox {
     uint256 public s_reinitLendAmount = 0;
 
