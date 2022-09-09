@@ -87,6 +87,9 @@ contract Slip is ISlip, ERC20, Initializable {
      * @inheritdoc ISlip
      */
     function changeOwner(address newOwner) external override onlyBoxOwner {
-        boxOwner = newOwner;
+        if (newOwner != _msgSender()) {
+            emit OwnershipTransferred(_msgSender(), newOwner);
+            boxOwner = newOwner;
+        }
     }
 }
