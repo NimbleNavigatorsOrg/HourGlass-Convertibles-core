@@ -6,8 +6,6 @@ import "@uniswap/lib/contracts/libraries/TransferHelper.sol";
 import "../../utils/CBBImmutableArgs.sol";
 import "../interfaces/IConvertibleBondBox.sol";
 
-import "forge-std/console2.sol";
-
 /**
  * @dev Convertible Bond Box for a ButtonTranche bond
  *
@@ -21,14 +19,14 @@ contract ConvertibleBondBox is
     CBBImmutableArgs,
     IConvertibleBondBox
 {
-    uint256 public override s_startDate = 0;
-    uint256 public override s_repaidSafeSlips = 0;
+    uint256 public override s_startDate;
+    uint256 public override s_repaidSafeSlips;
     uint256 public constant override s_trancheGranularity = 1000;
     uint256 public constant override s_penaltyGranularity = 1000;
     uint256 public constant override s_priceGranularity = 1e8;
-    uint256 public override feeBps = 0;
+    uint256 public override feeBps;
 
-    uint256 public s_initialPrice = 0;
+    uint256 public s_initialPrice;
 
     // Denominator for basis points. Used to calculate fees
     uint256 public constant override BPS = 10_000;
@@ -64,15 +62,13 @@ contract ConvertibleBondBox is
         reinitializer(2)
         onlyOwner
     {
-        uint256 priceGranularity = s_priceGranularity;
-
-        if (_initialPrice > priceGranularity)
+        if (_initialPrice > s_priceGranularity)
             revert InitialPriceTooHigh({
                 given: _initialPrice,
-                maxPrice: priceGranularity
+                maxPrice: s_priceGranularity
             });
         if (_initialPrice == 0)
-            revert InitialPriceIsZero({given: 0, maxPrice: priceGranularity});
+            revert InitialPriceIsZero({given: 0, maxPrice: s_priceGranularity});
 
         if (block.timestamp >= maturityDate())
             revert BondIsMature({
@@ -96,14 +92,13 @@ contract ConvertibleBondBox is
         address _lender,
         uint256 _stableAmount
     ) external override {
-        uint256 priceGranularity = s_priceGranularity;
         uint256 price = currentPrice();
 
         if (_stableAmount < 1e6)
             revert MinimumInput({input: _stableAmount, reqInput: 1e6});
 
         uint256 safeSlipAmount = (_stableAmount *
-            priceGranularity *
+            s_priceGranularity *
             trancheDecimals()) /
             price /
             stableDecimals();
@@ -161,17 +156,18 @@ contract ConvertibleBondBox is
      * @inheritdoc IConvertibleBondBox
      */
     function currentPrice() public view override returns (uint256) {
-        //load storage variables into memory
-        uint256 price = s_priceGranularity;
         uint256 maturityDate = maturityDate();
-        if (block.timestamp < maturityDate) {
-            price =
-                price -
-                ((price - s_initialPrice) * (maturityDate - block.timestamp)) /
-                (maturityDate - s_startDate);
-        }
 
-        return price;
+        if (block.timestamp < maturityDate) {
+            uint price =
+                s_priceGranularity -
+                ((s_priceGranularity - s_initialPrice) * (maturityDate - block.timestamp)) /
+                (maturityDate - s_startDate);
+
+            return price;
+        } else {
+            return s_priceGranularity;
+        }
     }
 
     /**
@@ -180,7 +176,6 @@ contract ConvertibleBondBox is
     function repay(uint256 _stableAmount) external override {
         //Load into memory
         uint256 price = currentPrice();
-        uint256 priceGranularity = s_priceGranularity;
 
         if (_stableAmount < 1e6)
             revert MinimumInput({input: _stableAmount, reqInput: 1e6});
@@ -188,7 +183,7 @@ contract ConvertibleBondBox is
         //calculate inputs for internal redeem function
         uint256 stableFees = (_stableAmount * feeBps) / BPS;
         uint256 safeTranchePayout = (_stableAmount *
-            priceGranularity *
+            s_priceGranularity *
             trancheDecimals()) /
             price /
             stableDecimals();
