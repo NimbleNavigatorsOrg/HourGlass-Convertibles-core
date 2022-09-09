@@ -17,7 +17,7 @@ contract StagingBox is OwnableUpgradeable, SBImmutableArgs, IStagingBox {
 
     modifier beforeReinitialized() {
         if (convertibleBondBox().s_startDate() != 0) {
-            revert CBBReinitialized({state: false, requiredState: true});
+            revert CBBReinitialized({state: true, requiredState: false});
         }
         _;
     }
