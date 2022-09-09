@@ -15,7 +15,7 @@ import "../interfaces/IStagingBox.sol";
 contract StagingBox is OwnableUpgradeable, SBImmutableArgs, IStagingBox {
     uint256 public s_reinitLendAmount;
 
-    modifier beforeReinitialized() {
+    modifier beforeReinitialize() {
         if (convertibleBondBox().s_startDate() != 0) {
             revert CBBReinitialized({state: true, requiredState: false});
         }
@@ -47,7 +47,7 @@ contract StagingBox is OwnableUpgradeable, SBImmutableArgs, IStagingBox {
     function depositBorrow(address _borrower, uint256 _borrowAmount)
         external
         override
-        beforeReinitialized
+        beforeReinitialize
     {
         //- transfers `_safeTrancheAmount` of SafeTranche Tokens from msg.sender to SB
 
@@ -81,7 +81,7 @@ contract StagingBox is OwnableUpgradeable, SBImmutableArgs, IStagingBox {
     function depositLend(address _lender, uint256 _lendAmount)
         external
         override
-        beforeReinitialized
+        beforeReinitialize
     {
         //- transfers `_lendAmount`of Stable Tokens from msg.sender to SB
         TransferHelper.safeTransferFrom(

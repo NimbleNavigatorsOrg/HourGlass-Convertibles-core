@@ -19,18 +19,59 @@ contract ConvertibleBondBox is
     CBBImmutableArgs,
     IConvertibleBondBox
 {
+    // Set when reinitialized
     uint256 public override s_startDate;
+    uint256 public s_initialPrice;
+
     uint256 public override s_repaidSafeSlips;
+
+    // Changeable by owner
+    uint256 public override feeBps;
+
     uint256 public constant override s_trancheGranularity = 1000;
     uint256 public constant override s_penaltyGranularity = 1000;
     uint256 public constant override s_priceGranularity = 1e8;
-    uint256 public override feeBps;
-
-    uint256 public s_initialPrice;
 
     // Denominator for basis points. Used to calculate fees
     uint256 public constant override BPS = 10_000;
     uint256 public constant override maxFeeBPS = 50;
+
+    modifier afterReinitialize() {
+        if (s_startDate == 0) {
+            revert ConvertibleBondBoxNotStarted({
+                given: 0,
+                minStartDate: block.timestamp
+            });
+        }
+        _;
+    }
+
+    modifier beforeBondMature() {
+        if (block.timestamp >= maturityDate()) {
+            revert BondIsMature({
+                currentTime: block.timestamp,
+                maturity: maturityDate()
+            });
+        }
+        _;
+    }
+
+    modifier afterBondMature() {
+        if (block.timestamp < maturityDate()) {
+            revert BondNotMatureYet({
+                maturityDate: maturityDate(),
+                currentTime: block.timestamp
+            });
+        }
+        _;
+    }
+
+    modifier validAmount(uint256 amount) {
+        if (amount < 1e6) {
+            revert MinimumInput({input: amount, reqInput: 1e6});
+        }
+        _;
+    }
 
     function initialize(address _owner) external initializer {
         require(
@@ -61,6 +102,7 @@ contract ConvertibleBondBox is
         external
         reinitializer(2)
         onlyOwner
+        beforeBondMature
     {
         if (_initialPrice > s_priceGranularity)
             revert InitialPriceTooHigh({
@@ -69,12 +111,6 @@ contract ConvertibleBondBox is
             });
         if (_initialPrice == 0)
             revert InitialPriceIsZero({given: 0, maxPrice: s_priceGranularity});
-
-        if (block.timestamp >= maturityDate())
-            revert BondIsMature({
-                currentTime: block.timestamp,
-                maturity: maturityDate()
-            });
 
         s_initialPrice = _initialPrice;
 
@@ -91,11 +127,14 @@ contract ConvertibleBondBox is
         address _borrower,
         address _lender,
         uint256 _stableAmount
-    ) external override {
+    )
+        external
+        override
+        afterReinitialize
+        beforeBondMature
+        validAmount(_stableAmount)
+    {
         uint256 price = currentPrice();
-
-        if (_stableAmount < 1e6)
-            revert MinimumInput({input: _stableAmount, reqInput: 1e6});
 
         uint256 safeSlipAmount = (_stableAmount *
             s_priceGranularity *
@@ -123,10 +162,13 @@ contract ConvertibleBondBox is
         address _borrower,
         address _lender,
         uint256 _safeTrancheAmount
-    ) external override {
-        if (_safeTrancheAmount < 1e6)
-            revert MinimumInput({input: _safeTrancheAmount, reqInput: 1e6});
-
+    )
+        external
+        override
+        afterReinitialize
+        beforeBondMature
+        validAmount(_safeTrancheAmount)
+    {
         uint256 price = currentPrice();
 
         uint256 zTrancheAmount = (_safeTrancheAmount * riskRatio()) /
@@ -173,12 +215,13 @@ contract ConvertibleBondBox is
     /**
      * @inheritdoc IConvertibleBondBox
      */
-    function repay(uint256 _stableAmount) external override {
+    function repay(uint256 _stableAmount)
+        external
+        override
+        validAmount(_stableAmount)
+    {
         //Load into memory
         uint256 price = currentPrice();
-
-        if (_stableAmount < 1e6)
-            revert MinimumInput({input: _stableAmount, reqInput: 1e6});
 
         //calculate inputs for internal redeem function
         uint256 stableFees = (_stableAmount * feeBps) / BPS;
@@ -197,13 +240,13 @@ contract ConvertibleBondBox is
     /**
      * @inheritdoc IConvertibleBondBox
      */
-    function repayMax(uint256 _riskSlipAmount) external override {
+    function repayMax(uint256 _riskSlipAmount)
+        external
+        override
+        validAmount(_riskSlipAmount)
+    {
         // Load params into memory
         uint256 price = currentPrice();
-
-        // check min input
-        if (_riskSlipAmount < 1e6)
-            revert MinimumInput({input: _riskSlipAmount, reqInput: 1e6});
 
         // Calculate inputs for internal repay function
         uint256 safeTranchePayout = (_riskSlipAmount * safeRatio()) /
@@ -222,16 +265,12 @@ contract ConvertibleBondBox is
     /**
      * @inheritdoc IConvertibleBondBox
      */
-    function redeemRiskTranche(uint256 _riskSlipAmount) external override {
-        if (block.timestamp < maturityDate())
-            revert BondNotMatureYet({
-                maturityDate: maturityDate(),
-                currentTime: block.timestamp
-            });
-
-        if (_riskSlipAmount < 1e6)
-            revert MinimumInput({input: _riskSlipAmount, reqInput: 1e6});
-
+    function redeemRiskTranche(uint256 _riskSlipAmount)
+        external
+        override
+        afterBondMature
+        validAmount(_riskSlipAmount)
+    {
         //transfer fee to owner
         if (feeBps > 0 && _msgSender() != owner()) {
             uint256 feeSlip = (_riskSlipAmount * feeBps) / BPS;
@@ -253,16 +292,12 @@ contract ConvertibleBondBox is
     /**
      * @inheritdoc IConvertibleBondBox
      */
-    function redeemSafeTranche(uint256 _safeSlipAmount) external override {
-        if (block.timestamp < maturityDate())
-            revert BondNotMatureYet({
-                maturityDate: maturityDate(),
-                currentTime: block.timestamp
-            });
-
-        if (_safeSlipAmount < 1e6)
-            revert MinimumInput({input: _safeSlipAmount, reqInput: 1e6});
-
+    function redeemSafeTranche(uint256 _safeSlipAmount)
+        external
+        override
+        afterBondMature
+        validAmount(_safeSlipAmount)
+    {
         //transfer fee to owner
         if (feeBps > 0 && _msgSender() != owner()) {
             uint256 feeSlip = (_safeSlipAmount * feeBps) / BPS;
@@ -294,10 +329,11 @@ contract ConvertibleBondBox is
     /**
      * @inheritdoc IConvertibleBondBox
      */
-    function redeemStable(uint256 _safeSlipAmount) external override {
-        if (_safeSlipAmount < 1e6)
-            revert MinimumInput({input: _safeSlipAmount, reqInput: 1e6});
-
+    function redeemStable(uint256 _safeSlipAmount)
+        external
+        override
+        validAmount(_safeSlipAmount)
+    {
         //transfer safeSlips to owner
         if (feeBps > 0 && _msgSender() != owner()) {
             uint256 feeSlip = (_safeSlipAmount * feeBps) / BPS;
@@ -324,14 +360,15 @@ contract ConvertibleBondBox is
     /**
      * @inheritdoc IConvertibleBondBox
      */
-    function setFee(uint256 newFeeBps) external override onlyOwner {
-        if (block.timestamp >= maturityDate())
-            revert BondIsMature({
-                currentTime: block.timestamp,
-                maturity: maturityDate()
-            });
+    function setFee(uint256 newFeeBps)
+        external
+        override
+        onlyOwner
+        beforeBondMature
+    {
         if (newFeeBps > maxFeeBPS)
             revert FeeTooLarge({input: newFeeBps, maximum: maxFeeBPS});
+
         feeBps = newFeeBps;
         emit FeeUpdate(newFeeBps);
     }
@@ -354,18 +391,6 @@ contract ConvertibleBondBox is
         uint256 _safeSlipAmount,
         uint256 _riskSlipAmount
     ) internal {
-        if (s_startDate == 0)
-            revert ConvertibleBondBoxNotStarted({
-                given: 0,
-                minStartDate: block.timestamp
-            });
-
-        if (block.timestamp >= maturityDate())
-            revert BondIsMature({
-                currentTime: block.timestamp,
-                maturity: maturityDate()
-            });
-
         //Transfer safeTranche to ConvertibleBondBox
         safeTranche().transferFrom(
             _msgSender(),
