@@ -201,13 +201,11 @@ contract ConvertibleBondBox is
      * @inheritdoc IConvertibleBondBox
      */
     function currentPrice() public view override returns (uint256) {
-        uint256 maturityDate = maturityDate();
-
-        if (block.timestamp < maturityDate) {
+        if (block.timestamp < maturityDate()) {
             uint price =
                 s_priceGranularity -
-                ((s_priceGranularity - s_initialPrice) * (maturityDate - block.timestamp)) /
-                (maturityDate - s_startDate);
+                ((s_priceGranularity - s_initialPrice) * (maturityDate() - block.timestamp)) /
+                (maturityDate() - s_startDate);
 
             return price;
         } else {
