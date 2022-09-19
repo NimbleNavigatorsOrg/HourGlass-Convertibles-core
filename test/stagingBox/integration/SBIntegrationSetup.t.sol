@@ -26,11 +26,9 @@ contract SBIntegrationSetup is CBBSetup {
     event RedeemLendSlip(address, uint256);
 
     event StagingBoxCreated(
-        IConvertibleBondBox convertibleBondBox,
-        uint256 initialPrice,
-        address owner,
         address msgSender,
-        address stagingBox
+        address stagingBox,
+        address slipFactory
     );
 
     function setUp() public override {

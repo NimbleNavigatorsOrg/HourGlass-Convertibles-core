@@ -70,25 +70,21 @@ contract sbInitialize is SBIntegrationSetup {
     function testEmitsInitialized(uint256 _fuzzPrice) public {
         _fuzzPrice = bound(_fuzzPrice, 1, s_priceGranularity);
 
-        vm.expectEmit(true, false, false, false);
+        vm.startPrank(s_cbb_owner);
+        vm.expectEmit(true, true, true, false);
         emit StagingBoxCreated(
-            ConvertibleBondBox(s_deployedCBBAddress),
-            _fuzzPrice,
-            s_cbb_owner,
             address(this),
-            address(0)
+            address(0),
+            address(s_slipFactory)
         );
         s_deployedSB = StagingBox(
-            stagingBoxFactory.createStagingBoxWithCBB(
-                s_CBBFactory,
+            stagingBoxFactory.createStagingBoxOnly(
                 s_slipFactory,
-                s_buttonWoodBondController,
-                s_penalty,
-                address(s_stableToken),
-                s_trancheIndex,
+                ConvertibleBondBox(s_deployedCBBAddress),
                 _fuzzPrice,
                 s_cbb_owner
             )
         );
+        vm.stopPrank();
     }
 }

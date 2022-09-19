@@ -89,11 +89,9 @@ contract CBBFactory is ICBBFactory {
 
         //emit Event
         emit ConvertibleBondBoxCreated(
-            stableToken,
-            trancheIndex,
-            penalty,
             msg.sender,
-            address(clone)
+            address(clone),
+            address(slipFactory)
         );
         return address(clone);
     }

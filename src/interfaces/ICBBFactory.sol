@@ -11,11 +11,9 @@ interface ICBBFactory {
     error TrancheIndexOutOfBounds(uint256 given, uint256 maxIndex);
 
     event ConvertibleBondBoxCreated(
-        address stableToken,
-        uint256 trancheIndex,
-        uint256 penalty,
         address creator,
-        address newBondBoxAdress
+        address newBondBoxAddress,
+        address slipFactory
     );
 
     /// @notice Some parameters are invalid
