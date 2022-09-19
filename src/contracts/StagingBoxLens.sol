@@ -102,20 +102,36 @@ contract StagingBoxLens is IStagingBoxLens {
             _stagingBox.initialPrice() /
             _stagingBox.stableDecimals();
 
+        uint256 riskTrancheAmount = (safeTrancheAmount *
+            convertibleBondBox.riskRatio()) / convertibleBondBox.safeRatio();
+
         //calculate total amount of tranche tokens by dividing by safeRatio
-        uint256 trancheTotal = (safeTrancheAmount *
-            convertibleBondBox.s_trancheGranularity()) /
-            convertibleBondBox.safeRatio();
+        uint256 trancheTotal = safeTrancheAmount + riskTrancheAmount;
 
         ////multiply with CDR to get btn token amount
         uint256 buttonAmount = 0;
         if (bond.totalDebt() > 0) {
-            buttonAmount =
-                (trancheTotal *
-                    convertibleBondBox.collateralToken().balanceOf(
-                        address(bond)
-                    )) /
-                bond.totalDebt();
+            if (!bond.isMature()) {
+                buttonAmount =
+                    (trancheTotal *
+                        convertibleBondBox.collateralToken().balanceOf(
+                            address(bond)
+                        )) /
+                    bond.totalDebt();
+            } else {
+                buttonAmount =
+                    (safeTrancheAmount *
+                        convertibleBondBox.collateralToken().balanceOf(
+                            address(convertibleBondBox.safeTranche())
+                        )) /
+                    convertibleBondBox.safeTranche().totalSupply();
+                buttonAmount +=
+                    (riskTrancheAmount *
+                        convertibleBondBox.collateralToken().balanceOf(
+                            address(convertibleBondBox.riskTranche())
+                        )) /
+                    convertibleBondBox.riskTranche().totalSupply();
+            }
         }
 
         //calculate underlying with ButtonTokenWrapper
