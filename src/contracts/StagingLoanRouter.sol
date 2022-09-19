@@ -17,7 +17,6 @@ contract StagingLoanRouter is IStagingLoanRouter {
     /**
      * @inheritdoc IStagingLoanRouter
      */
-
     function simpleWrapTrancheBorrow(
         IStagingBox _stagingBox,
         uint256 _amountRaw,
@@ -100,7 +99,6 @@ contract StagingLoanRouter is IStagingLoanRouter {
     /**
      * @inheritdoc IStagingLoanRouter
      */
-
     function multiWrapTrancheBorrow(
         IStagingBox _stagingBox,
         uint256 _amountRaw,
@@ -132,7 +130,6 @@ contract StagingLoanRouter is IStagingLoanRouter {
     /**
      * @inheritdoc IStagingLoanRouter
      */
-
     function simpleWithdrawBorrowUnwrap(
         IStagingBox _stagingBox,
         uint256 _borrowSlipAmount
@@ -167,7 +164,6 @@ contract StagingLoanRouter is IStagingLoanRouter {
     /**
      * @inheritdoc IStagingLoanRouter
      */
-
     function redeemLendSlipsForStables(
         IStagingBox _stagingBox,
         uint256 _lendSlipAmount
@@ -206,7 +202,6 @@ contract StagingLoanRouter is IStagingLoanRouter {
     /**
      * @inheritdoc IStagingLoanRouter
      */
-
     function redeemLendSlipsForTranchesAndUnwrap(
         IStagingBox _stagingBox,
         uint256 _lendSlipAmount
@@ -231,7 +226,6 @@ contract StagingLoanRouter is IStagingLoanRouter {
     /**
      * @inheritdoc IStagingLoanRouter
      */
-
     function redeemSafeSlipsForTranchesAndUnwrap(
         IStagingBox _stagingBox,
         uint256 _safeSlipAmount
@@ -289,7 +283,6 @@ contract StagingLoanRouter is IStagingLoanRouter {
     /**
      * @inheritdoc IStagingLoanRouter
      */
-
     function redeemRiskSlipsForTranchesAndUnwrap(
         IStagingBox _stagingBox,
         uint256 _riskSlipAmount
@@ -327,7 +320,6 @@ contract StagingLoanRouter is IStagingLoanRouter {
     /**
      * @inheritdoc IStagingLoanRouter
      */
-
     function repayAndUnwrapSimple(
         IStagingBox _stagingBox,
         uint256 _stableAmount,
@@ -381,7 +373,6 @@ contract StagingLoanRouter is IStagingLoanRouter {
     /**
      * @inheritdoc IStagingLoanRouter
      */
-
     function repayMaxAndUnwrapSimple(
         IStagingBox _stagingBox,
         uint256 _stableAmount,
@@ -469,7 +460,6 @@ contract StagingLoanRouter is IStagingLoanRouter {
     /**
      * @inheritdoc IStagingLoanRouter
      */
-
     function repayAndUnwrapMature(
         IStagingBox _stagingBox,
         uint256 _stableAmount,

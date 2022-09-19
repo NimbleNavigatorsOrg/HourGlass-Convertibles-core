@@ -4,4 +4,4 @@ clones-with-immutable-args/=lib/clones-with-immutable-args/src/
 @openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/
 @buttonwood-protocol/tranche/=lib/tranche/
 @buttonwood-protocol/button-wrappers/=lib/button-wrappers/
-forge-std/=lib\forge-std\src/
+forge-std/=lib/forge-std/src/
