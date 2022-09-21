@@ -226,7 +226,7 @@ contract ConvertiblesDVLens is IConvertiblesDVLens {
             ),
             NumFixedPoint(simTrancheCollateral.risk, decimals.tranche),
             NumFixedPoint(
-                (simTrancheCollateral.risk *
+                (simTrancheCollateral.safe *
                     (10**decimals.stable) +
                     stableBalance *
                     (10**decimals.tranche)),
