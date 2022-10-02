@@ -55,6 +55,20 @@ contract Repay is CBBSetup {
         s_deployedConvertibleBondBox.repay(1e6);
     }
 
+    function testCannotRepayMaxConvertibleBondBoxNotStarted() public {
+        bytes memory customError = abi.encodeWithSignature(
+            "ConvertibleBondBoxNotStarted(uint256,uint256)",
+            0,
+            block.timestamp
+        );
+
+        uint riskSlipAmount = s_riskSlip.balanceOf(s_borrower);
+
+        vm.prank(s_borrower);
+        vm.expectRevert(customError);
+        s_deployedConvertibleBondBox.repayMax(riskSlipAmount);
+    }
+
     function testCannotRepayMinimumInput(uint256 riskSlipAmount) public {
         initialSetup();
         riskSlipAmount = bound(riskSlipAmount, 0, 1e6 - 1);

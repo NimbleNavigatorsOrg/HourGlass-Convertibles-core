@@ -219,6 +219,7 @@ contract ConvertibleBondBox is
     function repay(uint256 _stableAmount)
         external
         override
+        afterReinitialize
         validAmount(_stableAmount)
     {
         //Load into memory
@@ -244,6 +245,7 @@ contract ConvertibleBondBox is
     function repayMax(uint256 _riskSlipAmount)
         external
         override
+        afterReinitialize
         validAmount(_riskSlipAmount)
     {
         // Load params into memory
@@ -429,12 +431,8 @@ contract ConvertibleBondBox is
         uint256 _safeTranchePayout,
         uint256 _riskTranchePayout
     ) internal {
-        // Ensure CBB started
-        if (s_startDate == 0)
-            revert ConvertibleBondBoxNotStarted({
-                given: 0,
-                minStartDate: block.timestamp
-            });
+        // Update total repaid safe slips
+        s_repaidSafeSlips += _safeTranchePayout;
 
         // Transfer fees to owner
         if (feeBps > 0 && _msgSender() != owner()) {
@@ -456,8 +454,6 @@ contract ConvertibleBondBox is
 
         // Transfer safeTranches to msg.sender (increment state)
         safeTranche().transfer(_msgSender(), _safeTranchePayout);
-
-        s_repaidSafeSlips += _safeTranchePayout;
 
         // Transfer riskTranches to msg.sender
         riskTranche().transfer(_msgSender(), _riskTranchePayout);
