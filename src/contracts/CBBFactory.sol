@@ -134,12 +134,20 @@ contract CBBFactory is ICBBFactory {
     {
         uint256 trancheCount = bond.trancheCount();
 
-        // Safe-Tranche cannot be the Z-Tranche
-        if (trancheIndex >= trancheCount - 1)
+        // Revert if only one tranche exists.
+        if (trancheCount == 1) {
+            revert InvalidTrancheCount();
+        }
+
+        // Revert if `trancheIndex` is Z-Tranche.
+        if (trancheIndex >= trancheCount - 1) {
+            // Note that the `trancheCount - 2` expression can not underflow
+            // due to check above.
             revert TrancheIndexOutOfBounds({
                 given: trancheIndex,
                 maxIndex: trancheCount - 2
             });
+        }
 
         (ITranche safeTranche, uint256 safeRatio) = bond.tranches(trancheIndex);
         (ITranche riskTranche, uint256 riskRatio) = bond.tranches(
