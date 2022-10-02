@@ -10,9 +10,7 @@ import "../interfaces/ISlipFactory.sol";
  * @dev Factory for Iou minimal proxy contracts
  */
 contract SlipFactory is ISlipFactory, Context {
-    bytes32 public constant DEFAULT_ADMIN_ROLE = 0x00;
-
-    address public target;
+    address public immutable target;
 
     constructor(address _target) {
         target = _target;
