@@ -2,12 +2,13 @@
 pragma solidity 0.8.13;
 
 import "clones-with-immutable-args/ClonesWithImmutableArgs.sol";
+import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "./ConvertibleBondBox.sol";
 import "../interfaces/ICBBFactory.sol";
 import "../interfaces/ISlip.sol";
 
-contract CBBFactory is ICBBFactory {
+contract CBBFactory is ICBBFactory, Context {
     using ClonesWithImmutableArgs for address;
 
     address public immutable implementation;
@@ -92,7 +93,7 @@ contract CBBFactory is ICBBFactory {
             stableToken,
             trancheIndex,
             penalty,
-            msg.sender,
+            _msgSender(),
             address(clone)
         );
         return address(clone);
