@@ -427,7 +427,7 @@ contract ConvertibleBondBox is
         uint256 _safeTranchePayout,
         uint256 _riskTranchePayout
     ) internal {
-        // Update total repaid safe slips
+        // Update total repaid bondSlips
         s_repaidBondSlips += _safeTranchePayout;
 
         // Transfer fees to owner

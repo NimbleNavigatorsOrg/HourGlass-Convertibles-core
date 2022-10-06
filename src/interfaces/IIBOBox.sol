@@ -49,7 +49,7 @@ interface IIBOBox is IIBOImmutableArgs {
     function cancelIssue(uint256 _issueOrderAmount) external;
 
     /**
-     * @dev Withdraws Lend Slips for unfilled IssueOrders
+     * @dev Withdraws buyOrders for unfilled IssueOrders
      * @param _buyOrderAmount The amount of stable tokens to cancel
      * Requirements:
      */

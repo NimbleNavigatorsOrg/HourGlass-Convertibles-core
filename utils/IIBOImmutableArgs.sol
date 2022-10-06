@@ -6,15 +6,15 @@ import "../src/interfaces/IConvertibleBondBox.sol";
 
 interface IIBOImmutableArgs {
     /**
-     * @notice the lend slip object
+     * @notice the buyOrder object
      * @dev using ClonesWithImmutableArgs pattern here to save gas
      * @dev https://github.com/wighawag/clones-with-immutable-args
-     * @return The lend slip object
+     * @return The buyOrder object
      */
     function buyOrder() external pure returns (ISlip);
 
     /**
-     * @notice the borrow slip object
+     * @notice the issueOrder object
      * @dev using ClonesWithImmutableArgs pattern here to save gas
      * @dev https://github.com/wighawag/clones-with-immutable-args
      * @return The issueOrder object

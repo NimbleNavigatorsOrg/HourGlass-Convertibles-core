@@ -249,7 +249,7 @@ interface IIBOBoxLens {
         returns (uint256);
 
     /**
-     * @dev provides maximum input param when redeeming lend slips for safe slips
+     * @dev provides maximum input param when redeeming buyOrders for bondSlips
      * @param _IBOBox The IBO box tied to the Convertible Bond
      * Requirements:
      */
@@ -260,7 +260,7 @@ interface IIBOBoxLens {
     ) external view returns (uint256);
 
     /**
-     * @dev provides maximum input param when redeeming lend slips for stables
+     * @dev provides maximum input param when redeeming buyOrders for stables
      * @param _IBOBox The IBO box tied to the Convertible Bond
      * Requirements:
      */
@@ -271,7 +271,7 @@ interface IIBOBoxLens {
     ) external view returns (uint256);
 
     /**
-     * @dev provides maximum input param when redeeming safe slips for stables
+     * @dev provides maximum input param when redeeming bondSlips for stables
      * @param _IBOBox The IBO box tied to the Convertible Bond
      * Requirements:
      */
@@ -282,7 +282,7 @@ interface IIBOBoxLens {
         returns (uint256);
 
     /**
-     * @dev provides maximum input param when cancelling lend slips
+     * @dev provides maximum input param when cancelling buyOrders
      * @param _IBOBox The IBO box tied to the Convertible Bond
      * Requirements:
      */
@@ -293,7 +293,7 @@ interface IIBOBoxLens {
         returns (uint256);
 
     /**
-     * @dev provides maximum input param when cancelling borrow slips
+     * @dev provides maximum input param when cancelling issueOrders
      * @param _IBOBox The IBO box tied to the Convertible Bond
      * Requirements:
      */
@@ -304,7 +304,7 @@ interface IIBOBoxLens {
         returns (uint256);
 
     /**
-     * @dev provides maximum input param when redeeming safe slips for tranches
+     * @dev provides maximum input param when redeeming bondSlips for tranches
      * @param _IBOBox The IBO box tied to the Convertible Bond
      * Requirements:
      */
@@ -315,7 +315,7 @@ interface IIBOBoxLens {
         returns (uint256);
 
     /**
-     * @dev provides maximum input param when redeeming lend slips for tranches
+     * @dev provides maximum input param when redeeming buyOrders for tranches
      * @param _IBOBox The IBO box tied to the Convertible Bond
      * Requirements:
      */

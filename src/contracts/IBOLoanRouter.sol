@@ -377,7 +377,7 @@ contract IBOLoanRouter is IIBOLoanRouter {
             _stableAmount + _stableFees
         );
 
-        //Transfer risk slips to CBB
+        //Transfer debtSlips to router
         convertibleBondBox.debtSlip().transferFrom(
             msg.sender,
             address(this),

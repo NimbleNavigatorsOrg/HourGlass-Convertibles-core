@@ -125,7 +125,7 @@ interface IIBOLoanRouter {
      * @param _IBOBox The IBO box tied to the Convertible Bond
      * @param _stableAmount The amount of stableTokens to be repaid
      * @param _stableFees The amount of stableToken fees
-     * @param _debtSlipAmount The amount of risk slips being repaid for
+     * @param _debtSlipAmount The amount of debtSlips being repaid for
      * Requirements:
      *  - can only be called prior to maturity
      *  - only to be called with bonds that have A/Z tranche setup

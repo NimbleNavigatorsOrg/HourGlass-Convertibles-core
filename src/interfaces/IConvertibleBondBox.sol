@@ -158,7 +158,7 @@ interface IConvertibleBondBox is ICBBImmutableArgs {
     function s_startDate() external view returns (uint256);
 
     /**
-     * @dev Gets the total repaid safe slips to date
+     * @dev Gets the total repaid bondSlips to date
      */
     function s_repaidBondSlips() external view returns (uint256);
 
