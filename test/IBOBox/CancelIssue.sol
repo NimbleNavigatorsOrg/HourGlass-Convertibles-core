@@ -57,7 +57,7 @@ contract CancelIssue is iboBoxSetup {
         s_issueOrder.approve(s_deployedIBOBAddress, type(uint256).max);
 
         vm.expectEmit(true, true, true, true);
-        emit BorrowWithdrawal(s_borrower, _borrowAmount);
+        emit CancelledIssueOrder(s_borrower, _borrowAmount);
         s_deployedIBOB.cancelIssue(_borrowAmount);
         vm.stopPrank();
 

@@ -6,8 +6,8 @@ import "../../utils/IIBOImmutableArgs.sol";
 interface IIBOBox is IIBOImmutableArgs {
     event LendDeposit(address lender, uint256 lendAmount);
     event BorrowDeposit(address borrower, uint256 safeTrancheAmount);
-    event LendWithdrawal(address lender, uint256 buyOrderAmount);
-    event BorrowWithdrawal(address borrower, uint256 issueOrderAmount);
+    event CancelledBuyOrder(address lender, uint256 buyOrderAmount);
+    event CancelledIssueOrder(address borrower, uint256 issueOrderAmount);
     event RedeemIssueOrder(address caller, uint256 issueOrderAmount);
     event RedeemBuyOrder(address caller, uint256 buyOrderAmount);
     event Initialized(address owner);

@@ -118,7 +118,7 @@ contract IBOBox is OwnableUpgradeable, IBOImmutableArgs, IIBOBox {
         issueOrder().burn(_msgSender(), _issueOrderAmount);
 
         //event stuff
-        emit BorrowWithdrawal(_msgSender(), _issueOrderAmount);
+        emit CancelledIssueOrder(_msgSender(), _issueOrderAmount);
     }
 
     function cancelBuy(uint256 _buyOrderAmount) external override {
@@ -147,7 +147,7 @@ contract IBOBox is OwnableUpgradeable, IBOImmutableArgs, IIBOBox {
         buyOrder().burn(_msgSender(), _buyOrderAmount);
 
         //event stuff
-        emit LendWithdrawal(_msgSender(), _buyOrderAmount);
+        emit CancelledBuyOrder(_msgSender(), _buyOrderAmount);
     }
 
     function redeemIssueOrder(uint256 _issueOrderAmount) external override {

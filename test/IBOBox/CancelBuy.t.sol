@@ -81,7 +81,7 @@ contract CancelBuy is iboBoxSetup {
 
         vm.startPrank(s_lender);
         vm.expectEmit(true, true, true, true);
-        emit LendWithdrawal(s_lender, _lendAmount);
+        emit CancelledBuyOrder(s_lender, _lendAmount);
         s_deployedIBOB.cancelBuy(_lendAmount);
         vm.stopPrank();
 

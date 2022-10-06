@@ -20,8 +20,8 @@ contract iboBoxSetup is CBBSetup {
 
     event LendDeposit(address, uint256);
     event BorrowDeposit(address, uint256);
-    event LendWithdrawal(address, uint256);
-    event BorrowWithdrawal(address, uint256);
+    event CancelledBuyOrder(address, uint256);
+    event CancelledIssueOrder(address, uint256);
     event RedeemIssueOrder(address, uint256);
     event RedeemBuyOrder(address, uint256);
 
