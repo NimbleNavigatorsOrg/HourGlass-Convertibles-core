@@ -238,54 +238,54 @@ contract ConvertibleBondBox is
     /**
      * @inheritdoc IConvertibleBondBox
      */
-    function repayMax(uint256 _issuerSlipAmount)
+    function repayMax(uint256 _debtSlipAmount)
         external
         override
         afterActivate
-        validAmount(_issuerSlipAmount)
+        validAmount(_debtSlipAmount)
     {
         // Load params into memory
         uint256 price = currentPrice();
 
         // Calculate inputs for internal repay function
-        uint256 safeTranchePayout = (_issuerSlipAmount * safeRatio()) /
+        uint256 safeTranchePayout = (_debtSlipAmount * safeRatio()) /
             riskRatio();
         uint256 stablesOwed = (safeTranchePayout * price * stableDecimals()) /
             s_priceGranularity /
             trancheDecimals();
         uint256 stableFees = (stablesOwed * feeBps) / BPS;
 
-        _repay(stablesOwed, stableFees, safeTranchePayout, _issuerSlipAmount);
+        _repay(stablesOwed, stableFees, safeTranchePayout, _debtSlipAmount);
 
         //emit event
-        emit Repay(_msgSender(), stablesOwed, _issuerSlipAmount, price);
+        emit Repay(_msgSender(), stablesOwed, _debtSlipAmount, price);
     }
 
     /**
      * @inheritdoc IConvertibleBondBox
      */
-    function redeemRiskTranche(uint256 _issuerSlipAmount)
+    function redeemRiskTranche(uint256 _debtSlipAmount)
         external
         override
         afterBondMature
-        validAmount(_issuerSlipAmount)
+        validAmount(_debtSlipAmount)
     {
         //transfer fee to owner
         if (feeBps > 0 && _msgSender() != owner()) {
-            uint256 feeSlip = (_issuerSlipAmount * feeBps) / BPS;
-            issuerSlip().transferFrom(_msgSender(), owner(), feeSlip);
-            _issuerSlipAmount -= feeSlip;
+            uint256 feeSlip = (_debtSlipAmount * feeBps) / BPS;
+            debtSlip().transferFrom(_msgSender(), owner(), feeSlip);
+            _debtSlipAmount -= feeSlip;
         }
 
-        uint256 zTranchePayout = (_issuerSlipAmount *
+        uint256 zTranchePayout = (_debtSlipAmount *
             (s_penaltyGranularity - penalty())) / (s_penaltyGranularity);
 
         //transfer Z-tranches from ConvertibleBondBox to msg.sender
         riskTranche().transfer(_msgSender(), zTranchePayout);
 
-        issuerSlip().burn(_msgSender(), _issuerSlipAmount);
+        debtSlip().burn(_msgSender(), _debtSlipAmount);
 
-        emit RedeemRiskTranche(_msgSender(), _issuerSlipAmount);
+        emit RedeemRiskTranche(_msgSender(), _debtSlipAmount);
     }
 
     /**
@@ -313,7 +313,7 @@ contract ConvertibleBondBox is
         safeTranche().transfer(_msgSender(), _bondSlipAmount);
 
         uint256 zPenaltyTotal = riskTranche().balanceOf(address(this)) -
-            issuerSlip().totalSupply();
+            debtSlip().totalSupply();
 
         //transfer risk-Tranche penalty after maturity only
         riskTranche().transfer(
@@ -388,7 +388,7 @@ contract ConvertibleBondBox is
         address _lender,
         uint256 _stableAmount,
         uint256 _bondSlipAmount,
-        uint256 _issuerSlipAmount
+        uint256 _debtSlipAmount
     ) internal {
         //Transfer safeTranche to ConvertibleBondBox
         safeTranche().transferFrom(
@@ -401,14 +401,14 @@ contract ConvertibleBondBox is
         riskTranche().transferFrom(
             _msgSender(),
             address(this),
-            _issuerSlipAmount
+            _debtSlipAmount
         );
 
         // //Mint bondSlips to the lender
         bondSlip().mint(_lender, _bondSlipAmount);
 
-        // //Mint issuerSlips to the borrower
-        issuerSlip().mint(_borrower, _issuerSlipAmount);
+        // //Mint debtSlips to the borrower
+        debtSlip().mint(_borrower, _debtSlipAmount);
 
         // // Transfer stables to borrower
         if (_msgSender() != _borrower) {
@@ -454,7 +454,7 @@ contract ConvertibleBondBox is
         // Transfer riskTranches to msg.sender
         riskTranche().transfer(_msgSender(), _riskTranchePayout);
 
-        // Burn issuerSlips
-        issuerSlip().burn(_msgSender(), _riskTranchePayout);
+        // Burn debtSlips
+        debtSlip().burn(_msgSender(), _riskTranchePayout);
     }
 }

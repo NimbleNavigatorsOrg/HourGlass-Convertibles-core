@@ -8,7 +8,7 @@ contract TransmitActivate is iboBoxSetup {
         uint256 IBORiskTranche;
         uint256 IBOStableTokens;
         uint256 IBOBondSlip;
-        uint256 IBOIssuerSlip;
+        uint256 IBODebtSlip;
         uint256 CBBSafeTranche;
         uint256 CBBRiskTranche;
     }
@@ -62,7 +62,7 @@ contract TransmitActivate is iboBoxSetup {
             s_riskTranche.balanceOf(s_deployedIBOBAddress),
             s_stableToken.balanceOf(s_deployedIBOBAddress),
             s_bondSlip.balanceOf(s_deployedIBOBAddress),
-            s_issuerSlip.balanceOf(s_deployedIBOBAddress),
+            s_debtSlip.balanceOf(s_deployedIBOBAddress),
             s_safeTranche.balanceOf(s_deployedCBBAddress),
             s_riskTranche.balanceOf(s_deployedCBBAddress)
         );
@@ -123,8 +123,8 @@ contract TransmitActivate is iboBoxSetup {
             s_bondSlip.balanceOf(s_deployedIBOBAddress)
         );
         assertEq(
-            before.IBOIssuerSlip + adjustments.riskTrancheAmount,
-            s_issuerSlip.balanceOf(s_deployedIBOBAddress)
+            before.IBODebtSlip + adjustments.riskTrancheAmount,
+            s_debtSlip.balanceOf(s_deployedIBOBAddress)
         );
         assertEq(
             before.CBBSafeTranche + adjustments.safeTrancheAmount,

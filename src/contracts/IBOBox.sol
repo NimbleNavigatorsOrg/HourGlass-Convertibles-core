@@ -151,8 +151,8 @@ contract IBOBox is OwnableUpgradeable, IBOImmutableArgs, IIBOBox {
     }
 
     function redeemBorrowSlip(uint256 _borrowSlipAmount) external override {
-        // Transfer `_borrowSlipAmount*riskRatio()/safeRatio()` of IssuerSlips to msg.sender
-        ISlip(issuerSlipAddress()).transfer(
+        // Transfer `_borrowSlipAmount*riskRatio()/safeRatio()` of DebtSlips to msg.sender
+        ISlip(debtSlipAddress()).transfer(
             _msgSender(),
             ((_borrowSlipAmount *
                 priceGranularity() *

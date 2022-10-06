@@ -57,7 +57,7 @@ interface IIBOBox is IIBOImmutableArgs {
 
     /**
      * @dev Deposits _stableAmount of stable-tokens and then calls lend to CBB
-     * @param _borrowSlipAmount amount of BorrowSlips to redeem IssuerSlips and USDT with
+     * @param _borrowSlipAmount amount of BorrowSlips to redeem DebtSlips and USDT with
      * Requirements:
      */
 

@@ -7,7 +7,7 @@ contract Repay is CBBSetup {
     struct BeforeBalances {
         uint256 borrowerStables;
         uint256 borrowerSafeTranche;
-        uint256 borrowerIssuerSlip;
+        uint256 borrowerDebtSlip;
         uint256 borrowerRiskTranche;
         uint256 ownerStables;
         uint256 CBBSafeTranche;
@@ -19,7 +19,7 @@ contract Repay is CBBSetup {
     struct RepayAmounts {
         uint256 stablesFee;
         uint256 stablesRepaid;
-        uint256 issuerSlipAmount;
+        uint256 debtSlipAmount;
         uint256 safeTranchePayout;
         uint256 riskTranchePayout;
     }
@@ -62,25 +62,25 @@ contract Repay is CBBSetup {
             block.timestamp
         );
 
-        uint256 issuerSlipAmount = s_issuerSlip.balanceOf(s_borrower);
+        uint256 debtSlipAmount = s_debtSlip.balanceOf(s_borrower);
 
         vm.prank(s_borrower);
         vm.expectRevert(customError);
-        s_deployedConvertibleBondBox.repayMax(issuerSlipAmount);
+        s_deployedConvertibleBondBox.repayMax(debtSlipAmount);
     }
 
-    function testCannotRepayMinimumInput(uint256 issuerSlipAmount) public {
+    function testCannotRepayMinimumInput(uint256 debtSlipAmount) public {
         initialSetup();
-        issuerSlipAmount = bound(issuerSlipAmount, 0, 1e6 - 1);
+        debtSlipAmount = bound(debtSlipAmount, 0, 1e6 - 1);
 
         bytes memory customError = abi.encodeWithSignature(
             "MinimumInput(uint256,uint256)",
-            issuerSlipAmount,
+            debtSlipAmount,
             1e6
         );
         vm.prank(s_borrower);
         vm.expectRevert(customError);
-        s_deployedConvertibleBondBox.repay(issuerSlipAmount);
+        s_deployedConvertibleBondBox.repay(debtSlipAmount);
     }
 
     function testRepay(
@@ -107,7 +107,7 @@ contract Repay is CBBSetup {
         BeforeBalances memory before = BeforeBalances(
             s_stableToken.balanceOf(s_borrower),
             s_safeTranche.balanceOf(s_borrower),
-            s_issuerSlip.balanceOf(s_borrower),
+            s_debtSlip.balanceOf(s_borrower),
             s_riskTranche.balanceOf(s_borrower),
             s_stableToken.balanceOf(s_cbb_owner),
             s_safeTranche.balanceOf(s_deployedCBBAddress),
@@ -116,7 +116,7 @@ contract Repay is CBBSetup {
             s_deployedConvertibleBondBox.s_repaidBondSlips()
         );
 
-        uint256 maxStablesOwed = (before.borrowerIssuerSlip *
+        uint256 maxStablesOwed = (before.borrowerDebtSlip *
             s_deployedConvertibleBondBox.safeRatio() *
             s_deployedConvertibleBondBox.currentPrice() *
             s_deployedConvertibleBondBox.stableDecimals()) /
@@ -160,7 +160,7 @@ contract Repay is CBBSetup {
     function testRepayMax(
         uint256 time,
         uint256 fee,
-        uint256 issuerSlipAmount
+        uint256 debtSlipAmount
     ) public {
         initialSetup();
 
@@ -181,7 +181,7 @@ contract Repay is CBBSetup {
         BeforeBalances memory before = BeforeBalances(
             s_stableToken.balanceOf(s_borrower),
             s_safeTranche.balanceOf(s_borrower),
-            s_issuerSlip.balanceOf(s_borrower),
+            s_debtSlip.balanceOf(s_borrower),
             s_riskTranche.balanceOf(s_borrower),
             s_stableToken.balanceOf(s_cbb_owner),
             s_safeTranche.balanceOf(s_deployedCBBAddress),
@@ -190,13 +190,9 @@ contract Repay is CBBSetup {
             s_deployedConvertibleBondBox.s_repaidBondSlips()
         );
 
-        issuerSlipAmount = bound(
-            issuerSlipAmount,
-            1e6,
-            before.borrowerIssuerSlip
-        );
+        debtSlipAmount = bound(debtSlipAmount, 1e6, before.borrowerDebtSlip);
 
-        uint256 stablesOwed = (issuerSlipAmount *
+        uint256 stablesOwed = (debtSlipAmount *
             s_deployedConvertibleBondBox.safeRatio() *
             s_deployedConvertibleBondBox.currentPrice() *
             s_deployedConvertibleBondBox.stableDecimals()) /
@@ -209,9 +205,9 @@ contract Repay is CBBSetup {
         RepayAmounts memory adjustments = RepayAmounts(
             stableFees,
             stablesOwed,
-            issuerSlipAmount,
-            (issuerSlipAmount * s_safeRatio) / s_riskRatio,
-            issuerSlipAmount
+            debtSlipAmount,
+            (debtSlipAmount * s_safeRatio) / s_riskRatio,
+            debtSlipAmount
         );
 
         vm.startPrank(s_borrower);
@@ -220,10 +216,10 @@ contract Repay is CBBSetup {
         emit Repay(
             s_borrower,
             stablesOwed,
-            issuerSlipAmount,
+            debtSlipAmount,
             s_deployedConvertibleBondBox.currentPrice()
         );
-        s_deployedConvertibleBondBox.repayMax(issuerSlipAmount);
+        s_deployedConvertibleBondBox.repayMax(debtSlipAmount);
         vm.stopPrank();
 
         assertions(before, adjustments);
@@ -248,8 +244,8 @@ contract Repay is CBBSetup {
         );
 
         assertApproxEqRel(
-            before.borrowerIssuerSlip - adjustments.issuerSlipAmount,
-            s_issuerSlip.balanceOf(s_borrower),
+            before.borrowerDebtSlip - adjustments.debtSlipAmount,
+            s_debtSlip.balanceOf(s_borrower),
             1e15
         );
 

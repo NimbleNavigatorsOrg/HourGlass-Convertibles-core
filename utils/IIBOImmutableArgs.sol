@@ -83,13 +83,13 @@ interface IIBOImmutableArgs {
     function riskTranche() external pure returns (ITranche);
 
     /**
-     * @notice The address of the issuerSlip of the CBB
+     * @notice The address of the debtSlip of the CBB
      * @dev using ClonesWithImmutableArgs pattern here to save gas
      * @dev https://github.com/wighawag/clones-with-immutable-args
-     * @return The address of the issuerSlip of the CBB
+     * @return The address of the debtSlip of the CBB
      */
 
-    function issuerSlipAddress() external pure returns (address);
+    function debtSlipAddress() external pure returns (address);
 
     /**
      * @notice The tranche ratio of the riskTranche

@@ -23,12 +23,12 @@ interface ICBBImmutableArgs {
     function bondSlip() external pure returns (ISlip);
 
     /**
-     * @notice The issuerSlip object
+     * @notice The debtSlip object
      * @dev using ClonesWithImmutableArgs pattern here to save gas
      * @dev https://github.com/wighawag/clones-with-immutable-args
-     * @return The issuerSlip Slip object
+     * @return The debtSlip Slip object
      */
-    function issuerSlip() external pure returns (ISlip);
+    function debtSlip() external pure returns (ISlip);
 
     /**
      * @notice penalty for zslips

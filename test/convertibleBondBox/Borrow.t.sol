@@ -6,7 +6,7 @@ import "./CBBSetup.sol";
 contract Borrow is CBBSetup {
     struct BeforeBalances {
         uint256 borrowerStables;
-        uint256 borrowerIssuerSlip;
+        uint256 borrowerDebtSlip;
         uint256 lenderBondSlip;
         uint256 matcherRiskTranche;
         uint256 matcherSafeTranche;
@@ -90,7 +90,7 @@ contract Borrow is CBBSetup {
 
         BeforeBalances memory before = BeforeBalances(
             s_stableToken.balanceOf(s_borrower),
-            s_issuerSlip.balanceOf(s_borrower),
+            s_debtSlip.balanceOf(s_borrower),
             s_bondSlip.balanceOf(s_lender),
             s_riskTranche.balanceOf(address(this)),
             s_safeTranche.balanceOf(address(this)),
@@ -168,8 +168,8 @@ contract Borrow is CBBSetup {
         );
 
         assertEq(
-            before.borrowerIssuerSlip + adjustments.riskTrancheAmount,
-            s_issuerSlip.balanceOf(s_borrower)
+            before.borrowerDebtSlip + adjustments.riskTrancheAmount,
+            s_debtSlip.balanceOf(s_borrower)
         );
 
         assertEq(

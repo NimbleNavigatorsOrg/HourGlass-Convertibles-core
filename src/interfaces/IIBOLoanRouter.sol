@@ -89,17 +89,17 @@ interface IIBOLoanRouter {
     ) external;
 
     /**
-     * @dev redeems issuerSlips for riskTranches, redeems tranches for rebasing
+     * @dev redeems debtSlips for riskTranches, redeems tranches for rebasing
      * collateral, unwraps rebasing collateral
      * @param _IBOBox The IBO box tied to the Convertible Bond
-     * @param _issuerSlipAmount The amount of issuerSlips to be redeemed
+     * @param _debtSlipAmount The amount of debtSlips to be redeemed
      * Requirements:
      *  - can only be called after maturity
      */
 
-    function redeemIssuerSlipsForTranchesAndUnwrap(
+    function redeemDebtSlipsForTranchesAndUnwrap(
         IIBOBox _IBOBox,
-        uint256 _issuerSlipAmount
+        uint256 _debtSlipAmount
     ) external;
 
     /**
@@ -107,7 +107,7 @@ interface IIBOLoanRouter {
      * @param _IBOBox The IBO box tied to the Convertible Bond
      * @param _stableAmount The amount of stableTokens to be repaid
      * @param _stableFees The amount of stableToken fees
-     * @param _issuerSlipAmount The amount of issuerSlips to be repaid with
+     * @param _debtSlipAmount The amount of debtSlips to be repaid with
      * Requirements:
      *  - can only be called prior to maturity
      *  - only to be called with bonds that have A/Z tranche setup
@@ -117,15 +117,15 @@ interface IIBOLoanRouter {
         IIBOBox _IBOBox,
         uint256 _stableAmount,
         uint256 _stableFees,
-        uint256 _issuerSlipAmount
+        uint256 _debtSlipAmount
     ) external;
 
     /**
-     * @dev repays of users issuerSlips w/ stable tokens to CBB and unwraps collateral into underlying
+     * @dev repays of users debtSlips w/ stable tokens to CBB and unwraps collateral into underlying
      * @param _IBOBox The IBO box tied to the Convertible Bond
      * @param _stableAmount The amount of stableTokens to be repaid
      * @param _stableFees The amount of stableToken fees
-     * @param _issuerSlipAmount The amount of risk slips being repaid for
+     * @param _debtSlipAmount The amount of risk slips being repaid for
      * Requirements:
      *  - can only be called prior to maturity
      *  - only to be called with bonds that have A/Z tranche setup
@@ -135,7 +135,7 @@ interface IIBOLoanRouter {
         IIBOBox _IBOBox,
         uint256 _stableAmount,
         uint256 _stableFees,
-        uint256 _issuerSlipAmount
+        uint256 _debtSlipAmount
     ) external;
 
     /**
@@ -143,7 +143,7 @@ interface IIBOLoanRouter {
      * @param _IBOBox The IBO box tied to the Convertible Bond
      * @param _stableAmount The amount of stableTokens to be repaid
      * @param _stableFees The amount of stableToken fees
-     * @param _issuerSlipAmount The amount of issuerSlips to be repaid with
+     * @param _debtSlipAmount The amount of debtSlips to be repaid with
      * Requirements:
      *  - can only be called after maturity
      */
@@ -152,6 +152,6 @@ interface IIBOLoanRouter {
         IIBOBox _IBOBox,
         uint256 _stableAmount,
         uint256 _stableFees,
-        uint256 _issuerSlipAmount
+        uint256 _debtSlipAmount
     ) external;
 }

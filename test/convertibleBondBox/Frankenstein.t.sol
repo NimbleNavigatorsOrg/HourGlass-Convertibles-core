@@ -75,7 +75,7 @@ contract Frankenstein is CBBSetup {
                 address(s_deployedConvertibleBondBox),
                 type(uint256).max
             );
-            s_issuerSlip.approve(
+            s_debtSlip.approve(
                 address(s_deployedConvertibleBondBox),
                 type(uint256).max
             );
@@ -96,16 +96,16 @@ contract Frankenstein is CBBSetup {
         );
         vm.stopPrank();
 
-        // Borrower repays half of issuerSlips halfway to maturity @ currentPrice
+        // Borrower repays half of debtSlips halfway to maturity @ currentPrice
         vm.warp(s_maturityDate / 2);
         vm.startPrank(address(borrower));
         uint256 _currentPrice = s_deployedConvertibleBondBox.currentPrice();
-        uint256 issuerSlipBalance = s_deployedConvertibleBondBox
-            .issuerSlip()
+        uint256 debtSlipBalance = s_deployedConvertibleBondBox
+            .debtSlip()
             .balanceOf(address(borrower)) / 2;
 
         s_deployedConvertibleBondBox.repay(
-            (((issuerSlipBalance * s_safeRatio) / s_riskRatio) *
+            (((debtSlipBalance * s_safeRatio) / s_riskRatio) *
                 _currentPrice *
                 (10**s_stableDecimals)) /
                 s_priceGranularity /

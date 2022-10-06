@@ -5,14 +5,14 @@ import "./IBOLoanRouterSetup.t.sol";
 contract RepayUnwrap is IBOLoanRouterSetup {
     struct BeforeBalances {
         uint256 borrowerStables;
-        uint256 borrowerIssuerSlip;
+        uint256 borrowerDebtSlip;
         uint256 borrowerCollateral;
     }
 
     struct RepayAmounts {
         uint256 stablesFee;
         uint256 stablesOwed;
-        uint256 issuerSlipAmount;
+        uint256 debtSlipAmount;
         uint256 collateralAmount;
     }
 
@@ -65,16 +65,16 @@ contract RepayUnwrap is IBOLoanRouterSetup {
     }
 
     function testRepayMaxUnwrapSimple(
-        uint256 issuerSlipAmount,
+        uint256 debtSlipAmount,
         uint256 data,
         uint256 time
     ) public {
         initialSetup(data, time, false);
 
-        issuerSlipAmount = bound(
-            issuerSlipAmount,
+        debtSlipAmount = bound(
+            debtSlipAmount,
             1e6,
-            s_issuerSlip.balanceOf(s_borrower)
+            s_debtSlip.balanceOf(s_borrower)
         );
 
         (
@@ -84,21 +84,21 @@ contract RepayUnwrap is IBOLoanRouterSetup {
 
         ) = s_IBOLens.viewRepayMaxAndUnwrapSimple(
                 s_deployedIBOB,
-                issuerSlipAmount
+                debtSlipAmount
             );
 
         s_stableToken.mint(s_borrower, stablesOwed + stableFees);
 
         BeforeBalances memory before = BeforeBalances(
             s_stableToken.balanceOf(s_borrower),
-            s_issuerSlip.balanceOf(s_borrower),
+            s_debtSlip.balanceOf(s_borrower),
             s_collateralToken.balanceOf(s_borrower)
         );
 
         RepayAmounts memory adjustments = RepayAmounts(
             stableFees,
             stablesOwed,
-            issuerSlipAmount,
+            debtSlipAmount,
             collateralAmount
         );
 
@@ -107,7 +107,7 @@ contract RepayUnwrap is IBOLoanRouterSetup {
             s_deployedIBOB,
             stablesOwed,
             stableFees,
-            issuerSlipAmount
+            debtSlipAmount
         );
         vm.stopPrank();
 
@@ -146,7 +146,7 @@ contract RepayUnwrap is IBOLoanRouterSetup {
 
         BeforeBalances memory before = BeforeBalances(
             s_stableToken.balanceOf(s_borrower),
-            s_issuerSlip.balanceOf(s_borrower),
+            s_debtSlip.balanceOf(s_borrower),
             s_collateralToken.balanceOf(s_borrower)
         );
 
@@ -193,7 +193,7 @@ contract RepayUnwrap is IBOLoanRouterSetup {
 
         BeforeBalances memory before = BeforeBalances(
             s_stableToken.balanceOf(s_borrower),
-            s_issuerSlip.balanceOf(s_borrower),
+            s_debtSlip.balanceOf(s_borrower),
             s_collateralToken.balanceOf(s_borrower)
         );
 
@@ -217,19 +217,19 @@ contract RepayUnwrap is IBOLoanRouterSetup {
     }
 
     function testRepayMaxAndUnwrapMature(
-        uint256 issuerSlipAmount,
+        uint256 debtSlipAmount,
         uint256 data,
         uint256 time
     ) public {
         initialSetup(data, time, true);
 
-        issuerSlipAmount = bound(
-            issuerSlipAmount,
+        debtSlipAmount = bound(
+            debtSlipAmount,
             Math.max(
                 1e6,
                 ((10**s_collateralDecimals) * s_riskRatio) / s_safeRatio
             ),
-            s_issuerSlip.balanceOf(s_borrower)
+            s_debtSlip.balanceOf(s_borrower)
         );
 
         (
@@ -239,21 +239,21 @@ contract RepayUnwrap is IBOLoanRouterSetup {
 
         ) = s_IBOLens.viewRepayMaxAndUnwrapMature(
                 s_deployedIBOB,
-                issuerSlipAmount
+                debtSlipAmount
             );
 
         s_stableToken.mint(s_borrower, stablesOwed + stableFees);
 
         BeforeBalances memory before = BeforeBalances(
             s_stableToken.balanceOf(s_borrower),
-            s_issuerSlip.balanceOf(s_borrower),
+            s_debtSlip.balanceOf(s_borrower),
             s_collateralToken.balanceOf(s_borrower)
         );
 
         RepayAmounts memory adjustments = RepayAmounts(
             stableFees,
             stablesOwed,
-            issuerSlipAmount,
+            debtSlipAmount,
             collateralAmount
         );
 
@@ -262,7 +262,7 @@ contract RepayUnwrap is IBOLoanRouterSetup {
             s_deployedIBOB,
             stablesOwed,
             stableFees,
-            issuerSlipAmount
+            debtSlipAmount
         );
         vm.stopPrank();
 
@@ -288,8 +288,8 @@ contract RepayUnwrap is IBOLoanRouterSetup {
         );
 
         assertApproxEqRel(
-            before.borrowerIssuerSlip - adjustments.issuerSlipAmount,
-            s_issuerSlip.balanceOf(s_borrower),
+            before.borrowerDebtSlip - adjustments.debtSlipAmount,
+            s_debtSlip.balanceOf(s_borrower),
             1e15
         );
     }

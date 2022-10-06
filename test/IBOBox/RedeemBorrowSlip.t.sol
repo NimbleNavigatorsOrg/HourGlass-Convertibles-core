@@ -5,15 +5,15 @@ import "./iboBoxSetup.t.sol";
 contract RedeemBorrowSlip is iboBoxSetup {
     struct BeforeBalances {
         uint256 borrowerBorrowSlips;
-        uint256 borrowerIssuerSlips;
+        uint256 borrowerDebtSlips;
         uint256 borrowerStableTokens;
-        uint256 IBOIssuerSlips;
+        uint256 IBODebtSlips;
         uint256 IBOStableTokens;
         uint256 activateLendAmount;
     }
 
     struct BorrowAmounts {
-        uint256 issuerSlipAmount;
+        uint256 debtSlipAmount;
         uint256 borrowSlipAmount;
     }
 
@@ -45,9 +45,9 @@ contract RedeemBorrowSlip is iboBoxSetup {
 
         BeforeBalances memory before = BeforeBalances(
             s_borrowSlip.balanceOf(s_borrower),
-            s_issuerSlip.balanceOf(s_borrower),
+            s_debtSlip.balanceOf(s_borrower),
             s_stableToken.balanceOf(s_borrower),
-            s_issuerSlip.balanceOf(s_deployedIBOBAddress),
+            s_debtSlip.balanceOf(s_deployedIBOBAddress),
             s_stableToken.balanceOf(s_deployedIBOBAddress),
             s_deployedIBOB.s_activateLendAmount()
         );
@@ -83,8 +83,8 @@ contract RedeemBorrowSlip is iboBoxSetup {
         );
 
         assertEq(
-            before.borrowerIssuerSlips + adjustments.issuerSlipAmount,
-            s_issuerSlip.balanceOf(s_borrower)
+            before.borrowerDebtSlips + adjustments.debtSlipAmount,
+            s_debtSlip.balanceOf(s_borrower)
         );
 
         assertEq(
@@ -93,8 +93,8 @@ contract RedeemBorrowSlip is iboBoxSetup {
         );
 
         assertEq(
-            before.IBOIssuerSlips - adjustments.issuerSlipAmount,
-            s_issuerSlip.balanceOf(s_deployedIBOBAddress)
+            before.IBODebtSlips - adjustments.debtSlipAmount,
+            s_debtSlip.balanceOf(s_deployedIBOBAddress)
         );
 
         assertEq(

@@ -75,9 +75,7 @@ contract RedeemStable is CBBSetup {
 
         vm.startPrank(s_borrower);
         s_stableToken.approve(s_deployedCBBAddress, type(uint256).max);
-        s_deployedConvertibleBondBox.repayMax(
-            s_issuerSlip.balanceOf(s_borrower)
-        );
+        s_deployedConvertibleBondBox.repayMax(s_debtSlip.balanceOf(s_borrower));
         vm.stopPrank();
 
         BeforeBalances memory before = BeforeBalances(

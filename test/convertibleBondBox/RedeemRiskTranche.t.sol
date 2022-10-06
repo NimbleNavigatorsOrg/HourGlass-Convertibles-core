@@ -5,15 +5,15 @@ import "./CBBSetup.sol";
 
 contract RedeemRiskTranche is CBBSetup {
     struct BeforeBalances {
-        uint256 borrowerIssuerSlip;
+        uint256 borrowerDebtSlip;
         uint256 borrowerRiskTranche;
-        uint256 ownerIssuerSlip;
+        uint256 ownerDebtSlip;
         uint256 CBBRiskTranche;
     }
 
     struct RedeemAmounts {
         uint256 feeSlip;
-        uint256 issuerSlipAmount;
+        uint256 debtSlipAmount;
         uint256 riskTranchePayout;
     }
 
@@ -22,7 +22,7 @@ contract RedeemRiskTranche is CBBSetup {
 
     function testCannotRedeemRiskTrancheBondNotMatureYet(
         uint256 time,
-        uint256 issuerSlipAmount
+        uint256 debtSlipAmount
     ) public {
         time = bound(time, 0, s_maturityDate - 1);
 
@@ -33,30 +33,30 @@ contract RedeemRiskTranche is CBBSetup {
             block.timestamp
         );
         vm.expectRevert(customError);
-        s_deployedConvertibleBondBox.redeemRiskTranche(issuerSlipAmount);
+        s_deployedConvertibleBondBox.redeemRiskTranche(debtSlipAmount);
     }
 
     function testCannotRedeemRiskTrancheMinimumInput(
         uint256 time,
-        uint256 issuerSlipAmount
+        uint256 debtSlipAmount
     ) public {
         time = bound(time, s_maturityDate, s_endOfUnixTime);
-        issuerSlipAmount = bound(issuerSlipAmount, 0, 1e6 - 1);
+        debtSlipAmount = bound(debtSlipAmount, 0, 1e6 - 1);
         vm.warp(time);
 
         bytes memory customError = abi.encodeWithSignature(
             "MinimumInput(uint256,uint256)",
-            issuerSlipAmount,
+            debtSlipAmount,
             1e6
         );
         vm.expectRevert(customError);
-        s_deployedConvertibleBondBox.redeemRiskTranche(issuerSlipAmount);
+        s_deployedConvertibleBondBox.redeemRiskTranche(debtSlipAmount);
     }
 
     function testRedeemRiskTranche(
         uint256 time,
         uint256 depositAmount,
-        uint256 issuerSlipAmountToRedeem,
+        uint256 debtSlipAmountToRedeem,
         uint256 fee
     ) public {
         time = bound(time, s_maturityDate, s_endOfUnixTime);
@@ -83,37 +83,35 @@ contract RedeemRiskTranche is CBBSetup {
         vm.warp(time);
 
         BeforeBalances memory before = BeforeBalances(
-            s_issuerSlip.balanceOf(s_borrowerAddress),
+            s_debtSlip.balanceOf(s_borrowerAddress),
             s_riskTranche.balanceOf(s_borrowerAddress),
-            s_issuerSlip.balanceOf(s_cbb_owner),
+            s_debtSlip.balanceOf(s_cbb_owner),
             s_riskTranche.balanceOf(s_deployedCBBAddress)
         );
 
-        issuerSlipAmountToRedeem = bound(
-            issuerSlipAmountToRedeem,
+        debtSlipAmountToRedeem = bound(
+            debtSlipAmountToRedeem,
             1e6,
-            before.borrowerIssuerSlip
+            before.borrowerDebtSlip
         );
 
-        uint256 feeSlip = (issuerSlipAmountToRedeem * fee) / s_BPS;
+        uint256 feeSlip = (debtSlipAmountToRedeem * fee) / s_BPS;
 
         RedeemAmounts memory adjustments = RedeemAmounts(
             feeSlip,
-            issuerSlipAmountToRedeem,
-            ((issuerSlipAmountToRedeem - feeSlip) *
+            debtSlipAmountToRedeem,
+            ((debtSlipAmountToRedeem - feeSlip) *
                 (s_penaltyGranularity - s_penalty)) / s_penaltyGranularity
         );
 
         vm.startPrank(s_borrowerAddress);
-        s_issuerSlip.approve(s_deployedCBBAddress, type(uint256).max);
+        s_debtSlip.approve(s_deployedCBBAddress, type(uint256).max);
         vm.expectEmit(true, true, true, true);
         emit RedeemRiskTranche(
             s_borrowerAddress,
-            adjustments.issuerSlipAmount - adjustments.feeSlip
+            adjustments.debtSlipAmount - adjustments.feeSlip
         );
-        s_deployedConvertibleBondBox.redeemRiskTranche(
-            issuerSlipAmountToRedeem
-        );
+        s_deployedConvertibleBondBox.redeemRiskTranche(debtSlipAmountToRedeem);
         vm.stopPrank();
 
         assertions(before, adjustments);
@@ -124,8 +122,8 @@ contract RedeemRiskTranche is CBBSetup {
         RedeemAmounts memory adjustments
     ) internal {
         assertEq(
-            before.ownerIssuerSlip + adjustments.feeSlip,
-            s_issuerSlip.balanceOf(s_cbb_owner)
+            before.ownerDebtSlip + adjustments.feeSlip,
+            s_debtSlip.balanceOf(s_cbb_owner)
         );
 
         assertEq(
@@ -139,8 +137,8 @@ contract RedeemRiskTranche is CBBSetup {
         );
 
         assertEq(
-            before.borrowerIssuerSlip - adjustments.issuerSlipAmount,
-            s_issuerSlip.balanceOf(s_borrowerAddress)
+            before.borrowerDebtSlip - adjustments.debtSlipAmount,
+            s_debtSlip.balanceOf(s_borrowerAddress)
         );
     }
 }

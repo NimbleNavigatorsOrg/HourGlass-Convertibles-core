@@ -110,7 +110,7 @@ contract IBOBoxFactory is IIBOBoxFactory, Context {
             ),
             abi.encodePacked(
                 convertibleBondBox.riskTranche(),
-                address(convertibleBondBox.issuerSlip()),
+                address(convertibleBondBox.debtSlip()),
                 convertibleBondBox.riskRatio(),
                 convertibleBondBox.s_priceGranularity(),
                 convertibleBondBox.trancheDecimals(),
