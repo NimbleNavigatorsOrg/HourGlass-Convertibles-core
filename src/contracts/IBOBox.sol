@@ -3,27 +3,27 @@ pragma solidity 0.8.13;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@uniswap/lib/contracts/libraries/TransferHelper.sol";
-import "../../utils/SBImmutableArgs.sol";
-import "../interfaces/IStagingBox.sol";
+import "../../utils/IBOImmutableArgs.sol";
+import "../interfaces/IIBOBox.sol";
 
 /**
- * @dev Staging Box for reinitializing a ConvertibleBondBox
+ * @dev IBO Box for activating a ConvertibleBondBox
  *
  * Invariants:
  *  - `initial Price must be < $1.00`
  */
-contract StagingBox is OwnableUpgradeable, SBImmutableArgs, IStagingBox {
-    uint256 public s_reinitLendAmount;
+contract IBOBox is OwnableUpgradeable, IBOImmutableArgs, IIBOBox {
+    uint256 public s_activateLendAmount;
 
-    modifier beforeReinitialize() {
+    modifier beforeActivate() {
         if (convertibleBondBox().s_startDate() != 0) {
-            revert CBBReinitialized({state: true, requiredState: false});
+            revert CBBActivated({state: true, requiredState: false});
         }
         _;
     }
 
     function initialize(address _owner) external initializer {
-        require(_owner != address(0), "StagingBox: invalid owner address");
+        require(_owner != address(0), "IBOBox: invalid owner address");
         //check if valid initialPrice immutable arg
         if (initialPrice() > priceGranularity())
             revert InitialPriceTooHigh({
@@ -41,12 +41,12 @@ contract StagingBox is OwnableUpgradeable, SBImmutableArgs, IStagingBox {
         emit Initialized(_owner);
     }
 
-    function depositBorrow(address _borrower, uint256 _borrowAmount)
+    function createIssueOrder(address _borrower, uint256 _borrowAmount)
         external
         override
-        beforeReinitialize
+        beforeActivate
     {
-        //- transfers `_safeTrancheAmount` of SafeTranche Tokens from msg.sender to SB
+        //- transfers `_safeTrancheAmount` of SafeTranche Tokens from msg.sender to IBO
 
         uint256 safeTrancheAmount = (_borrowAmount *
             priceGranularity() *
@@ -60,7 +60,7 @@ contract StagingBox is OwnableUpgradeable, SBImmutableArgs, IStagingBox {
             safeTrancheAmount
         );
 
-        //- transfers `_safeTrancheAmount * riskRatio() / safeRatio()`  of RiskTranches from msg.sender to SB
+        //- transfers `_safeTrancheAmount * riskRatio() / safeRatio()`  of RiskTranches from msg.sender to IBO
 
         riskTranche().transferFrom(
             _msgSender(),
@@ -69,18 +69,18 @@ contract StagingBox is OwnableUpgradeable, SBImmutableArgs, IStagingBox {
         );
 
         //- mints `_safeTrancheAmount` of BorrowerSlips to `_borrower`
-        borrowSlip().mint(_borrower, _borrowAmount);
+        issueOrder().mint(_borrower, _borrowAmount);
 
         //add event stuff
-        emit BorrowDeposit(_borrower, _borrowAmount);
+        emit IssueOrderCreated(_borrower, _borrowAmount);
     }
 
-    function depositLend(address _lender, uint256 _lendAmount)
+    function createBuyOrder(address _lender, uint256 _lendAmount)
         external
         override
-        beforeReinitialize
+        beforeActivate
     {
-        //- transfers `_lendAmount`of Stable Tokens from msg.sender to SB
+        //- transfers `_lendAmount`of Stable Tokens from msg.sender to IBO
         TransferHelper.safeTransferFrom(
             address(stableToken()),
             _msgSender(),
@@ -89,17 +89,17 @@ contract StagingBox is OwnableUpgradeable, SBImmutableArgs, IStagingBox {
         );
 
         //- mints `_lendAmount`of LenderSlips to `_lender`
-        lendSlip().mint(_lender, _lendAmount);
+        buyOrder().mint(_lender, _lendAmount);
 
         //add event stuff
-        emit LendDeposit(_lender, _lendAmount);
+        emit BuyOrderCreated(_lender, _lendAmount);
     }
 
-    function withdrawBorrow(uint256 _borrowSlipAmount) external override {
-        //- Reverse of depositBorrow() function
-        //- transfers `_borrowSlipAmount` of SafeTranche Tokens from SB to msg.sender
+    function cancelIssue(uint256 _issueOrderAmount) external override {
+        //- Reverse of createIssueOrder() function
+        //- transfers `_issueOrderAmount` of SafeTranche Tokens from IBO to msg.sender
 
-        uint256 safeTrancheAmount = (_borrowSlipAmount *
+        uint256 safeTrancheAmount = (_issueOrderAmount *
             priceGranularity() *
             trancheDecimals()) /
             initialPrice() /
@@ -107,54 +107,54 @@ contract StagingBox is OwnableUpgradeable, SBImmutableArgs, IStagingBox {
 
         safeTranche().transfer(_msgSender(), (safeTrancheAmount));
 
-        //- transfers `_borrowSlipAmount*riskRatio()/safeRatio()` of RiskTranche Tokens from SB to msg.sender
+        //- transfers `_issueOrderAmount*riskRatio()/safeRatio()` of RiskTranche Tokens from IBO to msg.sender
 
         riskTranche().transfer(
             _msgSender(),
             (safeTrancheAmount * riskRatio()) / safeRatio()
         );
 
-        //- burns `_borrowSlipAmount` of msg.sender’s BorrowSlips
-        borrowSlip().burn(_msgSender(), _borrowSlipAmount);
+        //- burns `_issueOrderAmount` of msg.sender’s IssueOrders
+        issueOrder().burn(_msgSender(), _issueOrderAmount);
 
         //event stuff
-        emit BorrowWithdrawal(_msgSender(), _borrowSlipAmount);
+        emit CancelledIssueOrder(_msgSender(), _issueOrderAmount);
     }
 
-    function withdrawLend(uint256 _lendSlipAmount) external override {
-        //- Reverse of depositBorrow() function
+    function cancelBuy(uint256 _buyOrderAmount) external override {
+        //- Reverse of createIssueOrder() function
 
-        //revert check for _lendSlipAmount after CBB reinitialized
+        //revert check for _buyOrderAmount after CBB activated
         if (convertibleBondBox().s_startDate() != 0) {
             uint256 maxWithdrawAmount = stableToken().balanceOf(address(this)) -
-                s_reinitLendAmount;
-            if (_lendSlipAmount > maxWithdrawAmount) {
+                s_activateLendAmount;
+            if (_buyOrderAmount > maxWithdrawAmount) {
                 revert WithdrawAmountTooHigh({
-                    requestAmount: _lendSlipAmount,
+                    requestAmount: _buyOrderAmount,
                     maxAmount: maxWithdrawAmount
                 });
             }
         }
 
-        //- transfers `_lendSlipAmount` of Stable Tokens from SB to msg.sender
+        //- transfers `_buyOrderAmount` of Stable Tokens from IBO to msg.sender
         TransferHelper.safeTransfer(
             address(stableToken()),
             _msgSender(),
-            _lendSlipAmount
+            _buyOrderAmount
         );
 
-        //- burns `_lendSlipAmount` of msg.sender’s LenderSlips
-        lendSlip().burn(_msgSender(), _lendSlipAmount);
+        //- burns `_buyOrderAmount` of msg.sender’s LenderSlips
+        buyOrder().burn(_msgSender(), _buyOrderAmount);
 
         //event stuff
-        emit LendWithdrawal(_msgSender(), _lendSlipAmount);
+        emit CancelledBuyOrder(_msgSender(), _buyOrderAmount);
     }
 
-    function redeemBorrowSlip(uint256 _borrowSlipAmount) external override {
-        // Transfer `_borrowSlipAmount*riskRatio()/safeRatio()` of RiskSlips to msg.sender
-        ISlip(riskSlipAddress()).transfer(
+    function executeIssueOrder(uint256 _issueOrderAmount) external override {
+        // Transfer `_issueOrderAmount*riskRatio()/safeRatio()` of DebtSlips to msg.sender
+        ISlip(debtSlipAddress()).transfer(
             _msgSender(),
-            ((_borrowSlipAmount *
+            ((_issueOrderAmount *
                 priceGranularity() *
                 riskRatio() *
                 trancheDecimals()) /
@@ -163,41 +163,41 @@ contract StagingBox is OwnableUpgradeable, SBImmutableArgs, IStagingBox {
                 stableDecimals())
         );
 
-        // Transfer `_borrowSlipAmount*initialPrice()/priceGranularity()` of StableToken to msg.sender
+        // Transfer `_issueOrderAmount*initialPrice()/priceGranularity()` of StableToken to msg.sender
         TransferHelper.safeTransfer(
             address(stableToken()),
             _msgSender(),
-            _borrowSlipAmount
+            _issueOrderAmount
         );
 
-        // burns `_borrowSlipAmount` of msg.sender’s BorrowSlips
-        borrowSlip().burn(_msgSender(), _borrowSlipAmount);
+        // burns `_issueOrderAmount` of msg.sender’s IssueOrders
+        issueOrder().burn(_msgSender(), _issueOrderAmount);
 
-        //decrement s_reinitLendAmount
-        s_reinitLendAmount -= _borrowSlipAmount;
+        //decrement s_activateLendAmount
+        s_activateLendAmount -= _issueOrderAmount;
 
         //event stuff
-        emit RedeemBorrowSlip(_msgSender(), _borrowSlipAmount);
+        emit ExecuteIssueOrder(_msgSender(), _issueOrderAmount);
     }
 
-    function redeemLendSlip(uint256 _lendSlipAmount) external override {
-        //- Transfer `_lendSlipAmount*priceGranularity()/initialPrice()`  of SafeSlips to msg.sender
-        ISlip(safeSlipAddress()).transfer(
+    function executeBuyOrder(uint256 _buyOrderAmount) external override {
+        //- Transfer `_buyOrderAmount*priceGranularity()/initialPrice()`  of BondSlips to msg.sender
+        ISlip(bondSlipAddress()).transfer(
             _msgSender(),
-            (_lendSlipAmount * priceGranularity() * trancheDecimals()) /
+            (_buyOrderAmount * priceGranularity() * trancheDecimals()) /
                 initialPrice() /
                 stableDecimals()
         );
 
-        //- burns `_lendSlipAmount` of msg.sender’s LendSlips
-        lendSlip().burn(_msgSender(), _lendSlipAmount);
+        //- burns `_buyOrderAmount` of msg.sender’s BuyOrders
+        buyOrder().burn(_msgSender(), _buyOrderAmount);
 
-        emit RedeemLendSlip(_msgSender(), _lendSlipAmount);
+        emit ExecuteBuyOrder(_msgSender(), _buyOrderAmount);
     }
 
-    function transmitReInit(bool _isLend) external override onlyOwner {
+    function transmitActivate(bool _isLend) external override onlyOwner {
         /*
-        - calls `CBB.reinitialize(…)`
+        - calls `CBB.activate(…)`
             - `Address(this)` as borrower + lender
             - if `_isLend` is true: calls CBB with balance of StableAmount
             - if `_isLend` is false: calls CBB with balance of SafeTrancheAmount
@@ -208,8 +208,8 @@ contract StagingBox is OwnableUpgradeable, SBImmutableArgs, IStagingBox {
 
         if (_isLend) {
             uint256 stableAmount = stableToken().balanceOf(address(this));
-            s_reinitLendAmount = stableAmount;
-            convertibleBondBox().reinitialize(initialPrice());
+            s_activateLendAmount = stableAmount;
+            convertibleBondBox().activate(initialPrice());
             convertibleBondBox().lend(
                 address(this),
                 address(this),
@@ -219,12 +219,12 @@ contract StagingBox is OwnableUpgradeable, SBImmutableArgs, IStagingBox {
 
         if (!_isLend) {
             uint256 safeTrancheBalance = safeTranche().balanceOf(address(this));
-            s_reinitLendAmount =
+            s_activateLendAmount =
                 (safeTrancheBalance * initialPrice() * stableDecimals()) /
                 priceGranularity() /
                 trancheDecimals();
 
-            convertibleBondBox().reinitialize(initialPrice());
+            convertibleBondBox().activate(initialPrice());
 
             convertibleBondBox().borrow(
                 address(this),
@@ -239,7 +239,7 @@ contract StagingBox is OwnableUpgradeable, SBImmutableArgs, IStagingBox {
 
     function transferOwnership(address newOwner)
         public
-        override(IStagingBox, OwnableUpgradeable)
+        override(IIBOBox, OwnableUpgradeable)
         onlyOwner
     {
         _transferOwnership(newOwner);

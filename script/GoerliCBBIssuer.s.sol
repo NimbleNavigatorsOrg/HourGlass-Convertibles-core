@@ -7,10 +7,10 @@ import "../src/contracts/Slip.sol";
 import "../src/contracts/SlipFactory.sol";
 import "../src/contracts/ConvertibleBondBox.sol";
 import "../src/contracts/CBBFactory.sol";
-import "../src/contracts/StagingBox.sol";
-import "../src/contracts/StagingBoxFactory.sol";
-import "../src/contracts/StagingBoxLens.sol";
-import "../src/contracts/StagingLoanRouter.sol";
+import "../src/contracts/IBOBox.sol";
+import "../src/contracts/IBOBoxFactory.sol";
+import "../src/contracts/IBOBoxLens.sol";
+import "../src/contracts/IBOLoanRouter.sol";
 import "../test/mocks/MockERC20.sol";
 import "../test/external/button-wrappers/MockOracle.sol";
 import "@buttonwood-protocol/tranche/contracts/interfaces/IBondFactory.sol";
@@ -23,14 +23,13 @@ import "../test/external/button-wrappers/ButtonToken.sol";
 contract GoerliCBBIssuer is Script {
     CBBFactory convertiblesFactory =
         CBBFactory(0xD76BEAfB4239f7648844Eb7B478DCc4Ad00Dd1E3);
-    StagingBoxFactory stagingFactory =
-        StagingBoxFactory(0x528576d130099a33bea94E43f7752E7f5dAd0B50);
+    IBOBoxFactory IBOFactory =
+        IBOBoxFactory(0x528576d130099a33bea94E43f7752E7f5dAd0B50);
     SlipFactory slipFactory =
         SlipFactory(0xD96D4AF92CA2E89E6e423C2aC7144A0c60412156);
-    StagingLoanRouter slr =
-        StagingLoanRouter(0x0162EbDEff59094a693af794644D929Ef6f1f3A3);
-    StagingBoxLens sbLens =
-        StagingBoxLens(0x5054300d1a213CacBd96f837733775585045C99B);
+    IBOLoanRouter slr =
+        IBOLoanRouter(0x0162EbDEff59094a693af794644D929Ef6f1f3A3);
+    IBOBoxLens IBOLens = IBOBoxLens(0x5054300d1a213CacBd96f837733775585045C99B);
 
     address public trancheFact = 0xE0De6e1a505b69D2987fAe7230db96682d26Dfca;
 
@@ -101,7 +100,7 @@ contract GoerliCBBIssuer is Script {
 
         //create IBO CBBs + SBs
         for (uint8 i = 1; i < repeatCount + 1; i++) {
-            address createdSB = stagingFactory.createStagingBoxWithCBB(
+            address createdIBO = IBOFactory.createIBOBoxWithCBB(
                 (convertiblesFactory),
                 (slipFactory),
                 bond,
@@ -112,10 +111,10 @@ contract GoerliCBBIssuer is Script {
                 msg.sender
             );
 
-            console2.log(createdSB, "SB-IBO-", i);
+            console2.log(createdIBO, "SB-IBO-", i);
 
             console2.log(
-                address(StagingBox(createdSB).convertibleBondBox()),
+                address(IBOBox(createdIBO).convertibleBondBox()),
                 "CBB-IBO-",
                 i
             );
@@ -124,7 +123,7 @@ contract GoerliCBBIssuer is Script {
         //create active Bonds (token only)
 
         for (uint8 i = 1; i < repeatCount + 1; i++) {
-            address createdSB = stagingFactory.createStagingBoxWithCBB(
+            address createdIBO = IBOFactory.createIBOBoxWithCBB(
                 (convertiblesFactory),
                 (slipFactory),
                 bondActive,
@@ -135,20 +134,20 @@ contract GoerliCBBIssuer is Script {
                 msg.sender
             );
 
-            IERC20(stableCoin).approve(createdSB, type(uint256).max);
+            IERC20(stableCoin).approve(createdIBO, type(uint256).max);
             IERC20(token).approve(address(slr), type(uint256).max);
 
             //make lendDeposits to 3 parties
 
-            StagingBox(createdSB).depositLend(
+            IBOBox(createdIBO).createBuyOrder(
                 msg.sender,
                 325 * (10**ERC20(stableCoin).decimals())
             );
-            StagingBox(createdSB).depositLend(
+            IBOBox(createdIBO).createBuyOrder(
                 recipientA,
                 325 * (10**ERC20(stableCoin).decimals())
             );
-            StagingBox(createdSB).depositLend(
+            IBOBox(createdIBO).createBuyOrder(
                 recipientB,
                 325 * (10**ERC20(stableCoin).decimals())
             );
@@ -161,35 +160,35 @@ contract GoerliCBBIssuer is Script {
             uint256 tokenBalance = 3000 * 10**ERC20(token).decimals();
 
             slr.simpleWrapTrancheBorrow(
-                IStagingBox(createdSB),
+                IIBOBox(createdIBO),
                 tokenBalance / 3,
                 0
             );
-            uint256 borrowSlipDistributionAmount = StagingBox(createdSB)
-                .borrowSlip()
+            uint256 issueOrderDistributionAmount = IBOBox(createdIBO)
+                .issueOrder()
                 .balanceOf(msg.sender) / 3;
-            StagingBox(createdSB).borrowSlip().transfer(
+            IBOBox(createdIBO).issueOrder().transfer(
                 recipientA,
-                borrowSlipDistributionAmount
+                issueOrderDistributionAmount
             );
-            StagingBox(createdSB).borrowSlip().transfer(
+            IBOBox(createdIBO).issueOrder().transfer(
                 recipientB,
-                borrowSlipDistributionAmount
+                issueOrderDistributionAmount
             );
 
-            //transmitReinit
+            //transmitActivate
 
-            bool boolReturn = sbLens.viewTransmitReInitBool(
-                IStagingBox(createdSB)
+            bool boolReturn = IBOLens.viewTransmitActivateBool(
+                IIBOBox(createdIBO)
             );
 
-            StagingBox(createdSB).transmitReInit(boolReturn);
+            IBOBox(createdIBO).transmitActivate(boolReturn);
 
             //repeat for AMPL-Token
 
-            console2.log(createdSB, "SB-ACTIVE-", i);
+            console2.log(createdIBO, "SB-ACTIVE-", i);
             console2.log(
-                address(StagingBox(createdSB).convertibleBondBox()),
+                address(IBOBox(createdIBO).convertibleBondBox()),
                 "CBB-ACTIVE-",
                 i
             );
@@ -198,7 +197,7 @@ contract GoerliCBBIssuer is Script {
         //create Mature Bonds
 
         for (uint8 i = 1; i < repeatCount + 1; i++) {
-            address createdSB = stagingFactory.createStagingBoxWithCBB(
+            address createdIBO = IBOFactory.createIBOBoxWithCBB(
                 (convertiblesFactory),
                 (slipFactory),
                 bondMature,
@@ -209,26 +208,26 @@ contract GoerliCBBIssuer is Script {
                 msg.sender
             );
 
-            StagingBox(createdSB).transferCBBOwnership(msg.sender);
-            StagingBox(createdSB).convertibleBondBox().setFee(50);
-            StagingBox(createdSB).convertibleBondBox().transferOwnership(
-                createdSB
+            IBOBox(createdIBO).transferCBBOwnership(msg.sender);
+            IBOBox(createdIBO).convertibleBondBox().setFee(50);
+            IBOBox(createdIBO).convertibleBondBox().transferOwnership(
+                createdIBO
             );
 
-            IERC20(stableCoin).approve(createdSB, type(uint256).max);
+            IERC20(stableCoin).approve(createdIBO, type(uint256).max);
             IERC20(token).approve(address(slr), type(uint256).max);
 
             //make lendDeposits to 3 parties
 
-            StagingBox(createdSB).depositLend(
+            IBOBox(createdIBO).createBuyOrder(
                 msg.sender,
                 235 * (10**ERC20(stableCoin).decimals())
             );
-            StagingBox(createdSB).depositLend(
+            IBOBox(createdIBO).createBuyOrder(
                 recipientA,
                 235 * (10**ERC20(stableCoin).decimals())
             );
-            StagingBox(createdSB).depositLend(
+            IBOBox(createdIBO).createBuyOrder(
                 recipientB,
                 235 * (10**ERC20(stableCoin).decimals())
             );
@@ -241,32 +240,32 @@ contract GoerliCBBIssuer is Script {
             uint256 tokenBalance = 3000 * 10**ERC20(token).decimals();
 
             slr.simpleWrapTrancheBorrow(
-                IStagingBox(createdSB),
+                IIBOBox(createdIBO),
                 tokenBalance / 3,
                 0
             );
-            uint256 borrowSlipDistributionAmount = StagingBox(createdSB)
-                .borrowSlip()
+            uint256 issueOrderDistributionAmount = IBOBox(createdIBO)
+                .issueOrder()
                 .balanceOf(msg.sender) / 3;
-            StagingBox(createdSB).borrowSlip().transfer(
+            IBOBox(createdIBO).issueOrder().transfer(
                 recipientA,
-                borrowSlipDistributionAmount
+                issueOrderDistributionAmount
             );
-            StagingBox(createdSB).borrowSlip().transfer(
+            IBOBox(createdIBO).issueOrder().transfer(
                 recipientB,
-                borrowSlipDistributionAmount
+                issueOrderDistributionAmount
             );
 
-            //transmitReInit
-            bool boolReturn = sbLens.viewTransmitReInitBool(
-                IStagingBox(createdSB)
+            //transmitActivate
+            bool boolReturn = IBOLens.viewTransmitActivateBool(
+                IIBOBox(createdIBO)
             );
 
-            StagingBox(createdSB).transmitReInit(boolReturn);
+            IBOBox(createdIBO).transmitActivate(boolReturn);
 
-            console2.log(createdSB, "SB-MATURE-", i);
+            console2.log(createdIBO, "SB-MATURE-", i);
             console2.log(
-                address(StagingBox(createdSB).convertibleBondBox()),
+                address(IBOBox(createdIBO).convertibleBondBox()),
                 "CBB-MATURE-",
                 i
             );

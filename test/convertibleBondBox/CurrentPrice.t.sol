@@ -10,7 +10,7 @@ contract CurrentPrice is CBBSetup {
         startPrice = bound(startPrice, 1, s_priceGranularity - 1);
 
         vm.prank(s_cbb_owner);
-        s_deployedConvertibleBondBox.reinitialize(startPrice);
+        s_deployedConvertibleBondBox.activate(startPrice);
 
         uint256 startDate = s_deployedConvertibleBondBox.s_startDate();
         time = bound(time, startDate, s_endOfUnixTime);

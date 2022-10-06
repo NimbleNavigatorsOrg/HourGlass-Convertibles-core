@@ -1,18 +1,18 @@
 pragma solidity 0.8.13;
 
-import "./StagingLoanRouterSetup.t.sol";
+import "./IBOLoanRouterSetup.t.sol";
 
-contract RepayUnwrap is StagingLoanRouterSetup {
+contract RepayUnwrap is IBOLoanRouterSetup {
     struct BeforeBalances {
         uint256 borrowerStables;
-        uint256 borrowerRiskSlip;
+        uint256 borrowerDebtSlip;
         uint256 borrowerCollateral;
     }
 
     struct RepayAmounts {
         uint256 stablesFee;
         uint256 stablesOwed;
-        uint256 riskSlipAmount;
+        uint256 debtSlipAmount;
         uint256 collateralAmount;
     }
 
@@ -22,28 +22,28 @@ contract RepayUnwrap is StagingLoanRouterSetup {
         bool isMature
     ) internal {
         vm.startPrank(s_borrower);
-        s_stagingLoanRouter.simpleWrapTrancheBorrow(
-            s_deployedSB,
+        s_IBOLoanRouter.simpleWrapTrancheBorrow(
+            s_deployedIBOB,
             s_collateralToken.balanceOf(s_borrower),
             0
         );
         vm.stopPrank();
 
         vm.startPrank(s_lender);
-        s_deployedSB.depositLend(
+        s_deployedIBOB.createBuyOrder(
             s_lender,
             (s_stableToken.balanceOf(s_lender) * 4) / 5
         );
         vm.stopPrank();
 
         vm.startPrank(s_cbb_owner);
-        s_deployedSB.transmitReInit(
-            s_SBLens.viewTransmitReInitBool(s_deployedSB)
+        s_deployedIBOB.transmitActivate(
+            s_IBOLens.viewTransmitActivateBool(s_deployedIBOB)
         );
         vm.stopPrank();
 
         vm.startPrank(s_borrower);
-        s_deployedSB.redeemBorrowSlip(s_borrowSlip.balanceOf(s_borrower));
+        s_deployedIBOB.executeIssueOrder(s_issueOrder.balanceOf(s_borrower));
         vm.stopPrank();
 
         !isMature
@@ -65,16 +65,16 @@ contract RepayUnwrap is StagingLoanRouterSetup {
     }
 
     function testRepayMaxUnwrapSimple(
-        uint256 riskSlipAmount,
+        uint256 debtSlipAmount,
         uint256 data,
         uint256 time
     ) public {
         initialSetup(data, time, false);
 
-        riskSlipAmount = bound(
-            riskSlipAmount,
+        debtSlipAmount = bound(
+            debtSlipAmount,
             1e6,
-            s_riskSlip.balanceOf(s_borrower)
+            s_debtSlip.balanceOf(s_borrower)
         );
 
         (
@@ -82,29 +82,32 @@ contract RepayUnwrap is StagingLoanRouterSetup {
             uint256 stablesOwed,
             uint256 stableFees,
 
-        ) = s_SBLens.viewRepayMaxAndUnwrapSimple(s_deployedSB, riskSlipAmount);
+        ) = s_IBOLens.viewRepayMaxAndUnwrapSimple(
+                s_deployedIBOB,
+                debtSlipAmount
+            );
 
         s_stableToken.mint(s_borrower, stablesOwed + stableFees);
 
         BeforeBalances memory before = BeforeBalances(
             s_stableToken.balanceOf(s_borrower),
-            s_riskSlip.balanceOf(s_borrower),
+            s_debtSlip.balanceOf(s_borrower),
             s_collateralToken.balanceOf(s_borrower)
         );
 
         RepayAmounts memory adjustments = RepayAmounts(
             stableFees,
             stablesOwed,
-            riskSlipAmount,
+            debtSlipAmount,
             collateralAmount
         );
 
         vm.startPrank(s_borrower);
-        s_stagingLoanRouter.repayMaxAndUnwrapSimple(
-            s_deployedSB,
+        s_IBOLoanRouter.repayMaxAndUnwrapSimple(
+            s_deployedIBOB,
             stablesOwed,
             stableFees,
-            riskSlipAmount
+            debtSlipAmount
         );
         vm.stopPrank();
 
@@ -118,11 +121,11 @@ contract RepayUnwrap is StagingLoanRouterSetup {
     ) public {
         initialSetup(data, time, false);
 
-        uint256 minStablesForSafeTranche = (s_deployedSB.trancheDecimals() *
-            s_deployedSB.initialPrice() *
-            s_deployedSB.stableDecimals()) /
-            s_deployedSB.priceGranularity() /
-            s_deployedSB.trancheDecimals();
+        uint256 minStablesForSafeTranche = (s_deployedIBOB.trancheDecimals() *
+            s_deployedIBOB.initialPrice() *
+            s_deployedIBOB.stableDecimals()) /
+            s_deployedIBOB.priceGranularity() /
+            s_deployedIBOB.trancheDecimals();
 
         stableAmount = bound(
             stableAmount,
@@ -135,7 +138,7 @@ contract RepayUnwrap is StagingLoanRouterSetup {
             uint256 stablesOwed,
             uint256 stableFees,
             uint256 riskTranchePayout
-        ) = s_SBLens.viewRepayAndUnwrapSimple(s_deployedSB, stableAmount);
+        ) = s_IBOLens.viewRepayAndUnwrapSimple(s_deployedIBOB, stableAmount);
 
         console2.log(riskTranchePayout, "riskTranchePayout");
 
@@ -143,7 +146,7 @@ contract RepayUnwrap is StagingLoanRouterSetup {
 
         BeforeBalances memory before = BeforeBalances(
             s_stableToken.balanceOf(s_borrower),
-            s_riskSlip.balanceOf(s_borrower),
+            s_debtSlip.balanceOf(s_borrower),
             s_collateralToken.balanceOf(s_borrower)
         );
 
@@ -155,8 +158,8 @@ contract RepayUnwrap is StagingLoanRouterSetup {
         );
 
         vm.startPrank(s_borrower);
-        s_stagingLoanRouter.repayAndUnwrapSimple(
-            s_deployedSB,
+        s_IBOLoanRouter.repayAndUnwrapSimple(
+            s_deployedIBOB,
             stablesOwed,
             stableFees,
             riskTranchePayout
@@ -184,13 +187,13 @@ contract RepayUnwrap is StagingLoanRouterSetup {
             uint256 stablesOwed,
             uint256 stableFees,
             uint256 riskTranchePayout
-        ) = s_SBLens.viewRepayAndUnwrapMature(s_deployedSB, stableAmount);
+        ) = s_IBOLens.viewRepayAndUnwrapMature(s_deployedIBOB, stableAmount);
 
         s_stableToken.mint(s_borrower, stablesOwed + stableFees);
 
         BeforeBalances memory before = BeforeBalances(
             s_stableToken.balanceOf(s_borrower),
-            s_riskSlip.balanceOf(s_borrower),
+            s_debtSlip.balanceOf(s_borrower),
             s_collateralToken.balanceOf(s_borrower)
         );
 
@@ -202,8 +205,8 @@ contract RepayUnwrap is StagingLoanRouterSetup {
         );
 
         vm.startPrank(s_borrower);
-        s_stagingLoanRouter.repayAndUnwrapMature(
-            s_deployedSB,
+        s_IBOLoanRouter.repayAndUnwrapMature(
+            s_deployedIBOB,
             stablesOwed,
             stableFees,
             riskTranchePayout
@@ -214,19 +217,19 @@ contract RepayUnwrap is StagingLoanRouterSetup {
     }
 
     function testRepayMaxAndUnwrapMature(
-        uint256 riskSlipAmount,
+        uint256 debtSlipAmount,
         uint256 data,
         uint256 time
     ) public {
         initialSetup(data, time, true);
 
-        riskSlipAmount = bound(
-            riskSlipAmount,
+        debtSlipAmount = bound(
+            debtSlipAmount,
             Math.max(
                 1e6,
                 ((10**s_collateralDecimals) * s_riskRatio) / s_safeRatio
             ),
-            s_riskSlip.balanceOf(s_borrower)
+            s_debtSlip.balanceOf(s_borrower)
         );
 
         (
@@ -234,29 +237,32 @@ contract RepayUnwrap is StagingLoanRouterSetup {
             uint256 stablesOwed,
             uint256 stableFees,
 
-        ) = s_SBLens.viewRepayMaxAndUnwrapMature(s_deployedSB, riskSlipAmount);
+        ) = s_IBOLens.viewRepayMaxAndUnwrapMature(
+                s_deployedIBOB,
+                debtSlipAmount
+            );
 
         s_stableToken.mint(s_borrower, stablesOwed + stableFees);
 
         BeforeBalances memory before = BeforeBalances(
             s_stableToken.balanceOf(s_borrower),
-            s_riskSlip.balanceOf(s_borrower),
+            s_debtSlip.balanceOf(s_borrower),
             s_collateralToken.balanceOf(s_borrower)
         );
 
         RepayAmounts memory adjustments = RepayAmounts(
             stableFees,
             stablesOwed,
-            riskSlipAmount,
+            debtSlipAmount,
             collateralAmount
         );
 
         vm.startPrank(s_borrower);
-        s_stagingLoanRouter.repayAndUnwrapMature(
-            s_deployedSB,
+        s_IBOLoanRouter.repayAndUnwrapMature(
+            s_deployedIBOB,
             stablesOwed,
             stableFees,
-            riskSlipAmount
+            debtSlipAmount
         );
         vm.stopPrank();
 
@@ -282,8 +288,8 @@ contract RepayUnwrap is StagingLoanRouterSetup {
         );
 
         assertApproxEqRel(
-            before.borrowerRiskSlip - adjustments.riskSlipAmount,
-            s_riskSlip.balanceOf(s_borrower),
+            before.borrowerDebtSlip - adjustments.debtSlipAmount,
+            s_debtSlip.balanceOf(s_borrower),
             1e15
         );
     }

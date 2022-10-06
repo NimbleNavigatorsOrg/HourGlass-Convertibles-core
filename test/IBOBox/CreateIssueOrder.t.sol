@@ -1,66 +1,66 @@
 pragma solidity 0.8.13;
 
-import "./integration/SBIntegrationSetup.t.sol";
+import "./iboBoxSetup.t.sol";
 
-contract DepositBorrow is SBIntegrationSetup {
+contract CreateIssueOrder is iboBoxSetup {
     struct BeforeBalances {
-        uint256 borrowerBorrowSlips;
+        uint256 borrowerIssueOrders;
         uint256 routerSafeTranche;
         uint256 routerRiskTranche;
-        uint256 SBSafeTranche;
-        uint256 SBRiskTranche;
+        uint256 IBOSafeTranche;
+        uint256 IBORiskTranche;
     }
 
     struct BorrowAmounts {
         uint256 safeTrancheAmount;
         uint256 riskTrancheAmount;
-        uint256 borrowSlipAmount;
+        uint256 issueOrderAmount;
     }
 
     address s_borrower = address(1);
     address s_lender = address(2);
 
-    function testCannotDepositBorrowCBBNotReinitialized() public {
-        setupStagingBox(0);
+    function testCannotCreateIssueOrderCBBNotActivated() public {
+        setupIBOBox(0);
 
-        vm.prank(s_deployedSBAddress);
-        s_deployedConvertibleBondBox.reinitialize(5);
+        vm.prank(s_deployedIBOBAddress);
+        s_deployedConvertibleBondBox.activate(5);
 
         bytes memory customError = abi.encodeWithSignature(
-            "CBBReinitialized(bool,bool)",
+            "CBBActivated(bool,bool)",
             true,
             false
         );
         vm.expectRevert(customError);
-        s_deployedSB.depositBorrow(s_borrower, 1);
+        s_deployedIBOB.createIssueOrder(s_borrower, 1);
     }
 
-    function testDepositBorrow(uint256 _fuzzPrice, uint256 _borrowAmount)
+    function testCreateIssueOrder(uint256 _fuzzPrice, uint256 _borrowAmount)
         public
     {
-        setupStagingBox(_fuzzPrice);
+        setupIBOBox(_fuzzPrice);
 
         BeforeBalances memory before = BeforeBalances(
-            s_borrowSlip.balanceOf(s_borrower),
+            s_issueOrder.balanceOf(s_borrower),
             s_safeTranche.balanceOf(address(this)),
             s_riskTranche.balanceOf(address(this)),
-            s_safeTranche.balanceOf(s_deployedSBAddress),
-            s_riskTranche.balanceOf(s_deployedSBAddress)
+            s_safeTranche.balanceOf(s_deployedIBOBAddress),
+            s_riskTranche.balanceOf(s_deployedIBOBAddress)
         );
 
         uint256 maxBorrowAmount = (before.routerSafeTranche *
-            s_deployedSB.initialPrice() *
-            s_deployedSB.stableDecimals()) /
-            s_deployedSB.priceGranularity() /
-            s_deployedSB.trancheDecimals();
+            s_deployedIBOB.initialPrice() *
+            s_deployedIBOB.stableDecimals()) /
+            s_deployedIBOB.priceGranularity() /
+            s_deployedIBOB.trancheDecimals();
 
         _borrowAmount = bound(_borrowAmount, 1, maxBorrowAmount);
 
         uint256 safeTrancheAmount = (_borrowAmount *
-            s_deployedSB.priceGranularity() *
-            s_deployedSB.trancheDecimals()) /
-            s_deployedSB.initialPrice() /
-            s_deployedSB.stableDecimals();
+            s_deployedIBOB.priceGranularity() *
+            s_deployedIBOB.trancheDecimals()) /
+            s_deployedIBOB.initialPrice() /
+            s_deployedIBOB.stableDecimals();
 
         BorrowAmounts memory adjustments = BorrowAmounts(
             safeTrancheAmount,
@@ -69,8 +69,8 @@ contract DepositBorrow is SBIntegrationSetup {
         );
 
         vm.expectEmit(true, true, true, true);
-        emit BorrowDeposit(s_borrower, _borrowAmount);
-        s_deployedSB.depositBorrow(s_borrower, _borrowAmount);
+        emit IssueOrderCreated(s_borrower, _borrowAmount);
+        s_deployedIBOB.createIssueOrder(s_borrower, _borrowAmount);
 
         assertions(before, adjustments);
     }
@@ -90,18 +90,18 @@ contract DepositBorrow is SBIntegrationSetup {
         );
 
         assertEq(
-            before.SBSafeTranche + adjustments.safeTrancheAmount,
-            s_safeTranche.balanceOf(s_deployedSBAddress)
+            before.IBOSafeTranche + adjustments.safeTrancheAmount,
+            s_safeTranche.balanceOf(s_deployedIBOBAddress)
         );
 
         assertEq(
-            before.SBRiskTranche + adjustments.riskTrancheAmount,
-            s_riskTranche.balanceOf(s_deployedSBAddress)
+            before.IBORiskTranche + adjustments.riskTrancheAmount,
+            s_riskTranche.balanceOf(s_deployedIBOBAddress)
         );
 
         assertEq(
-            before.borrowerBorrowSlips + adjustments.borrowSlipAmount,
-            s_borrowSlip.balanceOf(s_borrower)
+            before.borrowerIssueOrders + adjustments.issueOrderAmount,
+            s_issueOrder.balanceOf(s_borrower)
         );
     }
 }

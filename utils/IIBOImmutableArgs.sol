@@ -4,22 +4,22 @@ pragma solidity ^0.8.7;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../src/interfaces/IConvertibleBondBox.sol";
 
-interface ISBImmutableArgs {
+interface IIBOImmutableArgs {
     /**
-     * @notice the lend slip object
+     * @notice the buyOrder object
      * @dev using ClonesWithImmutableArgs pattern here to save gas
      * @dev https://github.com/wighawag/clones-with-immutable-args
-     * @return The lend slip object
+     * @return The buyOrder object
      */
-    function lendSlip() external pure returns (ISlip);
+    function buyOrder() external pure returns (ISlip);
 
     /**
-     * @notice the borrow slip object
+     * @notice the issueOrder object
      * @dev using ClonesWithImmutableArgs pattern here to save gas
      * @dev https://github.com/wighawag/clones-with-immutable-args
-     * @return The borrowSlip object
+     * @return The issueOrder object
      */
-    function borrowSlip() external pure returns (ISlip);
+    function issueOrder() external pure returns (ISlip);
 
     /**
      * @notice The convertible bond box object
@@ -56,13 +56,13 @@ interface ISBImmutableArgs {
     function safeTranche() external pure returns (ITranche);
 
     /**
-     * @notice The address of the safeslip of the CBB
+     * @notice The address of the BondSlip of the CBB
      * @dev using ClonesWithImmutableArgs pattern here to save gas
      * @dev https://github.com/wighawag/clones-with-immutable-args
-     * @return The address of the safeslip of the CBB
+     * @return The address of the BondSlip of the CBB
      */
 
-    function safeSlipAddress() external pure returns (address);
+    function bondSlipAddress() external pure returns (address);
 
     /**
      * @notice The tranche ratio of the safeTranche
@@ -83,13 +83,13 @@ interface ISBImmutableArgs {
     function riskTranche() external pure returns (ITranche);
 
     /**
-     * @notice The address of the riskSlip of the CBB
+     * @notice The address of the debtSlip of the CBB
      * @dev using ClonesWithImmutableArgs pattern here to save gas
      * @dev https://github.com/wighawag/clones-with-immutable-args
-     * @return The address of the riskSlip of the CBB
+     * @return The address of the debtSlip of the CBB
      */
 
-    function riskSlipAddress() external pure returns (address);
+    function debtSlipAddress() external pure returns (address);
 
     /**
      * @notice The tranche ratio of the riskTranche

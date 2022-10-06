@@ -7,10 +7,10 @@ import "../src/contracts/Slip.sol";
 import "../src/contracts/SlipFactory.sol";
 import "../src/contracts/ConvertibleBondBox.sol";
 import "../src/contracts/CBBFactory.sol";
-import "../src/contracts/StagingBox.sol";
-import "../src/contracts/StagingBoxFactory.sol";
-import "../src/contracts/StagingBoxLens.sol";
-import "../src/contracts/StagingLoanRouter.sol";
+import "../src/contracts/IBOBox.sol";
+import "../src/contracts/IBOBoxFactory.sol";
+import "../src/contracts/IBOBoxLens.sol";
+import "../src/contracts/IBOLoanRouter.sol";
 import "../test/mocks/MockERC20.sol";
 import "@buttonwood-protocol/tranche/contracts/interfaces/IBondFactory.sol";
 import "../test/external/button-wrappers/ButtonTokenFactory.sol";
@@ -45,15 +45,13 @@ contract KovanAnvil is Script {
         ConvertibleBondBox deployedCBB = new ConvertibleBondBox();
         CBBFactory cbbFactory = new CBBFactory(address(deployedCBB));
 
-        //staging box + staging box factory
-        StagingBox deployedStagingBox = new StagingBox();
-        StagingBoxFactory sbFactory = new StagingBoxFactory(
-            address(deployedStagingBox)
-        );
+        //IBO box + IBO box factory
+        IBOBox deployedIBOBox = new IBOBox();
+        IBOBoxFactory iboFactory = new IBOBoxFactory(address(deployedIBOBox));
 
-        //deploy staging box router + lens
-        StagingLoanRouter stagingLoanRouter = new StagingLoanRouter();
-        StagingBoxLens stagingBoxLens = new StagingBoxLens();
+        //deploy IBO box router + lens
+        IBOLoanRouter IBOLoanRouter = new IBOLoanRouter();
+        IBOBoxLens IBOBoxLens = new IBOBoxLens();
 
         //deploy buttonToken
         ButtonToken buttonForth = ButtonToken(
@@ -76,8 +74,8 @@ contract KovanAnvil is Script {
             block.timestamp + 2592e3
         );
 
-        //create new SB with CBB
-        address createdSB = sbFactory.createStagingBoxWithCBB(
+        //create new IBO with CBB
+        address createdIBO = iboFactory.createIBOBoxWithCBB(
             cbbFactory,
             slipFactory,
             IBondController(createdBond),
@@ -100,10 +98,10 @@ contract KovanAnvil is Script {
         console2.log(address(deployedSlip), "deployedSlip");
         console2.log(address(slipFactory), "slipFactory");
         console2.log(address(cbbFactory), "ConvertiblesFactory");
-        console2.log(address(sbFactory), "StagingBoxFactory");
-        console2.log(address(stagingLoanRouter), "StagingLoanRouter");
-        console2.log(address(stagingBoxLens), "StagingBoxLens");
-        console2.log(createdSB, "createdSB");
+        console2.log(address(iboFactory), "IBOBoxFactory");
+        console2.log(address(IBOLoanRouter), "IBOLoanRouter");
+        console2.log(address(IBOBoxLens), "IBOBoxLens");
+        console2.log(createdIBO, "createdIBO");
         console2.log(createdBond, "createdBond");
     }
 }

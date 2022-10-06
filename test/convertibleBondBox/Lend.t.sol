@@ -6,8 +6,8 @@ import "./CBBSetup.sol";
 contract Lend is CBBSetup {
     struct BeforeBalances {
         uint256 borrowerStables;
-        uint256 borrowerRiskSlip;
-        uint256 lenderSafeSlip;
+        uint256 borrowerDebtSlip;
+        uint256 lenderBondSlip;
         uint256 matcherRiskTranche;
         uint256 matcherSafeTranche;
         uint256 matcherStables;
@@ -41,7 +41,7 @@ contract Lend is CBBSetup {
         stableLendAmount = bound(stableLendAmount, 0, minimumInput - 1);
 
         vm.prank(s_cbb_owner);
-        s_deployedConvertibleBondBox.reinitialize(s_initialPrice);
+        s_deployedConvertibleBondBox.activate(s_initialPrice);
 
         bytes memory customError = abi.encodeWithSignature(
             "MinimumInput(uint256,uint256)",
@@ -58,7 +58,7 @@ contract Lend is CBBSetup {
 
     function testCannotLendBondIsMature() public {
         vm.prank(s_cbb_owner);
-        s_deployedConvertibleBondBox.reinitialize(s_initialPrice);
+        s_deployedConvertibleBondBox.activate(s_initialPrice);
 
         vm.warp(s_maturityDate);
         bytes memory customError = abi.encodeWithSignature(
@@ -82,7 +82,7 @@ contract Lend is CBBSetup {
         );
 
         vm.prank(s_cbb_owner);
-        s_deployedConvertibleBondBox.reinitialize(startPrice);
+        s_deployedConvertibleBondBox.activate(startPrice);
 
         time = bound(
             time,
@@ -93,8 +93,8 @@ contract Lend is CBBSetup {
 
         BeforeBalances memory before = BeforeBalances(
             s_stableToken.balanceOf(s_borrower),
-            s_riskSlip.balanceOf(s_borrower),
-            s_safeSlip.balanceOf(s_lender),
+            s_debtSlip.balanceOf(s_borrower),
+            s_bondSlip.balanceOf(s_lender),
             s_riskTranche.balanceOf(address(this)),
             s_safeTranche.balanceOf(address(this)),
             s_stableToken.balanceOf(address(this)),
@@ -166,13 +166,13 @@ contract Lend is CBBSetup {
         );
 
         assertEq(
-            before.lenderSafeSlip + adjustments.safeTrancheAmount,
-            s_safeSlip.balanceOf(s_lender)
+            before.lenderBondSlip + adjustments.safeTrancheAmount,
+            s_bondSlip.balanceOf(s_lender)
         );
 
         assertEq(
-            before.borrowerRiskSlip + adjustments.riskTrancheAmount,
-            s_riskSlip.balanceOf(s_borrower)
+            before.borrowerDebtSlip + adjustments.riskTrancheAmount,
+            s_debtSlip.balanceOf(s_borrower)
         );
 
         assertEq(

@@ -27,8 +27,8 @@ abstract contract CBBSetup is Test {
     TrancheFactory s_trancheFactory;
     Tranche s_tranche;
     Slip s_slip;
-    ISlip s_riskSlip;
-    ISlip s_safeSlip;
+    ISlip s_debtSlip;
+    ISlip s_bondSlip;
     SlipFactory s_slipFactory;
     ITranche s_safeTranche;
     ITranche s_riskTranche;
@@ -64,7 +64,7 @@ abstract contract CBBSetup is Test {
     event RedeemRiskTranche(address, uint256);
     event Repay(address, uint256, uint256, uint256);
     event Initialized(address);
-    event ReInitialized(uint256, uint256);
+    event Activated(uint256, uint256);
     event FeeUpdate(uint256);
 
     function setUp() public virtual {
@@ -143,7 +143,7 @@ abstract contract CBBSetup is Test {
 
         s_deployedConvertibleBondBox = ConvertibleBondBox(s_deployedCBBAddress);
 
-        s_safeSlip = s_deployedConvertibleBondBox.safeSlip();
-        s_riskSlip = s_deployedConvertibleBondBox.riskSlip();
+        s_bondSlip = s_deployedConvertibleBondBox.bondSlip();
+        s_debtSlip = s_deployedConvertibleBondBox.debtSlip();
     }
 }

@@ -4,32 +4,32 @@ pragma solidity ^0.8.7;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "clones-with-immutable-args/Clone.sol";
 import "../src/interfaces/IConvertibleBondBox.sol";
-import "./ISBImmutableArgs.sol";
+import "./IIBOImmutableArgs.sol";
 
 /**
  * @notice Defines the immutable arguments for a CBB
  * @dev using the clones-with-immutable-args library
  * we fetch args from the code section
  */
-contract SBImmutableArgs is Clone, ISBImmutableArgs {
+contract IBOImmutableArgs is Clone, IIBOImmutableArgs {
     /**
-     * @inheritdoc ISBImmutableArgs
+     * @inheritdoc IIBOImmutableArgs
      */
 
-    function lendSlip() public pure returns (ISlip) {
+    function buyOrder() public pure returns (ISlip) {
         return ISlip(_getArgAddress(0));
     }
 
     /**
-     * @inheritdoc ISBImmutableArgs
+     * @inheritdoc IIBOImmutableArgs
      */
 
-    function borrowSlip() public pure returns (ISlip) {
+    function issueOrder() public pure returns (ISlip) {
         return ISlip(_getArgAddress(20));
     }
 
     /**
-     * @inheritdoc ISBImmutableArgs
+     * @inheritdoc IIBOImmutableArgs
      */
 
     function convertibleBondBox() public pure returns (IConvertibleBondBox) {
@@ -37,7 +37,7 @@ contract SBImmutableArgs is Clone, ISBImmutableArgs {
     }
 
     /**
-     * @inheritdoc ISBImmutableArgs
+     * @inheritdoc IIBOImmutableArgs
      */
 
     function initialPrice() public pure returns (uint256) {
@@ -45,7 +45,7 @@ contract SBImmutableArgs is Clone, ISBImmutableArgs {
     }
 
     /**
-     * @inheritdoc ISBImmutableArgs
+     * @inheritdoc IIBOImmutableArgs
      */
 
     function stableToken() public pure returns (IERC20) {
@@ -53,7 +53,7 @@ contract SBImmutableArgs is Clone, ISBImmutableArgs {
     }
 
     /**
-     * @inheritdoc ISBImmutableArgs
+     * @inheritdoc IIBOImmutableArgs
      */
 
     function safeTranche() public pure returns (ITranche) {
@@ -61,15 +61,15 @@ contract SBImmutableArgs is Clone, ISBImmutableArgs {
     }
 
     /**
-     * @inheritdoc ISBImmutableArgs
+     * @inheritdoc IIBOImmutableArgs
      */
 
-    function safeSlipAddress() public pure returns (address) {
+    function bondSlipAddress() public pure returns (address) {
         return (_getArgAddress(132));
     }
 
     /**
-     * @inheritdoc ISBImmutableArgs
+     * @inheritdoc IIBOImmutableArgs
      */
 
     function safeRatio() public pure returns (uint256) {
@@ -77,7 +77,7 @@ contract SBImmutableArgs is Clone, ISBImmutableArgs {
     }
 
     /**
-     * @inheritdoc ISBImmutableArgs
+     * @inheritdoc IIBOImmutableArgs
      */
 
     function riskTranche() public pure returns (ITranche) {
@@ -85,15 +85,15 @@ contract SBImmutableArgs is Clone, ISBImmutableArgs {
     }
 
     /**
-     * @inheritdoc ISBImmutableArgs
+     * @inheritdoc IIBOImmutableArgs
      */
 
-    function riskSlipAddress() public pure returns (address) {
+    function debtSlipAddress() public pure returns (address) {
         return (_getArgAddress(204));
     }
 
     /**
-     * @inheritdoc ISBImmutableArgs
+     * @inheritdoc IIBOImmutableArgs
      */
 
     function riskRatio() public pure returns (uint256) {
@@ -101,7 +101,7 @@ contract SBImmutableArgs is Clone, ISBImmutableArgs {
     }
 
     /**
-     * @inheritdoc ISBImmutableArgs
+     * @inheritdoc IIBOImmutableArgs
      */
 
     function priceGranularity() public pure returns (uint256) {
@@ -109,7 +109,7 @@ contract SBImmutableArgs is Clone, ISBImmutableArgs {
     }
 
     /**
-     * @inheritdoc ISBImmutableArgs
+     * @inheritdoc IIBOImmutableArgs
      */
 
     function trancheDecimals() public pure override returns (uint256) {
@@ -117,7 +117,7 @@ contract SBImmutableArgs is Clone, ISBImmutableArgs {
     }
 
     /**
-     * @inheritdoc ISBImmutableArgs
+     * @inheritdoc IIBOImmutableArgs
      */
 
     function stableDecimals() public pure override returns (uint256) {

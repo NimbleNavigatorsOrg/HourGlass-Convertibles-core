@@ -60,7 +60,7 @@ contract Frankenstein is CBBSetup {
         }
 
         vm.prank(s_cbb_owner);
-        s_deployedConvertibleBondBox.reinitialize(s_initialPrice);
+        s_deployedConvertibleBondBox.activate(s_initialPrice);
 
         s_deployedConvertibleBondBox.borrow(
             address(borrower),
@@ -71,11 +71,11 @@ contract Frankenstein is CBBSetup {
         //get slip approvals for all addresses
         for (uint160 i = 1; i < 11; i++) {
             vm.startPrank(address(i));
-            s_safeSlip.approve(
+            s_bondSlip.approve(
                 address(s_deployedConvertibleBondBox),
                 type(uint256).max
             );
-            s_riskSlip.approve(
+            s_debtSlip.approve(
                 address(s_deployedConvertibleBondBox),
                 type(uint256).max
             );
@@ -96,16 +96,16 @@ contract Frankenstein is CBBSetup {
         );
         vm.stopPrank();
 
-        // Borrower repays half of riskSlips halfway to maturity @ currentPrice
+        // Borrower repays half of debtSlips halfway to maturity @ currentPrice
         vm.warp(s_maturityDate / 2);
         vm.startPrank(address(borrower));
         uint256 _currentPrice = s_deployedConvertibleBondBox.currentPrice();
-        uint256 riskSlipBalance = s_deployedConvertibleBondBox
-            .riskSlip()
+        uint256 debtSlipBalance = s_deployedConvertibleBondBox
+            .debtSlip()
             .balanceOf(address(borrower)) / 2;
 
         s_deployedConvertibleBondBox.repay(
-            (((riskSlipBalance * s_safeRatio) / s_riskRatio) *
+            (((debtSlipBalance * s_safeRatio) / s_riskRatio) *
                 _currentPrice *
                 (10**s_stableDecimals)) /
                 s_priceGranularity /
@@ -127,19 +127,19 @@ contract Frankenstein is CBBSetup {
         );
         vm.stopPrank();
 
-        // Lender redeems half of safeSlips for tranches @ maturity
+        // Lender redeems half of bondSlips for tranches @ maturity
         vm.warp(s_maturityDate);
 
         vm.startPrank(address(lender));
-        uint256 safeSlipBalance = s_deployedConvertibleBondBox
-            .safeSlip()
+        uint256 bondSlipBalance = s_deployedConvertibleBondBox
+            .bondSlip()
             .balanceOf(address(lender)) / 2;
-        s_deployedConvertibleBondBox.redeemSafeTranche(safeSlipBalance);
+        s_deployedConvertibleBondBox.redeemSafeTranche(bondSlipBalance);
         vm.stopPrank();
 
-        // Lender redeems half of remaining safeSlips for stables
+        // Lender redeems half of remaining bondSlips for stables
         vm.startPrank(address(lender));
-        safeSlipBalance = s_safeSlip.balanceOf(address(lender)) / 2;
+        bondSlipBalance = s_bondSlip.balanceOf(address(lender)) / 2;
         vm.stopPrank();
     }
 }

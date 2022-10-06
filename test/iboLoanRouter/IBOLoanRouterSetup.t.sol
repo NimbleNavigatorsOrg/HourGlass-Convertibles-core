@@ -2,29 +2,29 @@ pragma solidity 0.8.13;
 
 import "../../test/convertibleBondBox/CBBSetup.sol";
 
-import "../../src/contracts/StagingBox.sol";
-import "../../src/contracts/StagingBoxFactory.sol";
-import "../../src/contracts/StagingBoxLens.sol";
-import "../../src/contracts/StagingLoanRouter.sol";
+import "../../src/contracts/IBOBox.sol";
+import "../../src/contracts/IBOBoxFactory.sol";
+import "../../src/contracts/IBOBoxLens.sol";
+import "../../src/contracts/IBOLoanRouter.sol";
 
 import "../mocks/MockERC20.sol";
 import "../external/button-wrappers/ButtonToken.sol";
 import "../external/button-wrappers/MockOracle.sol";
 
-contract StagingLoanRouterSetup is CBBSetup {
-    StagingBoxFactory stagingBoxFactory;
-    StagingBox s_deployedSB;
-    StagingBoxLens s_SBLens;
-    StagingLoanRouter s_stagingLoanRouter;
-    address s_deployedSBAddress;
+contract IBOLoanRouterSetup is CBBSetup {
+    IBOBoxFactory iboBoxFactory;
+    IBOBox s_deployedIBOB;
+    IBOBoxLens s_IBOLens;
+    IBOLoanRouter s_IBOLoanRouter;
+    address s_deployedIBOBAddress;
 
     ButtonToken s_buttonCollatToken;
     MockOracle s_mockOracle;
 
     uint256 s_initMockData = 5e8;
 
-    ISlip s_borrowSlip;
-    ISlip s_lendSlip;
+    ISlip s_issueOrder;
+    ISlip s_buyOrder;
 
     address s_borrower = address(1);
     address s_lender = address(2);
@@ -92,14 +92,14 @@ contract StagingLoanRouterSetup is CBBSetup {
             s_buttonWoodBondController.trancheCount() - 1
         );
 
-        StagingBox stagingBox = new StagingBox();
-        stagingBoxFactory = new StagingBoxFactory(address(stagingBox));
-        s_SBLens = new StagingBoxLens();
-        s_stagingLoanRouter = new StagingLoanRouter();
+        IBOBox iboBox = new IBOBox();
+        iboBoxFactory = new IBOBoxFactory(address(iboBox));
+        s_IBOLens = new IBOBoxLens();
+        s_IBOLoanRouter = new IBOLoanRouter();
 
         vm.prank(s_cbb_owner);
-        s_deployedSB = StagingBox(
-            stagingBoxFactory.createStagingBoxWithCBB(
+        s_deployedIBOB = IBOBox(
+            iboBoxFactory.createIBOBoxWithCBB(
                 s_CBBFactory,
                 s_slipFactory,
                 s_buttonWoodBondController,
@@ -111,15 +111,15 @@ contract StagingLoanRouterSetup is CBBSetup {
             )
         );
 
-        s_deployedCBBAddress = address(s_deployedSB.convertibleBondBox());
+        s_deployedCBBAddress = address(s_deployedIBOB.convertibleBondBox());
         s_deployedConvertibleBondBox = ConvertibleBondBox(s_deployedCBBAddress);
 
-        s_deployedSBAddress = address(s_deployedSB);
+        s_deployedIBOBAddress = address(s_deployedIBOB);
 
-        s_safeSlip = s_deployedConvertibleBondBox.safeSlip();
-        s_riskSlip = s_deployedConvertibleBondBox.riskSlip();
-        s_borrowSlip = s_deployedSB.borrowSlip();
-        s_lendSlip = s_deployedSB.lendSlip();
+        s_bondSlip = s_deployedConvertibleBondBox.bondSlip();
+        s_debtSlip = s_deployedConvertibleBondBox.debtSlip();
+        s_issueOrder = s_deployedIBOB.issueOrder();
+        s_buyOrder = s_deployedIBOB.buyOrder();
 
         s_collateralToken.mint(
             address(this),
@@ -142,21 +142,18 @@ contract StagingLoanRouterSetup is CBBSetup {
         s_stableToken.mint(s_lender, 10000 * (10**s_stableDecimals));
 
         vm.startPrank(s_borrower);
-        s_collateralToken.approve(
-            address(s_stagingLoanRouter),
-            type(uint256).max
-        );
-        s_borrowSlip.approve(address(s_stagingLoanRouter), type(uint256).max);
-        s_riskSlip.approve(address(s_stagingLoanRouter), type(uint256).max);
-        s_stableToken.approve(address(s_stagingLoanRouter), type(uint256).max);
+        s_collateralToken.approve(address(s_IBOLoanRouter), type(uint256).max);
+        s_issueOrder.approve(address(s_IBOLoanRouter), type(uint256).max);
+        s_debtSlip.approve(address(s_IBOLoanRouter), type(uint256).max);
+        s_stableToken.approve(address(s_IBOLoanRouter), type(uint256).max);
         s_stableToken.approve(s_deployedCBBAddress, type(uint256).max);
         vm.stopPrank();
 
         vm.startPrank(s_lender);
-        s_stableToken.approve(address(s_stagingLoanRouter), type(uint256).max);
-        s_stableToken.approve(s_deployedSBAddress, type(uint256).max);
-        s_safeSlip.approve(address(s_stagingLoanRouter), type(uint256).max);
-        s_lendSlip.approve(address(s_stagingLoanRouter), type(uint256).max);
+        s_stableToken.approve(address(s_IBOLoanRouter), type(uint256).max);
+        s_stableToken.approve(s_deployedIBOBAddress, type(uint256).max);
+        s_bondSlip.approve(address(s_IBOLoanRouter), type(uint256).max);
+        s_buyOrder.approve(address(s_IBOLoanRouter), type(uint256).max);
         vm.stopPrank();
     }
 }

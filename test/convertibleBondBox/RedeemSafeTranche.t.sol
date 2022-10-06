@@ -5,17 +5,17 @@ import "./CBBSetup.sol";
 
 contract RedeemSafeTranche is CBBSetup {
     struct BeforeBalances {
-        uint256 lenderSafeSlip;
+        uint256 lenderBondSlip;
         uint256 lenderSafeTranche;
         uint256 lenderRiskTranche;
-        uint256 ownerSafeSlip;
+        uint256 ownerBondSlip;
         uint256 CBBSafeTranche;
         uint256 CBBRiskTranche;
     }
 
     struct RedeemAmounts {
         uint256 feeSlip;
-        uint256 safeSlipAmount;
+        uint256 bondSlipAmount;
         uint256 penaltyTrancheAmount;
     }
 
@@ -24,7 +24,7 @@ contract RedeemSafeTranche is CBBSetup {
 
     function testCannotRedeemSafeTrancheBondNotMatureYet(uint256 time) public {
         vm.prank(s_cbb_owner);
-        s_deployedConvertibleBondBox.reinitialize(s_initialPrice);
+        s_deployedConvertibleBondBox.activate(s_initialPrice);
 
         time = bound(
             time,
@@ -42,32 +42,32 @@ contract RedeemSafeTranche is CBBSetup {
         s_deployedConvertibleBondBox.redeemSafeTranche(1e6);
     }
 
-    function testCannotRedeemSafeTrancheMinimumInput(uint256 safeSlipAmount)
+    function testCannotRedeemSafeTrancheMinimumInput(uint256 bondSlipAmount)
         public
     {
         vm.prank(s_cbb_owner);
-        s_deployedConvertibleBondBox.reinitialize(s_initialPrice);
+        s_deployedConvertibleBondBox.activate(s_initialPrice);
 
         vm.warp(s_maturityDate);
-        safeSlipAmount = bound(safeSlipAmount, 0, 1e6 - 1);
+        bondSlipAmount = bound(bondSlipAmount, 0, 1e6 - 1);
 
         bytes memory customError = abi.encodeWithSignature(
             "MinimumInput(uint256,uint256)",
-            safeSlipAmount,
+            bondSlipAmount,
             1e6
         );
         vm.expectRevert(customError);
-        s_deployedConvertibleBondBox.redeemSafeTranche(safeSlipAmount);
+        s_deployedConvertibleBondBox.redeemSafeTranche(bondSlipAmount);
     }
 
     function testRedeemSafeTranche(
-        uint256 safeSlipRedeemAmount,
-        uint256 riskSlipRedeemAmount,
+        uint256 bondSlipRedeemAmount,
+        uint256 debtSlipRedeemAmount,
         uint256 time,
         uint256 fee
     ) public {
         vm.prank(s_cbb_owner);
-        s_deployedConvertibleBondBox.reinitialize(s_initialPrice);
+        s_deployedConvertibleBondBox.activate(s_initialPrice);
 
         //set fee
         fee = bound(fee, 0, s_maxFeeBPS);
@@ -106,55 +106,55 @@ contract RedeemSafeTranche is CBBSetup {
 
         // do a riskTrancheRedeem
         {
-            riskSlipRedeemAmount = bound(
-                riskSlipRedeemAmount,
+            debtSlipRedeemAmount = bound(
+                debtSlipRedeemAmount,
                 1e6,
-                s_riskSlip.balanceOf(address(s_borrower))
+                s_debtSlip.balanceOf(address(s_borrower))
             );
             vm.startPrank(s_borrower);
-            s_riskSlip.approve(s_deployedCBBAddress, type(uint256).max);
+            s_debtSlip.approve(s_deployedCBBAddress, type(uint256).max);
             s_deployedConvertibleBondBox.redeemRiskTranche(
-                riskSlipRedeemAmount
+                debtSlipRedeemAmount
             );
             vm.stopPrank();
         }
 
         // check balances
         BeforeBalances memory before = BeforeBalances(
-            s_safeSlip.balanceOf(s_lender),
+            s_bondSlip.balanceOf(s_lender),
             s_safeTranche.balanceOf(s_lender),
             s_riskTranche.balanceOf(s_lender),
-            s_safeSlip.balanceOf(s_cbb_owner),
+            s_bondSlip.balanceOf(s_cbb_owner),
             s_safeTranche.balanceOf(s_deployedCBBAddress),
             s_riskTranche.balanceOf(s_deployedCBBAddress)
         );
 
         // calculate amounts
 
-        safeSlipRedeemAmount = bound(
-            safeSlipRedeemAmount,
+        bondSlipRedeemAmount = bound(
+            bondSlipRedeemAmount,
             1e6,
-            before.lenderSafeSlip
+            before.lenderBondSlip
         );
 
-        uint256 feeSlip = (safeSlipRedeemAmount * fee) / s_BPS;
-        uint256 zTranchePayout = ((safeSlipRedeemAmount - feeSlip) *
-            (before.CBBRiskTranche - s_riskSlip.totalSupply())) /
-            (s_safeSlip.totalSupply() -
-                s_deployedConvertibleBondBox.s_repaidSafeSlips());
+        uint256 feeSlip = (bondSlipRedeemAmount * fee) / s_BPS;
+        uint256 zTranchePayout = ((bondSlipRedeemAmount - feeSlip) *
+            (before.CBBRiskTranche - s_debtSlip.totalSupply())) /
+            (s_bondSlip.totalSupply() -
+                s_deployedConvertibleBondBox.s_repaidBondSlips());
 
         RedeemAmounts memory adjustments = RedeemAmounts(
             feeSlip,
-            safeSlipRedeemAmount,
+            bondSlipRedeemAmount,
             zTranchePayout
         );
 
         // do the safeTrancheRedeem
         vm.startPrank(s_lender);
-        s_safeSlip.approve(s_deployedCBBAddress, type(uint256).max);
+        s_bondSlip.approve(s_deployedCBBAddress, type(uint256).max);
         vm.expectEmit(true, true, true, true);
-        emit RedeemSafeTranche(address(2), safeSlipRedeemAmount - feeSlip);
-        s_deployedConvertibleBondBox.redeemSafeTranche(safeSlipRedeemAmount);
+        emit RedeemSafeTranche(address(2), bondSlipRedeemAmount - feeSlip);
+        s_deployedConvertibleBondBox.redeemSafeTranche(bondSlipRedeemAmount);
         vm.stopPrank();
 
         // check assertions
@@ -166,13 +166,13 @@ contract RedeemSafeTranche is CBBSetup {
         RedeemAmounts memory adjustments
     ) internal {
         assertEq(
-            before.lenderSafeSlip - adjustments.safeSlipAmount,
-            s_safeSlip.balanceOf(s_lender)
+            before.lenderBondSlip - adjustments.bondSlipAmount,
+            s_bondSlip.balanceOf(s_lender)
         );
 
         assertEq(
             before.lenderSafeTranche +
-                adjustments.safeSlipAmount -
+                adjustments.bondSlipAmount -
                 adjustments.feeSlip,
             s_safeTranche.balanceOf(s_lender)
         );
@@ -183,13 +183,13 @@ contract RedeemSafeTranche is CBBSetup {
         );
 
         assertEq(
-            before.ownerSafeSlip + adjustments.feeSlip,
-            s_safeSlip.balanceOf(s_cbb_owner)
+            before.ownerBondSlip + adjustments.feeSlip,
+            s_bondSlip.balanceOf(s_cbb_owner)
         );
 
         assertEq(
             before.CBBSafeTranche -
-                adjustments.safeSlipAmount +
+                adjustments.bondSlipAmount +
                 adjustments.feeSlip,
             s_safeTranche.balanceOf(s_deployedCBBAddress)
         );

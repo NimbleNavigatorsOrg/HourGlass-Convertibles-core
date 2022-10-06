@@ -1,12 +1,12 @@
 pragma solidity 0.8.13;
 
-import "./integration/SBIntegrationSetup.t.sol";
+import "./iboBoxSetup.t.sol";
 
-contract WithdrawLend is SBIntegrationSetup {
+contract CancelBuy is iboBoxSetup {
     struct BeforeBalances {
-        uint256 lenderLendSlips;
+        uint256 lenderBuyOrders;
         uint256 lenderStableTokens;
-        uint256 SBStableTokens;
+        uint256 IBOStableTokens;
     }
 
     struct LendAmounts {
@@ -16,38 +16,38 @@ contract WithdrawLend is SBIntegrationSetup {
     address s_borrower = address(1);
     address s_lender = address(2);
 
-    function testCannotWithdrawLendWithdrawAmountTooHigh(
+    function testCannotCancelBuyWithdrawAmountTooHigh(
         uint256 _fuzzPrice,
         uint256 _lendAmount
     ) public {
-        setupStagingBox(_fuzzPrice);
+        setupIBOBox(_fuzzPrice);
 
         uint256 maxBorrowAmount = (s_safeTranche.balanceOf(address(this)) *
-            s_deployedSB.initialPrice() *
-            s_deployedSB.stableDecimals()) /
-            s_deployedSB.priceGranularity() /
-            s_deployedSB.trancheDecimals();
+            s_deployedIBOB.initialPrice() *
+            s_deployedIBOB.stableDecimals()) /
+            s_deployedIBOB.priceGranularity() /
+            s_deployedIBOB.trancheDecimals();
 
-        s_deployedSB.depositBorrow(s_borrower, maxBorrowAmount);
+        s_deployedIBOB.createIssueOrder(s_borrower, maxBorrowAmount);
 
-        s_deployedSB.depositLend(
+        s_deployedIBOB.createBuyOrder(
             s_lender,
             s_stableToken.balanceOf(address(this))
         );
 
-        bool isLend = s_SBLens.viewTransmitReInitBool(s_deployedSB);
+        bool isLend = s_IBOLens.viewTransmitActivateBool(s_deployedIBOB);
 
         vm.prank(s_cbb_owner);
-        s_deployedSB.transmitReInit(isLend);
+        s_deployedIBOB.transmitActivate(isLend);
 
         uint256 maxWithdrawAmount = s_stableToken.balanceOf(
-            s_deployedSBAddress
-        ) - s_deployedSB.s_reinitLendAmount();
+            s_deployedIBOBAddress
+        ) - s_deployedIBOB.s_activateLendAmount();
 
         _lendAmount = bound(
             _lendAmount,
             maxWithdrawAmount + 1,
-            Math.max(maxWithdrawAmount + 1, s_lendSlip.balanceOf(s_lender))
+            Math.max(maxWithdrawAmount + 1, s_buyOrder.balanceOf(s_lender))
         );
 
         bytes memory customError = abi.encodeWithSignature(
@@ -58,31 +58,31 @@ contract WithdrawLend is SBIntegrationSetup {
 
         vm.prank(s_lender);
         vm.expectRevert(customError);
-        s_deployedSB.withdrawLend(_lendAmount);
+        s_deployedIBOB.cancelBuy(_lendAmount);
     }
 
-    function testWithdrawLend(uint256 _fuzzPrice, uint256 _lendAmount) public {
-        setupStagingBox(_fuzzPrice);
+    function testCancelBuy(uint256 _fuzzPrice, uint256 _lendAmount) public {
+        setupIBOBox(_fuzzPrice);
 
-        s_deployedSB.depositLend(
+        s_deployedIBOB.createBuyOrder(
             s_lender,
             s_stableToken.balanceOf(address(this))
         );
 
         BeforeBalances memory before = BeforeBalances(
-            s_lendSlip.balanceOf(s_lender),
+            s_buyOrder.balanceOf(s_lender),
             s_stableToken.balanceOf(s_lender),
-            s_stableToken.balanceOf(s_deployedSBAddress)
+            s_stableToken.balanceOf(s_deployedIBOBAddress)
         );
 
-        _lendAmount = bound(_lendAmount, 1, before.lenderLendSlips);
+        _lendAmount = bound(_lendAmount, 1, before.lenderBuyOrders);
 
         LendAmounts memory adjustments = LendAmounts(_lendAmount);
 
         vm.startPrank(s_lender);
         vm.expectEmit(true, true, true, true);
-        emit LendWithdrawal(s_lender, _lendAmount);
-        s_deployedSB.withdrawLend(_lendAmount);
+        emit CancelledBuyOrder(s_lender, _lendAmount);
+        s_deployedIBOB.cancelBuy(_lendAmount);
         vm.stopPrank();
 
         assertions(before, adjustments);
@@ -93,8 +93,8 @@ contract WithdrawLend is SBIntegrationSetup {
         LendAmounts memory adjustments
     ) internal {
         assertEq(
-            before.lenderLendSlips - adjustments.stableAmount,
-            s_lendSlip.balanceOf(s_lender)
+            before.lenderBuyOrders - adjustments.stableAmount,
+            s_buyOrder.balanceOf(s_lender)
         );
 
         assertEq(
@@ -103,8 +103,8 @@ contract WithdrawLend is SBIntegrationSetup {
         );
 
         assertEq(
-            before.SBStableTokens - adjustments.stableAmount,
-            s_stableToken.balanceOf(s_deployedSBAddress)
+            before.IBOStableTokens - adjustments.stableAmount,
+            s_stableToken.balanceOf(s_deployedIBOBAddress)
         );
     }
 }

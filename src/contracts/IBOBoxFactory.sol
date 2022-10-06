@@ -4,21 +4,21 @@ pragma solidity 0.8.13;
 import "clones-with-immutable-args/ClonesWithImmutableArgs.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import "./StagingBox.sol";
+import "./IBOBox.sol";
 import "./ConvertibleBondBox.sol";
 import "../interfaces/ICBBFactory.sol";
-import "../interfaces/IStagingBoxFactory.sol";
+import "../interfaces/IIBOBoxFactory.sol";
 
-contract StagingBoxFactory is IStagingBoxFactory, Context {
+contract IBOBoxFactory is IIBOBoxFactory, Context {
     using ClonesWithImmutableArgs for address;
 
     address public immutable implementation;
 
-    mapping(address => address) public CBBtoSB;
+    mapping(address => address) public CBBtoIBO;
 
     struct SlipPair {
-        address lendSlip;
-        address borrowSlip;
+        address buyOrder;
+        address issueOrder;
     }
 
     constructor(address _implementation) {
@@ -26,7 +26,7 @@ contract StagingBoxFactory is IStagingBoxFactory, Context {
     }
 
     /**
-     * @dev Deploys a staging box with a CBB
+     * @dev Deploys a IBO box with a CBB
      * @param cBBFactory The ConvertibleBondBox factory
      * @param slipFactory The factory for the Slip-Tokens
      * @param bond The buttonwood bond
@@ -37,7 +37,7 @@ contract StagingBoxFactory is IStagingBoxFactory, Context {
      * @param cbbOwner The owner of the ConvertibleBondBox
      */
 
-    function createStagingBoxWithCBB(
+    function createIBOBoxWithCBB(
         ICBBFactory cBBFactory,
         ISlipFactory slipFactory,
         IBondController bond,
@@ -58,28 +58,28 @@ contract StagingBoxFactory is IStagingBoxFactory, Context {
             )
         );
 
-        address deployedSB = this.createStagingBoxOnly(
+        address deployedIBOB = this.createIBOBoxOnly(
             slipFactory,
             convertibleBondBox,
             initialPrice,
             cbbOwner
         );
 
-        //transfer ownership of CBB to SB
-        convertibleBondBox.transferOwnership(deployedSB);
+        //transfer ownership of CBB to IBO
+        convertibleBondBox.transferOwnership(deployedIBOB);
 
-        return deployedSB;
+        return deployedIBOB;
     }
 
     /**
-     * @dev Deploys only a staging box
+     * @dev Deploys only a IBO box
      * @param slipFactory The factory for the Slip-Tokens
-     * @param convertibleBondBox The CBB tied to the staging box being deployed
+     * @param convertibleBondBox The CBB tied to the IBO box being deployed
      * @param initialPrice The initial price of the safe asset
-     * @param owner The owner of the StagingBox
+     * @param owner The owner of the IBOBox
      */
 
-    function createStagingBoxOnly(
+    function createIBOBoxOnly(
         ISlipFactory slipFactory,
         ConvertibleBondBox convertibleBondBox,
         uint256 initialPrice,
@@ -87,7 +87,7 @@ contract StagingBoxFactory is IStagingBoxFactory, Context {
     ) public returns (address) {
         require(
             _msgSender() == convertibleBondBox.owner(),
-            "StagingBoxFactory: Deployer not owner of CBB"
+            "IBOBoxFactory: Deployer not owner of CBB"
         );
 
         SlipPair memory SlipData = deploySlips(
@@ -99,18 +99,18 @@ contract StagingBoxFactory is IStagingBoxFactory, Context {
 
         bytes memory data = bytes.concat(
             abi.encodePacked(
-                SlipData.lendSlip,
-                SlipData.borrowSlip,
+                SlipData.buyOrder,
+                SlipData.issueOrder,
                 convertibleBondBox,
                 initialPrice,
                 convertibleBondBox.stableToken(),
                 convertibleBondBox.safeTranche(),
-                address(convertibleBondBox.safeSlip()),
+                address(convertibleBondBox.bondSlip()),
                 convertibleBondBox.safeRatio()
             ),
             abi.encodePacked(
                 convertibleBondBox.riskTranche(),
-                address(convertibleBondBox.riskSlip()),
+                address(convertibleBondBox.debtSlip()),
                 convertibleBondBox.riskRatio(),
                 convertibleBondBox.s_priceGranularity(),
                 convertibleBondBox.trancheDecimals(),
@@ -118,33 +118,33 @@ contract StagingBoxFactory is IStagingBoxFactory, Context {
             )
         );
 
-        // clone staging box
-        StagingBox clone = StagingBox(implementation.clone(data));
+        // clone IBO box
+        IBOBox clone = IBOBox(implementation.clone(data));
         clone.initialize(owner);
 
-        //tansfer slips ownership to staging box
-        ISlip(SlipData.lendSlip).changeOwner(address(clone));
-        ISlip(SlipData.borrowSlip).changeOwner(address(clone));
+        //tansfer slips ownership to IBO box
+        ISlip(SlipData.buyOrder).changeOwner(address(clone));
+        ISlip(SlipData.issueOrder).changeOwner(address(clone));
 
-        address oldStagingBox = CBBtoSB[address(convertibleBondBox)];
+        address oldIBOBox = CBBtoIBO[address(convertibleBondBox)];
 
-        if (oldStagingBox == address(0)) {
-            emit StagingBoxCreated(
+        if (oldIBOBox == address(0)) {
+            emit IBOBoxCreated(
                 _msgSender(),
                 address(clone),
                 address(slipFactory)
             );
         } else {
-            emit StagingBoxReplaced(
+            emit IBOBoxReplaced(
                 convertibleBondBox,
                 _msgSender(),
-                oldStagingBox,
+                oldIBOBox,
                 address(clone),
                 address(slipFactory)
             );
         }
 
-        CBBtoSB[address(convertibleBondBox)] = address(clone);
+        CBBtoIBO[address(convertibleBondBox)] = address(clone);
 
         return address(clone);
     }
@@ -162,23 +162,23 @@ contract StagingBoxFactory is IStagingBoxFactory, Context {
             address(riskTranche)
         ).symbol();
 
-        // clone deploy lend slip
-        address lendSlipTokenAddress = slipFactory.createSlip(
-            "IBO-Buy-Slip",
-            string(abi.encodePacked("IBO-BUY-SLIP-", collateralSymbolSafe)),
+        // clone deploy buyOrder
+        address buyOrderTokenAddress = slipFactory.createSlip(
+            "IBO-Buy-Order",
+            string(abi.encodePacked("BUY-IBO-", collateralSymbolSafe)),
             stableToken
         );
 
-        //clone deployborrow slip
-        address borrowSlipTokenAddress = slipFactory.createSlip(
-            "IBO-Sell-Slip",
-            string(abi.encodePacked("IBO-SELL-SLIP-", collateralSymbolRisk)),
+        //clone deployissueOrder
+        address issueOrderTokenAddress = slipFactory.createSlip(
+            "IBO-Issue-Order",
+            string(abi.encodePacked("ISSUE-IBO-", collateralSymbolRisk)),
             stableToken
         );
 
         SlipPair memory SlipData = SlipPair(
-            lendSlipTokenAddress,
-            borrowSlipTokenAddress
+            buyOrderTokenAddress,
+            issueOrderTokenAddress
         );
 
         return SlipData;

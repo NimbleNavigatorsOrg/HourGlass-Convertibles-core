@@ -3,13 +3,13 @@ pragma solidity 0.8.13;
 
 import "./CBBSetup.sol";
 
-contract Reinitialize is CBBSetup {
-    function testFailReinitializeNotOwner() public {
+contract Activate is CBBSetup {
+    function testFailActivateNotOwner() public {
         vm.prank(address(1));
-        s_deployedConvertibleBondBox.reinitialize(s_initialPrice);
+        s_deployedConvertibleBondBox.activate(s_initialPrice);
     }
 
-    function testCannotReinitializeInitialPriceTooHigh(uint256 price) public {
+    function testCannotActivateInitialPriceTooHigh(uint256 price) public {
         price = bound(price, s_priceGranularity + 1, type(uint256).max);
 
         vm.prank(s_cbb_owner);
@@ -19,10 +19,10 @@ contract Reinitialize is CBBSetup {
             s_priceGranularity
         );
         vm.expectRevert(customError);
-        s_deployedConvertibleBondBox.reinitialize(price);
+        s_deployedConvertibleBondBox.activate(price);
     }
 
-    function testCannotReinitializeInitialPriceIsZero() public {
+    function testCannotActivateInitialPriceIsZero() public {
         vm.prank(s_cbb_owner);
         bytes memory customError = abi.encodeWithSignature(
             "InitialPriceIsZero(uint256,uint256)",
@@ -30,10 +30,10 @@ contract Reinitialize is CBBSetup {
             s_priceGranularity
         );
         vm.expectRevert(customError);
-        s_deployedConvertibleBondBox.reinitialize(0);
+        s_deployedConvertibleBondBox.activate(0);
     }
 
-    function testCannotReinitializeBondIsMature(uint256 time) public {
+    function testCannotActivateBondIsMature(uint256 time) public {
         time = bound(time, s_maturityDate, s_endOfUnixTime);
 
         vm.warp(time);
@@ -46,17 +46,17 @@ contract Reinitialize is CBBSetup {
 
         vm.prank(s_cbb_owner);
         vm.expectRevert(customError);
-        s_deployedConvertibleBondBox.reinitialize(s_initialPrice);
+        s_deployedConvertibleBondBox.activate(s_initialPrice);
     }
 
-    function testReinitialize(uint256 time, uint256 startPrice) public {
+    function testActivate(uint256 time, uint256 startPrice) public {
         time = bound(time, block.timestamp, s_maturityDate);
         startPrice = bound(startPrice, 1, s_priceGranularity);
 
         vm.warp(time);
 
         vm.prank(s_cbb_owner);
-        s_deployedConvertibleBondBox.reinitialize(startPrice);
+        s_deployedConvertibleBondBox.activate(startPrice);
 
         assertEq(s_deployedConvertibleBondBox.s_startDate(), time);
         assertEq(s_deployedConvertibleBondBox.s_initialPrice(), startPrice);

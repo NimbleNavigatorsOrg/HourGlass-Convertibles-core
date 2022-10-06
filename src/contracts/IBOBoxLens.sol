@@ -1,33 +1,33 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.13;
 
-import "../interfaces/IStagingBoxLens.sol";
+import "../interfaces/IIBOBoxLens.sol";
 import "../interfaces/IConvertibleBondBox.sol";
 import "@buttonwood-protocol/button-wrappers/contracts/interfaces/IButtonToken.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 
-contract StagingBoxLens is IStagingBoxLens {
+contract IBOBoxLens is IIBOBoxLens {
     /**
-     * @inheritdoc IStagingBoxLens
+     * @inheritdoc IIBOBoxLens
      */
-    function viewTransmitReInitBool(IStagingBox _stagingBox)
+    function viewTransmitActivateBool(IIBOBox _IBOBox)
         public
         view
         returns (bool)
     {
         bool isLend = false;
 
-        uint256 stableBalance = _stagingBox.stableToken().balanceOf(
-            address(_stagingBox)
+        uint256 stableBalance = _IBOBox.stableToken().balanceOf(
+            address(_IBOBox)
         );
-        uint256 safeTrancheBalance = _stagingBox.safeTranche().balanceOf(
-            address(_stagingBox)
+        uint256 safeTrancheBalance = _IBOBox.safeTranche().balanceOf(
+            address(_IBOBox)
         );
         uint256 expectedStableLoan = (safeTrancheBalance *
-            _stagingBox.initialPrice() *
-            _stagingBox.stableDecimals()) /
-            _stagingBox.priceGranularity() /
-            _stagingBox.trancheDecimals();
+            _IBOBox.initialPrice() *
+            _IBOBox.stableDecimals()) /
+            _IBOBox.priceGranularity() /
+            _IBOBox.trancheDecimals();
 
         //if excess borrowDemand, call lend
         if (expectedStableLoan >= stableBalance) {
@@ -38,23 +38,24 @@ contract StagingBoxLens is IStagingBoxLens {
     }
 
     /**
-     * @inheritdoc IStagingBoxLens
+     * @inheritdoc IIBOBoxLens
      */
-    function viewSimpleWrapTrancheBorrow(
-        IStagingBox _stagingBox,
-        uint256 _amountRaw
-    ) public view returns (uint256, uint256) {
+    function viewSimpleWrapTrancheBorrow(IIBOBox _IBOBox, uint256 _amountRaw)
+        public
+        view
+        returns (uint256, uint256)
+    {
         (
             IConvertibleBondBox convertibleBondBox,
             IBondController bond,
             IButtonToken wrapper,
 
-        ) = fetchElasticStack(_stagingBox);
+        ) = fetchElasticStack(_IBOBox);
 
         //calculate rebase token qty w wrapperfunction
         uint256 buttonAmount = wrapper.underlyingToWrapper(_amountRaw);
 
-        //calculate safeTranche (borrowSlip amount) amount with tranche ratio & CDR
+        //calculate safeTranche (issueOrder amount) amount with tranche ratio & CDR
         uint256 bondCollateralBalance = wrapper.balanceOf(address(bond));
         uint256 bondDebt = bond.totalDebt();
 
@@ -71,33 +72,33 @@ contract StagingBoxLens is IStagingBoxLens {
 
         //calculate stabletoken amount w/ safeTrancheAmount & initialPrice
         uint256 stableLoanAmount = (safeTrancheAmount *
-            _stagingBox.initialPrice() *
-            _stagingBox.stableDecimals()) /
-            _stagingBox.priceGranularity() /
-            _stagingBox.trancheDecimals();
+            _IBOBox.initialPrice() *
+            _IBOBox.stableDecimals()) /
+            _IBOBox.priceGranularity() /
+            _IBOBox.trancheDecimals();
 
         return (stableLoanAmount, safeTrancheAmount);
     }
 
     /**
-     * @inheritdoc IStagingBoxLens
+     * @inheritdoc IIBOBoxLens
      */
-    function viewSimpleWithdrawBorrowUnwrap(
-        IStagingBox _stagingBox,
-        uint256 _borrowSlipAmount
+    function viewSimpleCancelIssueUnwrap(
+        IIBOBox _IBOBox,
+        uint256 _issueOrderAmount
     ) public view returns (uint256, uint256) {
         (
             IConvertibleBondBox convertibleBondBox,
             IBondController bond,
             IButtonToken wrapper,
 
-        ) = fetchElasticStack(_stagingBox);
+        ) = fetchElasticStack(_IBOBox);
 
-        uint256 safeTrancheAmount = (_borrowSlipAmount *
-            _stagingBox.priceGranularity() *
-            _stagingBox.trancheDecimals()) /
-            _stagingBox.initialPrice() /
-            _stagingBox.stableDecimals();
+        uint256 safeTrancheAmount = (_issueOrderAmount *
+            _IBOBox.priceGranularity() *
+            _IBOBox.trancheDecimals()) /
+            _IBOBox.initialPrice() /
+            _IBOBox.stableDecimals();
 
         uint256 riskTrancheAmount = (safeTrancheAmount *
             convertibleBondBox.riskRatio()) / convertibleBondBox.safeRatio();
@@ -138,138 +139,140 @@ contract StagingBoxLens is IStagingBoxLens {
     }
 
     /**
-     * @inheritdoc IStagingBoxLens
+     * @inheritdoc IIBOBoxLens
      */
 
-    function viewWithdrawLendSlip(
-        IStagingBox _stagingBox,
-        uint256 _lendSlipAmount
-    ) external view returns (uint256) {
-        return _lendSlipAmount;
+    function viewCancelBuyOrder(IIBOBox _IBOBox, uint256 _buyOrderAmount)
+        external
+        view
+        returns (uint256)
+    {
+        return _buyOrderAmount;
     }
 
     /**
-     * @inheritdoc IStagingBoxLens
+     * @inheritdoc IIBOBoxLens
      */
 
-    function viewRedeemBorrowSlipForRiskSlip(
-        IStagingBox _stagingBox,
-        uint256 _borrowSlipAmount
+    function viewExecuteIssueOrderForDebtSlip(
+        IIBOBox _IBOBox,
+        uint256 _issueOrderAmount
     ) external view returns (uint256, uint256) {
-        uint256 loanAmount = _borrowSlipAmount;
+        uint256 loanAmount = _issueOrderAmount;
 
-        uint256 riskSlipAmount = (loanAmount *
-            _stagingBox.priceGranularity() *
-            _stagingBox.riskRatio() *
-            _stagingBox.trancheDecimals()) /
-            _stagingBox.initialPrice() /
-            _stagingBox.safeRatio() /
-            _stagingBox.stableDecimals();
+        uint256 debtSlipAmount = (loanAmount *
+            _IBOBox.priceGranularity() *
+            _IBOBox.riskRatio() *
+            _IBOBox.trancheDecimals()) /
+            _IBOBox.initialPrice() /
+            _IBOBox.safeRatio() /
+            _IBOBox.stableDecimals();
 
-        return (riskSlipAmount, loanAmount);
+        return (debtSlipAmount, loanAmount);
     }
 
     /**
-     * @inheritdoc IStagingBoxLens
+     * @inheritdoc IIBOBoxLens
      */
 
-    function viewRedeemLendSlipForSafeSlip(
-        IStagingBox _stagingBox,
-        uint256 _lendSlipAmount
+    function viewExecuteBuyOrderForBondSlip(
+        IIBOBox _IBOBox,
+        uint256 _buyOrderAmount
     ) external view returns (uint256) {
-        uint256 safeSlipAmount = (_lendSlipAmount *
-            _stagingBox.priceGranularity() *
-            _stagingBox.trancheDecimals()) /
-            _stagingBox.initialPrice() /
-            _stagingBox.stableDecimals();
+        uint256 bondSlipAmount = (_buyOrderAmount *
+            _IBOBox.priceGranularity() *
+            _IBOBox.trancheDecimals()) /
+            _IBOBox.initialPrice() /
+            _IBOBox.stableDecimals();
 
-        return (safeSlipAmount);
+        return (bondSlipAmount);
     }
 
     /**
-     * @inheritdoc IStagingBoxLens
+     * @inheritdoc IIBOBoxLens
      */
 
-    function viewRedeemLendSlipsForStables(
-        IStagingBox _stagingBox,
-        uint256 _lendSlipAmount
+    function viewExecuteBuyOrdersRedeemStables(
+        IIBOBox _IBOBox,
+        uint256 _buyOrderAmount
     ) public view returns (uint256, uint256) {
-        //calculate lendSlips to safeSlips w/ initialPrice
-        uint256 safeSlipsAmount = (_lendSlipAmount *
-            _stagingBox.priceGranularity() *
-            _stagingBox.trancheDecimals()) /
-            _stagingBox.initialPrice() /
-            _stagingBox.stableDecimals();
+        //calculate buyOrders to bondSlips w/ initialPrice
+        uint256 bondSlipsAmount = (_buyOrderAmount *
+            _IBOBox.priceGranularity() *
+            _IBOBox.trancheDecimals()) /
+            _IBOBox.initialPrice() /
+            _IBOBox.stableDecimals();
 
-        return _safeSlipsForStablesWithFees(_stagingBox, safeSlipsAmount);
+        return _bondSlipsForStablesWithFees(_IBOBox, bondSlipsAmount);
     }
 
     /**
-     * @inheritdoc IStagingBoxLens
+     * @inheritdoc IIBOBoxLens
      */
-    function viewRedeemSafeSlipsForStables(
-        IStagingBox _stagingBox,
-        uint256 _safeSlipAmount
+    function viewRedeemBondSlipsForStables(
+        IIBOBox _IBOBox,
+        uint256 _bondSlipAmount
     ) public view returns (uint256, uint256) {
-        return _safeSlipsForStablesWithFees(_stagingBox, _safeSlipAmount);
+        return _bondSlipsForStablesWithFees(_IBOBox, _bondSlipAmount);
     }
 
-    function _safeSlipsForStablesWithFees(
-        IStagingBox _stagingBox,
-        uint256 _safeSlipAmount
+    function _bondSlipsForStablesWithFees(
+        IIBOBox _IBOBox,
+        uint256 _bondSlipAmount
     ) internal view returns (uint256, uint256) {
         (IConvertibleBondBox convertibleBondBox, , , ) = fetchElasticStack(
-            _stagingBox
+            _IBOBox
         );
 
-        uint256 feeSlip = (_safeSlipAmount * convertibleBondBox.feeBps()) /
+        uint256 feeSlip = (_bondSlipAmount * convertibleBondBox.feeBps()) /
             convertibleBondBox.BPS();
 
-        uint256 stableAmount = _safeSlipsForStables(
-            _stagingBox,
-            _safeSlipAmount - feeSlip
+        uint256 stableAmount = _bondSlipsForStables(
+            _IBOBox,
+            _bondSlipAmount - feeSlip
         );
-        uint256 feeAmount = _safeSlipsForStables(_stagingBox, feeSlip);
+        uint256 feeAmount = _bondSlipsForStables(_IBOBox, feeSlip);
 
         return (stableAmount, feeAmount);
     }
 
-    function _safeSlipsForStables(
-        IStagingBox _stagingBox,
-        uint256 _safeSlipAmount
-    ) internal view returns (uint256) {
+    function _bondSlipsForStables(IIBOBox _IBOBox, uint256 _bondSlipAmount)
+        internal
+        view
+        returns (uint256)
+    {
         (IConvertibleBondBox convertibleBondBox, , , ) = fetchElasticStack(
-            _stagingBox
+            _IBOBox
         );
 
-        uint256 feeSlip = (_safeSlipAmount * convertibleBondBox.feeBps()) /
+        uint256 feeSlip = (_bondSlipAmount * convertibleBondBox.feeBps()) /
             convertibleBondBox.BPS();
 
         //subtract fees
-        _safeSlipAmount -= feeSlip;
+        _bondSlipAmount -= feeSlip;
 
-        //calculate safeSlips to stables via math for CBB redeemStable
-        uint256 cbbStableBalance = _stagingBox.stableToken().balanceOf(
+        //calculate bondSlips to stables via math for CBB redeemStable
+        uint256 cbbStableBalance = _IBOBox.stableToken().balanceOf(
             address(convertibleBondBox)
         );
 
         uint256 stableAmount = 0;
 
-        if (convertibleBondBox.s_repaidSafeSlips() > 0) {
+        if (convertibleBondBox.s_repaidBondSlips() > 0) {
             stableAmount =
-                (_safeSlipAmount * cbbStableBalance) /
-                convertibleBondBox.s_repaidSafeSlips();
+                (_bondSlipAmount * cbbStableBalance) /
+                convertibleBondBox.s_repaidBondSlips();
         }
 
         return (stableAmount);
     }
 
     /**
-     * @inheritdoc IStagingBoxLens
+     * @inheritdoc IIBOBoxLens
      */
-    function viewRedeemLendSlipsForTranches(
-        IStagingBox _stagingBox,
-        uint256 _lendSlipAmount
+    function viewExecuteBuyOrdersRedeemTranches(
+        IIBOBox _IBOBox,
+        uint256 _buyOrderAmount
     )
         public
         view
@@ -280,22 +283,22 @@ contract StagingBoxLens is IStagingBoxLens {
             uint256
         )
     {
-        //calculate lendSlips to safeSlips w/ initialPrice
-        uint256 safeSlipsAmount = (_lendSlipAmount *
-            _stagingBox.priceGranularity() *
-            _stagingBox.trancheDecimals()) /
-            _stagingBox.initialPrice() /
-            _stagingBox.stableDecimals();
+        //calculate buyOrders to bondSlips w/ initialPrice
+        uint256 bondSlipsAmount = (_buyOrderAmount *
+            _IBOBox.priceGranularity() *
+            _IBOBox.trancheDecimals()) /
+            _IBOBox.initialPrice() /
+            _IBOBox.stableDecimals();
 
-        return _safeSlipRedeemUnwrapWithFees(_stagingBox, safeSlipsAmount);
+        return _bondSlipRedeemUnwrapWithFees(_IBOBox, bondSlipsAmount);
     }
 
     /**
-     * @inheritdoc IStagingBoxLens
+     * @inheritdoc IIBOBoxLens
      */
-    function viewRedeemSafeSlipsForTranches(
-        IStagingBox _stagingBox,
-        uint256 _safeSlipAmount
+    function viewRedeemBondSlipsForTranches(
+        IIBOBox _IBOBox,
+        uint256 _bondSlipAmount
     )
         public
         view
@@ -306,12 +309,12 @@ contract StagingBoxLens is IStagingBoxLens {
             uint256
         )
     {
-        return _safeSlipRedeemUnwrapWithFees(_stagingBox, _safeSlipAmount);
+        return _bondSlipRedeemUnwrapWithFees(_IBOBox, _bondSlipAmount);
     }
 
-    function _safeSlipRedeemUnwrapWithFees(
-        IStagingBox _stagingBox,
-        uint256 _safeSlipAmount
+    function _bondSlipRedeemUnwrapWithFees(
+        IIBOBox _IBOBox,
+        uint256 _bondSlipAmount
     )
         public
         view
@@ -323,58 +326,59 @@ contract StagingBoxLens is IStagingBoxLens {
         )
     {
         (IConvertibleBondBox convertibleBondBox, , , ) = fetchElasticStack(
-            _stagingBox
+            _IBOBox
         );
 
-        uint256 feeSlip = (_safeSlipAmount * convertibleBondBox.feeBps()) /
+        uint256 feeSlip = (_bondSlipAmount * convertibleBondBox.feeBps()) /
             convertibleBondBox.BPS();
 
         (
             uint256 underlyingAmount,
             uint256 buttonAmount
-        ) = _safeSlipRedeemUnwrap(_stagingBox, _safeSlipAmount - feeSlip);
+        ) = _bondSlipRedeemUnwrap(_IBOBox, _bondSlipAmount - feeSlip);
 
-        (uint256 underlyingFee, uint256 buttonFee) = _safeSlipRedeemUnwrap(
-            _stagingBox,
+        (uint256 underlyingFee, uint256 buttonFee) = _bondSlipRedeemUnwrap(
+            _IBOBox,
             feeSlip
         );
 
         return (underlyingAmount, buttonAmount, underlyingFee, buttonFee);
     }
 
-    function _safeSlipRedeemUnwrap(
-        IStagingBox _stagingBox,
-        uint256 _safeSlipAmount
-    ) internal view returns (uint256, uint256) {
+    function _bondSlipRedeemUnwrap(IIBOBox _IBOBox, uint256 _bondSlipAmount)
+        internal
+        view
+        returns (uint256, uint256)
+    {
         (
             IConvertibleBondBox convertibleBondBox,
             ,
             IButtonToken wrapper,
 
-        ) = fetchElasticStack(_stagingBox);
+        ) = fetchElasticStack(_IBOBox);
 
-        //safeSlips = safeTranches
+        //bondSlips = safeTranches
         //calculate safe tranches to rebasing collateral via balance of safeTranche address
         uint256 buttonAmount = (wrapper.balanceOf(
-            address(_stagingBox.safeTranche())
-        ) * _safeSlipAmount) / _stagingBox.safeTranche().totalSupply();
+            address(_IBOBox.safeTranche())
+        ) * _bondSlipAmount) / _IBOBox.safeTranche().totalSupply();
 
         //calculate penalty riskTranche
-        uint256 penaltyTrancheTotal = _stagingBox.riskTranche().balanceOf(
+        uint256 penaltyTrancheTotal = _IBOBox.riskTranche().balanceOf(
             address(convertibleBondBox)
-        ) - IERC20(_stagingBox.riskSlipAddress()).totalSupply();
+        ) - IERC20(_IBOBox.debtSlipAddress()).totalSupply();
 
-        uint256 penaltyTrancheRedeemable = (_safeSlipAmount *
+        uint256 penaltyTrancheRedeemable = (_bondSlipAmount *
             penaltyTrancheTotal) /
-            (IERC20(_stagingBox.safeSlipAddress()).totalSupply() -
-                convertibleBondBox.s_repaidSafeSlips());
+            (IERC20(_IBOBox.bondSlipAddress()).totalSupply() -
+                convertibleBondBox.s_repaidBondSlips());
 
         //calculate rebasing collateral redeemable for riskTranche penalty
         //total the rebasing collateral
         buttonAmount +=
-            (wrapper.balanceOf(address(_stagingBox.riskTranche())) *
+            (wrapper.balanceOf(address(_IBOBox.riskTranche())) *
                 penaltyTrancheRedeemable) /
-            _stagingBox.riskTranche().totalSupply();
+            _IBOBox.riskTranche().totalSupply();
 
         //convert rebasing collateral to collateralToken qty via wrapper
         uint256 underlyingAmount = wrapper.wrapperToUnderlying(buttonAmount);
@@ -384,11 +388,11 @@ contract StagingBoxLens is IStagingBoxLens {
     }
 
     /**
-     * @inheritdoc IStagingBoxLens
+     * @inheritdoc IIBOBoxLens
      */
-    function viewRedeemRiskSlipsForTranches(
-        IStagingBox _stagingBox,
-        uint256 _riskSlipAmount
+    function viewRedeemDebtSlipsForTranches(
+        IIBOBox _IBOBox,
+        uint256 _debtSlipAmount
     )
         public
         view
@@ -400,45 +404,45 @@ contract StagingBoxLens is IStagingBoxLens {
         )
     {
         (IConvertibleBondBox convertibleBondBox, , , ) = fetchElasticStack(
-            _stagingBox
+            _IBOBox
         );
 
         //subtract fees
-        uint256 feeSlip = (_riskSlipAmount * convertibleBondBox.feeBps()) /
+        uint256 feeSlip = (_debtSlipAmount * convertibleBondBox.feeBps()) /
             convertibleBondBox.BPS();
 
         (
             uint256 underlyingAmount,
             uint256 buttonAmount
-        ) = _redeemRiskSlipForTranches(_stagingBox, _riskSlipAmount - feeSlip);
-        (uint256 underlyingFee, uint256 buttonFee) = _redeemRiskSlipForTranches(
-            _stagingBox,
+        ) = _redeemDebtSlipForTranches(_IBOBox, _debtSlipAmount - feeSlip);
+        (uint256 underlyingFee, uint256 buttonFee) = _redeemDebtSlipForTranches(
+            _IBOBox,
             feeSlip
         );
 
         return (underlyingAmount, buttonAmount, underlyingFee, buttonFee);
     }
 
-    function _redeemRiskSlipForTranches(
-        IStagingBox _stagingBox,
-        uint256 _riskSlipAmount
+    function _redeemDebtSlipForTranches(
+        IIBOBox _IBOBox,
+        uint256 _debtSlipAmount
     ) internal view returns (uint256, uint256) {
         (
             IConvertibleBondBox convertibleBondBox,
             ,
             IButtonToken wrapper,
 
-        ) = fetchElasticStack(_stagingBox);
+        ) = fetchElasticStack(_IBOBox);
 
-        //calculate riskSlip to riskTranche - penalty
-        uint256 riskTrancheAmount = _riskSlipAmount -
-            (_riskSlipAmount * convertibleBondBox.penalty()) /
+        //calculate debtSlip to riskTranche - penalty
+        uint256 riskTrancheAmount = _debtSlipAmount -
+            (_debtSlipAmount * convertibleBondBox.penalty()) /
             convertibleBondBox.s_penaltyGranularity();
 
         //calculate rebasing collateral redeemable for riskTranche - penalty via tranche balance
         uint256 buttonAmount = (wrapper.balanceOf(
-            address(_stagingBox.riskTranche())
-        ) * riskTrancheAmount) / _stagingBox.riskTranche().totalSupply();
+            address(_IBOBox.riskTranche())
+        ) * riskTrancheAmount) / _IBOBox.riskTranche().totalSupply();
 
         // convert rebasing collateral to collateralToken qty via wrapper
         uint256 underlyingAmount = wrapper.wrapperToUnderlying(buttonAmount);
@@ -448,12 +452,9 @@ contract StagingBoxLens is IStagingBoxLens {
     }
 
     /**
-     * @inheritdoc IStagingBoxLens
+     * @inheritdoc IIBOBoxLens
      */
-    function viewRepayAndUnwrapSimple(
-        IStagingBox _stagingBox,
-        uint256 _stableAmount
-    )
+    function viewRepayAndUnwrapSimple(IIBOBox _IBOBox, uint256 _stableAmount)
         public
         view
         returns (
@@ -468,7 +469,7 @@ contract StagingBoxLens is IStagingBoxLens {
             IBondController bond,
             IButtonToken wrapper,
 
-        ) = fetchElasticStack(_stagingBox);
+        ) = fetchElasticStack(_IBOBox);
 
         //minus fees
         uint256 stableFees = (_stableAmount * convertibleBondBox.feeBps()) /
@@ -504,11 +505,11 @@ contract StagingBoxLens is IStagingBoxLens {
     }
 
     /**
-     * @inheritdoc IStagingBoxLens
+     * @inheritdoc IIBOBoxLens
      */
     function viewRepayMaxAndUnwrapSimple(
-        IStagingBox _stagingBox,
-        uint256 _riskSlipAmount
+        IIBOBox _IBOBox,
+        uint256 _debtSlipAmount
     )
         public
         view
@@ -524,12 +525,12 @@ contract StagingBoxLens is IStagingBoxLens {
             IBondController bond,
             IButtonToken wrapper,
 
-        ) = fetchElasticStack(_stagingBox);
+        ) = fetchElasticStack(_IBOBox);
 
-        //riskTranche payout = riskSlipAmount
-        uint256 riskTranchePayout = _riskSlipAmount;
-        uint256 safeTranchePayout = (riskTranchePayout *
-            _stagingBox.safeRatio()) / _stagingBox.riskRatio();
+        //riskTranche payout = debtSlipAmount
+        uint256 riskTranchePayout = _debtSlipAmount;
+        uint256 safeTranchePayout = (riskTranchePayout * _IBOBox.safeRatio()) /
+            _IBOBox.riskRatio();
 
         //calculate repayment cost
         uint256 stablesOwed = (safeTranchePayout *
@@ -563,12 +564,9 @@ contract StagingBoxLens is IStagingBoxLens {
     }
 
     /**
-     * @inheritdoc IStagingBoxLens
+     * @inheritdoc IIBOBoxLens
      */
-    function viewRepayAndUnwrapMature(
-        IStagingBox _stagingBox,
-        uint256 _stableAmount
-    )
+    function viewRepayAndUnwrapMature(IIBOBox _IBOBox, uint256 _stableAmount)
         public
         view
         returns (
@@ -583,7 +581,7 @@ contract StagingBoxLens is IStagingBoxLens {
             ,
             IButtonToken wrapper,
 
-        ) = fetchElasticStack(_stagingBox);
+        ) = fetchElasticStack(_IBOBox);
 
         //calculate fees
         uint256 stableFees = (_stableAmount * convertibleBondBox.feeBps()) /
@@ -594,19 +592,19 @@ contract StagingBoxLens is IStagingBoxLens {
             convertibleBondBox.trancheDecimals()) /
             convertibleBondBox.stableDecimals();
 
-        uint256 riskTranchePayout = (safeTranchepayout *
-            _stagingBox.riskRatio()) / _stagingBox.safeRatio();
+        uint256 riskTranchePayout = (safeTranchepayout * _IBOBox.riskRatio()) /
+            _IBOBox.safeRatio();
 
         //get collateral balance for safeTranche rebasing collateral output
         uint256 collateralBalanceSafe = wrapper.balanceOf(
-            address(_stagingBox.safeTranche())
+            address(_IBOBox.safeTranche())
         );
         uint256 buttonAmount = (safeTranchepayout * collateralBalanceSafe) /
             convertibleBondBox.safeTranche().totalSupply();
 
         //get collateral balance for riskTranche rebasing collateral output
         uint256 collateralBalanceRisk = wrapper.balanceOf(
-            address(_stagingBox.riskTranche())
+            address(_IBOBox.riskTranche())
         );
         buttonAmount +=
             (riskTranchePayout * collateralBalanceRisk) /
@@ -620,11 +618,11 @@ contract StagingBoxLens is IStagingBoxLens {
     }
 
     /**
-     * @inheritdoc IStagingBoxLens
+     * @inheritdoc IIBOBoxLens
      */
     function viewRepayMaxAndUnwrapMature(
-        IStagingBox _stagingBox,
-        uint256 _riskSlipAmount
+        IIBOBox _IBOBox,
+        uint256 _debtSlipAmount
     )
         public
         view
@@ -640,15 +638,15 @@ contract StagingBoxLens is IStagingBoxLens {
             ,
             IButtonToken wrapper,
 
-        ) = fetchElasticStack(_stagingBox);
+        ) = fetchElasticStack(_IBOBox);
 
         //Calculate tranches
-        //riskTranche payout = riskSlipAmount
-        uint256 safeTranchePayout = (_riskSlipAmount *
-            _stagingBox.safeRatio()) / _stagingBox.riskRatio();
+        //riskTranche payout = debtSlipAmount
+        uint256 safeTranchePayout = (_debtSlipAmount * _IBOBox.safeRatio()) /
+            _IBOBox.riskRatio();
 
-        uint256 stablesOwed = (safeTranchePayout *
-            _stagingBox.stableDecimals()) / _stagingBox.trancheDecimals();
+        uint256 stablesOwed = (safeTranchePayout * _IBOBox.stableDecimals()) /
+            _IBOBox.trancheDecimals();
 
         //calculate stable Fees
         uint256 stableFees = (stablesOwed * convertibleBondBox.feeBps()) /
@@ -656,189 +654,192 @@ contract StagingBoxLens is IStagingBoxLens {
 
         //get collateral balance for safeTranche rebasing collateral output
         uint256 buttonAmount = (safeTranchePayout *
-            wrapper.balanceOf(address(_stagingBox.safeTranche()))) /
+            wrapper.balanceOf(address(_IBOBox.safeTranche()))) /
             convertibleBondBox.safeTranche().totalSupply();
 
         //get collateral balance for riskTranche rebasing collateral output
         uint256 collateralBalanceRisk = wrapper.balanceOf(
-            address(_stagingBox.riskTranche())
+            address(_IBOBox.riskTranche())
         );
 
         buttonAmount +=
-            (_riskSlipAmount * collateralBalanceRisk) /
+            (_debtSlipAmount * collateralBalanceRisk) /
             convertibleBondBox.riskTranche().totalSupply();
 
         // convert rebasing collateral to collateralToken qty via wrapper
         uint256 underlyingAmount = wrapper.wrapperToUnderlying(buttonAmount);
 
         // return both
-        return (underlyingAmount, stablesOwed, stableFees, _riskSlipAmount);
+        return (underlyingAmount, stablesOwed, stableFees, _debtSlipAmount);
     }
 
     /**
-     * @inheritdoc IStagingBoxLens
+     * @inheritdoc IIBOBoxLens
      */
 
-    function viewMaxRedeemBorrowSlip(IStagingBox _stagingBox, address _account)
+    function viewMaxExecuteIssueOrder(IIBOBox _IBOBox, address _account)
         public
         view
         returns (uint256)
     {
-        uint256 userBorrowSlip = _stagingBox.borrowSlip().balanceOf(_account);
-        return Math.min(userBorrowSlip, _stagingBox.s_reinitLendAmount());
+        uint256 userIssueOrder = _IBOBox.issueOrder().balanceOf(_account);
+        return Math.min(userIssueOrder, _IBOBox.s_activateLendAmount());
     }
 
     /**
-     * @inheritdoc IStagingBoxLens
+     * @inheritdoc IIBOBoxLens
      */
 
-    function viewMaxRedeemLendSlipForSafeSlip(
-        IStagingBox _stagingBox,
+    function viewMaxExecuteBuyOrderForBondSlip(
+        IIBOBox _IBOBox,
         address _account
     ) public view returns (uint256) {
         (IConvertibleBondBox convertibleBondBox, , , ) = fetchElasticStack(
-            _stagingBox
+            _IBOBox
         );
-        uint256 userLendSlip = _stagingBox.lendSlip().balanceOf(_account);
-        uint256 sb_safeSlips = convertibleBondBox.safeSlip().balanceOf(
-            address(_stagingBox)
+        uint256 userBuyOrder = _IBOBox.buyOrder().balanceOf(_account);
+        uint256 IBO_bondSlips = convertibleBondBox.bondSlip().balanceOf(
+            address(_IBOBox)
         );
 
-        uint256 maxRedeemableLendSlips = (sb_safeSlips *
-            _stagingBox.initialPrice() *
-            _stagingBox.stableDecimals()) /
-            _stagingBox.priceGranularity() /
-            _stagingBox.trancheDecimals();
+        uint256 maxRedeemableBuyOrders = (IBO_bondSlips *
+            _IBOBox.initialPrice() *
+            _IBOBox.stableDecimals()) /
+            _IBOBox.priceGranularity() /
+            _IBOBox.trancheDecimals();
 
-        return Math.min(userLendSlip, maxRedeemableLendSlips);
+        return Math.min(userBuyOrder, maxRedeemableBuyOrders);
     }
 
     /**
-     * @inheritdoc IStagingBoxLens
+     * @inheritdoc IIBOBoxLens
      */
 
-    function viewMaxRedeemLendSlipForStables(
-        IStagingBox _stagingBox,
+    function viewMaxExecuteBuyOrderRedeemStables(
+        IIBOBox _IBOBox,
         address _account
     ) public view returns (uint256) {
         (IConvertibleBondBox convertibleBondBox, , , ) = fetchElasticStack(
-            _stagingBox
+            _IBOBox
         );
-        uint256 userLendSlip = _stagingBox.lendSlip().balanceOf(_account);
+        uint256 userBuyOrder = _IBOBox.buyOrder().balanceOf(_account);
 
-        uint256 sb_safeSlips = convertibleBondBox.safeSlip().balanceOf(
-            address(_stagingBox)
+        uint256 IBO_bondSlips = convertibleBondBox.bondSlip().balanceOf(
+            address(_IBOBox)
         );
 
-        uint256 maxRedeemableLendSlips = (Math.min(
-            sb_safeSlips,
-            convertibleBondBox.s_repaidSafeSlips()
+        uint256 maxRedeemableBuyOrders = (Math.min(
+            IBO_bondSlips,
+            convertibleBondBox.s_repaidBondSlips()
         ) *
-            _stagingBox.initialPrice() *
-            _stagingBox.stableDecimals()) /
-            _stagingBox.priceGranularity() /
-            _stagingBox.trancheDecimals();
+            _IBOBox.initialPrice() *
+            _IBOBox.stableDecimals()) /
+            _IBOBox.priceGranularity() /
+            _IBOBox.trancheDecimals();
 
-        return Math.min(userLendSlip, maxRedeemableLendSlips);
+        return Math.min(userBuyOrder, maxRedeemableBuyOrders);
     }
 
     /**
-     * @inheritdoc IStagingBoxLens
+     * @inheritdoc IIBOBoxLens
      */
 
-    function viewMaxRedeemSafeSlipForStables(
-        IStagingBox _stagingBox,
-        address _account
-    ) public view returns (uint256) {
-        (IConvertibleBondBox convertibleBondBox, , , ) = fetchElasticStack(
-            _stagingBox
-        );
-        uint256 userSafeSlip = convertibleBondBox.safeSlip().balanceOf(
-            _account
-        );
-
-        return Math.min(userSafeSlip, convertibleBondBox.s_repaidSafeSlips());
-    }
-
-    /**
-     * @inheritdoc IStagingBoxLens
-     */
-
-    function viewMaxWithdrawLendSlips(IStagingBox _stagingBox, address _account)
+    function viewMaxRedeemBondSlipForStables(IIBOBox _IBOBox, address _account)
         public
         view
         returns (uint256)
     {
         (IConvertibleBondBox convertibleBondBox, , , ) = fetchElasticStack(
-            _stagingBox
+            _IBOBox
+        );
+        uint256 userBondSlip = convertibleBondBox.bondSlip().balanceOf(
+            _account
         );
 
-        uint256 userLendSlip = _stagingBox.lendSlip().balanceOf(_account);
-
-        uint256 maxWithdrawableLendSlips = userLendSlip;
-
-        if (convertibleBondBox.s_startDate() > 0) {
-            uint256 withdrawableStables = _stagingBox.stableToken().balanceOf(
-                address(_stagingBox)
-            ) - _stagingBox.s_reinitLendAmount();
-
-            maxWithdrawableLendSlips = Math.min(
-                userLendSlip,
-                withdrawableStables
-            );
-        }
-
-        return maxWithdrawableLendSlips;
+        return Math.min(userBondSlip, convertibleBondBox.s_repaidBondSlips());
     }
 
     /**
-     * @inheritdoc IStagingBoxLens
+     * @inheritdoc IIBOBoxLens
      */
 
-    function viewMaxWithdrawBorrowSlips(
-        IStagingBox _stagingBox,
-        address _account
-    ) public view returns (uint256) {
+    function viewMaxCancelBuyOrders(IIBOBox _IBOBox, address _account)
+        public
+        view
+        returns (uint256)
+    {
         (IConvertibleBondBox convertibleBondBox, , , ) = fetchElasticStack(
-            _stagingBox
+            _IBOBox
         );
 
-        uint256 userBorrowSlip = _stagingBox.borrowSlip().balanceOf(_account);
+        uint256 userBuyOrder = _IBOBox.buyOrder().balanceOf(_account);
 
-        uint256 maxWithdrawableBorrowSlip = userBorrowSlip;
+        uint256 maxWithdrawableBuyOrders = userBuyOrder;
 
         if (convertibleBondBox.s_startDate() > 0) {
-            uint256 withdrawableSafeTranche = _stagingBox
-                .safeTranche()
-                .balanceOf(address(_stagingBox));
+            uint256 cancellableStables = _IBOBox.stableToken().balanceOf(
+                address(_IBOBox)
+            ) - _IBOBox.s_activateLendAmount();
 
-            uint256 withdrawableSafeTrancheToBorrowSlip = (withdrawableSafeTranche *
-                    _stagingBox.initialPrice() *
-                    _stagingBox.stableDecimals()) /
-                    _stagingBox.priceGranularity() /
-                    _stagingBox.trancheDecimals();
-
-            maxWithdrawableBorrowSlip = Math.min(
-                userBorrowSlip,
-                withdrawableSafeTrancheToBorrowSlip
+            maxWithdrawableBuyOrders = Math.min(
+                userBuyOrder,
+                cancellableStables
             );
         }
 
-        return maxWithdrawableBorrowSlip;
+        return maxWithdrawableBuyOrders;
     }
 
     /**
-     * @inheritdoc IStagingBoxLens
+     * @inheritdoc IIBOBoxLens
      */
 
-    function viewMaxRedeemSafeSlipForTranches(
-        IStagingBox _stagingBox,
-        address _account
-    ) public view returns (uint256) {
+    function viewMaxCancelIssueOrders(IIBOBox _IBOBox, address _account)
+        public
+        view
+        returns (uint256)
+    {
         (IConvertibleBondBox convertibleBondBox, , , ) = fetchElasticStack(
-            _stagingBox
+            _IBOBox
         );
-        uint256 userSafeSlip = convertibleBondBox.safeSlip().balanceOf(
+
+        uint256 userIssueOrder = _IBOBox.issueOrder().balanceOf(_account);
+
+        uint256 maxWithdrawableIssueOrder = userIssueOrder;
+
+        if (convertibleBondBox.s_startDate() > 0) {
+            uint256 cancellableSafeTranche = _IBOBox.safeTranche().balanceOf(
+                address(_IBOBox)
+            );
+
+            uint256 cancellableSafeTrancheToIssueOrder = (cancellableSafeTranche *
+                    _IBOBox.initialPrice() *
+                    _IBOBox.stableDecimals()) /
+                    _IBOBox.priceGranularity() /
+                    _IBOBox.trancheDecimals();
+
+            maxWithdrawableIssueOrder = Math.min(
+                userIssueOrder,
+                cancellableSafeTrancheToIssueOrder
+            );
+        }
+
+        return maxWithdrawableIssueOrder;
+    }
+
+    /**
+     * @inheritdoc IIBOBoxLens
+     */
+
+    function viewMaxRedeemBondSlipForTranches(IIBOBox _IBOBox, address _account)
+        public
+        view
+        returns (uint256)
+    {
+        (IConvertibleBondBox convertibleBondBox, , , ) = fetchElasticStack(
+            _IBOBox
+        );
+        uint256 userBondSlip = convertibleBondBox.bondSlip().balanceOf(
             _account
         );
 
@@ -846,36 +847,36 @@ contract StagingBoxLens is IStagingBoxLens {
             .safeTranche()
             .balanceOf(address(convertibleBondBox));
 
-        return Math.min(userSafeSlip, cbbSafeTrancheBalance);
+        return Math.min(userBondSlip, cbbSafeTrancheBalance);
     }
 
     /**
-     * @inheritdoc IStagingBoxLens
+     * @inheritdoc IIBOBoxLens
      */
 
-    function viewMaxRedeemLendSlipForTranches(
-        IStagingBox _stagingBox,
+    function viewMaxExecuteBuyOrderRedeemTranches(
+        IIBOBox _IBOBox,
         address _account
     ) public view returns (uint256) {
         (IConvertibleBondBox convertibleBondBox, , , ) = fetchElasticStack(
-            _stagingBox
+            _IBOBox
         );
-        uint256 userLendSlip = _stagingBox.lendSlip().balanceOf(_account);
+        uint256 userBuyOrder = _IBOBox.buyOrder().balanceOf(_account);
 
         uint256 cbbSafeTrancheBalance = convertibleBondBox
             .safeTranche()
             .balanceOf(address(convertibleBondBox));
 
-        uint256 cbbSafeTrancheToLendSlip = (cbbSafeTrancheBalance *
-            _stagingBox.initialPrice() *
-            _stagingBox.stableDecimals()) /
-            _stagingBox.priceGranularity() /
-            _stagingBox.trancheDecimals();
+        uint256 cbbSafeTrancheToBuyOrder = (cbbSafeTrancheBalance *
+            _IBOBox.initialPrice() *
+            _IBOBox.stableDecimals()) /
+            _IBOBox.priceGranularity() /
+            _IBOBox.trancheDecimals();
 
-        return Math.min(userLendSlip, cbbSafeTrancheToLendSlip);
+        return Math.min(userBuyOrder, cbbSafeTrancheToBuyOrder);
     }
 
-    function fetchElasticStack(IStagingBox _stagingBox)
+    function fetchElasticStack(IIBOBox _IBOBox)
         internal
         view
         returns (
@@ -885,8 +886,7 @@ contract StagingBoxLens is IStagingBoxLens {
             IERC20
         )
     {
-        IConvertibleBondBox convertibleBondBox = _stagingBox
-            .convertibleBondBox();
+        IConvertibleBondBox convertibleBondBox = _IBOBox.convertibleBondBox();
         IBondController bond = convertibleBondBox.bond();
         IButtonToken wrapper = IButtonToken(bond.collateralToken());
         IERC20 underlying = IERC20(wrapper.underlying());

@@ -11,11 +11,11 @@ forge script script/KovanAnvil.s.sol --fork-url $LOCAL_HOST_URL  --private-key $
 
 Next, get approval for tokens, by using Cast as follows, replacing $variables with the addresses console.log'd by the script where necessary: 
 ```
-cast send $rawCollateralAddress "approve(address,uint256)" $stagingLoanRouterAddress $amount --rpc-url $LOCAL_HOST_URL  --private-key $PRIVATE_KEY0
+cast send $rawCollateralAddress "approve(address,uint256)" $IBOLoanRouterAddress $amount --rpc-url $LOCAL_HOST_URL  --private-key $PRIVATE_KEY0
 ```
 Finally, complete a borrow as follows, again replacing the $variables: 
 ```
-cast send $stagingLoanRouterAddress "simpleWrapTrancheBorrow(address,uint256,uint256)" $stagingBoxAddress $amount $amountMin --rpc-url $LOCAL_HOST_URL  --private-key $PRIVATE_KEY0 
+cast send $IBOLoanRouterAddress "simpleWrapTrancheBorrow(address,uint256,uint256)" $IBOBoxAddress $amount $amountMin --rpc-url $LOCAL_HOST_URL  --private-key $PRIVATE_KEY0 
 ```
 
 To run the CBB issuer, run the following, replacing your private key: 
@@ -32,7 +32,7 @@ forge script script/GoerliUserTesting.s.sol --rpc-url $GOERLI_RPC_URL --private-
 
 To create a contract: 
 ```
-forge create --rpc-url $GOERLI_RPC_URL --private-key $PRIVATE_KEY_PERSONAL src/contracts/StagingBoxLens.sol:StagingBoxLens 
+forge create --rpc-url $GOERLI_RPC_URL --private-key $PRIVATE_KEY_PERSONAL src/contracts/IBOBoxLens.sol:IBOBoxLens 
 ```
 
 forge create --rpc-url $GOERLI_RPC_URL --private-key $PRIVATE_KEY_PERSONAL src/contracts/ConvertiblesDVLens.sol:ConvertiblesDVLens 

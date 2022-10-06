@@ -1,13 +1,13 @@
 pragma solidity 0.8.13;
 
-import "./StagingLoanRouterSetup.t.sol";
+import "./IBOLoanRouterSetup.t.sol";
 
-contract SimpleWrapTrancheBorrow is StagingLoanRouterSetup {
+contract SimpleWrapTrancheBorrow is IBOLoanRouterSetup {
     struct BeforeBalances {
         uint256 borrowerCollateral;
-        uint256 borrowerBorrowSlip;
-        uint256 SBSafeTranche;
-        uint256 SBRiskTranche;
+        uint256 borrowerIssueOrder;
+        uint256 IBOSafeTranche;
+        uint256 IBORiskTranche;
     }
 
     struct BorrowAmounts {
@@ -34,14 +34,14 @@ contract SimpleWrapTrancheBorrow is StagingLoanRouterSetup {
 
         s_mockOracle.setData(data, true);
 
-        (uint256 loanAmount, uint256 safeTrancheAmount) = s_SBLens
-            .viewSimpleWrapTrancheBorrow(s_deployedSB, collateralAmount);
+        (uint256 loanAmount, uint256 safeTrancheAmount) = s_IBOLens
+            .viewSimpleWrapTrancheBorrow(s_deployedIBOB, collateralAmount);
 
         BeforeBalances memory before = BeforeBalances(
             s_collateralToken.balanceOf(s_borrower),
-            s_borrowSlip.balanceOf(s_borrower),
-            s_safeTranche.balanceOf(s_deployedSBAddress),
-            s_riskTranche.balanceOf(s_deployedSBAddress)
+            s_issueOrder.balanceOf(s_borrower),
+            s_safeTranche.balanceOf(s_deployedIBOBAddress),
+            s_riskTranche.balanceOf(s_deployedIBOBAddress)
         );
 
         BorrowAmounts memory adjustments = BorrowAmounts(
@@ -52,8 +52,8 @@ contract SimpleWrapTrancheBorrow is StagingLoanRouterSetup {
         );
 
         vm.prank(s_borrower);
-        s_stagingLoanRouter.simpleWrapTrancheBorrow(
-            s_deployedSB,
+        s_IBOLoanRouter.simpleWrapTrancheBorrow(
+            s_deployedIBOB,
             collateralAmount,
             (loanAmount * 95) / 100
         );
@@ -72,20 +72,20 @@ contract SimpleWrapTrancheBorrow is StagingLoanRouterSetup {
         );
 
         assertApproxEqRel(
-            before.borrowerBorrowSlip + adjustments.stableAmount,
-            s_borrowSlip.balanceOf(s_borrower),
+            before.borrowerIssueOrder + adjustments.stableAmount,
+            s_issueOrder.balanceOf(s_borrower),
             1e15
         );
 
         assertApproxEqRel(
-            before.SBSafeTranche + adjustments.safeTrancheAmount,
-            s_safeTranche.balanceOf(s_deployedSBAddress),
+            before.IBOSafeTranche + adjustments.safeTrancheAmount,
+            s_safeTranche.balanceOf(s_deployedIBOBAddress),
             1e15
         );
 
         assertApproxEqRel(
-            before.SBRiskTranche + adjustments.riskTrancheAmount,
-            s_riskTranche.balanceOf(s_deployedSBAddress),
+            before.IBORiskTranche + adjustments.riskTrancheAmount,
+            s_riskTranche.balanceOf(s_deployedIBOBAddress),
             1e15
         );
     }
