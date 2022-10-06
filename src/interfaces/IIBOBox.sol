@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import "../../utils/ISBImmutableArgs.sol";
 
-interface IStagingBox is ISBImmutableArgs {
+interface IIBOBox is ISBImmutableArgs {
     event LendDeposit(address lender, uint256 lendAmount);
     event BorrowDeposit(address borrower, uint256 safeTrancheAmount);
     event LendWithdrawal(address lender, uint256 lendSlipAmount);

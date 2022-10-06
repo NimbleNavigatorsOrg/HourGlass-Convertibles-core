@@ -1,8 +1,8 @@
 pragma solidity 0.8.13;
 
-import "./integration/SBIntegrationSetup.t.sol";
+import "./iboBoxSetup.t.sol";
 
-contract TransmitReinit is SBIntegrationSetup {
+contract TransmitReinit is iboBoxSetup {
     struct BeforeBalances {
         uint256 SBSafeTranche;
         uint256 SBRiskTranche;
@@ -27,7 +27,7 @@ contract TransmitReinit is SBIntegrationSetup {
         uint256 _borrowAmount,
         uint256 _lendAmount
     ) public {
-        setupStagingBox(_fuzzPrice);
+        setupIBOBox(_fuzzPrice);
 
         uint256 maxBorrowAmount = (s_safeTranche.balanceOf(address(this)) *
             s_deployedSB.initialPrice() *

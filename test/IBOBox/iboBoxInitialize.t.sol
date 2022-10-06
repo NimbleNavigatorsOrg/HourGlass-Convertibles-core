@@ -1,11 +1,11 @@
 pragma solidity 0.8.13;
 
-import "./integration/SBIntegrationSetup.t.sol";
+import "./iboBoxSetup.t.sol";
 
-contract sbInitialize is SBIntegrationSetup {
+contract iboBoxInitialize is iboBoxSetup {
     function testFailInvalidOwnerAddress() public {
-        s_deployedSB = StagingBox(
-            stagingBoxFactory.createStagingBoxWithCBB(
+        s_deployedSB = IBOBox(
+            iboBoxFactory.createIBOBoxWithCBB(
                 s_CBBFactory,
                 s_slipFactory,
                 s_buttonWoodBondController,
@@ -31,8 +31,8 @@ contract sbInitialize is SBIntegrationSetup {
         );
         vm.expectRevert(customError);
 
-        s_deployedSB = StagingBox(
-            stagingBoxFactory.createStagingBoxWithCBB(
+        s_deployedSB = IBOBox(
+            iboBoxFactory.createIBOBoxWithCBB(
                 s_CBBFactory,
                 s_slipFactory,
                 s_buttonWoodBondController,
@@ -53,8 +53,8 @@ contract sbInitialize is SBIntegrationSetup {
             s_priceGranularity
         );
         vm.expectRevert(customError);
-        s_deployedSB = StagingBox(
-            stagingBoxFactory.createStagingBoxWithCBB(
+        s_deployedSB = IBOBox(
+            iboBoxFactory.createIBOBoxWithCBB(
                 s_CBBFactory,
                 s_slipFactory,
                 s_buttonWoodBondController,
@@ -72,13 +72,9 @@ contract sbInitialize is SBIntegrationSetup {
 
         vm.startPrank(s_cbb_owner);
         vm.expectEmit(true, true, true, false);
-        emit StagingBoxCreated(
-            address(this),
-            address(0),
-            address(s_slipFactory)
-        );
-        s_deployedSB = StagingBox(
-            stagingBoxFactory.createStagingBoxOnly(
+        emit IBOBoxCreated(address(this), address(0), address(s_slipFactory));
+        s_deployedSB = IBOBox(
+            iboBoxFactory.createIBOBoxOnly(
                 s_slipFactory,
                 ConvertibleBondBox(s_deployedCBBAddress),
                 _fuzzPrice,

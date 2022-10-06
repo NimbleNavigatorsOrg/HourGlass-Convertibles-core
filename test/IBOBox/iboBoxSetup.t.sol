@@ -1,18 +1,18 @@
 pragma solidity 0.8.13;
 
-import "../../../src/contracts/StagingBox.sol";
-import "../../../src/contracts/StagingBoxLens.sol";
-import "../../../src/contracts/StagingBoxFactory.sol";
-import "../../../test/convertibleBondBox/CBBSetup.sol";
+import "../../src/contracts/IBOBox.sol";
+import "../../src/contracts/IBOBoxLens.sol";
+import "../../src/contracts/IBOBoxFactory.sol";
+import "../../test/convertibleBondBox/CBBSetup.sol";
 
 import "forge-std/console2.sol";
 
-contract SBIntegrationSetup is CBBSetup {
+contract iboBoxSetup is CBBSetup {
     uint256 s_initialFuzzPrice;
 
-    StagingBoxFactory stagingBoxFactory;
-    StagingBox s_deployedSB;
-    StagingBoxLens s_SBLens;
+    IBOBoxFactory iboBoxFactory;
+    IBOBox s_deployedSB;
+    IBOBoxLens s_SBLens;
     address s_deployedSBAddress;
 
     ISlip s_borrowSlip;
@@ -25,21 +25,17 @@ contract SBIntegrationSetup is CBBSetup {
     event RedeemBorrowSlip(address, uint256);
     event RedeemLendSlip(address, uint256);
 
-    event StagingBoxCreated(
-        address msgSender,
-        address stagingBox,
-        address slipFactory
-    );
+    event IBOBoxCreated(address msgSender, address IBOBox, address slipFactory);
 
     function setUp() public override {
         super.setUp();
 
-        StagingBox stagingBox = new StagingBox();
-        stagingBoxFactory = new StagingBoxFactory(address(stagingBox));
-        s_SBLens = new StagingBoxLens();
+        IBOBox IBOBox = new IBOBox();
+        iboBoxFactory = new IBOBoxFactory(address(IBOBox));
+        s_SBLens = new IBOBoxLens();
     }
 
-    function setupStagingBox(uint256 _fuzzPrice) internal {
+    function setupIBOBox(uint256 _fuzzPrice) internal {
         s_initialFuzzPrice = bound(
             _fuzzPrice,
             s_priceGranularity / 100,
@@ -47,8 +43,8 @@ contract SBIntegrationSetup is CBBSetup {
         );
 
         vm.prank(s_cbb_owner);
-        s_deployedSB = StagingBox(
-            stagingBoxFactory.createStagingBoxOnly(
+        s_deployedSB = IBOBox(
+            iboBoxFactory.createIBOBoxOnly(
                 s_slipFactory,
                 s_deployedConvertibleBondBox,
                 s_initialFuzzPrice,

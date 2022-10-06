@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.13;
 
-import "../interfaces/IStagingLoanRouter.sol";
+import "../interfaces/IIBOLoanRouter.sol";
 import "../interfaces/IConvertibleBondBox.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@uniswap/lib/contracts/libraries/TransferHelper.sol";
@@ -13,12 +13,12 @@ import "@openzeppelin/contracts/utils/math/Math.sol";
 
 import "forge-std/console2.sol";
 
-contract StagingLoanRouter is IStagingLoanRouter {
+contract IBOLoanRouter is IIBOLoanRouter {
     /**
-     * @inheritdoc IStagingLoanRouter
+     * @inheritdoc IIBOLoanRouter
      */
     function simpleWrapTrancheBorrow(
-        IStagingBox _stagingBox,
+        IIBOBox _IBOBox,
         uint256 _amountRaw,
         uint256 _minBorrowSlips
     ) public {
@@ -27,7 +27,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
             IBondController bond,
             IButtonToken wrapper,
             IERC20 underlying
-        ) = fetchElasticStack(_stagingBox);
+        ) = fetchElasticStack(_IBOBox);
 
         TransferHelper.safeTransferFrom(
             address(underlying),
@@ -46,35 +46,25 @@ contract StagingLoanRouter is IStagingLoanRouter {
         wrapper.approve(address(bond), type(uint256).max);
         bond.deposit(wrapperAmount);
 
-        uint256 riskTrancheBalance = _stagingBox.riskTranche().balanceOf(
+        uint256 riskTrancheBalance = _IBOBox.riskTranche().balanceOf(
             address(this)
         );
-        uint256 safeTrancheBalance = _stagingBox.safeTranche().balanceOf(
+        uint256 safeTrancheBalance = _IBOBox.safeTranche().balanceOf(
             address(this)
         );
 
         if (
-            _stagingBox.safeTranche().allowance(
-                address(this),
-                address(_stagingBox)
-            ) < safeTrancheBalance
+            _IBOBox.safeTranche().allowance(address(this), address(_IBOBox)) <
+            safeTrancheBalance
         ) {
-            _stagingBox.safeTranche().approve(
-                address(_stagingBox),
-                type(uint256).max
-            );
+            _IBOBox.safeTranche().approve(address(_IBOBox), type(uint256).max);
         }
 
         if (
-            _stagingBox.riskTranche().allowance(
-                address(this),
-                address(_stagingBox)
-            ) < riskTrancheBalance
+            _IBOBox.riskTranche().allowance(address(this), address(_IBOBox)) <
+            riskTrancheBalance
         ) {
-            _stagingBox.riskTranche().approve(
-                address(_stagingBox),
-                type(uint256).max
-            );
+            _IBOBox.riskTranche().approve(address(_IBOBox), type(uint256).max);
         }
 
         uint256 borrowAmount = (Math.min(
@@ -82,12 +72,12 @@ contract StagingLoanRouter is IStagingLoanRouter {
             ((riskTrancheBalance * convertibleBondBox.safeRatio()) /
                 convertibleBondBox.riskRatio())
         ) *
-            _stagingBox.initialPrice() *
-            _stagingBox.stableDecimals()) /
-            _stagingBox.priceGranularity() /
-            _stagingBox.trancheDecimals();
+            _IBOBox.initialPrice() *
+            _IBOBox.stableDecimals()) /
+            _IBOBox.priceGranularity() /
+            _IBOBox.trancheDecimals();
 
-        _stagingBox.depositBorrow(msg.sender, borrowAmount);
+        _IBOBox.depositBorrow(msg.sender, borrowAmount);
 
         if (borrowAmount < _minBorrowSlips)
             revert SlippageExceeded({
@@ -97,21 +87,21 @@ contract StagingLoanRouter is IStagingLoanRouter {
     }
 
     /**
-     * @inheritdoc IStagingLoanRouter
+     * @inheritdoc IIBOLoanRouter
      */
     function multiWrapTrancheBorrow(
-        IStagingBox _stagingBox,
+        IIBOBox _IBOBox,
         uint256 _amountRaw,
         uint256 _minBorrowSlips
     ) external {
-        simpleWrapTrancheBorrow(_stagingBox, _amountRaw, _minBorrowSlips);
+        simpleWrapTrancheBorrow(_IBOBox, _amountRaw, _minBorrowSlips);
 
         (
             IConvertibleBondBox convertibleBondBox,
             IBondController bond,
             ,
 
-        ) = fetchElasticStack(_stagingBox);
+        ) = fetchElasticStack(_IBOBox);
 
         //send back unused tranches to msg.sender
         uint256 trancheCount = bond.trancheCount();
@@ -128,62 +118,57 @@ contract StagingLoanRouter is IStagingLoanRouter {
     }
 
     /**
-     * @inheritdoc IStagingLoanRouter
+     * @inheritdoc IIBOLoanRouter
      */
     function simpleWithdrawBorrowUnwrap(
-        IStagingBox _stagingBox,
+        IIBOBox _IBOBox,
         uint256 _borrowSlipAmount
     ) external {
         //transfer borrowSlips
-        _stagingBox.borrowSlip().transferFrom(
+        _IBOBox.borrowSlip().transferFrom(
             msg.sender,
             address(this),
             _borrowSlipAmount
         );
 
-        //approve borrowSlips for StagingBox
+        //approve borrowSlips for IBOBox
         if (
-            _stagingBox.borrowSlip().allowance(
-                address(this),
-                address(_stagingBox)
-            ) < _borrowSlipAmount
+            _IBOBox.borrowSlip().allowance(address(this), address(_IBOBox)) <
+            _borrowSlipAmount
         ) {
-            _stagingBox.borrowSlip().approve(
-                address(_stagingBox),
-                type(uint256).max
-            );
+            _IBOBox.borrowSlip().approve(address(_IBOBox), type(uint256).max);
         }
 
         //withdraw borrowSlips for tranches
-        _stagingBox.withdrawBorrow(_borrowSlipAmount);
+        _IBOBox.withdrawBorrow(_borrowSlipAmount);
 
         //redeem tranches with underlying bond & mature
-        _redeemTrancheImmatureUnwrap(_stagingBox);
+        _redeemTrancheImmatureUnwrap(_IBOBox);
     }
 
     /**
-     * @inheritdoc IStagingLoanRouter
+     * @inheritdoc IIBOLoanRouter
      */
-    function redeemLendSlipsForStables(
-        IStagingBox _stagingBox,
-        uint256 _lendSlipAmount
-    ) external {
+    function redeemLendSlipsForStables(IIBOBox _IBOBox, uint256 _lendSlipAmount)
+        external
+    {
         (IConvertibleBondBox convertibleBondBox, , , ) = fetchElasticStack(
-            _stagingBox
+            _IBOBox
         );
 
-        _stagingBox.lendSlip().transferFrom(
+        _IBOBox.lendSlip().transferFrom(
             msg.sender,
             address(this),
             _lendSlipAmount
         );
 
         //redeem lendSlips for SafeSlips
-        _stagingBox.redeemLendSlip(_lendSlipAmount);
+        _IBOBox.redeemLendSlip(_lendSlipAmount);
 
         //get balance of SafeSlips and redeem for stables
-        uint256 safeSlipAmount = IERC20(_stagingBox.safeSlipAddress())
-            .balanceOf(address(this));
+        uint256 safeSlipAmount = IERC20(_IBOBox.safeSlipAddress()).balanceOf(
+            address(this)
+        );
 
         convertibleBondBox.redeemStable(safeSlipAmount);
 
@@ -200,38 +185,39 @@ contract StagingLoanRouter is IStagingLoanRouter {
     }
 
     /**
-     * @inheritdoc IStagingLoanRouter
+     * @inheritdoc IIBOLoanRouter
      */
     function redeemLendSlipsForTranchesAndUnwrap(
-        IStagingBox _stagingBox,
+        IIBOBox _IBOBox,
         uint256 _lendSlipAmount
     ) external {
         //Transfer lendslips to router
-        _stagingBox.lendSlip().transferFrom(
+        _IBOBox.lendSlip().transferFrom(
             msg.sender,
             address(this),
             _lendSlipAmount
         );
 
         //redeem lendSlips for SafeSlips
-        _stagingBox.redeemLendSlip(_lendSlipAmount);
+        _IBOBox.redeemLendSlip(_lendSlipAmount);
 
         //redeem SafeSlips for SafeTranche
-        uint256 safeSlipAmount = IERC20(_stagingBox.safeSlipAddress())
-            .balanceOf(address(this));
+        uint256 safeSlipAmount = IERC20(_IBOBox.safeSlipAddress()).balanceOf(
+            address(this)
+        );
 
-        _safeSlipsForTranchesUnwrap(_stagingBox, safeSlipAmount);
+        _safeSlipsForTranchesUnwrap(_IBOBox, safeSlipAmount);
     }
 
     /**
-     * @inheritdoc IStagingLoanRouter
+     * @inheritdoc IIBOLoanRouter
      */
     function redeemSafeSlipsForTranchesAndUnwrap(
-        IStagingBox _stagingBox,
+        IIBOBox _IBOBox,
         uint256 _safeSlipAmount
     ) external {
         (IConvertibleBondBox convertibleBondBox, , , ) = fetchElasticStack(
-            _stagingBox
+            _IBOBox
         );
         //Transfer safeslips to router
         convertibleBondBox.safeSlip().transferFrom(
@@ -240,11 +226,11 @@ contract StagingLoanRouter is IStagingLoanRouter {
             _safeSlipAmount
         );
 
-        _safeSlipsForTranchesUnwrap(_stagingBox, _safeSlipAmount);
+        _safeSlipsForTranchesUnwrap(_IBOBox, _safeSlipAmount);
     }
 
     function _safeSlipsForTranchesUnwrap(
-        IStagingBox _stagingBox,
+        IIBOBox _IBOBox,
         uint256 _safeSlipAmount
     ) internal {
         (
@@ -252,7 +238,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
             IBondController bond,
             IButtonToken wrapper,
 
-        ) = fetchElasticStack(_stagingBox);
+        ) = fetchElasticStack(_IBOBox);
 
         convertibleBondBox.redeemSafeTranche(_safeSlipAmount);
 
@@ -281,10 +267,10 @@ contract StagingLoanRouter is IStagingLoanRouter {
     }
 
     /**
-     * @inheritdoc IStagingLoanRouter
+     * @inheritdoc IIBOLoanRouter
      */
     function redeemRiskSlipsForTranchesAndUnwrap(
-        IStagingBox _stagingBox,
+        IIBOBox _IBOBox,
         uint256 _riskSlipAmount
     ) external {
         (
@@ -292,7 +278,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
             IBondController bond,
             IButtonToken wrapper,
 
-        ) = fetchElasticStack(_stagingBox);
+        ) = fetchElasticStack(_IBOBox);
 
         //Transfer riskSlips to router
         convertibleBondBox.riskSlip().transferFrom(
@@ -318,16 +304,16 @@ contract StagingLoanRouter is IStagingLoanRouter {
     }
 
     /**
-     * @inheritdoc IStagingLoanRouter
+     * @inheritdoc IIBOLoanRouter
      */
     function repayAndUnwrapSimple(
-        IStagingBox _stagingBox,
+        IIBOBox _IBOBox,
         uint256 _stableAmount,
         uint256 _stableFees,
         uint256 _riskSlipAmount
     ) external {
         (IConvertibleBondBox convertibleBondBox, , , ) = fetchElasticStack(
-            _stagingBox
+            _IBOBox
         );
 
         //Transfer Stables to Router
@@ -360,27 +346,27 @@ contract StagingLoanRouter is IStagingLoanRouter {
         }
         convertibleBondBox.repay(_stableAmount);
 
-        _redeemTrancheImmatureUnwrap(_stagingBox);
+        _redeemTrancheImmatureUnwrap(_IBOBox);
 
         //send unpaid riskSlip back
 
         convertibleBondBox.riskSlip().transfer(
             msg.sender,
-            IERC20(_stagingBox.riskSlipAddress()).balanceOf(address(this))
+            IERC20(_IBOBox.riskSlipAddress()).balanceOf(address(this))
         );
     }
 
     /**
-     * @inheritdoc IStagingLoanRouter
+     * @inheritdoc IIBOLoanRouter
      */
     function repayMaxAndUnwrapSimple(
-        IStagingBox _stagingBox,
+        IIBOBox _IBOBox,
         uint256 _stableAmount,
         uint256 _stableFees,
         uint256 _riskSlipAmount
     ) external {
         (IConvertibleBondBox convertibleBondBox, , , ) = fetchElasticStack(
-            _stagingBox
+            _IBOBox
         );
 
         //Transfer Stables + fees + slippage to Router
@@ -413,7 +399,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
         }
         convertibleBondBox.repayMax(_riskSlipAmount);
 
-        _redeemTrancheImmatureUnwrap(_stagingBox);
+        _redeemTrancheImmatureUnwrap(_IBOBox);
 
         //send unused stables back to msg.sender
         TransferHelper.safeTransfer(
@@ -423,13 +409,13 @@ contract StagingLoanRouter is IStagingLoanRouter {
         );
     }
 
-    function _redeemTrancheImmatureUnwrap(IStagingBox _stagingBox) internal {
+    function _redeemTrancheImmatureUnwrap(IIBOBox _IBOBox) internal {
         (
             IConvertibleBondBox convertibleBondBox,
             IBondController bond,
             IButtonToken wrapper,
 
-        ) = fetchElasticStack(_stagingBox);
+        ) = fetchElasticStack(_IBOBox);
 
         uint256 safeRatio = convertibleBondBox.safeRatio();
         uint256 riskRatio = convertibleBondBox.riskRatio();
@@ -458,10 +444,10 @@ contract StagingLoanRouter is IStagingLoanRouter {
     }
 
     /**
-     * @inheritdoc IStagingLoanRouter
+     * @inheritdoc IIBOLoanRouter
      */
     function repayAndUnwrapMature(
-        IStagingBox _stagingBox,
+        IIBOBox _IBOBox,
         uint256 _stableAmount,
         uint256 _stableFees,
         uint256 _riskSlipAmount
@@ -471,7 +457,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
             IBondController bond,
             IButtonToken wrapper,
 
-        ) = fetchElasticStack(_stagingBox);
+        ) = fetchElasticStack(_IBOBox);
 
         //Transfer Stables to Router
         TransferHelper.safeTransferFrom(
@@ -518,7 +504,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
         wrapper.withdrawAllTo(msg.sender);
     }
 
-    function fetchElasticStack(IStagingBox _stagingBox)
+    function fetchElasticStack(IIBOBox _IBOBox)
         internal
         view
         returns (
@@ -528,8 +514,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
             IERC20
         )
     {
-        IConvertibleBondBox convertibleBondBox = _stagingBox
-            .convertibleBondBox();
+        IConvertibleBondBox convertibleBondBox = _IBOBox.convertibleBondBox();
         IBondController bond = convertibleBondBox.bond();
         IButtonToken wrapper = IButtonToken(bond.collateralToken());
         IERC20 underlying = IERC20(wrapper.underlying());

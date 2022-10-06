@@ -1,8 +1,8 @@
 pragma solidity 0.8.13;
 
-import "./StagingLoanRouterSetup.t.sol";
+import "./IBOLoanRouterSetup.t.sol";
 
-contract RepayUnwrap is StagingLoanRouterSetup {
+contract RepayUnwrap is IBOLoanRouterSetup {
     struct BeforeBalances {
         uint256 borrowerStables;
         uint256 borrowerRiskSlip;
@@ -22,7 +22,7 @@ contract RepayUnwrap is StagingLoanRouterSetup {
         bool isMature
     ) internal {
         vm.startPrank(s_borrower);
-        s_stagingLoanRouter.simpleWrapTrancheBorrow(
+        s_IBOLoanRouter.simpleWrapTrancheBorrow(
             s_deployedSB,
             s_collateralToken.balanceOf(s_borrower),
             0
@@ -100,7 +100,7 @@ contract RepayUnwrap is StagingLoanRouterSetup {
         );
 
         vm.startPrank(s_borrower);
-        s_stagingLoanRouter.repayMaxAndUnwrapSimple(
+        s_IBOLoanRouter.repayMaxAndUnwrapSimple(
             s_deployedSB,
             stablesOwed,
             stableFees,
@@ -155,7 +155,7 @@ contract RepayUnwrap is StagingLoanRouterSetup {
         );
 
         vm.startPrank(s_borrower);
-        s_stagingLoanRouter.repayAndUnwrapSimple(
+        s_IBOLoanRouter.repayAndUnwrapSimple(
             s_deployedSB,
             stablesOwed,
             stableFees,
@@ -202,7 +202,7 @@ contract RepayUnwrap is StagingLoanRouterSetup {
         );
 
         vm.startPrank(s_borrower);
-        s_stagingLoanRouter.repayAndUnwrapMature(
+        s_IBOLoanRouter.repayAndUnwrapMature(
             s_deployedSB,
             stablesOwed,
             stableFees,
@@ -252,7 +252,7 @@ contract RepayUnwrap is StagingLoanRouterSetup {
         );
 
         vm.startPrank(s_borrower);
-        s_stagingLoanRouter.repayAndUnwrapMature(
+        s_IBOLoanRouter.repayAndUnwrapMature(
             s_deployedSB,
             stablesOwed,
             stableFees,

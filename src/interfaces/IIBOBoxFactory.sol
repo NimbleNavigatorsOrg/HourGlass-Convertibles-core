@@ -6,18 +6,18 @@ import "./IConvertibleBondBox.sol";
  * @notice Interface for Convertible Bond Box factory contracts
  */
 
-interface IStagingBoxFactory {
-    event StagingBoxCreated(
+interface IIBOBoxFactory {
+    event IBOBoxCreated(
         address msgSender,
-        address stagingBox,
+        address IBOBox,
         address slipFactory
     );
 
-    event StagingBoxReplaced(
+    event IBOBoxReplaced(
         IConvertibleBondBox convertibleBondBox,
         address msgSender,
-        address oldStagingBox,
-        address newStagingBox,
+        address oldIBOBox,
+        address newIBOBox,
         address slipFactory
     );
 

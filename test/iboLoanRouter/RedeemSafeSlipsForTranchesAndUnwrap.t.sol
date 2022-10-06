@@ -1,8 +1,8 @@
 pragma solidity 0.8.13;
 
-import "./StagingLoanRouterSetup.t.sol";
+import "./IBOLoanRouterSetup.t.sol";
 
-contract RedeemSafeSlipsForTranchesAndUnwrap is StagingLoanRouterSetup {
+contract RedeemSafeSlipsForTranchesAndUnwrap is IBOLoanRouterSetup {
     struct BeforeBalances {
         uint256 lenderSafeSlips;
         uint256 lenderCollateral;
@@ -15,7 +15,7 @@ contract RedeemSafeSlipsForTranchesAndUnwrap is StagingLoanRouterSetup {
 
     function initialSetup(uint256 data) internal {
         vm.startPrank(s_borrower);
-        s_stagingLoanRouter.simpleWrapTrancheBorrow(
+        s_IBOLoanRouter.simpleWrapTrancheBorrow(
             s_deployedSB,
             s_collateralToken.balanceOf(s_borrower),
             0
@@ -97,7 +97,7 @@ contract RedeemSafeSlipsForTranchesAndUnwrap is StagingLoanRouterSetup {
         );
 
         vm.startPrank(s_lender);
-        s_stagingLoanRouter.redeemSafeSlipsForTranchesAndUnwrap(
+        s_IBOLoanRouter.redeemSafeSlipsForTranchesAndUnwrap(
             s_deployedSB,
             safeSlipAmount
         );

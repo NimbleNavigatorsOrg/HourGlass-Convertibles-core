@@ -1,8 +1,8 @@
 pragma solidity 0.8.13;
 
-import "./integration/SBIntegrationSetup.t.sol";
+import "./iboBoxSetup.t.sol";
 
-contract RedeemBorrowSlip is SBIntegrationSetup {
+contract RedeemBorrowSlip is iboBoxSetup {
     struct BeforeBalances {
         uint256 borrowerBorrowSlips;
         uint256 borrowerRiskSlips;
@@ -23,7 +23,7 @@ contract RedeemBorrowSlip is SBIntegrationSetup {
     function testRedeemBorrowSlip(uint256 _fuzzPrice, uint256 _borrowAmount)
         public
     {
-        setupStagingBox(_fuzzPrice);
+        setupIBOBox(_fuzzPrice);
 
         uint256 maxBorrowAmount = (s_safeTranche.balanceOf(address(this)) *
             s_deployedSB.initialPrice() *

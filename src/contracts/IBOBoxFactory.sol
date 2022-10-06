@@ -4,12 +4,12 @@ pragma solidity 0.8.13;
 import "clones-with-immutable-args/ClonesWithImmutableArgs.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import "./StagingBox.sol";
+import "./IBOBox.sol";
 import "./ConvertibleBondBox.sol";
 import "../interfaces/ICBBFactory.sol";
-import "../interfaces/IStagingBoxFactory.sol";
+import "../interfaces/IIBOBoxFactory.sol";
 
-contract StagingBoxFactory is IStagingBoxFactory, Context {
+contract IBOBoxFactory is IIBOBoxFactory, Context {
     using ClonesWithImmutableArgs for address;
 
     address public immutable implementation;
@@ -26,7 +26,7 @@ contract StagingBoxFactory is IStagingBoxFactory, Context {
     }
 
     /**
-     * @dev Deploys a staging box with a CBB
+     * @dev Deploys a IBO box with a CBB
      * @param cBBFactory The ConvertibleBondBox factory
      * @param slipFactory The factory for the Slip-Tokens
      * @param bond The buttonwood bond
@@ -37,7 +37,7 @@ contract StagingBoxFactory is IStagingBoxFactory, Context {
      * @param cbbOwner The owner of the ConvertibleBondBox
      */
 
-    function createStagingBoxWithCBB(
+    function createIBOBoxWithCBB(
         ICBBFactory cBBFactory,
         ISlipFactory slipFactory,
         IBondController bond,
@@ -58,7 +58,7 @@ contract StagingBoxFactory is IStagingBoxFactory, Context {
             )
         );
 
-        address deployedSB = this.createStagingBoxOnly(
+        address deployedSB = this.createIBOBoxOnly(
             slipFactory,
             convertibleBondBox,
             initialPrice,
@@ -72,14 +72,14 @@ contract StagingBoxFactory is IStagingBoxFactory, Context {
     }
 
     /**
-     * @dev Deploys only a staging box
+     * @dev Deploys only a IBO box
      * @param slipFactory The factory for the Slip-Tokens
-     * @param convertibleBondBox The CBB tied to the staging box being deployed
+     * @param convertibleBondBox The CBB tied to the IBO box being deployed
      * @param initialPrice The initial price of the safe asset
-     * @param owner The owner of the StagingBox
+     * @param owner The owner of the IBOBox
      */
 
-    function createStagingBoxOnly(
+    function createIBOBoxOnly(
         ISlipFactory slipFactory,
         ConvertibleBondBox convertibleBondBox,
         uint256 initialPrice,
@@ -87,7 +87,7 @@ contract StagingBoxFactory is IStagingBoxFactory, Context {
     ) public returns (address) {
         require(
             _msgSender() == convertibleBondBox.owner(),
-            "StagingBoxFactory: Deployer not owner of CBB"
+            "IBOBoxFactory: Deployer not owner of CBB"
         );
 
         SlipPair memory SlipData = deploySlips(
@@ -118,27 +118,27 @@ contract StagingBoxFactory is IStagingBoxFactory, Context {
             )
         );
 
-        // clone staging box
-        StagingBox clone = StagingBox(implementation.clone(data));
+        // clone IBO box
+        IBOBox clone = IBOBox(implementation.clone(data));
         clone.initialize(owner);
 
-        //tansfer slips ownership to staging box
+        //tansfer slips ownership to IBO box
         ISlip(SlipData.lendSlip).changeOwner(address(clone));
         ISlip(SlipData.borrowSlip).changeOwner(address(clone));
 
-        address oldStagingBox = CBBtoSB[address(convertibleBondBox)];
+        address oldIBOBox = CBBtoSB[address(convertibleBondBox)];
 
-        if (oldStagingBox == address(0)) {
-            emit StagingBoxCreated(
+        if (oldIBOBox == address(0)) {
+            emit IBOBoxCreated(
                 _msgSender(),
                 address(clone),
                 address(slipFactory)
             );
         } else {
-            emit StagingBoxReplaced(
+            emit IBOBoxReplaced(
                 convertibleBondBox,
                 _msgSender(),
-                oldStagingBox,
+                oldIBOBox,
                 address(clone),
                 address(slipFactory)
             );

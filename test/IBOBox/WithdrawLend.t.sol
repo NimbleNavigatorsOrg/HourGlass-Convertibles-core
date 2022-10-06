@@ -1,8 +1,8 @@
 pragma solidity 0.8.13;
 
-import "./integration/SBIntegrationSetup.t.sol";
+import "./iboBoxSetup.t.sol";
 
-contract WithdrawLend is SBIntegrationSetup {
+contract WithdrawLend is iboBoxSetup {
     struct BeforeBalances {
         uint256 lenderLendSlips;
         uint256 lenderStableTokens;
@@ -20,7 +20,7 @@ contract WithdrawLend is SBIntegrationSetup {
         uint256 _fuzzPrice,
         uint256 _lendAmount
     ) public {
-        setupStagingBox(_fuzzPrice);
+        setupIBOBox(_fuzzPrice);
 
         uint256 maxBorrowAmount = (s_safeTranche.balanceOf(address(this)) *
             s_deployedSB.initialPrice() *
@@ -62,7 +62,7 @@ contract WithdrawLend is SBIntegrationSetup {
     }
 
     function testWithdrawLend(uint256 _fuzzPrice, uint256 _lendAmount) public {
-        setupStagingBox(_fuzzPrice);
+        setupIBOBox(_fuzzPrice);
 
         s_deployedSB.depositLend(
             s_lender,

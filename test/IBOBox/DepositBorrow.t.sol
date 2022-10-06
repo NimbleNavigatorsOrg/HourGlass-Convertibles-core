@@ -1,8 +1,8 @@
 pragma solidity 0.8.13;
 
-import "./integration/SBIntegrationSetup.t.sol";
+import "./iboBoxSetup.t.sol";
 
-contract DepositBorrow is SBIntegrationSetup {
+contract DepositBorrow is iboBoxSetup {
     struct BeforeBalances {
         uint256 borrowerBorrowSlips;
         uint256 routerSafeTranche;
@@ -21,7 +21,7 @@ contract DepositBorrow is SBIntegrationSetup {
     address s_lender = address(2);
 
     function testCannotDepositBorrowCBBNotReinitialized() public {
-        setupStagingBox(0);
+        setupIBOBox(0);
 
         vm.prank(s_deployedSBAddress);
         s_deployedConvertibleBondBox.reinitialize(5);
@@ -38,7 +38,7 @@ contract DepositBorrow is SBIntegrationSetup {
     function testDepositBorrow(uint256 _fuzzPrice, uint256 _borrowAmount)
         public
     {
-        setupStagingBox(_fuzzPrice);
+        setupIBOBox(_fuzzPrice);
 
         BeforeBalances memory before = BeforeBalances(
             s_borrowSlip.balanceOf(s_borrower),

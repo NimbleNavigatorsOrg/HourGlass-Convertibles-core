@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.13;
 
-import "../interfaces/IStagingBox.sol";
+import "../interfaces/IIBOBox.sol";
 import "../interfaces/IConvertibleBondBox.sol";
 
 struct NumFixedPoint {
@@ -9,7 +9,7 @@ struct NumFixedPoint {
     uint256 decimals;
 }
 
-struct StagingDataIBO {
+struct IBODataIBO {
     NumFixedPoint lendSlipSupply;
     NumFixedPoint borrowSlipSupply;
     NumFixedPoint safeTrancheBalance;
@@ -21,7 +21,7 @@ struct StagingDataIBO {
     NumFixedPoint tvlLend;
 }
 
-struct StagingDataActive {
+struct IBODataActive {
     NumFixedPoint lendSlipSupply;
     NumFixedPoint borrowSlipSupply;
     NumFixedPoint safeTrancheBalance;
@@ -70,30 +70,30 @@ struct CBBDataMature {
 
 interface IConvertiblesDVLens {
     /**
-     * @dev provides the stats for Staging Box in IBO period
-     * @param _stagingBox The staging box tied to the Convertible Bond
+     * @dev provides the stats for IBO Box in IBO period
+     * @param _IBOBox The IBO box tied to the Convertible Bond
      * Requirements:
      */
 
-    function viewStagingStatsIBO(IStagingBox _stagingBox)
+    function viewIBOStatsIBO(IIBOBox _IBOBox)
         external
         view
-        returns (StagingDataIBO memory);
+        returns (IBODataIBO memory);
 
     /**
-     * @dev provides the stats for Staging Box in IBO period
-     * @param _stagingBox The staging box tied to the Convertible Bond
+     * @dev provides the stats for IBO Box in IBO period
+     * @param _IBOBox The IBO box tied to the Convertible Bond
      * Requirements:
      */
 
-    function viewStagingStatsActive(IStagingBox _stagingBox)
+    function viewIBOStatsActive(IIBOBox _IBOBox)
         external
         view
-        returns (StagingDataActive memory);
+        returns (IBODataActive memory);
 
     /**
-     * @dev provides the stats for Staging Box in IBO period
-     * @param _convertibleBondBox The staging box tied to the Convertible Bond
+     * @dev provides the stats for IBO Box in IBO period
+     * @param _convertibleBondBox The IBO box tied to the Convertible Bond
      * Requirements:
      */
 
@@ -103,8 +103,8 @@ interface IConvertiblesDVLens {
         returns (CBBDataActive memory);
 
     /**
-     * @dev provides the stats for Staging Box in IBO period
-     * @param _convertibleBondBox The staging box tied to the Convertible Bond
+     * @dev provides the stats for IBO Box in IBO period
+     * @param _convertibleBondBox The IBO box tied to the Convertible Bond
      * Requirements:
      */
 

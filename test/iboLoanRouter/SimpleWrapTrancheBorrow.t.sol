@@ -1,8 +1,8 @@
 pragma solidity 0.8.13;
 
-import "./StagingLoanRouterSetup.t.sol";
+import "./IBOLoanRouterSetup.t.sol";
 
-contract SimpleWrapTrancheBorrow is StagingLoanRouterSetup {
+contract SimpleWrapTrancheBorrow is IBOLoanRouterSetup {
     struct BeforeBalances {
         uint256 borrowerCollateral;
         uint256 borrowerBorrowSlip;
@@ -52,7 +52,7 @@ contract SimpleWrapTrancheBorrow is StagingLoanRouterSetup {
         );
 
         vm.prank(s_borrower);
-        s_stagingLoanRouter.simpleWrapTrancheBorrow(
+        s_IBOLoanRouter.simpleWrapTrancheBorrow(
             s_deployedSB,
             collateralAmount,
             (loanAmount * 95) / 100

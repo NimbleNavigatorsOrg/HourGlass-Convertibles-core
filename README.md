@@ -5,17 +5,17 @@ The Convertible Bond Box (CBB) is a enhancement to [ButtonBonds](https://github.
 - Allows borrowers to buy back the SafeTranches that collateralized by the senior tranches. It is important to note that borrowers aren't guaranteed this opportunity with ButtonZero & UniSwap since lenders can purchase bonds and hold them indefinitely, eliminating liquidity.
 - Gives lenders more confidence that a bond will be repaid via a penalty mechanism that is paid by borrowers if the stablecoins are not paid back by maturity.
 
-Implementation also includes a Staging Box which is an enhanced refundable escrow box responsible for facilitating an Initial Bond Offering (IBO). A staging box is not required in order to issue a CBB, however can be very useful if the owner of the CBB is looking to primarily borrow OR lend. For example, if a DAO were to issue a CBB against their token with the intent of borrowing, the Staging Box would be useful for gauging market lending demand before committing to borrowing.
+Implementation also includes a IBO Box which is an enhanced refundable escrow box responsible for facilitating an Initial Bond Offering (IBO). A IBO box is not required in order to issue a CBB, however can be very useful if the owner of the CBB is looking to primarily borrow OR lend. For example, if a DAO were to issue a CBB against their token with the intent of borrowing, the IBO Box would be useful for gauging market lending demand before committing to borrowing.
 
 ## Architecture
 - [Slip.sol](https://github.com/NimbleNavigatorsOrg/Forge-Lending-Box/blob/main/src/contracts/Slip.sol) : A regular ERC-20 whose minting and burning is only controlled by it's owner
   - [SlipFactory.sol](https://github.com/NimbleNavigatorsOrg/Forge-Lending-Box/blob/main/src/contracts/SlipFactory.sol) : Proxy Factory which deploys an IOU slip token for any given collateral token
 - [ConvertibleBondBox.sol](https://github.com/NimbleNavigatorsOrg/Forge-Lending-Box/blob/main/src/contracts/ConvertibleBondBox.sol) : Core contract for convertibles, tied to a given ButtonBond
   - [CBBFactory.sol](https://github.com/NimbleNavigatorsOrg/Forge-Lending-Box/blob/main/src/contracts/CBBFactory.sol) : Proxy Factory which deploys a CBB for a given ButtonBond
-- [StagingBox.sol](https://github.com/NimbleNavigatorsOrg/Forge-Lending-Box/blob/main/src/contracts/StagingBox.sol) : Core contract for holding IBO (initial bond offering) tied to a CBB
-  - [StagingBoxFactory.sol](https://github.com/NimbleNavigatorsOrg/Forge-Lending-Box/blob/main/src/contracts/StagingBoxFactory.sol) : Proxy Factory which deploys a CBB and then a Staging Box for a given ButtonBond
-- [StagingLoanRouter.sol](https://github.com/NimbleNavigatorsOrg/Forge-Lending-Box/blob/main/src/contracts/StagingLoanRouter.sol) : A router contract that allows users with raw non-rebasing tokens to directly participate in IBOs, and redeem across the elastic stack in atomic transactions
-- [StagingBoxLens.sol](https://github.com/NimbleNavigatorsOrg/Forge-Lending-Box/blob/main/src/contracts/StagingBoxLens.sol) : A view function contract that provides maximums/expected amounts which is helpful for front-end design
+- [IBOBox.sol](https://github.com/NimbleNavigatorsOrg/Forge-Lending-Box/blob/main/src/contracts/IBOBox.sol) : Core contract for holding IBO (initial bond offering) tied to a CBB
+  - [IBOBoxFactory.sol](https://github.com/NimbleNavigatorsOrg/Forge-Lending-Box/blob/main/src/contracts/IBOBoxFactory.sol) : Proxy Factory which deploys a CBB and then a IBO Box for a given ButtonBond
+- [IBOLoanRouter.sol](https://github.com/NimbleNavigatorsOrg/Forge-Lending-Box/blob/main/src/contracts/IBOLoanRouter.sol) : A router contract that allows users with raw non-rebasing tokens to directly participate in IBOs, and redeem across the elastic stack in atomic transactions
+- [IBOBoxLens.sol](https://github.com/NimbleNavigatorsOrg/Forge-Lending-Box/blob/main/src/contracts/IBOBoxLens.sol) : A view function contract that provides maximums/expected amounts which is helpful for front-end design
 
 ![ConvertiblesArchitectureFlow](https://user-images.githubusercontent.com/92934445/178622965-cf9f8292-9579-4dc6-a238-bb0b236f350e.jpg)
 

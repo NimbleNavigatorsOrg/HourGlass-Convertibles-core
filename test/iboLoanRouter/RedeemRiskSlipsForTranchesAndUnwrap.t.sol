@@ -1,21 +1,21 @@
 pragma solidity 0.8.13;
 
-import "./StagingLoanRouterSetup.t.sol";
+import "./IBOLoanRouterSetup.t.sol";
 
-contract RedeemLendSlipsForTranchesAndUnwrap is StagingLoanRouterSetup {
+contract RedeemRiskSlipsForTranchesAndUnwrap is IBOLoanRouterSetup {
     struct BeforeBalances {
-        uint256 lenderLendSlips;
-        uint256 lenderCollateral;
+        uint256 borrowerRiskSlip;
+        uint256 borrowerCollateral;
     }
 
     struct RedeemAmounts {
-        uint256 lendSlipAmount;
+        uint256 riskSlipAmount;
         uint256 collateralAmount;
     }
 
     function initialSetup(uint256 data) internal {
         vm.startPrank(s_borrower);
-        s_stagingLoanRouter.simpleWrapTrancheBorrow(
+        s_IBOLoanRouter.simpleWrapTrancheBorrow(
             s_deployedSB,
             s_collateralToken.balanceOf(s_borrower),
             0
@@ -45,6 +45,7 @@ contract RedeemLendSlipsForTranchesAndUnwrap is StagingLoanRouterSetup {
             s_deployedSB.redeemBorrowSlip(maxRedeemableBorrowSlips);
             vm.stopPrank();
         }
+
         uint256 maxRedeemableLendSlips = (s_safeSlip.balanceOf(
             s_deployedSBAddress
         ) *
@@ -70,49 +71,35 @@ contract RedeemLendSlipsForTranchesAndUnwrap is StagingLoanRouterSetup {
         s_buttonWoodBondController.mature();
     }
 
-    function testLendSlipRedeemTrancheAndUnwrap(
-        uint256 lendSlipAmount,
+    function testRiskSlipRedeemTrancheAndUnwrap(
+        uint256 riskSlipAmount,
         uint256 data
     ) public {
         initialSetup(data);
 
-        uint256 minLendSlips = (1e6 *
-            s_deployedSB.initialPrice() *
-            s_deployedSB.stableDecimals()) /
-            s_deployedSB.priceGranularity() /
-            s_deployedSB.trancheDecimals();
-
-        uint256 maxRedeemableLendSlips = (s_safeSlip.balanceOf(
-            s_deployedSBAddress
-        ) *
-            s_deployedSB.initialPrice() *
-            s_deployedSB.stableDecimals()) /
-            s_deployedSB.priceGranularity() /
-            s_deployedSB.trancheDecimals();
-
-        lendSlipAmount = bound(
-            lendSlipAmount,
-            Math.max(1, minLendSlips),
-            maxRedeemableLendSlips
+        riskSlipAmount = bound(
+            riskSlipAmount,
+            1e6,
+            s_riskSlip.balanceOf(s_borrower)
         );
 
         (uint256 collateralAmount, , , ) = s_SBLens
-            .viewRedeemLendSlipsForTranches(s_deployedSB, lendSlipAmount);
+            .viewRedeemRiskSlipsForTranches(s_deployedSB, riskSlipAmount);
 
         BeforeBalances memory before = BeforeBalances(
-            s_lendSlip.balanceOf(s_lender),
-            s_collateralToken.balanceOf(s_lender)
+            s_riskSlip.balanceOf(s_borrower),
+            s_collateralToken.balanceOf(s_borrower)
         );
 
         RedeemAmounts memory adjustments = RedeemAmounts(
-            lendSlipAmount,
+            riskSlipAmount,
             collateralAmount
         );
 
-        vm.startPrank(s_lender);
-        s_stagingLoanRouter.redeemLendSlipsForTranchesAndUnwrap(
+        vm.startPrank(s_borrower);
+        s_IBOLoanRouter.redeemRiskSlipsForTranchesAndUnwrap(
             s_deployedSB,
-            lendSlipAmount
+            riskSlipAmount
         );
         vm.stopPrank();
 
@@ -124,14 +111,14 @@ contract RedeemLendSlipsForTranchesAndUnwrap is StagingLoanRouterSetup {
         RedeemAmounts memory adjustments
     ) internal {
         assertApproxEqRel(
-            before.lenderLendSlips - adjustments.lendSlipAmount,
-            s_lendSlip.balanceOf(s_lender),
+            before.borrowerCollateral + adjustments.collateralAmount,
+            s_collateralToken.balanceOf(s_borrower),
             1e15
         );
 
         assertApproxEqRel(
-            before.lenderCollateral + adjustments.collateralAmount,
-            s_collateralToken.balanceOf(s_lender),
+            before.borrowerRiskSlip - adjustments.riskSlipAmount,
+            s_riskSlip.balanceOf(s_borrower),
             1e15
         );
     }

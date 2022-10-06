@@ -4,15 +4,15 @@ pragma solidity 0.8.13;
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@uniswap/lib/contracts/libraries/TransferHelper.sol";
 import "../../utils/SBImmutableArgs.sol";
-import "../interfaces/IStagingBox.sol";
+import "../interfaces/IIBOBox.sol";
 
 /**
- * @dev Staging Box for reinitializing a ConvertibleBondBox
+ * @dev IBO Box for reinitializing a ConvertibleBondBox
  *
  * Invariants:
  *  - `initial Price must be < $1.00`
  */
-contract StagingBox is OwnableUpgradeable, SBImmutableArgs, IStagingBox {
+contract IBOBox is OwnableUpgradeable, SBImmutableArgs, IIBOBox {
     uint256 public s_reinitLendAmount;
 
     modifier beforeReinitialize() {
@@ -23,7 +23,7 @@ contract StagingBox is OwnableUpgradeable, SBImmutableArgs, IStagingBox {
     }
 
     function initialize(address _owner) external initializer {
-        require(_owner != address(0), "StagingBox: invalid owner address");
+        require(_owner != address(0), "IBOBox: invalid owner address");
         //check if valid initialPrice immutable arg
         if (initialPrice() > priceGranularity())
             revert InitialPriceTooHigh({
@@ -239,7 +239,7 @@ contract StagingBox is OwnableUpgradeable, SBImmutableArgs, IStagingBox {
 
     function transferOwnership(address newOwner)
         public
-        override(IStagingBox, OwnableUpgradeable)
+        override(IIBOBox, OwnableUpgradeable)
         onlyOwner
     {
         _transferOwnership(newOwner);
