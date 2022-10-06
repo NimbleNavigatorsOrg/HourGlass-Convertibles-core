@@ -120,10 +120,9 @@ contract IBOLoanRouter is IIBOLoanRouter {
     /**
      * @inheritdoc IIBOLoanRouter
      */
-    function simpleCancelBorrowUnwrap(
-        IIBOBox _IBOBox,
-        uint256 _issueOrderAmount
-    ) external {
+    function simpleCancelIssueUnwrap(IIBOBox _IBOBox, uint256 _issueOrderAmount)
+        external
+    {
         //transfer issueOrders
         _IBOBox.issueOrder().transferFrom(
             msg.sender,
@@ -140,7 +139,7 @@ contract IBOLoanRouter is IIBOLoanRouter {
         }
 
         //cancel issueOrders for tranches
-        _IBOBox.cancelBorrow(_issueOrderAmount);
+        _IBOBox.cancelIssue(_issueOrderAmount);
 
         //redeem tranches with underlying bond & mature
         _redeemTrancheImmatureUnwrap(_IBOBox);

@@ -45,7 +45,7 @@ interface IIBOBox is IIBOImmutableArgs {
      * Requirements:
      */
 
-    function cancelBorrow(uint256 _issueOrderAmount) external;
+    function cancelIssue(uint256 _issueOrderAmount) external;
 
     /**
      * @dev Withdraws Lend Slips for unfilled IssueOrders

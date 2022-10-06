@@ -83,7 +83,7 @@ contract IBOBoxLens is IIBOBoxLens {
     /**
      * @inheritdoc IIBOBoxLens
      */
-    function viewSimpleCancelBorrowUnwrap(
+    function viewSimpleCancelIssueUnwrap(
         IIBOBox _IBOBox,
         uint256 _issueOrderAmount
     ) public view returns (uint256, uint256) {
@@ -796,7 +796,7 @@ contract IBOBoxLens is IIBOBoxLens {
      * @inheritdoc IIBOBoxLens
      */
 
-    function viewMaxWithdrawIssueOrders(IIBOBox _IBOBox, address _account)
+    function viewMaxCancelIssueOrders(IIBOBox _IBOBox, address _account)
         public
         view
         returns (uint256)

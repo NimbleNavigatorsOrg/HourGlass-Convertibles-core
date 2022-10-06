@@ -44,10 +44,8 @@ interface IIBOLoanRouter {
      *  - `msg.sender` must have `approved` `_issueOrderAmount` IssueOrder tokens to this contract
      */
 
-    function simpleCancelBorrowUnwrap(
-        IIBOBox _IBOBox,
-        uint256 _issueOrderAmount
-    ) external;
+    function simpleCancelIssueUnwrap(IIBOBox _IBOBox, uint256 _issueOrderAmount)
+        external;
 
     /**
      * @dev redeems buyOrders for bondSlips and bondSlips for stables

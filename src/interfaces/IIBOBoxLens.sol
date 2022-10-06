@@ -35,7 +35,7 @@ interface IIBOBoxLens {
      * - for A-Z convertible only
      */
 
-    function viewSimpleCancelBorrowUnwrap(
+    function viewSimpleCancelIssueUnwrap(
         IIBOBox _IBOBox,
         uint256 _issueOrderAmount
     ) external view returns (uint256, uint256);
@@ -298,7 +298,7 @@ interface IIBOBoxLens {
      * Requirements:
      */
 
-    function viewMaxWithdrawIssueOrders(IIBOBox _IBOBox, address _account)
+    function viewMaxCancelIssueOrders(IIBOBox _IBOBox, address _account)
         external
         view
         returns (uint256);
