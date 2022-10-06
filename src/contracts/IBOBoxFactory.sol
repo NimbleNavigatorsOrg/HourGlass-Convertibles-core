@@ -105,7 +105,7 @@ contract IBOBoxFactory is IIBOBoxFactory, Context {
                 initialPrice,
                 convertibleBondBox.stableToken(),
                 convertibleBondBox.safeTranche(),
-                address(convertibleBondBox.safeSlip()),
+                address(convertibleBondBox.bondSlip()),
                 convertibleBondBox.safeRatio()
             ),
             abi.encodePacked(

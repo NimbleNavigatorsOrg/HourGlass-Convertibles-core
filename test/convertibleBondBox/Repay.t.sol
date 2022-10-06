@@ -13,7 +13,7 @@ contract Repay is CBBSetup {
         uint256 CBBSafeTranche;
         uint256 CBBRiskTranche;
         uint256 CBBStables;
-        uint256 repaidSafeSlips;
+        uint256 repaidBondSlips;
     }
 
     struct RepayAmounts {
@@ -96,7 +96,7 @@ contract Repay is CBBSetup {
 
         s_stableToken.mint(
             s_borrower,
-            (s_safeSlip.balanceOf(s_lender) * (10**s_stableDecimals)) /
+            (s_bondSlip.balanceOf(s_lender) * (10**s_stableDecimals)) /
                 (10**s_collateralDecimals)
         );
 
@@ -113,7 +113,7 @@ contract Repay is CBBSetup {
             s_safeTranche.balanceOf(s_deployedCBBAddress),
             s_riskTranche.balanceOf(s_deployedCBBAddress),
             s_stableToken.balanceOf(s_deployedCBBAddress),
-            s_deployedConvertibleBondBox.s_repaidSafeSlips()
+            s_deployedConvertibleBondBox.s_repaidBondSlips()
         );
 
         uint256 maxStablesOwed = (before.borrowerIssuerSlip *
@@ -170,7 +170,7 @@ contract Repay is CBBSetup {
 
         s_stableToken.mint(
             s_borrower,
-            (s_safeSlip.balanceOf(s_lender) * (10**s_stableDecimals)) /
+            (s_bondSlip.balanceOf(s_lender) * (10**s_stableDecimals)) /
                 (10**s_collateralDecimals)
         );
 
@@ -187,7 +187,7 @@ contract Repay is CBBSetup {
             s_safeTranche.balanceOf(s_deployedCBBAddress),
             s_riskTranche.balanceOf(s_deployedCBBAddress),
             s_stableToken.balanceOf(s_deployedCBBAddress),
-            s_deployedConvertibleBondBox.s_repaidSafeSlips()
+            s_deployedConvertibleBondBox.s_repaidBondSlips()
         );
 
         issuerSlipAmount = bound(
@@ -284,8 +284,8 @@ contract Repay is CBBSetup {
         );
 
         assertApproxEqRel(
-            before.repaidSafeSlips + adjustments.safeTranchePayout,
-            s_deployedConvertibleBondBox.s_repaidSafeSlips(),
+            before.repaidBondSlips + adjustments.safeTranchePayout,
+            s_deployedConvertibleBondBox.s_repaidBondSlips(),
             1e15
         );
     }

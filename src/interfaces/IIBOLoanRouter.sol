@@ -50,7 +50,7 @@ interface IIBOLoanRouter {
     ) external;
 
     /**
-     * @dev redeems lendSlips for safeSlips and safeSlips for stables
+     * @dev redeems lendSlips for bondSlips and bondSlips for stables
      * @param _IBOBox The IBO box tied to the Convertible Bond
      * @param _lendSlipAmount The amount of lendSlips to be redeemed
      * Requirements:
@@ -61,21 +61,21 @@ interface IIBOLoanRouter {
         external;
 
     /**
-     * @dev redeems safeSlips for tranches, redeems tranches for rebasing
+     * @dev redeems bondSlips for tranches, redeems tranches for rebasing
      * collateral, unwraps rebasing collateral, and then swaps for stableToken
      * @param _IBOBox The IBO box tied to the Convertible Bond
-     * @param _safeSlipAmount The amount of lendSlips to be redeemed
+     * @param _bondSlipAmount The amount of lendSlips to be redeemed
      * Requirements:
      *  - can only be called after maturity
      */
 
-    function redeemSafeSlipsForTranchesAndUnwrap(
+    function redeemBondSlipsForTranchesAndUnwrap(
         IIBOBox _IBOBox,
-        uint256 _safeSlipAmount
+        uint256 _bondSlipAmount
     ) external;
 
     /**
-     * @dev redeems lendSlips for safeSlips and safeSlips for tranches, redeems tranches for rebasing
+     * @dev redeems lendSlips for bondSlips and bondSlips for tranches, redeems tranches for rebasing
      * collateral, unwraps rebasing collateral, and then swaps for stableToken
      * @param _IBOBox The IBO box tied to the Convertible Bond
      * @param _lendSlipAmount The amount of lendSlips to be redeemed

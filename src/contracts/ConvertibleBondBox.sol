@@ -23,7 +23,7 @@ contract ConvertibleBondBox is
     uint256 public override s_startDate;
     uint256 public s_initialPrice;
 
-    uint256 public override s_repaidSafeSlips;
+    uint256 public override s_repaidBondSlips;
 
     // Changeable by owner
     uint256 public override feeBps;
@@ -135,19 +135,19 @@ contract ConvertibleBondBox is
     {
         uint256 price = currentPrice();
 
-        uint256 safeSlipAmount = (_stableAmount *
+        uint256 bondSlipAmount = (_stableAmount *
             s_priceGranularity *
             trancheDecimals()) /
             price /
             stableDecimals();
 
-        uint256 zTrancheAmount = (safeSlipAmount * riskRatio()) / safeRatio();
+        uint256 zTrancheAmount = (bondSlipAmount * riskRatio()) / safeRatio();
 
         _atomicDeposit(
             _borrower,
             _lender,
             _stableAmount,
-            safeSlipAmount,
+            bondSlipAmount,
             zTrancheAmount
         );
 
@@ -291,26 +291,26 @@ contract ConvertibleBondBox is
     /**
      * @inheritdoc IConvertibleBondBox
      */
-    function redeemSafeTranche(uint256 _safeSlipAmount)
+    function redeemSafeTranche(uint256 _bondSlipAmount)
         external
         override
         afterBondMature
-        validAmount(_safeSlipAmount)
+        validAmount(_bondSlipAmount)
     {
         //transfer fee to owner
         if (feeBps > 0 && _msgSender() != owner()) {
-            uint256 feeSlip = (_safeSlipAmount * feeBps) / BPS;
-            safeSlip().transferFrom(_msgSender(), owner(), feeSlip);
-            _safeSlipAmount -= feeSlip;
+            uint256 feeSlip = (_bondSlipAmount * feeBps) / BPS;
+            bondSlip().transferFrom(_msgSender(), owner(), feeSlip);
+            _bondSlipAmount -= feeSlip;
         }
 
-        uint256 safeSlipSupply = safeSlip().totalSupply();
+        uint256 bondSlipSupply = bondSlip().totalSupply();
 
         //burn safe-slips
-        safeSlip().burn(_msgSender(), _safeSlipAmount);
+        bondSlip().burn(_msgSender(), _bondSlipAmount);
 
         //transfer safe-Tranche after maturity only
-        safeTranche().transfer(_msgSender(), _safeSlipAmount);
+        safeTranche().transfer(_msgSender(), _bondSlipAmount);
 
         uint256 zPenaltyTotal = riskTranche().balanceOf(address(this)) -
             issuerSlip().totalSupply();
@@ -318,26 +318,26 @@ contract ConvertibleBondBox is
         //transfer risk-Tranche penalty after maturity only
         riskTranche().transfer(
             _msgSender(),
-            (_safeSlipAmount * zPenaltyTotal) /
-                (safeSlipSupply - s_repaidSafeSlips)
+            (_bondSlipAmount * zPenaltyTotal) /
+                (bondSlipSupply - s_repaidBondSlips)
         );
 
-        emit RedeemSafeTranche(_msgSender(), _safeSlipAmount);
+        emit RedeemSafeTranche(_msgSender(), _bondSlipAmount);
     }
 
     /**
      * @inheritdoc IConvertibleBondBox
      */
-    function redeemStable(uint256 _safeSlipAmount)
+    function redeemStable(uint256 _bondSlipAmount)
         external
         override
-        validAmount(_safeSlipAmount)
+        validAmount(_bondSlipAmount)
     {
-        //transfer safeSlips to owner
+        //transfer bondSlips to owner
         if (feeBps > 0 && _msgSender() != owner()) {
-            uint256 feeSlip = (_safeSlipAmount * feeBps) / BPS;
-            safeSlip().transferFrom(_msgSender(), owner(), feeSlip);
-            _safeSlipAmount -= feeSlip;
+            uint256 feeSlip = (_bondSlipAmount * feeBps) / BPS;
+            bondSlip().transferFrom(_msgSender(), owner(), feeSlip);
+            _bondSlipAmount -= feeSlip;
         }
 
         uint256 stableBalance = stableToken().balanceOf(address(this));
@@ -346,14 +346,14 @@ contract ConvertibleBondBox is
         TransferHelper.safeTransfer(
             address(stableToken()),
             _msgSender(),
-            (_safeSlipAmount * stableBalance) / (s_repaidSafeSlips)
+            (_bondSlipAmount * stableBalance) / (s_repaidBondSlips)
         );
 
         //burn safe-slips
-        safeSlip().burn(_msgSender(), _safeSlipAmount);
-        s_repaidSafeSlips -= _safeSlipAmount;
+        bondSlip().burn(_msgSender(), _bondSlipAmount);
+        s_repaidBondSlips -= _bondSlipAmount;
 
-        emit RedeemStable(_msgSender(), _safeSlipAmount, currentPrice());
+        emit RedeemStable(_msgSender(), _bondSlipAmount, currentPrice());
     }
 
     /**
@@ -387,14 +387,14 @@ contract ConvertibleBondBox is
         address _borrower,
         address _lender,
         uint256 _stableAmount,
-        uint256 _safeSlipAmount,
+        uint256 _bondSlipAmount,
         uint256 _issuerSlipAmount
     ) internal {
         //Transfer safeTranche to ConvertibleBondBox
         safeTranche().transferFrom(
             _msgSender(),
             address(this),
-            _safeSlipAmount
+            _bondSlipAmount
         );
 
         //Transfer riskTranche to ConvertibleBondBox
@@ -404,8 +404,8 @@ contract ConvertibleBondBox is
             _issuerSlipAmount
         );
 
-        // //Mint safeSlips to the lender
-        safeSlip().mint(_lender, _safeSlipAmount);
+        // //Mint bondSlips to the lender
+        bondSlip().mint(_lender, _bondSlipAmount);
 
         // //Mint issuerSlips to the borrower
         issuerSlip().mint(_borrower, _issuerSlipAmount);
@@ -428,7 +428,7 @@ contract ConvertibleBondBox is
         uint256 _riskTranchePayout
     ) internal {
         // Update total repaid safe slips
-        s_repaidSafeSlips += _safeTranchePayout;
+        s_repaidBondSlips += _safeTranchePayout;
 
         // Transfer fees to owner
         if (feeBps > 0 && _msgSender() != owner()) {

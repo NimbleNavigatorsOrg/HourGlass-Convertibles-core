@@ -65,13 +65,13 @@ interface IIBOBoxLens {
     ) external view returns (uint256, uint256);
 
     /**
-     * @dev provides amount of safeSlips expected in return for redeeming lendSlips
+     * @dev provides amount of bondSlips expected in return for redeeming lendSlips
      * @param _IBOBox The IBO box tied to the Convertible Bond
      * @param _lendSlipAmount The amount of lendSlips to be redeemed
      * Requirements:
      */
 
-    function viewRedeemLendSlipForSafeSlip(
+    function viewRedeemLendSlipForBondSlip(
         IIBOBox _IBOBox,
         uint256 _lendSlipAmount
     ) external view returns (uint256);
@@ -89,15 +89,15 @@ interface IIBOBoxLens {
     ) external view returns (uint256, uint256);
 
     /**
-     * @dev provides amount of stableTokens expected in return for redeeming safeSlips
+     * @dev provides amount of stableTokens expected in return for redeeming bondSlips
      * @param _IBOBox The IBO box tied to the Convertible Bond
-     * @param _safeSlipAmount The amount of safeSlips to be redeemed
+     * @param _bondSlipAmount The amount of bondSlips to be redeemed
      * Requirements:
      */
 
-    function viewRedeemSafeSlipsForStables(
+    function viewRedeemBondSlipsForStables(
         IIBOBox _IBOBox,
-        uint256 _safeSlipAmount
+        uint256 _bondSlipAmount
     ) external view returns (uint256, uint256);
 
     /**
@@ -121,15 +121,15 @@ interface IIBOBoxLens {
         );
 
     /**
-     * @dev provides amount of unwrapped collateral tokens expected in return for redeeming safeSlips
+     * @dev provides amount of unwrapped collateral tokens expected in return for redeeming bondSlips
      * @param _IBOBox The IBO box tied to the Convertible Bond
-     * @param _safeSlipAmount The amount of lendSlips to be redeemed
+     * @param _bondSlipAmount The amount of lendSlips to be redeemed
      * Requirements:
      */
 
-    function viewRedeemSafeSlipsForTranches(
+    function viewRedeemBondSlipsForTranches(
         IIBOBox _IBOBox,
-        uint256 _safeSlipAmount
+        uint256 _bondSlipAmount
     )
         external
         view
@@ -254,7 +254,7 @@ interface IIBOBoxLens {
      * Requirements:
      */
 
-    function viewMaxRedeemLendSlipForSafeSlip(IIBOBox _IBOBox, address _account)
+    function viewMaxRedeemLendSlipForBondSlip(IIBOBox _IBOBox, address _account)
         external
         view
         returns (uint256);
@@ -276,7 +276,7 @@ interface IIBOBoxLens {
      * Requirements:
      */
 
-    function viewMaxRedeemSafeSlipForStables(IIBOBox _IBOBox, address _account)
+    function viewMaxRedeemBondSlipForStables(IIBOBox _IBOBox, address _account)
         external
         view
         returns (uint256);
@@ -309,7 +309,7 @@ interface IIBOBoxLens {
      * Requirements:
      */
 
-    function viewMaxRedeemSafeSlipForTranches(IIBOBox _IBOBox, address _account)
+    function viewMaxRedeemBondSlipForTranches(IIBOBox _IBOBox, address _account)
         external
         view
         returns (uint256);

@@ -5,13 +5,13 @@ import "./iboBoxSetup.t.sol";
 contract RedeemLendSlip is iboBoxSetup {
     struct BeforeBalances {
         uint256 lenderLendSlips;
-        uint256 lenderSafeSlips;
-        uint256 IBOSafeSlips;
+        uint256 lenderBondSlips;
+        uint256 IBOBondSlips;
     }
 
     struct LendAmounts {
         uint256 lendSlipAmount;
-        uint256 safeSlipAmount;
+        uint256 bondSlipAmount;
     }
 
     address s_borrower = address(1);
@@ -42,13 +42,13 @@ contract RedeemLendSlip is iboBoxSetup {
 
         BeforeBalances memory before = BeforeBalances(
             s_lendSlip.balanceOf(s_lender),
-            s_safeSlip.balanceOf(s_lender),
-            s_safeSlip.balanceOf(s_deployedIBOBAddress)
+            s_bondSlip.balanceOf(s_lender),
+            s_bondSlip.balanceOf(s_deployedIBOBAddress)
         );
 
         uint256 maxLendAmount = Math.min(
             before.lenderLendSlips,
-            (before.IBOSafeSlips *
+            (before.IBOBondSlips *
                 s_deployedIBOB.initialPrice() *
                 s_deployedIBOB.stableDecimals()) /
                 s_deployedIBOB.priceGranularity() /
@@ -84,13 +84,13 @@ contract RedeemLendSlip is iboBoxSetup {
         );
 
         assertEq(
-            before.lenderSafeSlips + adjustments.safeSlipAmount,
-            s_safeSlip.balanceOf(s_lender)
+            before.lenderBondSlips + adjustments.bondSlipAmount,
+            s_bondSlip.balanceOf(s_lender)
         );
 
         assertEq(
-            before.IBOSafeSlips - adjustments.safeSlipAmount,
-            s_safeSlip.balanceOf(s_deployedIBOBAddress)
+            before.IBOBondSlips - adjustments.bondSlipAmount,
+            s_bondSlip.balanceOf(s_deployedIBOBAddress)
         );
     }
 }

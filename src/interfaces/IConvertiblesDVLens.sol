@@ -26,22 +26,22 @@ struct IBODataActive {
     NumFixedPoint borrowSlipSupply;
     NumFixedPoint safeTrancheBalance;
     NumFixedPoint riskTrancheBalance;
-    NumFixedPoint safeSlipBalance;
+    NumFixedPoint bondSlipBalance;
     NumFixedPoint issuerSlipBalance;
     NumFixedPoint stableTokenBalanceBorrow;
     NumFixedPoint stableTokenBalanceLend;
     NumFixedPoint safeTrancheCollateral;
     NumFixedPoint riskTrancheCollateral;
-    NumFixedPoint safeSlipCollateral;
+    NumFixedPoint bondSlipCollateral;
     NumFixedPoint issuerSlipCollateral;
     NumFixedPoint tvlBorrow;
     NumFixedPoint tvlLend;
 }
 
 struct CBBDataActive {
-    NumFixedPoint safeSlipSupply;
+    NumFixedPoint bondSlipSupply;
     NumFixedPoint issuerSlipSupply;
-    NumFixedPoint repaidSafeSlips;
+    NumFixedPoint repaidBondSlips;
     NumFixedPoint safeTrancheBalance;
     NumFixedPoint riskTrancheBalance;
     NumFixedPoint stableTokenBalance;
@@ -53,9 +53,9 @@ struct CBBDataActive {
 }
 
 struct CBBDataMature {
-    NumFixedPoint safeSlipSupply;
+    NumFixedPoint bondSlipSupply;
     NumFixedPoint issuerSlipSupply;
-    NumFixedPoint repaidSafeSlips;
+    NumFixedPoint repaidBondSlips;
     NumFixedPoint safeTrancheBalance;
     NumFixedPoint riskTrancheBalance;
     NumFixedPoint zPenaltyTrancheBalance;

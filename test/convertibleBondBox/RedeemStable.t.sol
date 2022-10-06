@@ -5,16 +5,16 @@ import "./CBBSetup.sol";
 
 contract RedeemStable is CBBSetup {
     struct BeforeBalances {
-        uint256 lenderSafeSlip;
+        uint256 lenderBondSlip;
         uint256 lenderStableTokens;
-        uint256 ownerSafeSlip;
+        uint256 ownerBondSlip;
         uint256 CBBStableTokens;
-        uint256 repaidSafeSlips;
+        uint256 repaidBondSlips;
     }
 
     struct RedeemAmounts {
         uint256 feeSlip;
-        uint256 safeSlipAmount;
+        uint256 bondSlipAmount;
         uint256 stableAmount;
     }
 
@@ -38,24 +38,24 @@ contract RedeemStable is CBBSetup {
         );
     }
 
-    function testRedeemStableMinimumInput(uint256 safeSlipAmount) public {
+    function testRedeemStableMinimumInput(uint256 bondSlipAmount) public {
         initialSetup();
-        safeSlipAmount = bound(safeSlipAmount, 0, 1e6 - 1);
+        bondSlipAmount = bound(bondSlipAmount, 0, 1e6 - 1);
 
         bytes memory customError = abi.encodeWithSignature(
             "MinimumInput(uint256,uint256)",
-            safeSlipAmount,
+            bondSlipAmount,
             1e6
         );
         vm.prank(s_lender);
         vm.expectRevert(customError);
-        s_deployedConvertibleBondBox.redeemStable(safeSlipAmount);
+        s_deployedConvertibleBondBox.redeemStable(bondSlipAmount);
     }
 
     function testRedeemStable(
         uint256 time,
         uint256 fee,
-        uint256 safeSlipAmount
+        uint256 bondSlipAmount
     ) public {
         initialSetup();
 
@@ -65,7 +65,7 @@ contract RedeemStable is CBBSetup {
 
         s_stableToken.mint(
             s_borrower,
-            (s_safeSlip.balanceOf(s_lender) * (10**s_stableDecimals)) /
+            (s_bondSlip.balanceOf(s_lender) * (10**s_stableDecimals)) /
                 (10**s_collateralDecimals)
         );
 
@@ -81,40 +81,40 @@ contract RedeemStable is CBBSetup {
         vm.stopPrank();
 
         BeforeBalances memory before = BeforeBalances(
-            s_safeSlip.balanceOf(s_lender),
+            s_bondSlip.balanceOf(s_lender),
             s_stableToken.balanceOf(s_lender),
-            s_safeSlip.balanceOf(s_cbb_owner),
+            s_bondSlip.balanceOf(s_cbb_owner),
             s_stableToken.balanceOf(s_deployedCBBAddress),
-            s_deployedConvertibleBondBox.s_repaidSafeSlips()
+            s_deployedConvertibleBondBox.s_repaidBondSlips()
         );
 
-        safeSlipAmount = bound(
-            safeSlipAmount,
+        bondSlipAmount = bound(
+            bondSlipAmount,
             1e6,
-            s_deployedConvertibleBondBox.s_repaidSafeSlips()
+            s_deployedConvertibleBondBox.s_repaidBondSlips()
         );
 
-        uint256 feeSlip = (safeSlipAmount * fee) / s_BPS;
+        uint256 feeSlip = (bondSlipAmount * fee) / s_BPS;
 
-        uint256 stablePayout = ((safeSlipAmount - feeSlip) *
+        uint256 stablePayout = ((bondSlipAmount - feeSlip) *
             before.CBBStableTokens) /
-            s_deployedConvertibleBondBox.s_repaidSafeSlips();
+            s_deployedConvertibleBondBox.s_repaidBondSlips();
 
         RedeemAmounts memory adjustments = RedeemAmounts(
             feeSlip,
-            safeSlipAmount,
+            bondSlipAmount,
             stablePayout
         );
 
         vm.startPrank(s_lender);
-        s_safeSlip.approve(s_deployedCBBAddress, type(uint256).max);
+        s_bondSlip.approve(s_deployedCBBAddress, type(uint256).max);
         vm.expectEmit(true, true, true, true);
         emit RedeemStable(
             s_lender,
-            safeSlipAmount - feeSlip,
+            bondSlipAmount - feeSlip,
             s_deployedConvertibleBondBox.currentPrice()
         );
-        s_deployedConvertibleBondBox.redeemStable(safeSlipAmount);
+        s_deployedConvertibleBondBox.redeemStable(bondSlipAmount);
         vm.stopPrank();
 
         assertions(before, adjustments);
@@ -125,8 +125,8 @@ contract RedeemStable is CBBSetup {
         RedeemAmounts memory adjustments
     ) internal {
         assertEq(
-            before.lenderSafeSlip - adjustments.safeSlipAmount,
-            s_safeSlip.balanceOf(s_lender)
+            before.lenderBondSlip - adjustments.bondSlipAmount,
+            s_bondSlip.balanceOf(s_lender)
         );
 
         assertEq(
@@ -135,8 +135,8 @@ contract RedeemStable is CBBSetup {
         );
 
         assertEq(
-            before.ownerSafeSlip + adjustments.feeSlip,
-            s_safeSlip.balanceOf(s_cbb_owner)
+            before.ownerBondSlip + adjustments.feeSlip,
+            s_bondSlip.balanceOf(s_cbb_owner)
         );
 
         assertEq(
@@ -145,10 +145,10 @@ contract RedeemStable is CBBSetup {
         );
 
         assertEq(
-            before.repaidSafeSlips -
-                adjustments.safeSlipAmount +
+            before.repaidBondSlips -
+                adjustments.bondSlipAmount +
                 adjustments.feeSlip,
-            s_deployedConvertibleBondBox.s_repaidSafeSlips()
+            s_deployedConvertibleBondBox.s_repaidBondSlips()
         );
     }
 }

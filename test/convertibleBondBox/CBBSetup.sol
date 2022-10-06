@@ -28,7 +28,7 @@ abstract contract CBBSetup is Test {
     Tranche s_tranche;
     Slip s_slip;
     ISlip s_issuerSlip;
-    ISlip s_safeSlip;
+    ISlip s_bondSlip;
     SlipFactory s_slipFactory;
     ITranche s_safeTranche;
     ITranche s_riskTranche;
@@ -143,7 +143,7 @@ abstract contract CBBSetup is Test {
 
         s_deployedConvertibleBondBox = ConvertibleBondBox(s_deployedCBBAddress);
 
-        s_safeSlip = s_deployedConvertibleBondBox.safeSlip();
+        s_bondSlip = s_deployedConvertibleBondBox.bondSlip();
         s_issuerSlip = s_deployedConvertibleBondBox.issuerSlip();
     }
 }

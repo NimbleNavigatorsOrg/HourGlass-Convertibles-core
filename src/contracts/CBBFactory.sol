@@ -109,7 +109,7 @@ contract CBBFactory is ICBBFactory, Context {
             address(riskTranche)
         ).symbol();
 
-        address safeSlipAddress = slipFactory.createSlip(
+        address bondSlipAddress = slipFactory.createSlip(
             "Safe-CBB-Slip",
             string(abi.encodePacked("CBB-SAFE-", collateralSymbolSafe)),
             address(safeTranche)
@@ -121,7 +121,7 @@ contract CBBFactory is ICBBFactory, Context {
             address(riskTranche)
         );
 
-        SlipPair memory SlipData = SlipPair(safeSlipAddress, issuerSlipAddress);
+        SlipPair memory SlipData = SlipPair(bondSlipAddress, issuerSlipAddress);
 
         return SlipData;
     }

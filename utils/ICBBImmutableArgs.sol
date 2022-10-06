@@ -15,12 +15,12 @@ interface ICBBImmutableArgs {
     function bond() external pure returns (IBondController);
 
     /**
-     * @notice The safeSlip object
+     * @notice The bondSlip object
      * @dev using ClonesWithImmutableArgs pattern here to save gas
      * @dev https://github.com/wighawag/clones-with-immutable-args
-     * @return The safeSlip Slip object
+     * @return The bondSlip Slip object
      */
-    function safeSlip() external pure returns (ISlip);
+    function bondSlip() external pure returns (ISlip);
 
     /**
      * @notice The issuerSlip object

@@ -56,13 +56,13 @@ interface IIBOImmutableArgs {
     function safeTranche() external pure returns (ITranche);
 
     /**
-     * @notice The address of the safeslip of the CBB
+     * @notice The address of the BondSlip of the CBB
      * @dev using ClonesWithImmutableArgs pattern here to save gas
      * @dev https://github.com/wighawag/clones-with-immutable-args
-     * @return The address of the safeslip of the CBB
+     * @return The address of the BondSlip of the CBB
      */
 
-    function safeSlipAddress() external pure returns (address);
+    function bondSlipAddress() external pure returns (address);
 
     /**
      * @notice The tranche ratio of the safeTranche

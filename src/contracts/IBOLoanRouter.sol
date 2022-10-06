@@ -162,15 +162,15 @@ contract IBOLoanRouter is IIBOLoanRouter {
             _lendSlipAmount
         );
 
-        //redeem lendSlips for SafeSlips
+        //redeem lendSlips for BondSlips
         _IBOBox.redeemLendSlip(_lendSlipAmount);
 
-        //get balance of SafeSlips and redeem for stables
-        uint256 safeSlipAmount = IERC20(_IBOBox.safeSlipAddress()).balanceOf(
+        //get balance of BondSlips and redeem for stables
+        uint256 bondSlipAmount = IERC20(_IBOBox.bondSlipAddress()).balanceOf(
             address(this)
         );
 
-        convertibleBondBox.redeemStable(safeSlipAmount);
+        convertibleBondBox.redeemStable(bondSlipAmount);
 
         //get balance of stables and send back to user
         uint256 stableBalance = convertibleBondBox.stableToken().balanceOf(
@@ -198,40 +198,40 @@ contract IBOLoanRouter is IIBOLoanRouter {
             _lendSlipAmount
         );
 
-        //redeem lendSlips for SafeSlips
+        //redeem lendSlips for BondSlips
         _IBOBox.redeemLendSlip(_lendSlipAmount);
 
-        //redeem SafeSlips for SafeTranche
-        uint256 safeSlipAmount = IERC20(_IBOBox.safeSlipAddress()).balanceOf(
+        //redeem BondSlips for SafeTranche
+        uint256 bondSlipAmount = IERC20(_IBOBox.bondSlipAddress()).balanceOf(
             address(this)
         );
 
-        _safeSlipsForTranchesUnwrap(_IBOBox, safeSlipAmount);
+        _bondSlipsForTranchesUnwrap(_IBOBox, bondSlipAmount);
     }
 
     /**
      * @inheritdoc IIBOLoanRouter
      */
-    function redeemSafeSlipsForTranchesAndUnwrap(
+    function redeemBondSlipsForTranchesAndUnwrap(
         IIBOBox _IBOBox,
-        uint256 _safeSlipAmount
+        uint256 _bondSlipAmount
     ) external {
         (IConvertibleBondBox convertibleBondBox, , , ) = fetchElasticStack(
             _IBOBox
         );
-        //Transfer safeslips to router
-        convertibleBondBox.safeSlip().transferFrom(
+        //Transfer BondSlips to router
+        convertibleBondBox.bondSlip().transferFrom(
             msg.sender,
             address(this),
-            _safeSlipAmount
+            _bondSlipAmount
         );
 
-        _safeSlipsForTranchesUnwrap(_IBOBox, _safeSlipAmount);
+        _bondSlipsForTranchesUnwrap(_IBOBox, _bondSlipAmount);
     }
 
-    function _safeSlipsForTranchesUnwrap(
+    function _bondSlipsForTranchesUnwrap(
         IIBOBox _IBOBox,
-        uint256 _safeSlipAmount
+        uint256 _bondSlipAmount
     ) internal {
         (
             IConvertibleBondBox convertibleBondBox,
@@ -240,7 +240,7 @@ contract IBOLoanRouter is IIBOLoanRouter {
 
         ) = fetchElasticStack(_IBOBox);
 
-        convertibleBondBox.redeemSafeTranche(_safeSlipAmount);
+        convertibleBondBox.redeemSafeTranche(_bondSlipAmount);
 
         //redeem SafeTranche for underlying collateral
         uint256 safeTrancheAmount = convertibleBondBox.safeTranche().balanceOf(

@@ -46,7 +46,7 @@ contract RedeemLendSlipsForStables is IBOLoanRouterSetup {
             vm.stopPrank();
         }
 
-        uint256 maxRedeemableLendSlips = (s_safeSlip.balanceOf(
+        uint256 maxRedeemableLendSlips = (s_bondSlip.balanceOf(
             s_deployedIBOBAddress
         ) *
             s_deployedIBOB.initialPrice() *
@@ -90,7 +90,7 @@ contract RedeemLendSlipsForStables is IBOLoanRouterSetup {
             s_deployedIBOB.trancheDecimals();
 
         uint256 maxRedeemableLendSlips = (s_deployedConvertibleBondBox
-            .s_repaidSafeSlips() *
+            .s_repaidBondSlips() *
             s_deployedIBOB.initialPrice() *
             s_deployedIBOB.stableDecimals()) /
             s_deployedIBOB.priceGranularity() /

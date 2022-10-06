@@ -65,7 +65,7 @@ interface IIBOBox is IIBOImmutableArgs {
 
     /**
      * @dev Deposits _collateralAmount of collateral-tokens and then calls borrow to CBB
-     * @param _lendSlipAmount amount of LendSlips to redeem SafeSlips with
+     * @param _lendSlipAmount amount of LendSlips to redeem BondSlips with
      * Requirements:
      */
 

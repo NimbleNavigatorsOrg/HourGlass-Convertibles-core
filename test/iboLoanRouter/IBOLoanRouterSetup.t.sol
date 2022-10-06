@@ -116,7 +116,7 @@ contract IBOLoanRouterSetup is CBBSetup {
 
         s_deployedIBOBAddress = address(s_deployedIBOB);
 
-        s_safeSlip = s_deployedConvertibleBondBox.safeSlip();
+        s_bondSlip = s_deployedConvertibleBondBox.bondSlip();
         s_issuerSlip = s_deployedConvertibleBondBox.issuerSlip();
         s_borrowSlip = s_deployedIBOB.borrowSlip();
         s_lendSlip = s_deployedIBOB.lendSlip();
@@ -152,7 +152,7 @@ contract IBOLoanRouterSetup is CBBSetup {
         vm.startPrank(s_lender);
         s_stableToken.approve(address(s_IBOLoanRouter), type(uint256).max);
         s_stableToken.approve(s_deployedIBOBAddress, type(uint256).max);
-        s_safeSlip.approve(address(s_IBOLoanRouter), type(uint256).max);
+        s_bondSlip.approve(address(s_IBOLoanRouter), type(uint256).max);
         s_lendSlip.approve(address(s_IBOLoanRouter), type(uint256).max);
         vm.stopPrank();
     }

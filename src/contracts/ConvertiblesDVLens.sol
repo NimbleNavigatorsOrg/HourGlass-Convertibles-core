@@ -24,7 +24,7 @@ contract ConvertiblesDVLens is IConvertiblesDVLens {
     struct IBOBalances {
         uint256 safeTranche;
         uint256 riskTranche;
-        uint256 safeSlip;
+        uint256 bondSlip;
         uint256 issuerSlip;
         uint256 stablesBorrow;
         uint256 stablesLend;
@@ -97,7 +97,7 @@ contract ConvertiblesDVLens is IConvertiblesDVLens {
         CollateralBalance memory simSlipCollateral = calcTrancheCollateral(
             convertibleBondBox,
             bond,
-            convertibleBondBox.safeSlip().balanceOf(address(_IBOBox)),
+            convertibleBondBox.bondSlip().balanceOf(address(_IBOBox)),
             convertibleBondBox.issuerSlip().balanceOf(address(_IBOBox))
         );
 
@@ -109,7 +109,7 @@ contract ConvertiblesDVLens is IConvertiblesDVLens {
         IBOBalances memory IBO_Balances = IBOBalances(
             _IBOBox.safeTranche().balanceOf(address(_IBOBox)),
             _IBOBox.riskTranche().balanceOf(address(_IBOBox)),
-            _IBOBox.convertibleBondBox().safeSlip().balanceOf(address(_IBOBox)),
+            _IBOBox.convertibleBondBox().bondSlip().balanceOf(address(_IBOBox)),
             _IBOBox.convertibleBondBox().issuerSlip().balanceOf(
                 address(_IBOBox)
             ),
@@ -124,7 +124,7 @@ contract ConvertiblesDVLens is IConvertiblesDVLens {
             NumFixedPoint(_IBOBox.borrowSlip().totalSupply(), decimals.stable),
             NumFixedPoint(IBO_Balances.safeTranche, decimals.tranche),
             NumFixedPoint(IBO_Balances.riskTranche, decimals.tranche),
-            NumFixedPoint(IBO_Balances.safeSlip, decimals.tranche),
+            NumFixedPoint(IBO_Balances.bondSlip, decimals.tranche),
             NumFixedPoint(IBO_Balances.issuerSlip, decimals.tranche),
             NumFixedPoint(IBO_Balances.stablesBorrow, decimals.stable),
             NumFixedPoint(IBO_Balances.stablesLend, decimals.stable),
@@ -143,7 +143,7 @@ contract ConvertiblesDVLens is IConvertiblesDVLens {
             ),
             NumFixedPoint(
                 (IBO_Balances.stablesLend) +
-                    (IBO_Balances.safeSlip *
+                    (IBO_Balances.bondSlip *
                         convertibleBondBox.currentPrice() *
                         (10**decimals.stable)) /
                     convertibleBondBox.s_priceGranularity() /
@@ -180,7 +180,7 @@ contract ConvertiblesDVLens is IConvertiblesDVLens {
 
         CBBDataActive memory data = CBBDataActive(
             NumFixedPoint(
-                _convertibleBondBox.safeSlip().totalSupply(),
+                _convertibleBondBox.bondSlip().totalSupply(),
                 decimals.tranche
             ),
             NumFixedPoint(
@@ -188,7 +188,7 @@ contract ConvertiblesDVLens is IConvertiblesDVLens {
                 decimals.tranche
             ),
             NumFixedPoint(
-                _convertibleBondBox.s_repaidSafeSlips(),
+                _convertibleBondBox.s_repaidBondSlips(),
                 decimals.tranche
             ),
             NumFixedPoint(
@@ -257,7 +257,7 @@ contract ConvertiblesDVLens is IConvertiblesDVLens {
 
         CBBDataMature memory data = CBBDataMature(
             NumFixedPoint(
-                _convertibleBondBox.safeSlip().totalSupply(),
+                _convertibleBondBox.bondSlip().totalSupply(),
                 decimals.tranche
             ),
             NumFixedPoint(
@@ -265,7 +265,7 @@ contract ConvertiblesDVLens is IConvertiblesDVLens {
                 decimals.tranche
             ),
             NumFixedPoint(
-                _convertibleBondBox.s_repaidSafeSlips(),
+                _convertibleBondBox.s_repaidBondSlips(),
                 decimals.tranche
             ),
             NumFixedPoint(

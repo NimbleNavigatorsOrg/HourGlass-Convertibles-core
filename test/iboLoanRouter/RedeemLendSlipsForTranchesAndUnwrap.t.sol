@@ -45,7 +45,7 @@ contract RedeemLendSlipsForTranchesAndUnwrap is IBOLoanRouterSetup {
             s_deployedIBOB.redeemBorrowSlip(maxRedeemableBorrowSlips);
             vm.stopPrank();
         }
-        uint256 maxRedeemableLendSlips = (s_safeSlip.balanceOf(
+        uint256 maxRedeemableLendSlips = (s_bondSlip.balanceOf(
             s_deployedIBOBAddress
         ) *
             s_deployedIBOB.initialPrice() *
@@ -82,7 +82,7 @@ contract RedeemLendSlipsForTranchesAndUnwrap is IBOLoanRouterSetup {
             s_deployedIBOB.priceGranularity() /
             s_deployedIBOB.trancheDecimals();
 
-        uint256 maxRedeemableLendSlips = (s_safeSlip.balanceOf(
+        uint256 maxRedeemableLendSlips = (s_bondSlip.balanceOf(
             s_deployedIBOBAddress
         ) *
             s_deployedIBOB.initialPrice() *

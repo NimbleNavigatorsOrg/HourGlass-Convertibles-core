@@ -2,14 +2,14 @@ pragma solidity 0.8.13;
 
 import "./IBOLoanRouterSetup.t.sol";
 
-contract RedeemIssuerSlipsForTranchesAndUnwrap is IBOLoanRouterSetup {
+contract RedeemBondSlipsForTranchesAndUnwrap is IBOLoanRouterSetup {
     struct BeforeBalances {
-        uint256 borrowerIssuerSlip;
-        uint256 borrowerCollateral;
+        uint256 lenderBondSlips;
+        uint256 lenderCollateral;
     }
 
     struct RedeemAmounts {
-        uint256 issuerSlipAmount;
+        uint256 bondSlipAmount;
         uint256 collateralAmount;
     }
 
@@ -46,7 +46,7 @@ contract RedeemIssuerSlipsForTranchesAndUnwrap is IBOLoanRouterSetup {
             vm.stopPrank();
         }
 
-        uint256 maxRedeemableLendSlips = (s_safeSlip.balanceOf(
+        uint256 maxRedeemableLendSlips = (s_bondSlip.balanceOf(
             s_deployedIBOBAddress
         ) *
             s_deployedIBOB.initialPrice() *
@@ -71,35 +71,35 @@ contract RedeemIssuerSlipsForTranchesAndUnwrap is IBOLoanRouterSetup {
         s_buttonWoodBondController.mature();
     }
 
-    function testIssuerSlipRedeemTrancheAndUnwrap(
-        uint256 issuerSlipAmount,
+    function testBondSlipRedeemTrancheAndUnwrap(
+        uint256 bondSlipAmount,
         uint256 data
     ) public {
         initialSetup(data);
 
-        issuerSlipAmount = bound(
-            issuerSlipAmount,
+        bondSlipAmount = bound(
+            bondSlipAmount,
             1e6,
-            s_issuerSlip.balanceOf(s_borrower)
+            s_bondSlip.balanceOf(s_lender)
         );
 
         (uint256 collateralAmount, , , ) = s_IBOLens
-            .viewRedeemIssuerSlipsForTranches(s_deployedIBOB, issuerSlipAmount);
+            .viewRedeemBondSlipsForTranches(s_deployedIBOB, bondSlipAmount);
 
         BeforeBalances memory before = BeforeBalances(
-            s_issuerSlip.balanceOf(s_borrower),
-            s_collateralToken.balanceOf(s_borrower)
+            s_bondSlip.balanceOf(s_lender),
+            s_collateralToken.balanceOf(s_lender)
         );
 
         RedeemAmounts memory adjustments = RedeemAmounts(
-            issuerSlipAmount,
+            bondSlipAmount,
             collateralAmount
         );
 
-        vm.startPrank(s_borrower);
-        s_IBOLoanRouter.redeemIssuerSlipsForTranchesAndUnwrap(
+        vm.startPrank(s_lender);
+        s_IBOLoanRouter.redeemBondSlipsForTranchesAndUnwrap(
             s_deployedIBOB,
-            issuerSlipAmount
+            bondSlipAmount
         );
         vm.stopPrank();
 
@@ -111,14 +111,14 @@ contract RedeemIssuerSlipsForTranchesAndUnwrap is IBOLoanRouterSetup {
         RedeemAmounts memory adjustments
     ) internal {
         assertApproxEqRel(
-            before.borrowerCollateral + adjustments.collateralAmount,
-            s_collateralToken.balanceOf(s_borrower),
+            before.lenderBondSlips - adjustments.bondSlipAmount,
+            s_bondSlip.balanceOf(s_lender),
             1e15
         );
 
         assertApproxEqRel(
-            before.borrowerIssuerSlip - adjustments.issuerSlipAmount,
-            s_issuerSlip.balanceOf(s_borrower),
+            before.lenderCollateral + adjustments.collateralAmount,
+            s_collateralToken.balanceOf(s_lender),
             1e15
         );
     }
