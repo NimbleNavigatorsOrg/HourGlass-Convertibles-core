@@ -2,7 +2,7 @@ pragma solidity 0.8.13;
 
 import "./IBOLoanRouterSetup.t.sol";
 
-contract RedeemBuyOrdersForStables is IBOLoanRouterSetup {
+contract ExecuteBuyOrdersForStables is IBOLoanRouterSetup {
     struct BeforeBalances {
         uint256 lenderBuyOrders;
         uint256 lenderStables;
@@ -55,7 +55,7 @@ contract RedeemBuyOrdersForStables is IBOLoanRouterSetup {
             s_deployedIBOB.trancheDecimals();
 
         vm.startPrank(s_lender);
-        s_deployedIBOB.redeemBuyOrder(maxRedeemableBuyOrders / 2);
+        s_deployedIBOB.executeBuyOrder(maxRedeemableBuyOrders / 2);
         vm.stopPrank();
 
         vm.warp(s_maturityDate + 1);
@@ -102,7 +102,7 @@ contract RedeemBuyOrdersForStables is IBOLoanRouterSetup {
             Math.min(maxRedeemableBuyOrders, s_buyOrder.balanceOf(s_lender))
         );
 
-        (uint256 stableAmount, ) = s_IBOLens.viewRedeemBuyOrdersForStables(
+        (uint256 stableAmount, ) = s_IBOLens.viewExecuteBuyOrdersForStables(
             s_deployedIBOB,
             buyOrderAmount
         );
@@ -118,7 +118,7 @@ contract RedeemBuyOrdersForStables is IBOLoanRouterSetup {
         );
 
         vm.startPrank(s_lender);
-        s_IBOLoanRouter.redeemBuyOrdersForStables(
+        s_IBOLoanRouter.executeBuyOrdersForStables(
             s_deployedIBOB,
             buyOrderAmount
         );

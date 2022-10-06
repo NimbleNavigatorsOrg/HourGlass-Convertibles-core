@@ -175,7 +175,7 @@ contract IBOBoxLens is IIBOBoxLens {
      * @inheritdoc IIBOBoxLens
      */
 
-    function viewRedeemBuyOrderForBondSlip(
+    function viewExecuteBuyOrderForBondSlip(
         IIBOBox _IBOBox,
         uint256 _buyOrderAmount
     ) external view returns (uint256) {
@@ -192,7 +192,7 @@ contract IBOBoxLens is IIBOBoxLens {
      * @inheritdoc IIBOBoxLens
      */
 
-    function viewRedeemBuyOrdersForStables(
+    function viewExecuteBuyOrdersForStables(
         IIBOBox _IBOBox,
         uint256 _buyOrderAmount
     ) public view returns (uint256, uint256) {
@@ -270,7 +270,7 @@ contract IBOBoxLens is IIBOBoxLens {
     /**
      * @inheritdoc IIBOBoxLens
      */
-    function viewRedeemBuyOrdersForTranches(
+    function viewExecuteBuyOrdersForTranches(
         IIBOBox _IBOBox,
         uint256 _buyOrderAmount
     )
@@ -690,7 +690,7 @@ contract IBOBoxLens is IIBOBoxLens {
      * @inheritdoc IIBOBoxLens
      */
 
-    function viewMaxRedeemBuyOrderForBondSlip(IIBOBox _IBOBox, address _account)
+    function viewMaxExecuteBuyOrderForBondSlip(IIBOBox _IBOBox, address _account)
         public
         view
         returns (uint256)
@@ -716,7 +716,7 @@ contract IBOBoxLens is IIBOBoxLens {
      * @inheritdoc IIBOBoxLens
      */
 
-    function viewMaxRedeemBuyOrderForStables(IIBOBox _IBOBox, address _account)
+    function viewMaxExecuteBuyOrderForStables(IIBOBox _IBOBox, address _account)
         public
         view
         returns (uint256)
@@ -856,7 +856,7 @@ contract IBOBoxLens is IIBOBoxLens {
      * @inheritdoc IIBOBoxLens
      */
 
-    function viewMaxRedeemBuyOrderForTranches(IIBOBox _IBOBox, address _account)
+    function viewMaxExecuteBuyOrderForTranches(IIBOBox _IBOBox, address _account)
         public
         view
         returns (uint256)

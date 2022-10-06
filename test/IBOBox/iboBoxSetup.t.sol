@@ -23,7 +23,7 @@ contract iboBoxSetup is CBBSetup {
     event CancelledBuyOrder(address, uint256);
     event CancelledIssueOrder(address, uint256);
     event RedeemIssueOrder(address, uint256);
-    event RedeemBuyOrder(address, uint256);
+    event ExecuteBuyOrder(address, uint256);
 
     event IBOBoxCreated(address msgSender, address IBOBox, address slipFactory);
 

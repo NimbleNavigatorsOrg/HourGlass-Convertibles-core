@@ -180,7 +180,7 @@ contract IBOBox is OwnableUpgradeable, IBOImmutableArgs, IIBOBox {
         emit RedeemIssueOrder(_msgSender(), _issueOrderAmount);
     }
 
-    function redeemBuyOrder(uint256 _buyOrderAmount) external override {
+    function executeBuyOrder(uint256 _buyOrderAmount) external override {
         //- Transfer `_buyOrderAmount*priceGranularity()/initialPrice()`  of BondSlips to msg.sender
         ISlip(bondSlipAddress()).transfer(
             _msgSender(),
@@ -192,7 +192,7 @@ contract IBOBox is OwnableUpgradeable, IBOImmutableArgs, IIBOBox {
         //- burns `_buyOrderAmount` of msg.sender’s BuyOrders
         buyOrder().burn(_msgSender(), _buyOrderAmount);
 
-        emit RedeemBuyOrder(_msgSender(), _buyOrderAmount);
+        emit ExecuteBuyOrder(_msgSender(), _buyOrderAmount);
     }
 
     function transmitActivate(bool _isLend) external override onlyOwner {

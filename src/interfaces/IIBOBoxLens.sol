@@ -71,7 +71,7 @@ interface IIBOBoxLens {
      * Requirements:
      */
 
-    function viewRedeemBuyOrderForBondSlip(
+    function viewExecuteBuyOrderForBondSlip(
         IIBOBox _IBOBox,
         uint256 _buyOrderAmount
     ) external view returns (uint256);
@@ -83,7 +83,7 @@ interface IIBOBoxLens {
      * Requirements:
      */
 
-    function viewRedeemBuyOrdersForStables(
+    function viewExecuteBuyOrdersForStables(
         IIBOBox _IBOBox,
         uint256 _buyOrderAmount
     ) external view returns (uint256, uint256);
@@ -107,7 +107,7 @@ interface IIBOBoxLens {
      * Requirements:
      */
 
-    function viewRedeemBuyOrdersForTranches(
+    function viewExecuteBuyOrdersForTranches(
         IIBOBox _IBOBox,
         uint256 _buyOrderAmount
     )
@@ -254,7 +254,7 @@ interface IIBOBoxLens {
      * Requirements:
      */
 
-    function viewMaxRedeemBuyOrderForBondSlip(IIBOBox _IBOBox, address _account)
+    function viewMaxExecuteBuyOrderForBondSlip(IIBOBox _IBOBox, address _account)
         external
         view
         returns (uint256);
@@ -265,7 +265,7 @@ interface IIBOBoxLens {
      * Requirements:
      */
 
-    function viewMaxRedeemBuyOrderForStables(IIBOBox _IBOBox, address _account)
+    function viewMaxExecuteBuyOrderForStables(IIBOBox _IBOBox, address _account)
         external
         view
         returns (uint256);
@@ -320,7 +320,7 @@ interface IIBOBoxLens {
      * Requirements:
      */
 
-    function viewMaxRedeemBuyOrderForTranches(IIBOBox _IBOBox, address _account)
+    function viewMaxExecuteBuyOrderForTranches(IIBOBox _IBOBox, address _account)
         external
         view
         returns (uint256);

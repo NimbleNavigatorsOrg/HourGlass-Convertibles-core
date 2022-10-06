@@ -9,7 +9,7 @@ interface IIBOBox is IIBOImmutableArgs {
     event CancelledBuyOrder(address lender, uint256 buyOrderAmount);
     event CancelledIssueOrder(address borrower, uint256 issueOrderAmount);
     event RedeemIssueOrder(address caller, uint256 issueOrderAmount);
-    event RedeemBuyOrder(address caller, uint256 buyOrderAmount);
+    event ExecuteBuyOrder(address caller, uint256 buyOrderAmount);
     event Initialized(address owner);
 
     error InitialPriceTooHigh(uint256 given, uint256 maxPrice);
@@ -70,7 +70,7 @@ interface IIBOBox is IIBOImmutableArgs {
      * Requirements:
      */
 
-    function redeemBuyOrder(uint256 _buyOrderAmount) external;
+    function executeBuyOrder(uint256 _buyOrderAmount) external;
 
     /**
      * @dev Deposits _collateralAmount of collateral-tokens and then calls borrow to CBB

@@ -55,7 +55,7 @@ interface IIBOLoanRouter {
      *  - can only be called when there are stables in the CBB to be repaid
      */
 
-    function redeemBuyOrdersForStables(IIBOBox _IBOBox, uint256 _buyOrderAmount)
+    function executeBuyOrdersForStables(IIBOBox _IBOBox, uint256 _buyOrderAmount)
         external;
 
     /**
@@ -81,7 +81,7 @@ interface IIBOLoanRouter {
      *  - can only be called after maturity
      */
 
-    function redeemBuyOrdersForTranchesAndUnwrap(
+    function executeBuyOrdersForTranchesAndUnwrap(
         IIBOBox _IBOBox,
         uint256 _buyOrderAmount
     ) external;

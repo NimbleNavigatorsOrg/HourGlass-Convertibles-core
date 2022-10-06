@@ -55,7 +55,7 @@ contract RedeemDebtSlipsForTranchesAndUnwrap is IBOLoanRouterSetup {
             s_deployedIBOB.trancheDecimals();
 
         vm.startPrank(s_lender);
-        s_deployedIBOB.redeemBuyOrder(maxRedeemableBuyOrders / 2);
+        s_deployedIBOB.executeBuyOrder(maxRedeemableBuyOrders / 2);
         vm.stopPrank();
 
         vm.warp(s_maturityDate + 1);
