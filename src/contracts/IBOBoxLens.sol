@@ -192,7 +192,7 @@ contract IBOBoxLens is IIBOBoxLens {
      * @inheritdoc IIBOBoxLens
      */
 
-    function viewExecuteBuyOrdersForStables(
+    function viewExecuteBuyOrdersRedeemStables(
         IIBOBox _IBOBox,
         uint256 _buyOrderAmount
     ) public view returns (uint256, uint256) {
@@ -270,7 +270,7 @@ contract IBOBoxLens is IIBOBoxLens {
     /**
      * @inheritdoc IIBOBoxLens
      */
-    function viewExecuteBuyOrdersForTranches(
+    function viewExecuteBuyOrdersRedeemTranches(
         IIBOBox _IBOBox,
         uint256 _buyOrderAmount
     )
@@ -715,11 +715,10 @@ contract IBOBoxLens is IIBOBoxLens {
      * @inheritdoc IIBOBoxLens
      */
 
-    function viewMaxExecuteBuyOrderForStables(IIBOBox _IBOBox, address _account)
-        public
-        view
-        returns (uint256)
-    {
+    function viewMaxExecuteBuyOrderRedeemStables(
+        IIBOBox _IBOBox,
+        address _account
+    ) public view returns (uint256) {
         (IConvertibleBondBox convertibleBondBox, , , ) = fetchElasticStack(
             _IBOBox
         );
@@ -855,7 +854,7 @@ contract IBOBoxLens is IIBOBoxLens {
      * @inheritdoc IIBOBoxLens
      */
 
-    function viewMaxExecuteBuyOrderForTranches(
+    function viewMaxExecuteBuyOrderRedeemTranches(
         IIBOBox _IBOBox,
         address _account
     ) public view returns (uint256) {

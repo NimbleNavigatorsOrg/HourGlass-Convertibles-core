@@ -2,7 +2,7 @@ pragma solidity 0.8.13;
 
 import "./IBOLoanRouterSetup.t.sol";
 
-contract ExecuteBuyOrdersForTranchesAndUnwrap is IBOLoanRouterSetup {
+contract ExecuteBuyOrdersRedeemTranchesAndUnwrap is IBOLoanRouterSetup {
     struct BeforeBalances {
         uint256 lenderBuyOrders;
         uint256 lenderCollateral;
@@ -97,7 +97,7 @@ contract ExecuteBuyOrdersForTranchesAndUnwrap is IBOLoanRouterSetup {
         );
 
         (uint256 collateralAmount, , , ) = s_IBOLens
-            .viewExecuteBuyOrdersForTranches(s_deployedIBOB, buyOrderAmount);
+            .viewExecuteBuyOrdersRedeemTranches(s_deployedIBOB, buyOrderAmount);
 
         BeforeBalances memory before = BeforeBalances(
             s_buyOrder.balanceOf(s_lender),
@@ -110,7 +110,7 @@ contract ExecuteBuyOrdersForTranchesAndUnwrap is IBOLoanRouterSetup {
         );
 
         vm.startPrank(s_lender);
-        s_IBOLoanRouter.executeBuyOrdersForTranchesAndUnwrap(
+        s_IBOLoanRouter.executeBuyOrdersRedeemTranchesAndUnwrap(
             s_deployedIBOB,
             buyOrderAmount
         );

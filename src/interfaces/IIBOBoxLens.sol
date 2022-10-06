@@ -83,7 +83,7 @@ interface IIBOBoxLens {
      * Requirements:
      */
 
-    function viewExecuteBuyOrdersForStables(
+    function viewExecuteBuyOrdersRedeemStables(
         IIBOBox _IBOBox,
         uint256 _buyOrderAmount
     ) external view returns (uint256, uint256);
@@ -107,7 +107,7 @@ interface IIBOBoxLens {
      * Requirements:
      */
 
-    function viewExecuteBuyOrdersForTranches(
+    function viewExecuteBuyOrdersRedeemTranches(
         IIBOBox _IBOBox,
         uint256 _buyOrderAmount
     )
@@ -265,10 +265,10 @@ interface IIBOBoxLens {
      * Requirements:
      */
 
-    function viewMaxExecuteBuyOrderForStables(IIBOBox _IBOBox, address _account)
-        external
-        view
-        returns (uint256);
+    function viewMaxExecuteBuyOrderRedeemStables(
+        IIBOBox _IBOBox,
+        address _account
+    ) external view returns (uint256);
 
     /**
      * @dev provides maximum input param when redeeming safe slips for stables
@@ -320,7 +320,7 @@ interface IIBOBoxLens {
      * Requirements:
      */
 
-    function viewMaxExecuteBuyOrderForTranches(
+    function viewMaxExecuteBuyOrderRedeemTranches(
         IIBOBox _IBOBox,
         address _account
     ) external view returns (uint256);

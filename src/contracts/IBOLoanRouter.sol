@@ -148,9 +148,10 @@ contract IBOLoanRouter is IIBOLoanRouter {
     /**
      * @inheritdoc IIBOLoanRouter
      */
-    function executeBuyOrdersForStables(IIBOBox _IBOBox, uint256 _buyOrderAmount)
-        external
-    {
+    function executeBuyOrdersRedeemStables(
+        IIBOBox _IBOBox,
+        uint256 _buyOrderAmount
+    ) external {
         (IConvertibleBondBox convertibleBondBox, , , ) = fetchElasticStack(
             _IBOBox
         );
@@ -186,7 +187,7 @@ contract IBOLoanRouter is IIBOLoanRouter {
     /**
      * @inheritdoc IIBOLoanRouter
      */
-    function executeBuyOrdersForTranchesAndUnwrap(
+    function executeBuyOrdersRedeemTranchesAndUnwrap(
         IIBOBox _IBOBox,
         uint256 _buyOrderAmount
     ) external {
