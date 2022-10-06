@@ -11,9 +11,9 @@ contract iboBoxSetup is CBBSetup {
     uint256 s_initialFuzzPrice;
 
     IBOBoxFactory iboBoxFactory;
-    IBOBox s_deployedSB;
-    IBOBoxLens s_SBLens;
-    address s_deployedSBAddress;
+    IBOBox s_deployedIBOB;
+    IBOBoxLens s_IBOLens;
+    address s_deployedIBOBAddress;
 
     ISlip s_borrowSlip;
     ISlip s_lendSlip;
@@ -32,7 +32,7 @@ contract iboBoxSetup is CBBSetup {
 
         IBOBox IBOBox = new IBOBox();
         iboBoxFactory = new IBOBoxFactory(address(IBOBox));
-        s_SBLens = new IBOBoxLens();
+        s_IBOLens = new IBOBoxLens();
     }
 
     function setupIBOBox(uint256 _fuzzPrice) internal {
@@ -43,7 +43,7 @@ contract iboBoxSetup is CBBSetup {
         );
 
         vm.prank(s_cbb_owner);
-        s_deployedSB = IBOBox(
+        s_deployedIBOB = IBOBox(
             iboBoxFactory.createIBOBoxOnly(
                 s_slipFactory,
                 s_deployedConvertibleBondBox,
@@ -51,16 +51,16 @@ contract iboBoxSetup is CBBSetup {
                 s_cbb_owner
             )
         );
-        s_deployedSBAddress = address(s_deployedSB);
+        s_deployedIBOBAddress = address(s_deployedIBOB);
 
         vm.prank(s_cbb_owner);
-        s_deployedConvertibleBondBox.transferOwnership(s_deployedSBAddress);
+        s_deployedConvertibleBondBox.transferOwnership(s_deployedIBOBAddress);
 
-        s_safeTranche.approve(address(s_deployedSB), type(uint256).max);
-        s_riskTranche.approve(address(s_deployedSB), type(uint256).max);
-        s_stableToken.approve(address(s_deployedSB), type(uint256).max);
+        s_safeTranche.approve(address(s_deployedIBOB), type(uint256).max);
+        s_riskTranche.approve(address(s_deployedIBOB), type(uint256).max);
+        s_stableToken.approve(address(s_deployedIBOB), type(uint256).max);
 
-        s_borrowSlip = s_deployedSB.borrowSlip();
-        s_lendSlip = s_deployedSB.lendSlip();
+        s_borrowSlip = s_deployedIBOB.borrowSlip();
+        s_lendSlip = s_deployedIBOB.lendSlip();
     }
 }

@@ -6,7 +6,7 @@ contract RedeemLendSlip is iboBoxSetup {
     struct BeforeBalances {
         uint256 lenderLendSlips;
         uint256 lenderSafeSlips;
-        uint256 SBSafeSlips;
+        uint256 IBOSafeSlips;
     }
 
     struct LendAmounts {
@@ -23,36 +23,36 @@ contract RedeemLendSlip is iboBoxSetup {
         setupIBOBox(_fuzzPrice);
 
         uint256 maxBorrowAmount = (s_safeTranche.balanceOf(address(this)) *
-            s_deployedSB.initialPrice() *
-            s_deployedSB.stableDecimals()) /
-            s_deployedSB.priceGranularity() /
-            s_deployedSB.trancheDecimals();
+            s_deployedIBOB.initialPrice() *
+            s_deployedIBOB.stableDecimals()) /
+            s_deployedIBOB.priceGranularity() /
+            s_deployedIBOB.trancheDecimals();
 
-        s_deployedSB.depositBorrow(s_borrower, maxBorrowAmount);
+        s_deployedIBOB.depositBorrow(s_borrower, maxBorrowAmount);
 
-        s_deployedSB.depositLend(
+        s_deployedIBOB.depositLend(
             s_lender,
             s_stableToken.balanceOf(address(this))
         );
 
-        bool isLend = s_SBLens.viewTransmitReInitBool(s_deployedSB);
+        bool isLend = s_IBOLens.viewTransmitReInitBool(s_deployedIBOB);
 
         vm.prank(s_cbb_owner);
-        s_deployedSB.transmitReInit(isLend);
+        s_deployedIBOB.transmitReInit(isLend);
 
         BeforeBalances memory before = BeforeBalances(
             s_lendSlip.balanceOf(s_lender),
             s_safeSlip.balanceOf(s_lender),
-            s_safeSlip.balanceOf(s_deployedSBAddress)
+            s_safeSlip.balanceOf(s_deployedIBOBAddress)
         );
 
         uint256 maxLendAmount = Math.min(
             before.lenderLendSlips,
-            (before.SBSafeSlips *
-                s_deployedSB.initialPrice() *
-                s_deployedSB.stableDecimals()) /
-                s_deployedSB.priceGranularity() /
-                s_deployedSB.trancheDecimals()
+            (before.IBOSafeSlips *
+                s_deployedIBOB.initialPrice() *
+                s_deployedIBOB.stableDecimals()) /
+                s_deployedIBOB.priceGranularity() /
+                s_deployedIBOB.trancheDecimals()
         );
 
         _lendAmount = bound(_lendAmount, 1, maxLendAmount);
@@ -60,16 +60,16 @@ contract RedeemLendSlip is iboBoxSetup {
         LendAmounts memory adjustments = LendAmounts(
             _lendAmount,
             (_lendAmount *
-                s_deployedSB.priceGranularity() *
-                s_deployedSB.trancheDecimals()) /
-                s_deployedSB.initialPrice() /
-                s_deployedSB.stableDecimals()
+                s_deployedIBOB.priceGranularity() *
+                s_deployedIBOB.trancheDecimals()) /
+                s_deployedIBOB.initialPrice() /
+                s_deployedIBOB.stableDecimals()
         );
 
         vm.prank(s_lender);
         vm.expectEmit(true, true, true, true);
         emit RedeemLendSlip(s_lender, _lendAmount);
-        s_deployedSB.redeemLendSlip(_lendAmount);
+        s_deployedIBOB.redeemLendSlip(_lendAmount);
 
         assertions(before, adjustments);
     }
@@ -89,8 +89,8 @@ contract RedeemLendSlip is iboBoxSetup {
         );
 
         assertEq(
-            before.SBSafeSlips - adjustments.safeSlipAmount,
-            s_safeSlip.balanceOf(s_deployedSBAddress)
+            before.IBOSafeSlips - adjustments.safeSlipAmount,
+            s_safeSlip.balanceOf(s_deployedIBOBAddress)
         );
     }
 }

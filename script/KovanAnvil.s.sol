@@ -47,7 +47,7 @@ contract KovanAnvil is Script {
 
         //IBO box + IBO box factory
         IBOBox deployedIBOBox = new IBOBox();
-        IBOBoxFactory sbFactory = new IBOBoxFactory(address(deployedIBOBox));
+        IBOBoxFactory iboFactory = new IBOBoxFactory(address(deployedIBOBox));
 
         //deploy IBO box router + lens
         IBOLoanRouter IBOLoanRouter = new IBOLoanRouter();
@@ -74,8 +74,8 @@ contract KovanAnvil is Script {
             block.timestamp + 2592e3
         );
 
-        //create new SB with CBB
-        address createdSB = sbFactory.createIBOBoxWithCBB(
+        //create new IBO with CBB
+        address createdIBO = iboFactory.createIBOBoxWithCBB(
             cbbFactory,
             slipFactory,
             IBondController(createdBond),
@@ -98,10 +98,10 @@ contract KovanAnvil is Script {
         console2.log(address(deployedSlip), "deployedSlip");
         console2.log(address(slipFactory), "slipFactory");
         console2.log(address(cbbFactory), "ConvertiblesFactory");
-        console2.log(address(sbFactory), "IBOBoxFactory");
+        console2.log(address(iboFactory), "IBOBoxFactory");
         console2.log(address(IBOLoanRouter), "IBOLoanRouter");
         console2.log(address(IBOBoxLens), "IBOBoxLens");
-        console2.log(createdSB, "createdSB");
+        console2.log(createdIBO, "createdIBO");
         console2.log(createdBond, "createdBond");
     }
 }

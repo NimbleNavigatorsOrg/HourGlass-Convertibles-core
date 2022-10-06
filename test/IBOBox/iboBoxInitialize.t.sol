@@ -4,7 +4,7 @@ import "./iboBoxSetup.t.sol";
 
 contract iboBoxInitialize is iboBoxSetup {
     function testFailInvalidOwnerAddress() public {
-        s_deployedSB = IBOBox(
+        s_deployedIBOB = IBOBox(
             iboBoxFactory.createIBOBoxWithCBB(
                 s_CBBFactory,
                 s_slipFactory,
@@ -31,7 +31,7 @@ contract iboBoxInitialize is iboBoxSetup {
         );
         vm.expectRevert(customError);
 
-        s_deployedSB = IBOBox(
+        s_deployedIBOB = IBOBox(
             iboBoxFactory.createIBOBoxWithCBB(
                 s_CBBFactory,
                 s_slipFactory,
@@ -53,7 +53,7 @@ contract iboBoxInitialize is iboBoxSetup {
             s_priceGranularity
         );
         vm.expectRevert(customError);
-        s_deployedSB = IBOBox(
+        s_deployedIBOB = IBOBox(
             iboBoxFactory.createIBOBoxWithCBB(
                 s_CBBFactory,
                 s_slipFactory,
@@ -73,7 +73,7 @@ contract iboBoxInitialize is iboBoxSetup {
         vm.startPrank(s_cbb_owner);
         vm.expectEmit(true, true, true, false);
         emit IBOBoxCreated(address(this), address(0), address(s_slipFactory));
-        s_deployedSB = IBOBox(
+        s_deployedIBOB = IBOBox(
             iboBoxFactory.createIBOBoxOnly(
                 s_slipFactory,
                 ConvertibleBondBox(s_deployedCBBAddress),

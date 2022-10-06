@@ -23,27 +23,27 @@ contract RepayUnwrap is IBOLoanRouterSetup {
     ) internal {
         vm.startPrank(s_borrower);
         s_IBOLoanRouter.simpleWrapTrancheBorrow(
-            s_deployedSB,
+            s_deployedIBOB,
             s_collateralToken.balanceOf(s_borrower),
             0
         );
         vm.stopPrank();
 
         vm.startPrank(s_lender);
-        s_deployedSB.depositLend(
+        s_deployedIBOB.depositLend(
             s_lender,
             (s_stableToken.balanceOf(s_lender) * 4) / 5
         );
         vm.stopPrank();
 
         vm.startPrank(s_cbb_owner);
-        s_deployedSB.transmitReInit(
-            s_SBLens.viewTransmitReInitBool(s_deployedSB)
+        s_deployedIBOB.transmitReInit(
+            s_IBOLens.viewTransmitReInitBool(s_deployedIBOB)
         );
         vm.stopPrank();
 
         vm.startPrank(s_borrower);
-        s_deployedSB.redeemBorrowSlip(s_borrowSlip.balanceOf(s_borrower));
+        s_deployedIBOB.redeemBorrowSlip(s_borrowSlip.balanceOf(s_borrower));
         vm.stopPrank();
 
         !isMature
@@ -82,7 +82,10 @@ contract RepayUnwrap is IBOLoanRouterSetup {
             uint256 stablesOwed,
             uint256 stableFees,
 
-        ) = s_SBLens.viewRepayMaxAndUnwrapSimple(s_deployedSB, riskSlipAmount);
+        ) = s_IBOLens.viewRepayMaxAndUnwrapSimple(
+                s_deployedIBOB,
+                riskSlipAmount
+            );
 
         s_stableToken.mint(s_borrower, stablesOwed + stableFees);
 
@@ -101,7 +104,7 @@ contract RepayUnwrap is IBOLoanRouterSetup {
 
         vm.startPrank(s_borrower);
         s_IBOLoanRouter.repayMaxAndUnwrapSimple(
-            s_deployedSB,
+            s_deployedIBOB,
             stablesOwed,
             stableFees,
             riskSlipAmount
@@ -118,11 +121,11 @@ contract RepayUnwrap is IBOLoanRouterSetup {
     ) public {
         initialSetup(data, time, false);
 
-        uint256 minStablesForSafeTranche = (s_deployedSB.trancheDecimals() *
-            s_deployedSB.initialPrice() *
-            s_deployedSB.stableDecimals()) /
-            s_deployedSB.priceGranularity() /
-            s_deployedSB.trancheDecimals();
+        uint256 minStablesForSafeTranche = (s_deployedIBOB.trancheDecimals() *
+            s_deployedIBOB.initialPrice() *
+            s_deployedIBOB.stableDecimals()) /
+            s_deployedIBOB.priceGranularity() /
+            s_deployedIBOB.trancheDecimals();
 
         stableAmount = bound(
             stableAmount,
@@ -135,7 +138,7 @@ contract RepayUnwrap is IBOLoanRouterSetup {
             uint256 stablesOwed,
             uint256 stableFees,
             uint256 riskTranchePayout
-        ) = s_SBLens.viewRepayAndUnwrapSimple(s_deployedSB, stableAmount);
+        ) = s_IBOLens.viewRepayAndUnwrapSimple(s_deployedIBOB, stableAmount);
 
         console2.log(riskTranchePayout, "riskTranchePayout");
 
@@ -156,7 +159,7 @@ contract RepayUnwrap is IBOLoanRouterSetup {
 
         vm.startPrank(s_borrower);
         s_IBOLoanRouter.repayAndUnwrapSimple(
-            s_deployedSB,
+            s_deployedIBOB,
             stablesOwed,
             stableFees,
             riskTranchePayout
@@ -184,7 +187,7 @@ contract RepayUnwrap is IBOLoanRouterSetup {
             uint256 stablesOwed,
             uint256 stableFees,
             uint256 riskTranchePayout
-        ) = s_SBLens.viewRepayAndUnwrapMature(s_deployedSB, stableAmount);
+        ) = s_IBOLens.viewRepayAndUnwrapMature(s_deployedIBOB, stableAmount);
 
         s_stableToken.mint(s_borrower, stablesOwed + stableFees);
 
@@ -203,7 +206,7 @@ contract RepayUnwrap is IBOLoanRouterSetup {
 
         vm.startPrank(s_borrower);
         s_IBOLoanRouter.repayAndUnwrapMature(
-            s_deployedSB,
+            s_deployedIBOB,
             stablesOwed,
             stableFees,
             riskTranchePayout
@@ -234,7 +237,10 @@ contract RepayUnwrap is IBOLoanRouterSetup {
             uint256 stablesOwed,
             uint256 stableFees,
 
-        ) = s_SBLens.viewRepayMaxAndUnwrapMature(s_deployedSB, riskSlipAmount);
+        ) = s_IBOLens.viewRepayMaxAndUnwrapMature(
+                s_deployedIBOB,
+                riskSlipAmount
+            );
 
         s_stableToken.mint(s_borrower, stablesOwed + stableFees);
 
@@ -253,7 +259,7 @@ contract RepayUnwrap is IBOLoanRouterSetup {
 
         vm.startPrank(s_borrower);
         s_IBOLoanRouter.repayAndUnwrapMature(
-            s_deployedSB,
+            s_deployedIBOB,
             stablesOwed,
             stableFees,
             riskSlipAmount

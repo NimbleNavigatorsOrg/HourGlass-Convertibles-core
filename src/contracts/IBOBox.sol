@@ -3,7 +3,7 @@ pragma solidity 0.8.13;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@uniswap/lib/contracts/libraries/TransferHelper.sol";
-import "../../utils/SBImmutableArgs.sol";
+import "../../utils/IBOImmutableArgs.sol";
 import "../interfaces/IIBOBox.sol";
 
 /**
@@ -12,7 +12,7 @@ import "../interfaces/IIBOBox.sol";
  * Invariants:
  *  - `initial Price must be < $1.00`
  */
-contract IBOBox is OwnableUpgradeable, SBImmutableArgs, IIBOBox {
+contract IBOBox is OwnableUpgradeable, IBOImmutableArgs, IIBOBox {
     uint256 public s_reinitLendAmount;
 
     modifier beforeReinitialize() {
@@ -46,7 +46,7 @@ contract IBOBox is OwnableUpgradeable, SBImmutableArgs, IIBOBox {
         override
         beforeReinitialize
     {
-        //- transfers `_safeTrancheAmount` of SafeTranche Tokens from msg.sender to SB
+        //- transfers `_safeTrancheAmount` of SafeTranche Tokens from msg.sender to IBO
 
         uint256 safeTrancheAmount = (_borrowAmount *
             priceGranularity() *
@@ -60,7 +60,7 @@ contract IBOBox is OwnableUpgradeable, SBImmutableArgs, IIBOBox {
             safeTrancheAmount
         );
 
-        //- transfers `_safeTrancheAmount * riskRatio() / safeRatio()`  of RiskTranches from msg.sender to SB
+        //- transfers `_safeTrancheAmount * riskRatio() / safeRatio()`  of RiskTranches from msg.sender to IBO
 
         riskTranche().transferFrom(
             _msgSender(),
@@ -80,7 +80,7 @@ contract IBOBox is OwnableUpgradeable, SBImmutableArgs, IIBOBox {
         override
         beforeReinitialize
     {
-        //- transfers `_lendAmount`of Stable Tokens from msg.sender to SB
+        //- transfers `_lendAmount`of Stable Tokens from msg.sender to IBO
         TransferHelper.safeTransferFrom(
             address(stableToken()),
             _msgSender(),
@@ -97,7 +97,7 @@ contract IBOBox is OwnableUpgradeable, SBImmutableArgs, IIBOBox {
 
     function withdrawBorrow(uint256 _borrowSlipAmount) external override {
         //- Reverse of depositBorrow() function
-        //- transfers `_borrowSlipAmount` of SafeTranche Tokens from SB to msg.sender
+        //- transfers `_borrowSlipAmount` of SafeTranche Tokens from IBO to msg.sender
 
         uint256 safeTrancheAmount = (_borrowSlipAmount *
             priceGranularity() *
@@ -107,7 +107,7 @@ contract IBOBox is OwnableUpgradeable, SBImmutableArgs, IIBOBox {
 
         safeTranche().transfer(_msgSender(), (safeTrancheAmount));
 
-        //- transfers `_borrowSlipAmount*riskRatio()/safeRatio()` of RiskTranche Tokens from SB to msg.sender
+        //- transfers `_borrowSlipAmount*riskRatio()/safeRatio()` of RiskTranche Tokens from IBO to msg.sender
 
         riskTranche().transfer(
             _msgSender(),
@@ -136,7 +136,7 @@ contract IBOBox is OwnableUpgradeable, SBImmutableArgs, IIBOBox {
             }
         }
 
-        //- transfers `_lendSlipAmount` of Stable Tokens from SB to msg.sender
+        //- transfers `_lendSlipAmount` of Stable Tokens from IBO to msg.sender
         TransferHelper.safeTransfer(
             address(stableToken()),
             _msgSender(),

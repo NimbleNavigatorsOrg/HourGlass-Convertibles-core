@@ -4,11 +4,11 @@ import "./iboBoxSetup.t.sol";
 
 contract TransmitReinit is iboBoxSetup {
     struct BeforeBalances {
-        uint256 SBSafeTranche;
-        uint256 SBRiskTranche;
-        uint256 SBStableTokens;
-        uint256 SBSafeSlip;
-        uint256 SBRiskSlip;
+        uint256 IBOSafeTranche;
+        uint256 IBORiskTranche;
+        uint256 IBOStableTokens;
+        uint256 IBOSafeSlip;
+        uint256 IBORiskSlip;
         uint256 CBBSafeTranche;
         uint256 CBBRiskTranche;
     }
@@ -30,16 +30,16 @@ contract TransmitReinit is iboBoxSetup {
         setupIBOBox(_fuzzPrice);
 
         uint256 maxBorrowAmount = (s_safeTranche.balanceOf(address(this)) *
-            s_deployedSB.initialPrice() *
-            s_deployedSB.stableDecimals()) /
-            s_deployedSB.priceGranularity() /
-            s_deployedSB.trancheDecimals();
+            s_deployedIBOB.initialPrice() *
+            s_deployedIBOB.stableDecimals()) /
+            s_deployedIBOB.priceGranularity() /
+            s_deployedIBOB.trancheDecimals();
 
         uint256 minBorrowAmount = (1e6 *
-            s_deployedSB.initialPrice() *
-            s_deployedSB.stableDecimals()) /
-            s_deployedSB.priceGranularity() /
-            s_deployedSB.trancheDecimals();
+            s_deployedIBOB.initialPrice() *
+            s_deployedIBOB.stableDecimals()) /
+            s_deployedIBOB.priceGranularity() /
+            s_deployedIBOB.trancheDecimals();
 
         _borrowAmount = bound(
             _borrowAmount,
@@ -47,7 +47,7 @@ contract TransmitReinit is iboBoxSetup {
             maxBorrowAmount
         );
 
-        s_deployedSB.depositBorrow(s_borrower, _borrowAmount);
+        s_deployedIBOB.depositBorrow(s_borrower, _borrowAmount);
 
         _lendAmount = bound(
             _lendAmount,
@@ -55,39 +55,39 @@ contract TransmitReinit is iboBoxSetup {
             s_stableToken.balanceOf(address(this))
         );
 
-        s_deployedSB.depositLend(s_lender, _lendAmount);
+        s_deployedIBOB.depositLend(s_lender, _lendAmount);
 
         BeforeBalances memory before = BeforeBalances(
-            s_safeTranche.balanceOf(s_deployedSBAddress),
-            s_riskTranche.balanceOf(s_deployedSBAddress),
-            s_stableToken.balanceOf(s_deployedSBAddress),
-            s_safeSlip.balanceOf(s_deployedSBAddress),
-            s_riskSlip.balanceOf(s_deployedSBAddress),
+            s_safeTranche.balanceOf(s_deployedIBOBAddress),
+            s_riskTranche.balanceOf(s_deployedIBOBAddress),
+            s_stableToken.balanceOf(s_deployedIBOBAddress),
+            s_safeSlip.balanceOf(s_deployedIBOBAddress),
+            s_riskSlip.balanceOf(s_deployedIBOBAddress),
             s_safeTranche.balanceOf(s_deployedCBBAddress),
             s_riskTranche.balanceOf(s_deployedCBBAddress)
         );
 
-        bool isLend = s_SBLens.viewTransmitReInitBool(s_deployedSB);
+        bool isLend = s_IBOLens.viewTransmitReInitBool(s_deployedIBOB);
 
         uint256 reinitLendAmount;
         uint256 safeTrancheAmount;
 
         if (isLend) {
-            reinitLendAmount = before.SBStableTokens;
+            reinitLendAmount = before.IBOStableTokens;
             safeTrancheAmount =
                 (reinitLendAmount *
-                    s_deployedSB.priceGranularity() *
-                    s_deployedSB.trancheDecimals()) /
-                s_deployedSB.initialPrice() /
-                s_deployedSB.stableDecimals();
+                    s_deployedIBOB.priceGranularity() *
+                    s_deployedIBOB.trancheDecimals()) /
+                s_deployedIBOB.initialPrice() /
+                s_deployedIBOB.stableDecimals();
         } else {
             reinitLendAmount =
-                (before.SBSafeTranche *
-                    s_deployedSB.initialPrice() *
-                    s_deployedSB.stableDecimals()) /
-                s_deployedSB.priceGranularity() /
-                s_deployedSB.trancheDecimals();
-            safeTrancheAmount = before.SBSafeTranche;
+                (before.IBOSafeTranche *
+                    s_deployedIBOB.initialPrice() *
+                    s_deployedIBOB.stableDecimals()) /
+                s_deployedIBOB.priceGranularity() /
+                s_deployedIBOB.trancheDecimals();
+            safeTrancheAmount = before.IBOSafeTranche;
         }
 
         ReinitAmounts memory adjustments = ReinitAmounts(
@@ -97,7 +97,7 @@ contract TransmitReinit is iboBoxSetup {
         );
 
         vm.startPrank(s_cbb_owner);
-        s_deployedSB.transmitReInit(isLend);
+        s_deployedIBOB.transmitReInit(isLend);
 
         assertions(before, adjustments);
     }
@@ -107,24 +107,24 @@ contract TransmitReinit is iboBoxSetup {
         ReinitAmounts memory adjustments
     ) internal {
         assertEq(
-            before.SBSafeTranche - adjustments.safeTrancheAmount,
-            s_safeTranche.balanceOf(s_deployedSBAddress)
+            before.IBOSafeTranche - adjustments.safeTrancheAmount,
+            s_safeTranche.balanceOf(s_deployedIBOBAddress)
         );
         assertEq(
-            before.SBRiskTranche - adjustments.riskTrancheAmount,
-            s_riskTranche.balanceOf(s_deployedSBAddress)
+            before.IBORiskTranche - adjustments.riskTrancheAmount,
+            s_riskTranche.balanceOf(s_deployedIBOBAddress)
         );
         assertEq(
-            before.SBStableTokens,
-            s_stableToken.balanceOf(s_deployedSBAddress)
+            before.IBOStableTokens,
+            s_stableToken.balanceOf(s_deployedIBOBAddress)
         );
         assertEq(
-            before.SBSafeSlip + adjustments.safeTrancheAmount,
-            s_safeSlip.balanceOf(s_deployedSBAddress)
+            before.IBOSafeSlip + adjustments.safeTrancheAmount,
+            s_safeSlip.balanceOf(s_deployedIBOBAddress)
         );
         assertEq(
-            before.SBRiskSlip + adjustments.riskTrancheAmount,
-            s_riskSlip.balanceOf(s_deployedSBAddress)
+            before.IBORiskSlip + adjustments.riskTrancheAmount,
+            s_riskSlip.balanceOf(s_deployedIBOBAddress)
         );
         assertEq(
             before.CBBSafeTranche + adjustments.safeTrancheAmount,
@@ -136,7 +136,7 @@ contract TransmitReinit is iboBoxSetup {
         );
         assertEq(
             adjustments.reinitLendAmount,
-            s_deployedSB.s_reinitLendAmount()
+            s_deployedIBOB.s_reinitLendAmount()
         );
         assertEq(s_deployedConvertibleBondBox.owner(), s_cbb_owner);
     }

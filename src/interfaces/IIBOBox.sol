@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import "../../utils/ISBImmutableArgs.sol";
+import "../../utils/IIBOImmutableArgs.sol";
 
-interface IIBOBox is ISBImmutableArgs {
+interface IIBOBox is IIBOImmutableArgs {
     event LendDeposit(address lender, uint256 lendAmount);
     event BorrowDeposit(address borrower, uint256 safeTrancheAmount);
     event LendWithdrawal(address lender, uint256 lendSlipAmount);

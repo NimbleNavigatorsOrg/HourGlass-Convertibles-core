@@ -13,10 +13,10 @@ import "../external/button-wrappers/MockOracle.sol";
 
 contract IBOLoanRouterSetup is CBBSetup {
     IBOBoxFactory iboBoxFactory;
-    IBOBox s_deployedSB;
-    IBOBoxLens s_SBLens;
+    IBOBox s_deployedIBOB;
+    IBOBoxLens s_IBOLens;
     IBOLoanRouter s_IBOLoanRouter;
-    address s_deployedSBAddress;
+    address s_deployedIBOBAddress;
 
     ButtonToken s_buttonCollatToken;
     MockOracle s_mockOracle;
@@ -94,11 +94,11 @@ contract IBOLoanRouterSetup is CBBSetup {
 
         IBOBox iboBox = new IBOBox();
         iboBoxFactory = new IBOBoxFactory(address(iboBox));
-        s_SBLens = new IBOBoxLens();
+        s_IBOLens = new IBOBoxLens();
         s_IBOLoanRouter = new IBOLoanRouter();
 
         vm.prank(s_cbb_owner);
-        s_deployedSB = IBOBox(
+        s_deployedIBOB = IBOBox(
             iboBoxFactory.createIBOBoxWithCBB(
                 s_CBBFactory,
                 s_slipFactory,
@@ -111,15 +111,15 @@ contract IBOLoanRouterSetup is CBBSetup {
             )
         );
 
-        s_deployedCBBAddress = address(s_deployedSB.convertibleBondBox());
+        s_deployedCBBAddress = address(s_deployedIBOB.convertibleBondBox());
         s_deployedConvertibleBondBox = ConvertibleBondBox(s_deployedCBBAddress);
 
-        s_deployedSBAddress = address(s_deployedSB);
+        s_deployedIBOBAddress = address(s_deployedIBOB);
 
         s_safeSlip = s_deployedConvertibleBondBox.safeSlip();
         s_riskSlip = s_deployedConvertibleBondBox.riskSlip();
-        s_borrowSlip = s_deployedSB.borrowSlip();
-        s_lendSlip = s_deployedSB.lendSlip();
+        s_borrowSlip = s_deployedIBOB.borrowSlip();
+        s_lendSlip = s_deployedIBOB.lendSlip();
 
         s_collateralToken.mint(
             address(this),
@@ -151,7 +151,7 @@ contract IBOLoanRouterSetup is CBBSetup {
 
         vm.startPrank(s_lender);
         s_stableToken.approve(address(s_IBOLoanRouter), type(uint256).max);
-        s_stableToken.approve(s_deployedSBAddress, type(uint256).max);
+        s_stableToken.approve(s_deployedIBOBAddress, type(uint256).max);
         s_safeSlip.approve(address(s_IBOLoanRouter), type(uint256).max);
         s_lendSlip.approve(address(s_IBOLoanRouter), type(uint256).max);
         vm.stopPrank();

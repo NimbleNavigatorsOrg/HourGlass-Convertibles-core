@@ -7,8 +7,8 @@ contract WithdrawBorrow is iboBoxSetup {
         uint256 borrowerBorrowSlips;
         uint256 borrowerSafeTranche;
         uint256 borrowerRiskTranche;
-        uint256 SBSafeTranche;
-        uint256 SBRiskTranche;
+        uint256 IBOSafeTranche;
+        uint256 IBORiskTranche;
     }
 
     struct BorrowAmounts {
@@ -26,28 +26,28 @@ contract WithdrawBorrow is iboBoxSetup {
         setupIBOBox(_fuzzPrice);
 
         uint256 maxBorrowAmount = (s_safeTranche.balanceOf(address(this)) *
-            s_deployedSB.initialPrice() *
-            s_deployedSB.stableDecimals()) /
-            s_deployedSB.priceGranularity() /
-            s_deployedSB.trancheDecimals();
+            s_deployedIBOB.initialPrice() *
+            s_deployedIBOB.stableDecimals()) /
+            s_deployedIBOB.priceGranularity() /
+            s_deployedIBOB.trancheDecimals();
 
-        s_deployedSB.depositBorrow(s_borrower, maxBorrowAmount);
+        s_deployedIBOB.depositBorrow(s_borrower, maxBorrowAmount);
 
         BeforeBalances memory before = BeforeBalances(
             s_borrowSlip.balanceOf(s_borrower),
             s_safeTranche.balanceOf(s_borrower),
             s_riskTranche.balanceOf(s_borrower),
-            s_safeTranche.balanceOf(s_deployedSBAddress),
-            s_riskTranche.balanceOf(s_deployedSBAddress)
+            s_safeTranche.balanceOf(s_deployedIBOBAddress),
+            s_riskTranche.balanceOf(s_deployedIBOBAddress)
         );
 
         _borrowAmount = bound(_borrowAmount, 1, before.borrowerBorrowSlips);
 
         uint256 safeTrancheAmount = (_borrowAmount *
-            s_deployedSB.priceGranularity() *
-            s_deployedSB.trancheDecimals()) /
-            s_deployedSB.initialPrice() /
-            s_deployedSB.stableDecimals();
+            s_deployedIBOB.priceGranularity() *
+            s_deployedIBOB.trancheDecimals()) /
+            s_deployedIBOB.initialPrice() /
+            s_deployedIBOB.stableDecimals();
 
         BorrowAmounts memory adjustments = BorrowAmounts(
             _borrowAmount,
@@ -56,11 +56,11 @@ contract WithdrawBorrow is iboBoxSetup {
         );
 
         vm.startPrank(s_borrower);
-        s_borrowSlip.approve(s_deployedSBAddress, type(uint256).max);
+        s_borrowSlip.approve(s_deployedIBOBAddress, type(uint256).max);
 
         vm.expectEmit(true, true, true, true);
         emit BorrowWithdrawal(s_borrower, _borrowAmount);
-        s_deployedSB.withdrawBorrow(_borrowAmount);
+        s_deployedIBOB.withdrawBorrow(_borrowAmount);
         vm.stopPrank();
 
         assertions(before, adjustments);
@@ -86,13 +86,13 @@ contract WithdrawBorrow is iboBoxSetup {
         );
 
         assertEq(
-            before.SBSafeTranche - adjustments.safeTrancheAmount,
-            s_safeTranche.balanceOf(s_deployedSBAddress)
+            before.IBOSafeTranche - adjustments.safeTrancheAmount,
+            s_safeTranche.balanceOf(s_deployedIBOBAddress)
         );
 
         assertEq(
-            before.SBRiskTranche - adjustments.riskTrancheAmount,
-            s_riskTranche.balanceOf(s_deployedSBAddress)
+            before.IBORiskTranche - adjustments.riskTrancheAmount,
+            s_riskTranche.balanceOf(s_deployedIBOBAddress)
         );
     }
 }

@@ -106,7 +106,7 @@ contract ConvertiblesDVLens is IConvertiblesDVLens {
             ERC20(address(_IBOBox.stableToken())).decimals()
         );
 
-        IBOBalances memory SB_Balances = IBOBalances(
+        IBOBalances memory IBO_Balances = IBOBalances(
             _IBOBox.safeTranche().balanceOf(address(_IBOBox)),
             _IBOBox.riskTranche().balanceOf(address(_IBOBox)),
             _IBOBox.convertibleBondBox().safeSlip().balanceOf(address(_IBOBox)),
@@ -120,12 +120,12 @@ contract ConvertiblesDVLens is IConvertiblesDVLens {
         IBODataActive memory data = IBODataActive(
             NumFixedPoint(_IBOBox.lendSlip().totalSupply(), decimals.stable),
             NumFixedPoint(_IBOBox.borrowSlip().totalSupply(), decimals.stable),
-            NumFixedPoint(SB_Balances.safeTranche, decimals.tranche),
-            NumFixedPoint(SB_Balances.riskTranche, decimals.tranche),
-            NumFixedPoint(SB_Balances.safeSlip, decimals.tranche),
-            NumFixedPoint(SB_Balances.riskSlip, decimals.tranche),
-            NumFixedPoint(SB_Balances.stablesBorrow, decimals.stable),
-            NumFixedPoint(SB_Balances.stablesLend, decimals.stable),
+            NumFixedPoint(IBO_Balances.safeTranche, decimals.tranche),
+            NumFixedPoint(IBO_Balances.riskTranche, decimals.tranche),
+            NumFixedPoint(IBO_Balances.safeSlip, decimals.tranche),
+            NumFixedPoint(IBO_Balances.riskSlip, decimals.tranche),
+            NumFixedPoint(IBO_Balances.stablesBorrow, decimals.stable),
+            NumFixedPoint(IBO_Balances.stablesLend, decimals.stable),
             NumFixedPoint(simTrancheCollateral.safe, decimals.tranche),
             NumFixedPoint(simTrancheCollateral.risk, decimals.tranche),
             NumFixedPoint(simSlipCollateral.safe, decimals.tranche),
@@ -140,8 +140,8 @@ contract ConvertiblesDVLens is IConvertiblesDVLens {
                 decimals.tranche + decimals.stable
             ),
             NumFixedPoint(
-                (SB_Balances.stablesLend) +
-                    (SB_Balances.safeSlip *
+                (IBO_Balances.stablesLend) +
+                    (IBO_Balances.safeSlip *
                         convertibleBondBox.currentPrice() *
                         (10**decimals.stable)) /
                     convertibleBondBox.s_priceGranularity() /

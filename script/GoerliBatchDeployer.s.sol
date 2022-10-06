@@ -96,7 +96,7 @@ contract GoerliBatchDeployer is Script {
 
         //IBO box + IBO box factory
         IBOBox deployedIBOBox = new IBOBox();
-        IBOBoxFactory sbFactory = new IBOBoxFactory(address(deployedIBOBox));
+        IBOBoxFactory iboFactory = new IBOBoxFactory(address(deployedIBOBox));
 
         // //deploy IBO box router + lens
         // IBOLoanRouter IBOLoanRouter = new IBOLoanRouter();
@@ -107,7 +107,7 @@ contract GoerliBatchDeployer is Script {
 
         // console2.log(address(deployedSlip), "deployedSlip");
         // console2.log(address(slipFactory), "slipFactory");
-        console2.log(address(sbFactory), "IBOBoxFactory");
+        console2.log(address(iboFactory), "IBOBoxFactory");
         console2.log(address(cbbFactory), "ConvertiblesFactory");
         // console2.log(address(IBOLoanRouter), "IBOLoanRouter");
         // console2.log(address(IBOBoxLens), "IBOBoxLens");

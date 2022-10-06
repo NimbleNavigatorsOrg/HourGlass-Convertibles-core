@@ -14,7 +14,7 @@ contract IBOBoxFactory is IIBOBoxFactory, Context {
 
     address public immutable implementation;
 
-    mapping(address => address) public CBBtoSB;
+    mapping(address => address) public CBBtoIBO;
 
     struct SlipPair {
         address lendSlip;
@@ -58,17 +58,17 @@ contract IBOBoxFactory is IIBOBoxFactory, Context {
             )
         );
 
-        address deployedSB = this.createIBOBoxOnly(
+        address deployedIBOB = this.createIBOBoxOnly(
             slipFactory,
             convertibleBondBox,
             initialPrice,
             cbbOwner
         );
 
-        //transfer ownership of CBB to SB
-        convertibleBondBox.transferOwnership(deployedSB);
+        //transfer ownership of CBB to IBO
+        convertibleBondBox.transferOwnership(deployedIBOB);
 
-        return deployedSB;
+        return deployedIBOB;
     }
 
     /**
@@ -126,7 +126,7 @@ contract IBOBoxFactory is IIBOBoxFactory, Context {
         ISlip(SlipData.lendSlip).changeOwner(address(clone));
         ISlip(SlipData.borrowSlip).changeOwner(address(clone));
 
-        address oldIBOBox = CBBtoSB[address(convertibleBondBox)];
+        address oldIBOBox = CBBtoIBO[address(convertibleBondBox)];
 
         if (oldIBOBox == address(0)) {
             emit IBOBoxCreated(
@@ -144,7 +144,7 @@ contract IBOBoxFactory is IIBOBoxFactory, Context {
             );
         }
 
-        CBBtoSB[address(convertibleBondBox)] = address(clone);
+        CBBtoIBO[address(convertibleBondBox)] = address(clone);
 
         return address(clone);
     }

@@ -4,7 +4,7 @@ pragma solidity ^0.8.7;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../src/interfaces/IConvertibleBondBox.sol";
 
-interface ISBImmutableArgs {
+interface IIBOImmutableArgs {
     /**
      * @notice the lend slip object
      * @dev using ClonesWithImmutableArgs pattern here to save gas

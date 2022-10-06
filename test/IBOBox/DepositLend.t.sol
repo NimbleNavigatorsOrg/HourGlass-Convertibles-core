@@ -6,7 +6,7 @@ contract DepositLend is iboBoxSetup {
     struct BeforeBalances {
         uint256 lenderLendSlips;
         uint256 routerStableTokens;
-        uint256 SBStableTokens;
+        uint256 IBOStableTokens;
     }
 
     struct LendAmounts {
@@ -19,7 +19,7 @@ contract DepositLend is iboBoxSetup {
     function testCannotDepositLendCBBNotReinitialized() public {
         setupIBOBox(0);
 
-        vm.prank(s_deployedSBAddress);
+        vm.prank(s_deployedIBOBAddress);
         s_deployedConvertibleBondBox.reinitialize(5);
 
         bytes memory customError = abi.encodeWithSignature(
@@ -28,7 +28,7 @@ contract DepositLend is iboBoxSetup {
             false
         );
         vm.expectRevert(customError);
-        s_deployedSB.depositLend(s_lender, 1);
+        s_deployedIBOB.depositLend(s_lender, 1);
     }
 
     function testDepositLend(uint256 _fuzzPrice, uint256 _lendAmount) public {
@@ -37,7 +37,7 @@ contract DepositLend is iboBoxSetup {
         BeforeBalances memory before = BeforeBalances(
             s_lendSlip.balanceOf(s_lender),
             s_stableToken.balanceOf(address(this)),
-            s_stableToken.balanceOf(s_deployedSBAddress)
+            s_stableToken.balanceOf(s_deployedIBOBAddress)
         );
 
         _lendAmount = bound(_lendAmount, 1, before.routerStableTokens);
@@ -46,7 +46,7 @@ contract DepositLend is iboBoxSetup {
 
         vm.expectEmit(true, true, true, true);
         emit LendDeposit(s_lender, _lendAmount);
-        s_deployedSB.depositLend(s_lender, _lendAmount);
+        s_deployedIBOB.depositLend(s_lender, _lendAmount);
 
         assertions(before, adjustments);
     }
@@ -66,8 +66,8 @@ contract DepositLend is iboBoxSetup {
         );
 
         assertEq(
-            before.SBStableTokens + adjustments.stableAmount,
-            s_stableToken.balanceOf(s_deployedSBAddress)
+            before.IBOStableTokens + adjustments.stableAmount,
+            s_stableToken.balanceOf(s_deployedIBOBAddress)
         );
     }
 }

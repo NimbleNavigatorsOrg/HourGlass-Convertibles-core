@@ -6,7 +6,7 @@ contract WithdrawLend is iboBoxSetup {
     struct BeforeBalances {
         uint256 lenderLendSlips;
         uint256 lenderStableTokens;
-        uint256 SBStableTokens;
+        uint256 IBOStableTokens;
     }
 
     struct LendAmounts {
@@ -23,26 +23,26 @@ contract WithdrawLend is iboBoxSetup {
         setupIBOBox(_fuzzPrice);
 
         uint256 maxBorrowAmount = (s_safeTranche.balanceOf(address(this)) *
-            s_deployedSB.initialPrice() *
-            s_deployedSB.stableDecimals()) /
-            s_deployedSB.priceGranularity() /
-            s_deployedSB.trancheDecimals();
+            s_deployedIBOB.initialPrice() *
+            s_deployedIBOB.stableDecimals()) /
+            s_deployedIBOB.priceGranularity() /
+            s_deployedIBOB.trancheDecimals();
 
-        s_deployedSB.depositBorrow(s_borrower, maxBorrowAmount);
+        s_deployedIBOB.depositBorrow(s_borrower, maxBorrowAmount);
 
-        s_deployedSB.depositLend(
+        s_deployedIBOB.depositLend(
             s_lender,
             s_stableToken.balanceOf(address(this))
         );
 
-        bool isLend = s_SBLens.viewTransmitReInitBool(s_deployedSB);
+        bool isLend = s_IBOLens.viewTransmitReInitBool(s_deployedIBOB);
 
         vm.prank(s_cbb_owner);
-        s_deployedSB.transmitReInit(isLend);
+        s_deployedIBOB.transmitReInit(isLend);
 
         uint256 maxWithdrawAmount = s_stableToken.balanceOf(
-            s_deployedSBAddress
-        ) - s_deployedSB.s_reinitLendAmount();
+            s_deployedIBOBAddress
+        ) - s_deployedIBOB.s_reinitLendAmount();
 
         _lendAmount = bound(
             _lendAmount,
@@ -58,13 +58,13 @@ contract WithdrawLend is iboBoxSetup {
 
         vm.prank(s_lender);
         vm.expectRevert(customError);
-        s_deployedSB.withdrawLend(_lendAmount);
+        s_deployedIBOB.withdrawLend(_lendAmount);
     }
 
     function testWithdrawLend(uint256 _fuzzPrice, uint256 _lendAmount) public {
         setupIBOBox(_fuzzPrice);
 
-        s_deployedSB.depositLend(
+        s_deployedIBOB.depositLend(
             s_lender,
             s_stableToken.balanceOf(address(this))
         );
@@ -72,7 +72,7 @@ contract WithdrawLend is iboBoxSetup {
         BeforeBalances memory before = BeforeBalances(
             s_lendSlip.balanceOf(s_lender),
             s_stableToken.balanceOf(s_lender),
-            s_stableToken.balanceOf(s_deployedSBAddress)
+            s_stableToken.balanceOf(s_deployedIBOBAddress)
         );
 
         _lendAmount = bound(_lendAmount, 1, before.lenderLendSlips);
@@ -82,7 +82,7 @@ contract WithdrawLend is iboBoxSetup {
         vm.startPrank(s_lender);
         vm.expectEmit(true, true, true, true);
         emit LendWithdrawal(s_lender, _lendAmount);
-        s_deployedSB.withdrawLend(_lendAmount);
+        s_deployedIBOB.withdrawLend(_lendAmount);
         vm.stopPrank();
 
         assertions(before, adjustments);
@@ -103,8 +103,8 @@ contract WithdrawLend is iboBoxSetup {
         );
 
         assertEq(
-            before.SBStableTokens - adjustments.stableAmount,
-            s_stableToken.balanceOf(s_deployedSBAddress)
+            before.IBOStableTokens - adjustments.stableAmount,
+            s_stableToken.balanceOf(s_deployedIBOBAddress)
         );
     }
 }

@@ -29,7 +29,7 @@ contract GoerliCBBIssuer is Script {
         SlipFactory(0xD96D4AF92CA2E89E6e423C2aC7144A0c60412156);
     IBOLoanRouter slr =
         IBOLoanRouter(0x0162EbDEff59094a693af794644D929Ef6f1f3A3);
-    IBOBoxLens sbLens = IBOBoxLens(0x5054300d1a213CacBd96f837733775585045C99B);
+    IBOBoxLens IBOLens = IBOBoxLens(0x5054300d1a213CacBd96f837733775585045C99B);
 
     address public trancheFact = 0xE0De6e1a505b69D2987fAe7230db96682d26Dfca;
 
@@ -100,7 +100,7 @@ contract GoerliCBBIssuer is Script {
 
         //create IBO CBBs + SBs
         for (uint8 i = 1; i < repeatCount + 1; i++) {
-            address createdSB = IBOFactory.createIBOBoxWithCBB(
+            address createdIBO = IBOFactory.createIBOBoxWithCBB(
                 (convertiblesFactory),
                 (slipFactory),
                 bond,
@@ -111,10 +111,10 @@ contract GoerliCBBIssuer is Script {
                 msg.sender
             );
 
-            console2.log(createdSB, "SB-IBO-", i);
+            console2.log(createdIBO, "SB-IBO-", i);
 
             console2.log(
-                address(IBOBox(createdSB).convertibleBondBox()),
+                address(IBOBox(createdIBO).convertibleBondBox()),
                 "CBB-IBO-",
                 i
             );
@@ -123,7 +123,7 @@ contract GoerliCBBIssuer is Script {
         //create active Bonds (token only)
 
         for (uint8 i = 1; i < repeatCount + 1; i++) {
-            address createdSB = IBOFactory.createIBOBoxWithCBB(
+            address createdIBO = IBOFactory.createIBOBoxWithCBB(
                 (convertiblesFactory),
                 (slipFactory),
                 bondActive,
@@ -134,20 +134,20 @@ contract GoerliCBBIssuer is Script {
                 msg.sender
             );
 
-            IERC20(stableCoin).approve(createdSB, type(uint256).max);
+            IERC20(stableCoin).approve(createdIBO, type(uint256).max);
             IERC20(token).approve(address(slr), type(uint256).max);
 
             //make lendDeposits to 3 parties
 
-            IBOBox(createdSB).depositLend(
+            IBOBox(createdIBO).depositLend(
                 msg.sender,
                 325 * (10**ERC20(stableCoin).decimals())
             );
-            IBOBox(createdSB).depositLend(
+            IBOBox(createdIBO).depositLend(
                 recipientA,
                 325 * (10**ERC20(stableCoin).decimals())
             );
-            IBOBox(createdSB).depositLend(
+            IBOBox(createdIBO).depositLend(
                 recipientB,
                 325 * (10**ERC20(stableCoin).decimals())
             );
@@ -160,33 +160,35 @@ contract GoerliCBBIssuer is Script {
             uint256 tokenBalance = 3000 * 10**ERC20(token).decimals();
 
             slr.simpleWrapTrancheBorrow(
-                IIBOBox(createdSB),
+                IIBOBox(createdIBO),
                 tokenBalance / 3,
                 0
             );
-            uint256 borrowSlipDistributionAmount = IBOBox(createdSB)
+            uint256 borrowSlipDistributionAmount = IBOBox(createdIBO)
                 .borrowSlip()
                 .balanceOf(msg.sender) / 3;
-            IBOBox(createdSB).borrowSlip().transfer(
+            IBOBox(createdIBO).borrowSlip().transfer(
                 recipientA,
                 borrowSlipDistributionAmount
             );
-            IBOBox(createdSB).borrowSlip().transfer(
+            IBOBox(createdIBO).borrowSlip().transfer(
                 recipientB,
                 borrowSlipDistributionAmount
             );
 
             //transmitReinit
 
-            bool boolReturn = sbLens.viewTransmitReInitBool(IIBOBox(createdSB));
+            bool boolReturn = IBOLens.viewTransmitReInitBool(
+                IIBOBox(createdIBO)
+            );
 
-            IBOBox(createdSB).transmitReInit(boolReturn);
+            IBOBox(createdIBO).transmitReInit(boolReturn);
 
             //repeat for AMPL-Token
 
-            console2.log(createdSB, "SB-ACTIVE-", i);
+            console2.log(createdIBO, "SB-ACTIVE-", i);
             console2.log(
-                address(IBOBox(createdSB).convertibleBondBox()),
+                address(IBOBox(createdIBO).convertibleBondBox()),
                 "CBB-ACTIVE-",
                 i
             );
@@ -195,7 +197,7 @@ contract GoerliCBBIssuer is Script {
         //create Mature Bonds
 
         for (uint8 i = 1; i < repeatCount + 1; i++) {
-            address createdSB = IBOFactory.createIBOBoxWithCBB(
+            address createdIBO = IBOFactory.createIBOBoxWithCBB(
                 (convertiblesFactory),
                 (slipFactory),
                 bondMature,
@@ -206,24 +208,26 @@ contract GoerliCBBIssuer is Script {
                 msg.sender
             );
 
-            IBOBox(createdSB).transferCBBOwnership(msg.sender);
-            IBOBox(createdSB).convertibleBondBox().setFee(50);
-            IBOBox(createdSB).convertibleBondBox().transferOwnership(createdSB);
+            IBOBox(createdIBO).transferCBBOwnership(msg.sender);
+            IBOBox(createdIBO).convertibleBondBox().setFee(50);
+            IBOBox(createdIBO).convertibleBondBox().transferOwnership(
+                createdIBO
+            );
 
-            IERC20(stableCoin).approve(createdSB, type(uint256).max);
+            IERC20(stableCoin).approve(createdIBO, type(uint256).max);
             IERC20(token).approve(address(slr), type(uint256).max);
 
             //make lendDeposits to 3 parties
 
-            IBOBox(createdSB).depositLend(
+            IBOBox(createdIBO).depositLend(
                 msg.sender,
                 235 * (10**ERC20(stableCoin).decimals())
             );
-            IBOBox(createdSB).depositLend(
+            IBOBox(createdIBO).depositLend(
                 recipientA,
                 235 * (10**ERC20(stableCoin).decimals())
             );
-            IBOBox(createdSB).depositLend(
+            IBOBox(createdIBO).depositLend(
                 recipientB,
                 235 * (10**ERC20(stableCoin).decimals())
             );
@@ -236,30 +240,32 @@ contract GoerliCBBIssuer is Script {
             uint256 tokenBalance = 3000 * 10**ERC20(token).decimals();
 
             slr.simpleWrapTrancheBorrow(
-                IIBOBox(createdSB),
+                IIBOBox(createdIBO),
                 tokenBalance / 3,
                 0
             );
-            uint256 borrowSlipDistributionAmount = IBOBox(createdSB)
+            uint256 borrowSlipDistributionAmount = IBOBox(createdIBO)
                 .borrowSlip()
                 .balanceOf(msg.sender) / 3;
-            IBOBox(createdSB).borrowSlip().transfer(
+            IBOBox(createdIBO).borrowSlip().transfer(
                 recipientA,
                 borrowSlipDistributionAmount
             );
-            IBOBox(createdSB).borrowSlip().transfer(
+            IBOBox(createdIBO).borrowSlip().transfer(
                 recipientB,
                 borrowSlipDistributionAmount
             );
 
             //transmitReInit
-            bool boolReturn = sbLens.viewTransmitReInitBool(IIBOBox(createdSB));
+            bool boolReturn = IBOLens.viewTransmitReInitBool(
+                IIBOBox(createdIBO)
+            );
 
-            IBOBox(createdSB).transmitReInit(boolReturn);
+            IBOBox(createdIBO).transmitReInit(boolReturn);
 
-            console2.log(createdSB, "SB-MATURE-", i);
+            console2.log(createdIBO, "SB-MATURE-", i);
             console2.log(
-                address(IBOBox(createdSB).convertibleBondBox()),
+                address(IBOBox(createdIBO).convertibleBondBox()),
                 "CBB-MATURE-",
                 i
             );
