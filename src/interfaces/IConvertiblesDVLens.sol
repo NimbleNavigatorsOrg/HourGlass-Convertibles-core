@@ -11,7 +11,7 @@ struct NumFixedPoint {
 
 struct IBODataIBO {
     NumFixedPoint buyOrderSupply;
-    NumFixedPoint borrowSlipSupply;
+    NumFixedPoint issueOrderSupply;
     NumFixedPoint safeTrancheBalance;
     NumFixedPoint riskTrancheBalance;
     NumFixedPoint stableTokenBalance;
@@ -23,7 +23,7 @@ struct IBODataIBO {
 
 struct IBODataActive {
     NumFixedPoint buyOrderSupply;
-    NumFixedPoint borrowSlipSupply;
+    NumFixedPoint issueOrderSupply;
     NumFixedPoint safeTrancheBalance;
     NumFixedPoint riskTrancheBalance;
     NumFixedPoint bondSlipBalance;

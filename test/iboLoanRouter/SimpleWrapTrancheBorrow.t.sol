@@ -5,7 +5,7 @@ import "./IBOLoanRouterSetup.t.sol";
 contract SimpleWrapTrancheBorrow is IBOLoanRouterSetup {
     struct BeforeBalances {
         uint256 borrowerCollateral;
-        uint256 borrowerBorrowSlip;
+        uint256 borrowerIssueOrder;
         uint256 IBOSafeTranche;
         uint256 IBORiskTranche;
     }
@@ -39,7 +39,7 @@ contract SimpleWrapTrancheBorrow is IBOLoanRouterSetup {
 
         BeforeBalances memory before = BeforeBalances(
             s_collateralToken.balanceOf(s_borrower),
-            s_borrowSlip.balanceOf(s_borrower),
+            s_issueOrder.balanceOf(s_borrower),
             s_safeTranche.balanceOf(s_deployedIBOBAddress),
             s_riskTranche.balanceOf(s_deployedIBOBAddress)
         );
@@ -72,8 +72,8 @@ contract SimpleWrapTrancheBorrow is IBOLoanRouterSetup {
         );
 
         assertApproxEqRel(
-            before.borrowerBorrowSlip + adjustments.stableAmount,
-            s_borrowSlip.balanceOf(s_borrower),
+            before.borrowerIssueOrder + adjustments.stableAmount,
+            s_issueOrder.balanceOf(s_borrower),
             1e15
         );
 

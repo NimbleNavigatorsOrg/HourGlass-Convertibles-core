@@ -69,7 +69,7 @@ contract IBOBox is OwnableUpgradeable, IBOImmutableArgs, IIBOBox {
         );
 
         //- mints `_safeTrancheAmount` of BorrowerSlips to `_borrower`
-        borrowSlip().mint(_borrower, _borrowAmount);
+        issueOrder().mint(_borrower, _borrowAmount);
 
         //add event stuff
         emit BorrowDeposit(_borrower, _borrowAmount);
@@ -95,11 +95,11 @@ contract IBOBox is OwnableUpgradeable, IBOImmutableArgs, IIBOBox {
         emit LendDeposit(_lender, _lendAmount);
     }
 
-    function withdrawBorrow(uint256 _borrowSlipAmount) external override {
+    function withdrawBorrow(uint256 _issueOrderAmount) external override {
         //- Reverse of depositBorrow() function
-        //- transfers `_borrowSlipAmount` of SafeTranche Tokens from IBO to msg.sender
+        //- transfers `_issueOrderAmount` of SafeTranche Tokens from IBO to msg.sender
 
-        uint256 safeTrancheAmount = (_borrowSlipAmount *
+        uint256 safeTrancheAmount = (_issueOrderAmount *
             priceGranularity() *
             trancheDecimals()) /
             initialPrice() /
@@ -107,18 +107,18 @@ contract IBOBox is OwnableUpgradeable, IBOImmutableArgs, IIBOBox {
 
         safeTranche().transfer(_msgSender(), (safeTrancheAmount));
 
-        //- transfers `_borrowSlipAmount*riskRatio()/safeRatio()` of RiskTranche Tokens from IBO to msg.sender
+        //- transfers `_issueOrderAmount*riskRatio()/safeRatio()` of RiskTranche Tokens from IBO to msg.sender
 
         riskTranche().transfer(
             _msgSender(),
             (safeTrancheAmount * riskRatio()) / safeRatio()
         );
 
-        //- burns `_borrowSlipAmount` of msg.sender’s BorrowSlips
-        borrowSlip().burn(_msgSender(), _borrowSlipAmount);
+        //- burns `_issueOrderAmount` of msg.sender’s IssueOrders
+        issueOrder().burn(_msgSender(), _issueOrderAmount);
 
         //event stuff
-        emit BorrowWithdrawal(_msgSender(), _borrowSlipAmount);
+        emit BorrowWithdrawal(_msgSender(), _issueOrderAmount);
     }
 
     function withdrawLend(uint256 _buyOrderAmount) external override {
@@ -150,11 +150,11 @@ contract IBOBox is OwnableUpgradeable, IBOImmutableArgs, IIBOBox {
         emit LendWithdrawal(_msgSender(), _buyOrderAmount);
     }
 
-    function redeemBorrowSlip(uint256 _borrowSlipAmount) external override {
-        // Transfer `_borrowSlipAmount*riskRatio()/safeRatio()` of DebtSlips to msg.sender
+    function redeemIssueOrder(uint256 _issueOrderAmount) external override {
+        // Transfer `_issueOrderAmount*riskRatio()/safeRatio()` of DebtSlips to msg.sender
         ISlip(debtSlipAddress()).transfer(
             _msgSender(),
-            ((_borrowSlipAmount *
+            ((_issueOrderAmount *
                 priceGranularity() *
                 riskRatio() *
                 trancheDecimals()) /
@@ -163,21 +163,21 @@ contract IBOBox is OwnableUpgradeable, IBOImmutableArgs, IIBOBox {
                 stableDecimals())
         );
 
-        // Transfer `_borrowSlipAmount*initialPrice()/priceGranularity()` of StableToken to msg.sender
+        // Transfer `_issueOrderAmount*initialPrice()/priceGranularity()` of StableToken to msg.sender
         TransferHelper.safeTransfer(
             address(stableToken()),
             _msgSender(),
-            _borrowSlipAmount
+            _issueOrderAmount
         );
 
-        // burns `_borrowSlipAmount` of msg.sender’s BorrowSlips
-        borrowSlip().burn(_msgSender(), _borrowSlipAmount);
+        // burns `_issueOrderAmount` of msg.sender’s IssueOrders
+        issueOrder().burn(_msgSender(), _issueOrderAmount);
 
         //decrement s_activateLendAmount
-        s_activateLendAmount -= _borrowSlipAmount;
+        s_activateLendAmount -= _issueOrderAmount;
 
         //event stuff
-        emit RedeemBorrowSlip(_msgSender(), _borrowSlipAmount);
+        emit RedeemIssueOrder(_msgSender(), _issueOrderAmount);
     }
 
     function redeemBuyOrder(uint256 _buyOrderAmount) external override {

@@ -10,7 +10,7 @@ interface IIBOLoanRouter {
      * @dev Wraps and tranches raw token and then deposits into IBO box for a simple underlying bond (A/Z)
      * @param _IBOBox The IBO box tied to the Convertible Bond
      * @param _amountRaw The amount of SafeTranche tokens to borrow against
-     * @param _minBorrowSlips The minimum expected borrowSlips for slippage protection
+     * @param _minIssueOrders The minimum expected issueOrders for slippage protection
      * Requirements:
      *  - `msg.sender` must have `approved` `_amountRaw` collateral tokens to this contract
      */
@@ -18,14 +18,14 @@ interface IIBOLoanRouter {
     function simpleWrapTrancheBorrow(
         IIBOBox _IBOBox,
         uint256 _amountRaw,
-        uint256 _minBorrowSlips
+        uint256 _minIssueOrders
     ) external;
 
     /**
      * @dev Wraps and tranches raw token and then deposits into IBO box for any underlying bond
      * @param _IBOBox The IBO box tied to the Convertible Bond
      * @param _amountRaw The amount of SafeTranche tokens to borrow against
-     * @param _minBorrowSlips The minimum expected borrowSlips for slippage protection
+     * @param _minIssueOrders The minimum expected issueOrders for slippage protection
      * Requirements:
      *  - `msg.sender` must have `approved` `_amountRaw` collateral tokens to this contract
      */
@@ -33,20 +33,20 @@ interface IIBOLoanRouter {
     function multiWrapTrancheBorrow(
         IIBOBox _IBOBox,
         uint256 _amountRaw,
-        uint256 _minBorrowSlips
+        uint256 _minIssueOrders
     ) external;
 
     /**
-     * @dev withdraws borrowSlip and redeems w/ simple underlying bond (A/Z)
+     * @dev withdraws issueOrder and redeems w/ simple underlying bond (A/Z)
      * @param _IBOBox The IBO box tied to the Convertible Bond
-     * @param _borrowSlipAmount The amount of borrowSlips to be withdrawn
+     * @param _issueOrderAmount The amount of issueOrders to be withdrawn
      * Requirements:
-     *  - `msg.sender` must have `approved` `_borrowSlipAmount` BorrowSlip tokens to this contract
+     *  - `msg.sender` must have `approved` `_issueOrderAmount` IssueOrder tokens to this contract
      */
 
     function simpleWithdrawBorrowUnwrap(
         IIBOBox _IBOBox,
-        uint256 _borrowSlipAmount
+        uint256 _issueOrderAmount
     ) external;
 
     /**

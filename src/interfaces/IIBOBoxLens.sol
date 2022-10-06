@@ -30,14 +30,14 @@ interface IIBOBoxLens {
     /**
      * @dev provides amount of raw collateral tokens expected in return for withdrawing borrowslips
      * @param _IBOBox The IBO box tied to the Convertible Bond
-     * @param _borrowSlipAmount The amount of borrowSlips to be withdrawn
+     * @param _issueOrderAmount The amount of issueOrders to be withdrawn
      * Requirements:
      * - for A-Z convertible only
      */
 
     function viewSimpleWithdrawBorrowUnwrap(
         IIBOBox _IBOBox,
-        uint256 _borrowSlipAmount
+        uint256 _issueOrderAmount
     ) external view returns (uint256, uint256);
 
     /**
@@ -53,15 +53,15 @@ interface IIBOBoxLens {
         returns (uint256);
 
     /**
-     * @dev provides amount of debtSlips and stableToken loan in return for borrowSlips
+     * @dev provides amount of debtSlips and stableToken loan in return for issueOrders
      * @param _IBOBox The IBO box tied to the Convertible Bond
-     * @param _borrowSlipAmount The amount of borrowSlips to be redeemed
+     * @param _issueOrderAmount The amount of issueOrders to be redeemed
      * Requirements:
      */
 
-    function viewRedeemBorrowSlipForDebtSlip(
+    function viewRedeemIssueOrderForDebtSlip(
         IIBOBox _IBOBox,
-        uint256 _borrowSlipAmount
+        uint256 _issueOrderAmount
     ) external view returns (uint256, uint256);
 
     /**
@@ -238,12 +238,12 @@ interface IIBOBoxLens {
         );
 
     /**
-     * @dev provides maximum input param for redeemBorrowSlip
+     * @dev provides maximum input param for redeemIssueOrder
      * @param _IBOBox The IBO box tied to the Convertible Bond
      * Requirements:
      */
 
-    function viewMaxRedeemBorrowSlip(IIBOBox _IBOBox, address _account)
+    function viewMaxRedeemIssueOrder(IIBOBox _IBOBox, address _account)
         external
         view
         returns (uint256);
@@ -298,7 +298,7 @@ interface IIBOBoxLens {
      * Requirements:
      */
 
-    function viewMaxWithdrawBorrowSlips(IIBOBox _IBOBox, address _account)
+    function viewMaxWithdrawIssueOrders(IIBOBox _IBOBox, address _account)
         external
         view
         returns (uint256);

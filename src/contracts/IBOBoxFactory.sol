@@ -18,7 +18,7 @@ contract IBOBoxFactory is IIBOBoxFactory, Context {
 
     struct SlipPair {
         address buyOrder;
-        address borrowSlip;
+        address issueOrder;
     }
 
     constructor(address _implementation) {
@@ -100,7 +100,7 @@ contract IBOBoxFactory is IIBOBoxFactory, Context {
         bytes memory data = bytes.concat(
             abi.encodePacked(
                 SlipData.buyOrder,
-                SlipData.borrowSlip,
+                SlipData.issueOrder,
                 convertibleBondBox,
                 initialPrice,
                 convertibleBondBox.stableToken(),
@@ -124,7 +124,7 @@ contract IBOBoxFactory is IIBOBoxFactory, Context {
 
         //tansfer slips ownership to IBO box
         ISlip(SlipData.buyOrder).changeOwner(address(clone));
-        ISlip(SlipData.borrowSlip).changeOwner(address(clone));
+        ISlip(SlipData.issueOrder).changeOwner(address(clone));
 
         address oldIBOBox = CBBtoIBO[address(convertibleBondBox)];
 
@@ -170,7 +170,7 @@ contract IBOBoxFactory is IIBOBoxFactory, Context {
         );
 
         //clone deployborrow slip
-        address borrowSlipTokenAddress = slipFactory.createSlip(
+        address issueOrderTokenAddress = slipFactory.createSlip(
             "IBO-Sell-Slip",
             string(abi.encodePacked("IBO-SELL-SLIP-", collateralSymbolRisk)),
             stableToken
@@ -178,7 +178,7 @@ contract IBOBoxFactory is IIBOBoxFactory, Context {
 
         SlipPair memory SlipData = SlipPair(
             buyOrderTokenAddress,
-            borrowSlipTokenAddress
+            issueOrderTokenAddress
         );
 
         return SlipData;

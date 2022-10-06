@@ -36,13 +36,13 @@ contract RedeemBondSlipsForTranchesAndUnwrap is IBOLoanRouterSetup {
         vm.stopPrank();
 
         {
-            uint256 maxRedeemableBorrowSlips = Math.min(
+            uint256 maxRedeemableIssueOrders = Math.min(
                 s_deployedIBOB.s_activateLendAmount(),
-                s_borrowSlip.balanceOf(s_borrower)
+                s_issueOrder.balanceOf(s_borrower)
             );
 
             vm.startPrank(s_borrower);
-            s_deployedIBOB.redeemBorrowSlip(maxRedeemableBorrowSlips);
+            s_deployedIBOB.redeemIssueOrder(maxRedeemableIssueOrders);
             vm.stopPrank();
         }
 

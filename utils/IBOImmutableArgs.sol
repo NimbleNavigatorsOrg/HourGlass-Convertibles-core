@@ -24,7 +24,7 @@ contract IBOImmutableArgs is Clone, IIBOImmutableArgs {
      * @inheritdoc IIBOImmutableArgs
      */
 
-    function borrowSlip() public pure returns (ISlip) {
+    function issueOrder() public pure returns (ISlip) {
         return ISlip(_getArgAddress(20));
     }
 

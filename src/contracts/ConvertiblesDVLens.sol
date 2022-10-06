@@ -57,7 +57,7 @@ contract ConvertiblesDVLens is IConvertiblesDVLens {
 
         IBODataIBO memory data = IBODataIBO(
             NumFixedPoint(_IBOBox.buyOrder().totalSupply(), decimals.stable),
-            NumFixedPoint(_IBOBox.borrowSlip().totalSupply(), decimals.stable),
+            NumFixedPoint(_IBOBox.issueOrder().totalSupply(), decimals.stable),
             NumFixedPoint(
                 _IBOBox.safeTranche().balanceOf(address(_IBOBox)),
                 decimals.tranche
@@ -119,7 +119,7 @@ contract ConvertiblesDVLens is IConvertiblesDVLens {
 
         IBODataActive memory data = IBODataActive(
             NumFixedPoint(_IBOBox.buyOrder().totalSupply(), decimals.stable),
-            NumFixedPoint(_IBOBox.borrowSlip().totalSupply(), decimals.stable),
+            NumFixedPoint(_IBOBox.issueOrder().totalSupply(), decimals.stable),
             NumFixedPoint(IBO_Balances.safeTranche, decimals.tranche),
             NumFixedPoint(IBO_Balances.riskTranche, decimals.tranche),
             NumFixedPoint(IBO_Balances.bondSlip, decimals.tranche),

@@ -17,9 +17,9 @@ interface IIBOImmutableArgs {
      * @notice the borrow slip object
      * @dev using ClonesWithImmutableArgs pattern here to save gas
      * @dev https://github.com/wighawag/clones-with-immutable-args
-     * @return The borrowSlip object
+     * @return The issueOrder object
      */
-    function borrowSlip() external pure returns (ISlip);
+    function issueOrder() external pure returns (ISlip);
 
     /**
      * @notice The convertible bond box object

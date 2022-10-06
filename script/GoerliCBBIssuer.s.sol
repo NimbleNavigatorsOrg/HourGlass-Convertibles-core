@@ -164,16 +164,16 @@ contract GoerliCBBIssuer is Script {
                 tokenBalance / 3,
                 0
             );
-            uint256 borrowSlipDistributionAmount = IBOBox(createdIBO)
-                .borrowSlip()
+            uint256 issueOrderDistributionAmount = IBOBox(createdIBO)
+                .issueOrder()
                 .balanceOf(msg.sender) / 3;
-            IBOBox(createdIBO).borrowSlip().transfer(
+            IBOBox(createdIBO).issueOrder().transfer(
                 recipientA,
-                borrowSlipDistributionAmount
+                issueOrderDistributionAmount
             );
-            IBOBox(createdIBO).borrowSlip().transfer(
+            IBOBox(createdIBO).issueOrder().transfer(
                 recipientB,
-                borrowSlipDistributionAmount
+                issueOrderDistributionAmount
             );
 
             //transmitActivate
@@ -244,16 +244,16 @@ contract GoerliCBBIssuer is Script {
                 tokenBalance / 3,
                 0
             );
-            uint256 borrowSlipDistributionAmount = IBOBox(createdIBO)
-                .borrowSlip()
+            uint256 issueOrderDistributionAmount = IBOBox(createdIBO)
+                .issueOrder()
                 .balanceOf(msg.sender) / 3;
-            IBOBox(createdIBO).borrowSlip().transfer(
+            IBOBox(createdIBO).issueOrder().transfer(
                 recipientA,
-                borrowSlipDistributionAmount
+                issueOrderDistributionAmount
             );
-            IBOBox(createdIBO).borrowSlip().transfer(
+            IBOBox(createdIBO).issueOrder().transfer(
                 recipientB,
-                borrowSlipDistributionAmount
+                issueOrderDistributionAmount
             );
 
             //transmitActivate

@@ -4,7 +4,7 @@ import "./iboBoxSetup.t.sol";
 
 contract WithdrawBorrow is iboBoxSetup {
     struct BeforeBalances {
-        uint256 borrowerBorrowSlips;
+        uint256 borrowerIssueOrders;
         uint256 borrowerSafeTranche;
         uint256 borrowerRiskTranche;
         uint256 IBOSafeTranche;
@@ -12,7 +12,7 @@ contract WithdrawBorrow is iboBoxSetup {
     }
 
     struct BorrowAmounts {
-        uint256 borrowSlipAmount;
+        uint256 issueOrderAmount;
         uint256 safeTrancheAmount;
         uint256 riskTrancheAmount;
     }
@@ -34,14 +34,14 @@ contract WithdrawBorrow is iboBoxSetup {
         s_deployedIBOB.depositBorrow(s_borrower, maxBorrowAmount);
 
         BeforeBalances memory before = BeforeBalances(
-            s_borrowSlip.balanceOf(s_borrower),
+            s_issueOrder.balanceOf(s_borrower),
             s_safeTranche.balanceOf(s_borrower),
             s_riskTranche.balanceOf(s_borrower),
             s_safeTranche.balanceOf(s_deployedIBOBAddress),
             s_riskTranche.balanceOf(s_deployedIBOBAddress)
         );
 
-        _borrowAmount = bound(_borrowAmount, 1, before.borrowerBorrowSlips);
+        _borrowAmount = bound(_borrowAmount, 1, before.borrowerIssueOrders);
 
         uint256 safeTrancheAmount = (_borrowAmount *
             s_deployedIBOB.priceGranularity() *
@@ -56,7 +56,7 @@ contract WithdrawBorrow is iboBoxSetup {
         );
 
         vm.startPrank(s_borrower);
-        s_borrowSlip.approve(s_deployedIBOBAddress, type(uint256).max);
+        s_issueOrder.approve(s_deployedIBOBAddress, type(uint256).max);
 
         vm.expectEmit(true, true, true, true);
         emit BorrowWithdrawal(s_borrower, _borrowAmount);
@@ -71,8 +71,8 @@ contract WithdrawBorrow is iboBoxSetup {
         BorrowAmounts memory adjustments
     ) internal {
         assertEq(
-            before.borrowerBorrowSlips - adjustments.borrowSlipAmount,
-            s_borrowSlip.balanceOf(s_borrower)
+            before.borrowerIssueOrders - adjustments.issueOrderAmount,
+            s_issueOrder.balanceOf(s_borrower)
         );
 
         assertEq(

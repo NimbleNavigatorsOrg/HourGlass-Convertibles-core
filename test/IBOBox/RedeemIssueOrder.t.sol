@@ -2,9 +2,9 @@ pragma solidity 0.8.13;
 
 import "./iboBoxSetup.t.sol";
 
-contract RedeemBorrowSlip is iboBoxSetup {
+contract RedeemIssueOrder is iboBoxSetup {
     struct BeforeBalances {
-        uint256 borrowerBorrowSlips;
+        uint256 borrowerIssueOrders;
         uint256 borrowerDebtSlips;
         uint256 borrowerStableTokens;
         uint256 IBODebtSlips;
@@ -14,13 +14,13 @@ contract RedeemBorrowSlip is iboBoxSetup {
 
     struct BorrowAmounts {
         uint256 debtSlipAmount;
-        uint256 borrowSlipAmount;
+        uint256 issueOrderAmount;
     }
 
     address s_borrower = address(1);
     address s_lender = address(2);
 
-    function testRedeemBorrowSlip(uint256 _fuzzPrice, uint256 _borrowAmount)
+    function testRedeemIssueOrder(uint256 _fuzzPrice, uint256 _borrowAmount)
         public
     {
         setupIBOBox(_fuzzPrice);
@@ -44,7 +44,7 @@ contract RedeemBorrowSlip is iboBoxSetup {
         s_deployedIBOB.transmitActivate(isLend);
 
         BeforeBalances memory before = BeforeBalances(
-            s_borrowSlip.balanceOf(s_borrower),
+            s_issueOrder.balanceOf(s_borrower),
             s_debtSlip.balanceOf(s_borrower),
             s_stableToken.balanceOf(s_borrower),
             s_debtSlip.balanceOf(s_deployedIBOBAddress),
@@ -52,7 +52,7 @@ contract RedeemBorrowSlip is iboBoxSetup {
             s_deployedIBOB.s_activateLendAmount()
         );
 
-        _borrowAmount = bound(_borrowAmount, 1, before.borrowerBorrowSlips);
+        _borrowAmount = bound(_borrowAmount, 1, before.borrowerIssueOrders);
 
         BorrowAmounts memory adjustments = BorrowAmounts(
             (_borrowAmount *
@@ -67,8 +67,8 @@ contract RedeemBorrowSlip is iboBoxSetup {
 
         vm.prank(s_borrower);
         vm.expectEmit(true, true, true, true);
-        emit RedeemBorrowSlip(s_borrower, _borrowAmount);
-        s_deployedIBOB.redeemBorrowSlip(_borrowAmount);
+        emit RedeemIssueOrder(s_borrower, _borrowAmount);
+        s_deployedIBOB.redeemIssueOrder(_borrowAmount);
 
         assertions(before, adjustments);
     }
@@ -78,8 +78,8 @@ contract RedeemBorrowSlip is iboBoxSetup {
         BorrowAmounts memory adjustments
     ) internal {
         assertEq(
-            before.borrowerBorrowSlips - adjustments.borrowSlipAmount,
-            s_borrowSlip.balanceOf(s_borrower)
+            before.borrowerIssueOrders - adjustments.issueOrderAmount,
+            s_issueOrder.balanceOf(s_borrower)
         );
 
         assertEq(
@@ -88,7 +88,7 @@ contract RedeemBorrowSlip is iboBoxSetup {
         );
 
         assertEq(
-            before.borrowerStableTokens + adjustments.borrowSlipAmount,
+            before.borrowerStableTokens + adjustments.issueOrderAmount,
             s_stableToken.balanceOf(s_borrower)
         );
 
@@ -98,12 +98,12 @@ contract RedeemBorrowSlip is iboBoxSetup {
         );
 
         assertEq(
-            before.IBOStableTokens - adjustments.borrowSlipAmount,
+            before.IBOStableTokens - adjustments.issueOrderAmount,
             s_stableToken.balanceOf(s_deployedIBOBAddress)
         );
 
         assertEq(
-            before.activateLendAmount - adjustments.borrowSlipAmount,
+            before.activateLendAmount - adjustments.issueOrderAmount,
             s_deployedIBOB.s_activateLendAmount()
         );
     }

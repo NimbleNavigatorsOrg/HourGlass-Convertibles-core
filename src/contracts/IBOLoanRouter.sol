@@ -20,7 +20,7 @@ contract IBOLoanRouter is IIBOLoanRouter {
     function simpleWrapTrancheBorrow(
         IIBOBox _IBOBox,
         uint256 _amountRaw,
-        uint256 _minBorrowSlips
+        uint256 _minIssueOrders
     ) public {
         (
             IConvertibleBondBox convertibleBondBox,
@@ -79,10 +79,10 @@ contract IBOLoanRouter is IIBOLoanRouter {
 
         _IBOBox.depositBorrow(msg.sender, borrowAmount);
 
-        if (borrowAmount < _minBorrowSlips)
+        if (borrowAmount < _minIssueOrders)
             revert SlippageExceeded({
                 expectedAmount: borrowAmount,
-                minAmount: _minBorrowSlips
+                minAmount: _minIssueOrders
             });
     }
 
@@ -92,9 +92,9 @@ contract IBOLoanRouter is IIBOLoanRouter {
     function multiWrapTrancheBorrow(
         IIBOBox _IBOBox,
         uint256 _amountRaw,
-        uint256 _minBorrowSlips
+        uint256 _minIssueOrders
     ) external {
-        simpleWrapTrancheBorrow(_IBOBox, _amountRaw, _minBorrowSlips);
+        simpleWrapTrancheBorrow(_IBOBox, _amountRaw, _minIssueOrders);
 
         (
             IConvertibleBondBox convertibleBondBox,
@@ -122,25 +122,25 @@ contract IBOLoanRouter is IIBOLoanRouter {
      */
     function simpleWithdrawBorrowUnwrap(
         IIBOBox _IBOBox,
-        uint256 _borrowSlipAmount
+        uint256 _issueOrderAmount
     ) external {
-        //transfer borrowSlips
-        _IBOBox.borrowSlip().transferFrom(
+        //transfer issueOrders
+        _IBOBox.issueOrder().transferFrom(
             msg.sender,
             address(this),
-            _borrowSlipAmount
+            _issueOrderAmount
         );
 
-        //approve borrowSlips for IBOBox
+        //approve issueOrders for IBOBox
         if (
-            _IBOBox.borrowSlip().allowance(address(this), address(_IBOBox)) <
-            _borrowSlipAmount
+            _IBOBox.issueOrder().allowance(address(this), address(_IBOBox)) <
+            _issueOrderAmount
         ) {
-            _IBOBox.borrowSlip().approve(address(_IBOBox), type(uint256).max);
+            _IBOBox.issueOrder().approve(address(_IBOBox), type(uint256).max);
         }
 
-        //withdraw borrowSlips for tranches
-        _IBOBox.withdrawBorrow(_borrowSlipAmount);
+        //withdraw issueOrders for tranches
+        _IBOBox.withdrawBorrow(_issueOrderAmount);
 
         //redeem tranches with underlying bond & mature
         _redeemTrancheImmatureUnwrap(_IBOBox);

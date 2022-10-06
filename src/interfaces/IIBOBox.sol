@@ -7,8 +7,8 @@ interface IIBOBox is IIBOImmutableArgs {
     event LendDeposit(address lender, uint256 lendAmount);
     event BorrowDeposit(address borrower, uint256 safeTrancheAmount);
     event LendWithdrawal(address lender, uint256 buyOrderAmount);
-    event BorrowWithdrawal(address borrower, uint256 borrowSlipAmount);
-    event RedeemBorrowSlip(address caller, uint256 borrowSlipAmount);
+    event BorrowWithdrawal(address borrower, uint256 issueOrderAmount);
+    event RedeemIssueOrder(address caller, uint256 issueOrderAmount);
     event RedeemBuyOrder(address caller, uint256 buyOrderAmount);
     event Initialized(address owner);
 
@@ -20,8 +20,8 @@ interface IIBOBox is IIBOImmutableArgs {
     function s_activateLendAmount() external view returns (uint256);
 
     /**
-     * @dev Deposits collateral for BorrowSlips
-     * @param _borrower The recipent address of the BorrowSlips
+     * @dev Deposits collateral for IssueOrders
+     * @param _borrower The recipent address of the IssueOrders
      * @param _borrowAmount The amount of stableTokens to be borrowed
      * Requirements:
      *  - `msg.sender` must have `approved` `stableAmount` stable tokens to this contract
@@ -40,15 +40,15 @@ interface IIBOBox is IIBOImmutableArgs {
     function depositLend(address _lender, uint256 _lendAmount) external;
 
     /**
-     * @dev Withdraws SafeTranche + RiskTranche for unfilled BorrowSlips
-     * @param _borrowSlipAmount The amount of borrowSlips to withdraw
+     * @dev Withdraws SafeTranche + RiskTranche for unfilled IssueOrders
+     * @param _issueOrderAmount The amount of issueOrders to withdraw
      * Requirements:
      */
 
-    function withdrawBorrow(uint256 _borrowSlipAmount) external;
+    function withdrawBorrow(uint256 _issueOrderAmount) external;
 
     /**
-     * @dev Withdraws Lend Slips for unfilled BorrowSlips
+     * @dev Withdraws Lend Slips for unfilled IssueOrders
      * @param _buyOrderAmount The amount of stable tokens to withdraw
      * Requirements:
      */
@@ -57,11 +57,11 @@ interface IIBOBox is IIBOImmutableArgs {
 
     /**
      * @dev Deposits _stableAmount of stable-tokens and then calls lend to CBB
-     * @param _borrowSlipAmount amount of BorrowSlips to redeem DebtSlips and USDT with
+     * @param _issueOrderAmount amount of IssueOrders to redeem DebtSlips and USDT with
      * Requirements:
      */
 
-    function redeemBorrowSlip(uint256 _borrowSlipAmount) external;
+    function redeemIssueOrder(uint256 _issueOrderAmount) external;
 
     /**
      * @dev Deposits _collateralAmount of collateral-tokens and then calls borrow to CBB

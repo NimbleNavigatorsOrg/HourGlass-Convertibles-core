@@ -55,7 +55,7 @@ contract IBOBoxLens is IIBOBoxLens {
         //calculate rebase token qty w wrapperfunction
         uint256 buttonAmount = wrapper.underlyingToWrapper(_amountRaw);
 
-        //calculate safeTranche (borrowSlip amount) amount with tranche ratio & CDR
+        //calculate safeTranche (issueOrder amount) amount with tranche ratio & CDR
         uint256 bondCollateralBalance = wrapper.balanceOf(address(bond));
         uint256 bondDebt = bond.totalDebt();
 
@@ -85,7 +85,7 @@ contract IBOBoxLens is IIBOBoxLens {
      */
     function viewSimpleWithdrawBorrowUnwrap(
         IIBOBox _IBOBox,
-        uint256 _borrowSlipAmount
+        uint256 _issueOrderAmount
     ) public view returns (uint256, uint256) {
         (
             IConvertibleBondBox convertibleBondBox,
@@ -94,7 +94,7 @@ contract IBOBoxLens is IIBOBoxLens {
 
         ) = fetchElasticStack(_IBOBox);
 
-        uint256 safeTrancheAmount = (_borrowSlipAmount *
+        uint256 safeTrancheAmount = (_issueOrderAmount *
             _IBOBox.priceGranularity() *
             _IBOBox.trancheDecimals()) /
             _IBOBox.initialPrice() /
@@ -154,11 +154,11 @@ contract IBOBoxLens is IIBOBoxLens {
      * @inheritdoc IIBOBoxLens
      */
 
-    function viewRedeemBorrowSlipForDebtSlip(
+    function viewRedeemIssueOrderForDebtSlip(
         IIBOBox _IBOBox,
-        uint256 _borrowSlipAmount
+        uint256 _issueOrderAmount
     ) external view returns (uint256, uint256) {
-        uint256 loanAmount = _borrowSlipAmount;
+        uint256 loanAmount = _issueOrderAmount;
 
         uint256 debtSlipAmount = (loanAmount *
             _IBOBox.priceGranularity() *
@@ -677,13 +677,13 @@ contract IBOBoxLens is IIBOBoxLens {
      * @inheritdoc IIBOBoxLens
      */
 
-    function viewMaxRedeemBorrowSlip(IIBOBox _IBOBox, address _account)
+    function viewMaxRedeemIssueOrder(IIBOBox _IBOBox, address _account)
         public
         view
         returns (uint256)
     {
-        uint256 userBorrowSlip = _IBOBox.borrowSlip().balanceOf(_account);
-        return Math.min(userBorrowSlip, _IBOBox.s_activateLendAmount());
+        uint256 userIssueOrder = _IBOBox.issueOrder().balanceOf(_account);
+        return Math.min(userIssueOrder, _IBOBox.s_activateLendAmount());
     }
 
     /**
@@ -796,7 +796,7 @@ contract IBOBoxLens is IIBOBoxLens {
      * @inheritdoc IIBOBoxLens
      */
 
-    function viewMaxWithdrawBorrowSlips(IIBOBox _IBOBox, address _account)
+    function viewMaxWithdrawIssueOrders(IIBOBox _IBOBox, address _account)
         public
         view
         returns (uint256)
@@ -805,28 +805,28 @@ contract IBOBoxLens is IIBOBoxLens {
             _IBOBox
         );
 
-        uint256 userBorrowSlip = _IBOBox.borrowSlip().balanceOf(_account);
+        uint256 userIssueOrder = _IBOBox.issueOrder().balanceOf(_account);
 
-        uint256 maxWithdrawableBorrowSlip = userBorrowSlip;
+        uint256 maxWithdrawableIssueOrder = userIssueOrder;
 
         if (convertibleBondBox.s_startDate() > 0) {
             uint256 withdrawableSafeTranche = _IBOBox.safeTranche().balanceOf(
                 address(_IBOBox)
             );
 
-            uint256 withdrawableSafeTrancheToBorrowSlip = (withdrawableSafeTranche *
+            uint256 withdrawableSafeTrancheToIssueOrder = (withdrawableSafeTranche *
                     _IBOBox.initialPrice() *
                     _IBOBox.stableDecimals()) /
                     _IBOBox.priceGranularity() /
                     _IBOBox.trancheDecimals();
 
-            maxWithdrawableBorrowSlip = Math.min(
-                userBorrowSlip,
-                withdrawableSafeTrancheToBorrowSlip
+            maxWithdrawableIssueOrder = Math.min(
+                userIssueOrder,
+                withdrawableSafeTrancheToIssueOrder
             );
         }
 
-        return maxWithdrawableBorrowSlip;
+        return maxWithdrawableIssueOrder;
     }
 
     /**

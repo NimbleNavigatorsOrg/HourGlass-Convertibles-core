@@ -4,7 +4,7 @@ import "./iboBoxSetup.t.sol";
 
 contract DepositBorrow is iboBoxSetup {
     struct BeforeBalances {
-        uint256 borrowerBorrowSlips;
+        uint256 borrowerIssueOrders;
         uint256 routerSafeTranche;
         uint256 routerRiskTranche;
         uint256 IBOSafeTranche;
@@ -14,7 +14,7 @@ contract DepositBorrow is iboBoxSetup {
     struct BorrowAmounts {
         uint256 safeTrancheAmount;
         uint256 riskTrancheAmount;
-        uint256 borrowSlipAmount;
+        uint256 issueOrderAmount;
     }
 
     address s_borrower = address(1);
@@ -41,7 +41,7 @@ contract DepositBorrow is iboBoxSetup {
         setupIBOBox(_fuzzPrice);
 
         BeforeBalances memory before = BeforeBalances(
-            s_borrowSlip.balanceOf(s_borrower),
+            s_issueOrder.balanceOf(s_borrower),
             s_safeTranche.balanceOf(address(this)),
             s_riskTranche.balanceOf(address(this)),
             s_safeTranche.balanceOf(s_deployedIBOBAddress),
@@ -100,8 +100,8 @@ contract DepositBorrow is iboBoxSetup {
         );
 
         assertEq(
-            before.borrowerBorrowSlips + adjustments.borrowSlipAmount,
-            s_borrowSlip.balanceOf(s_borrower)
+            before.borrowerIssueOrders + adjustments.issueOrderAmount,
+            s_issueOrder.balanceOf(s_borrower)
         );
     }
 }
