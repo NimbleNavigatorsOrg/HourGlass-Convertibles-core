@@ -149,21 +149,21 @@ contract IBOLoanRouter is IIBOLoanRouter {
     /**
      * @inheritdoc IIBOLoanRouter
      */
-    function redeemBuySlipsForStables(IIBOBox _IBOBox, uint256 _buySlipAmount)
+    function redeemBuyOrdersForStables(IIBOBox _IBOBox, uint256 _buyOrderAmount)
         external
     {
         (IConvertibleBondBox convertibleBondBox, , , ) = fetchElasticStack(
             _IBOBox
         );
 
-        _IBOBox.buySlip().transferFrom(
+        _IBOBox.buyOrder().transferFrom(
             msg.sender,
             address(this),
-            _buySlipAmount
+            _buyOrderAmount
         );
 
-        //redeem buySlips for BondSlips
-        _IBOBox.redeemBuySlip(_buySlipAmount);
+        //redeem buyOrders for BondSlips
+        _IBOBox.redeemBuyOrder(_buyOrderAmount);
 
         //get balance of BondSlips and redeem for stables
         uint256 bondSlipAmount = IERC20(_IBOBox.bondSlipAddress()).balanceOf(
@@ -187,19 +187,19 @@ contract IBOLoanRouter is IIBOLoanRouter {
     /**
      * @inheritdoc IIBOLoanRouter
      */
-    function redeemBuySlipsForTranchesAndUnwrap(
+    function redeemBuyOrdersForTranchesAndUnwrap(
         IIBOBox _IBOBox,
-        uint256 _buySlipAmount
+        uint256 _buyOrderAmount
     ) external {
         //Transfer lendslips to router
-        _IBOBox.buySlip().transferFrom(
+        _IBOBox.buyOrder().transferFrom(
             msg.sender,
             address(this),
-            _buySlipAmount
+            _buyOrderAmount
         );
 
-        //redeem buySlips for BondSlips
-        _IBOBox.redeemBuySlip(_buySlipAmount);
+        //redeem buyOrders for BondSlips
+        _IBOBox.redeemBuyOrder(_buyOrderAmount);
 
         //redeem BondSlips for SafeTranche
         uint256 bondSlipAmount = IERC20(_IBOBox.bondSlipAddress()).balanceOf(

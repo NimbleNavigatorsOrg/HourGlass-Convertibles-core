@@ -41,13 +41,13 @@ interface IIBOBoxLens {
     ) external view returns (uint256, uint256);
 
     /**
-     * @dev provides amount of stable tokens expected in return for withdrawing buySlips
+     * @dev provides amount of stable tokens expected in return for withdrawing buyOrders
      * @param _IBOBox The IBO box tied to the Convertible Bond
-     * @param _buySlipAmount The amount of buySlips to be withdrawn
+     * @param _buyOrderAmount The amount of buyOrders to be withdrawn
      * Requirements:
      */
 
-    function viewWithdrawBuySlip(IIBOBox _IBOBox, uint256 _buySlipAmount)
+    function viewWithdrawBuyOrder(IIBOBox _IBOBox, uint256 _buyOrderAmount)
         external
         view
         returns (uint256);
@@ -65,27 +65,27 @@ interface IIBOBoxLens {
     ) external view returns (uint256, uint256);
 
     /**
-     * @dev provides amount of bondSlips expected in return for redeeming buySlips
+     * @dev provides amount of bondSlips expected in return for redeeming buyOrders
      * @param _IBOBox The IBO box tied to the Convertible Bond
-     * @param _buySlipAmount The amount of buySlips to be redeemed
+     * @param _buyOrderAmount The amount of buyOrders to be redeemed
      * Requirements:
      */
 
-    function viewRedeemBuySlipForBondSlip(
+    function viewRedeemBuyOrderForBondSlip(
         IIBOBox _IBOBox,
-        uint256 _buySlipAmount
+        uint256 _buyOrderAmount
     ) external view returns (uint256);
 
     /**
-     * @dev provides amount of stableTokens expected in return for redeeming buySlips
+     * @dev provides amount of stableTokens expected in return for redeeming buyOrders
      * @param _IBOBox The IBO box tied to the Convertible Bond
-     * @param _buySlipAmount The amount of buySlips to be redeemed
+     * @param _buyOrderAmount The amount of buyOrders to be redeemed
      * Requirements:
      */
 
-    function viewRedeemBuySlipsForStables(
+    function viewRedeemBuyOrdersForStables(
         IIBOBox _IBOBox,
-        uint256 _buySlipAmount
+        uint256 _buyOrderAmount
     ) external view returns (uint256, uint256);
 
     /**
@@ -101,15 +101,15 @@ interface IIBOBoxLens {
     ) external view returns (uint256, uint256);
 
     /**
-     * @dev provides amount of unwrapped collateral tokens expected in return for redeeming buySlips
+     * @dev provides amount of unwrapped collateral tokens expected in return for redeeming buyOrders
      * @param _IBOBox The IBO box tied to the Convertible Bond
-     * @param _buySlipAmount The amount of buySlips to be redeemed
+     * @param _buyOrderAmount The amount of buyOrders to be redeemed
      * Requirements:
      */
 
-    function viewRedeemBuySlipsForTranches(
+    function viewRedeemBuyOrdersForTranches(
         IIBOBox _IBOBox,
-        uint256 _buySlipAmount
+        uint256 _buyOrderAmount
     )
         external
         view
@@ -123,7 +123,7 @@ interface IIBOBoxLens {
     /**
      * @dev provides amount of unwrapped collateral tokens expected in return for redeeming bondSlips
      * @param _IBOBox The IBO box tied to the Convertible Bond
-     * @param _bondSlipAmount The amount of buySlips to be redeemed
+     * @param _bondSlipAmount The amount of buyOrders to be redeemed
      * Requirements:
      */
 
@@ -254,7 +254,7 @@ interface IIBOBoxLens {
      * Requirements:
      */
 
-    function viewMaxRedeemBuySlipForBondSlip(IIBOBox _IBOBox, address _account)
+    function viewMaxRedeemBuyOrderForBondSlip(IIBOBox _IBOBox, address _account)
         external
         view
         returns (uint256);
@@ -265,7 +265,7 @@ interface IIBOBoxLens {
      * Requirements:
      */
 
-    function viewMaxRedeemBuySlipForStables(IIBOBox _IBOBox, address _account)
+    function viewMaxRedeemBuyOrderForStables(IIBOBox _IBOBox, address _account)
         external
         view
         returns (uint256);
@@ -287,7 +287,7 @@ interface IIBOBoxLens {
      * Requirements:
      */
 
-    function viewMaxWithdrawBuySlips(IIBOBox _IBOBox, address _account)
+    function viewMaxWithdrawBuyOrders(IIBOBox _IBOBox, address _account)
         external
         view
         returns (uint256);
@@ -320,7 +320,7 @@ interface IIBOBoxLens {
      * Requirements:
      */
 
-    function viewMaxRedeemBuySlipForTranches(IIBOBox _IBOBox, address _account)
+    function viewMaxRedeemBuyOrderForTranches(IIBOBox _IBOBox, address _account)
         external
         view
         returns (uint256);

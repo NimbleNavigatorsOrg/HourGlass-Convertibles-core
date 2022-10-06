@@ -46,7 +46,7 @@ contract RedeemIssuerSlipsForTranchesAndUnwrap is IBOLoanRouterSetup {
             vm.stopPrank();
         }
 
-        uint256 maxRedeemableBuySlips = (s_bondSlip.balanceOf(
+        uint256 maxRedeemableBuyOrders = (s_bondSlip.balanceOf(
             s_deployedIBOBAddress
         ) *
             s_deployedIBOB.initialPrice() *
@@ -55,7 +55,7 @@ contract RedeemIssuerSlipsForTranchesAndUnwrap is IBOLoanRouterSetup {
             s_deployedIBOB.trancheDecimals();
 
         vm.startPrank(s_lender);
-        s_deployedIBOB.redeemBuySlip(maxRedeemableBuySlips / 2);
+        s_deployedIBOB.redeemBuyOrder(maxRedeemableBuyOrders / 2);
         vm.stopPrank();
 
         vm.warp(s_maturityDate + 1);

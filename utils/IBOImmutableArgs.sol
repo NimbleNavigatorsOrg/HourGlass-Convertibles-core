@@ -16,7 +16,7 @@ contract IBOImmutableArgs is Clone, IIBOImmutableArgs {
      * @inheritdoc IIBOImmutableArgs
      */
 
-    function buySlip() public pure returns (ISlip) {
+    function buyOrder() public pure returns (ISlip) {
         return ISlip(_getArgAddress(0));
     }
 

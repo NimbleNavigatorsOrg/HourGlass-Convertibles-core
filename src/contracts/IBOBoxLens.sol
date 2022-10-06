@@ -142,12 +142,12 @@ contract IBOBoxLens is IIBOBoxLens {
      * @inheritdoc IIBOBoxLens
      */
 
-    function viewWithdrawBuySlip(IIBOBox _IBOBox, uint256 _buySlipAmount)
+    function viewWithdrawBuyOrder(IIBOBox _IBOBox, uint256 _buyOrderAmount)
         external
         view
         returns (uint256)
     {
-        return _buySlipAmount;
+        return _buyOrderAmount;
     }
 
     /**
@@ -175,11 +175,11 @@ contract IBOBoxLens is IIBOBoxLens {
      * @inheritdoc IIBOBoxLens
      */
 
-    function viewRedeemBuySlipForBondSlip(
+    function viewRedeemBuyOrderForBondSlip(
         IIBOBox _IBOBox,
-        uint256 _buySlipAmount
+        uint256 _buyOrderAmount
     ) external view returns (uint256) {
-        uint256 bondSlipAmount = (_buySlipAmount *
+        uint256 bondSlipAmount = (_buyOrderAmount *
             _IBOBox.priceGranularity() *
             _IBOBox.trancheDecimals()) /
             _IBOBox.initialPrice() /
@@ -192,12 +192,12 @@ contract IBOBoxLens is IIBOBoxLens {
      * @inheritdoc IIBOBoxLens
      */
 
-    function viewRedeemBuySlipsForStables(
+    function viewRedeemBuyOrdersForStables(
         IIBOBox _IBOBox,
-        uint256 _buySlipAmount
+        uint256 _buyOrderAmount
     ) public view returns (uint256, uint256) {
-        //calculate buySlips to bondSlips w/ initialPrice
-        uint256 bondSlipsAmount = (_buySlipAmount *
+        //calculate buyOrders to bondSlips w/ initialPrice
+        uint256 bondSlipsAmount = (_buyOrderAmount *
             _IBOBox.priceGranularity() *
             _IBOBox.trancheDecimals()) /
             _IBOBox.initialPrice() /
@@ -270,9 +270,9 @@ contract IBOBoxLens is IIBOBoxLens {
     /**
      * @inheritdoc IIBOBoxLens
      */
-    function viewRedeemBuySlipsForTranches(
+    function viewRedeemBuyOrdersForTranches(
         IIBOBox _IBOBox,
-        uint256 _buySlipAmount
+        uint256 _buyOrderAmount
     )
         public
         view
@@ -283,8 +283,8 @@ contract IBOBoxLens is IIBOBoxLens {
             uint256
         )
     {
-        //calculate buySlips to bondSlips w/ initialPrice
-        uint256 bondSlipsAmount = (_buySlipAmount *
+        //calculate buyOrders to bondSlips w/ initialPrice
+        uint256 bondSlipsAmount = (_buyOrderAmount *
             _IBOBox.priceGranularity() *
             _IBOBox.trancheDecimals()) /
             _IBOBox.initialPrice() /
@@ -690,7 +690,7 @@ contract IBOBoxLens is IIBOBoxLens {
      * @inheritdoc IIBOBoxLens
      */
 
-    function viewMaxRedeemBuySlipForBondSlip(IIBOBox _IBOBox, address _account)
+    function viewMaxRedeemBuyOrderForBondSlip(IIBOBox _IBOBox, address _account)
         public
         view
         returns (uint256)
@@ -698,25 +698,25 @@ contract IBOBoxLens is IIBOBoxLens {
         (IConvertibleBondBox convertibleBondBox, , , ) = fetchElasticStack(
             _IBOBox
         );
-        uint256 userBuySlip = _IBOBox.buySlip().balanceOf(_account);
+        uint256 userBuyOrder = _IBOBox.buyOrder().balanceOf(_account);
         uint256 IBO_bondSlips = convertibleBondBox.bondSlip().balanceOf(
             address(_IBOBox)
         );
 
-        uint256 maxRedeemableBuySlips = (IBO_bondSlips *
+        uint256 maxRedeemableBuyOrders = (IBO_bondSlips *
             _IBOBox.initialPrice() *
             _IBOBox.stableDecimals()) /
             _IBOBox.priceGranularity() /
             _IBOBox.trancheDecimals();
 
-        return Math.min(userBuySlip, maxRedeemableBuySlips);
+        return Math.min(userBuyOrder, maxRedeemableBuyOrders);
     }
 
     /**
      * @inheritdoc IIBOBoxLens
      */
 
-    function viewMaxRedeemBuySlipForStables(IIBOBox _IBOBox, address _account)
+    function viewMaxRedeemBuyOrderForStables(IIBOBox _IBOBox, address _account)
         public
         view
         returns (uint256)
@@ -724,13 +724,13 @@ contract IBOBoxLens is IIBOBoxLens {
         (IConvertibleBondBox convertibleBondBox, , , ) = fetchElasticStack(
             _IBOBox
         );
-        uint256 userBuySlip = _IBOBox.buySlip().balanceOf(_account);
+        uint256 userBuyOrder = _IBOBox.buyOrder().balanceOf(_account);
 
         uint256 IBO_bondSlips = convertibleBondBox.bondSlip().balanceOf(
             address(_IBOBox)
         );
 
-        uint256 maxRedeemableBuySlips = (Math.min(
+        uint256 maxRedeemableBuyOrders = (Math.min(
             IBO_bondSlips,
             convertibleBondBox.s_repaidBondSlips()
         ) *
@@ -739,7 +739,7 @@ contract IBOBoxLens is IIBOBoxLens {
             _IBOBox.priceGranularity() /
             _IBOBox.trancheDecimals();
 
-        return Math.min(userBuySlip, maxRedeemableBuySlips);
+        return Math.min(userBuyOrder, maxRedeemableBuyOrders);
     }
 
     /**
@@ -765,7 +765,7 @@ contract IBOBoxLens is IIBOBoxLens {
      * @inheritdoc IIBOBoxLens
      */
 
-    function viewMaxWithdrawBuySlips(IIBOBox _IBOBox, address _account)
+    function viewMaxWithdrawBuyOrders(IIBOBox _IBOBox, address _account)
         public
         view
         returns (uint256)
@@ -774,22 +774,22 @@ contract IBOBoxLens is IIBOBoxLens {
             _IBOBox
         );
 
-        uint256 userBuySlip = _IBOBox.buySlip().balanceOf(_account);
+        uint256 userBuyOrder = _IBOBox.buyOrder().balanceOf(_account);
 
-        uint256 maxWithdrawableBuySlips = userBuySlip;
+        uint256 maxWithdrawableBuyOrders = userBuyOrder;
 
         if (convertibleBondBox.s_startDate() > 0) {
             uint256 withdrawableStables = _IBOBox.stableToken().balanceOf(
                 address(_IBOBox)
             ) - _IBOBox.s_activateLendAmount();
 
-            maxWithdrawableBuySlips = Math.min(
-                userBuySlip,
+            maxWithdrawableBuyOrders = Math.min(
+                userBuyOrder,
                 withdrawableStables
             );
         }
 
-        return maxWithdrawableBuySlips;
+        return maxWithdrawableBuyOrders;
     }
 
     /**
@@ -856,7 +856,7 @@ contract IBOBoxLens is IIBOBoxLens {
      * @inheritdoc IIBOBoxLens
      */
 
-    function viewMaxRedeemBuySlipForTranches(IIBOBox _IBOBox, address _account)
+    function viewMaxRedeemBuyOrderForTranches(IIBOBox _IBOBox, address _account)
         public
         view
         returns (uint256)
@@ -864,19 +864,19 @@ contract IBOBoxLens is IIBOBoxLens {
         (IConvertibleBondBox convertibleBondBox, , , ) = fetchElasticStack(
             _IBOBox
         );
-        uint256 userBuySlip = _IBOBox.buySlip().balanceOf(_account);
+        uint256 userBuyOrder = _IBOBox.buyOrder().balanceOf(_account);
 
         uint256 cbbSafeTrancheBalance = convertibleBondBox
             .safeTranche()
             .balanceOf(address(convertibleBondBox));
 
-        uint256 cbbSafeTrancheToBuySlip = (cbbSafeTrancheBalance *
+        uint256 cbbSafeTrancheToBuyOrder = (cbbSafeTrancheBalance *
             _IBOBox.initialPrice() *
             _IBOBox.stableDecimals()) /
             _IBOBox.priceGranularity() /
             _IBOBox.trancheDecimals();
 
-        return Math.min(userBuySlip, cbbSafeTrancheToBuySlip);
+        return Math.min(userBuyOrder, cbbSafeTrancheToBuyOrder);
     }
 
     function fetchElasticStack(IIBOBox _IBOBox)

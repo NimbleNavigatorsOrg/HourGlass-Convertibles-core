@@ -24,7 +24,7 @@ contract IBOLoanRouterSetup is CBBSetup {
     uint256 s_initMockData = 5e8;
 
     ISlip s_borrowSlip;
-    ISlip s_buySlip;
+    ISlip s_buyOrder;
 
     address s_borrower = address(1);
     address s_lender = address(2);
@@ -119,7 +119,7 @@ contract IBOLoanRouterSetup is CBBSetup {
         s_bondSlip = s_deployedConvertibleBondBox.bondSlip();
         s_issuerSlip = s_deployedConvertibleBondBox.issuerSlip();
         s_borrowSlip = s_deployedIBOB.borrowSlip();
-        s_buySlip = s_deployedIBOB.buySlip();
+        s_buyOrder = s_deployedIBOB.buyOrder();
 
         s_collateralToken.mint(
             address(this),
@@ -153,7 +153,7 @@ contract IBOLoanRouterSetup is CBBSetup {
         s_stableToken.approve(address(s_IBOLoanRouter), type(uint256).max);
         s_stableToken.approve(s_deployedIBOBAddress, type(uint256).max);
         s_bondSlip.approve(address(s_IBOLoanRouter), type(uint256).max);
-        s_buySlip.approve(address(s_IBOLoanRouter), type(uint256).max);
+        s_buyOrder.approve(address(s_IBOLoanRouter), type(uint256).max);
         vm.stopPrank();
     }
 }

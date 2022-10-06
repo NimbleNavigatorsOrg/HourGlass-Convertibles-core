@@ -11,7 +11,7 @@ interface IIBOImmutableArgs {
      * @dev https://github.com/wighawag/clones-with-immutable-args
      * @return The lend slip object
      */
-    function buySlip() external pure returns (ISlip);
+    function buyOrder() external pure returns (ISlip);
 
     /**
      * @notice the borrow slip object

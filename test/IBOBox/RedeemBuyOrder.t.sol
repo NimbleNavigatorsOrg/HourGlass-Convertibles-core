@@ -2,22 +2,22 @@ pragma solidity 0.8.13;
 
 import "./iboBoxSetup.t.sol";
 
-contract RedeemBuySlip is iboBoxSetup {
+contract RedeemBuyOrder is iboBoxSetup {
     struct BeforeBalances {
-        uint256 lenderBuySlips;
+        uint256 lenderBuyOrders;
         uint256 lenderBondSlips;
         uint256 IBOBondSlips;
     }
 
     struct LendAmounts {
-        uint256 buySlipAmount;
+        uint256 buyOrderAmount;
         uint256 bondSlipAmount;
     }
 
     address s_borrower = address(1);
     address s_lender = address(2);
 
-    function testRedeemBuySlip(uint256 _fuzzPrice, uint256 _lendAmount)
+    function testRedeemBuyOrder(uint256 _fuzzPrice, uint256 _lendAmount)
         public
     {
         setupIBOBox(_fuzzPrice);
@@ -41,13 +41,13 @@ contract RedeemBuySlip is iboBoxSetup {
         s_deployedIBOB.transmitActivate(isLend);
 
         BeforeBalances memory before = BeforeBalances(
-            s_buySlip.balanceOf(s_lender),
+            s_buyOrder.balanceOf(s_lender),
             s_bondSlip.balanceOf(s_lender),
             s_bondSlip.balanceOf(s_deployedIBOBAddress)
         );
 
         uint256 maxLendAmount = Math.min(
-            before.lenderBuySlips,
+            before.lenderBuyOrders,
             (before.IBOBondSlips *
                 s_deployedIBOB.initialPrice() *
                 s_deployedIBOB.stableDecimals()) /
@@ -68,8 +68,8 @@ contract RedeemBuySlip is iboBoxSetup {
 
         vm.prank(s_lender);
         vm.expectEmit(true, true, true, true);
-        emit RedeemBuySlip(s_lender, _lendAmount);
-        s_deployedIBOB.redeemBuySlip(_lendAmount);
+        emit RedeemBuyOrder(s_lender, _lendAmount);
+        s_deployedIBOB.redeemBuyOrder(_lendAmount);
 
         assertions(before, adjustments);
     }
@@ -79,8 +79,8 @@ contract RedeemBuySlip is iboBoxSetup {
         LendAmounts memory adjustments
     ) internal {
         assertEq(
-            before.lenderBuySlips - adjustments.buySlipAmount,
-            s_buySlip.balanceOf(s_lender)
+            before.lenderBuyOrders - adjustments.buyOrderAmount,
+            s_buyOrder.balanceOf(s_lender)
         );
 
         assertEq(

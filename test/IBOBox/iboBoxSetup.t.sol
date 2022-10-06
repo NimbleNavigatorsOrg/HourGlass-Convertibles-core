@@ -16,14 +16,14 @@ contract iboBoxSetup is CBBSetup {
     address s_deployedIBOBAddress;
 
     ISlip s_borrowSlip;
-    ISlip s_buySlip;
+    ISlip s_buyOrder;
 
     event LendDeposit(address, uint256);
     event BorrowDeposit(address, uint256);
     event LendWithdrawal(address, uint256);
     event BorrowWithdrawal(address, uint256);
     event RedeemBorrowSlip(address, uint256);
-    event RedeemBuySlip(address, uint256);
+    event RedeemBuyOrder(address, uint256);
 
     event IBOBoxCreated(address msgSender, address IBOBox, address slipFactory);
 
@@ -61,6 +61,6 @@ contract iboBoxSetup is CBBSetup {
         s_stableToken.approve(address(s_deployedIBOB), type(uint256).max);
 
         s_borrowSlip = s_deployedIBOB.borrowSlip();
-        s_buySlip = s_deployedIBOB.buySlip();
+        s_buyOrder = s_deployedIBOB.buyOrder();
     }
 }

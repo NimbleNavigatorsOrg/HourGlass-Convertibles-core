@@ -2,14 +2,14 @@ pragma solidity 0.8.13;
 
 import "./IBOLoanRouterSetup.t.sol";
 
-contract RedeemBuySlipsForStables is IBOLoanRouterSetup {
+contract RedeemBuyOrdersForStables is IBOLoanRouterSetup {
     struct BeforeBalances {
-        uint256 lenderBuySlips;
+        uint256 lenderBuyOrders;
         uint256 lenderStables;
     }
 
     struct RedeemAmounts {
-        uint256 buySlipAmount;
+        uint256 buyOrderAmount;
         uint256 stableAmount;
     }
 
@@ -46,7 +46,7 @@ contract RedeemBuySlipsForStables is IBOLoanRouterSetup {
             vm.stopPrank();
         }
 
-        uint256 maxRedeemableBuySlips = (s_bondSlip.balanceOf(
+        uint256 maxRedeemableBuyOrders = (s_bondSlip.balanceOf(
             s_deployedIBOBAddress
         ) *
             s_deployedIBOB.initialPrice() *
@@ -55,7 +55,7 @@ contract RedeemBuySlipsForStables is IBOLoanRouterSetup {
             s_deployedIBOB.trancheDecimals();
 
         vm.startPrank(s_lender);
-        s_deployedIBOB.redeemBuySlip(maxRedeemableBuySlips / 2);
+        s_deployedIBOB.redeemBuyOrder(maxRedeemableBuyOrders / 2);
         vm.stopPrank();
 
         vm.warp(s_maturityDate + 1);
@@ -78,49 +78,49 @@ contract RedeemBuySlipsForStables is IBOLoanRouterSetup {
         s_buttonWoodBondController.mature();
     }
 
-    function testBuySlipRedeemStables(uint256 buySlipAmount, uint256 data)
+    function testBuyOrderRedeemStables(uint256 buyOrderAmount, uint256 data)
         public
     {
         initialSetup(data);
 
-        uint256 minBuySlips = (1e6 *
+        uint256 minBuyOrders = (1e6 *
             s_deployedIBOB.initialPrice() *
             s_deployedIBOB.stableDecimals()) /
             s_deployedIBOB.priceGranularity() /
             s_deployedIBOB.trancheDecimals();
 
-        uint256 maxRedeemableBuySlips = (s_deployedConvertibleBondBox
+        uint256 maxRedeemableBuyOrders = (s_deployedConvertibleBondBox
             .s_repaidBondSlips() *
             s_deployedIBOB.initialPrice() *
             s_deployedIBOB.stableDecimals()) /
             s_deployedIBOB.priceGranularity() /
             s_deployedIBOB.trancheDecimals();
 
-        buySlipAmount = bound(
-            buySlipAmount,
-            Math.max(1, minBuySlips),
-            Math.min(maxRedeemableBuySlips, s_buySlip.balanceOf(s_lender))
+        buyOrderAmount = bound(
+            buyOrderAmount,
+            Math.max(1, minBuyOrders),
+            Math.min(maxRedeemableBuyOrders, s_buyOrder.balanceOf(s_lender))
         );
 
-        (uint256 stableAmount, ) = s_IBOLens.viewRedeemBuySlipsForStables(
+        (uint256 stableAmount, ) = s_IBOLens.viewRedeemBuyOrdersForStables(
             s_deployedIBOB,
-            buySlipAmount
+            buyOrderAmount
         );
 
         BeforeBalances memory before = BeforeBalances(
-            s_buySlip.balanceOf(s_lender),
+            s_buyOrder.balanceOf(s_lender),
             s_stableToken.balanceOf(s_lender)
         );
 
         RedeemAmounts memory adjustments = RedeemAmounts(
-            buySlipAmount,
+            buyOrderAmount,
             stableAmount
         );
 
         vm.startPrank(s_lender);
-        s_IBOLoanRouter.redeemBuySlipsForStables(
+        s_IBOLoanRouter.redeemBuyOrdersForStables(
             s_deployedIBOB,
-            buySlipAmount
+            buyOrderAmount
         );
         vm.stopPrank();
 
@@ -132,8 +132,8 @@ contract RedeemBuySlipsForStables is IBOLoanRouterSetup {
         RedeemAmounts memory adjustments
     ) internal {
         assertApproxEqRel(
-            before.lenderBuySlips - adjustments.buySlipAmount,
-            s_buySlip.balanceOf(s_lender),
+            before.lenderBuyOrders - adjustments.buyOrderAmount,
+            s_buyOrder.balanceOf(s_lender),
             1e15
         );
 
