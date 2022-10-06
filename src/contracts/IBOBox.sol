@@ -150,7 +150,7 @@ contract IBOBox is OwnableUpgradeable, IBOImmutableArgs, IIBOBox {
         emit CancelledBuyOrder(_msgSender(), _buyOrderAmount);
     }
 
-    function redeemIssueOrder(uint256 _issueOrderAmount) external override {
+    function executeIssueOrder(uint256 _issueOrderAmount) external override {
         // Transfer `_issueOrderAmount*riskRatio()/safeRatio()` of DebtSlips to msg.sender
         ISlip(debtSlipAddress()).transfer(
             _msgSender(),
@@ -177,7 +177,7 @@ contract IBOBox is OwnableUpgradeable, IBOImmutableArgs, IIBOBox {
         s_activateLendAmount -= _issueOrderAmount;
 
         //event stuff
-        emit RedeemIssueOrder(_msgSender(), _issueOrderAmount);
+        emit ExecuteIssueOrder(_msgSender(), _issueOrderAmount);
     }
 
     function executeBuyOrder(uint256 _buyOrderAmount) external override {

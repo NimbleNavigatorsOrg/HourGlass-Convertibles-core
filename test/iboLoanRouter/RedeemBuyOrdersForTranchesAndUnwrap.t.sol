@@ -42,7 +42,7 @@ contract ExecuteBuyOrdersForTranchesAndUnwrap is IBOLoanRouterSetup {
             );
 
             vm.startPrank(s_borrower);
-            s_deployedIBOB.redeemIssueOrder(maxRedeemableIssueOrders);
+            s_deployedIBOB.executeIssueOrder(maxRedeemableIssueOrders);
             vm.stopPrank();
         }
         uint256 maxRedeemableBuyOrders = (s_bondSlip.balanceOf(

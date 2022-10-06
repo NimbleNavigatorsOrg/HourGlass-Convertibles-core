@@ -43,7 +43,7 @@ contract RepayUnwrap is IBOLoanRouterSetup {
         vm.stopPrank();
 
         vm.startPrank(s_borrower);
-        s_deployedIBOB.redeemIssueOrder(s_issueOrder.balanceOf(s_borrower));
+        s_deployedIBOB.executeIssueOrder(s_issueOrder.balanceOf(s_borrower));
         vm.stopPrank();
 
         !isMature

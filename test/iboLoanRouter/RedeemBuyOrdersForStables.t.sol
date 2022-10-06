@@ -42,7 +42,7 @@ contract ExecuteBuyOrdersForStables is IBOLoanRouterSetup {
             );
 
             vm.startPrank(s_borrower);
-            s_deployedIBOB.redeemIssueOrder(maxRedeemableIssueOrders);
+            s_deployedIBOB.executeIssueOrder(maxRedeemableIssueOrders);
             vm.stopPrank();
         }
 

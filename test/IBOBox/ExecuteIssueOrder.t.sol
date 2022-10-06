@@ -2,7 +2,7 @@ pragma solidity 0.8.13;
 
 import "./iboBoxSetup.t.sol";
 
-contract RedeemIssueOrder is iboBoxSetup {
+contract ExecuteIssueOrder is iboBoxSetup {
     struct BeforeBalances {
         uint256 borrowerIssueOrders;
         uint256 borrowerDebtSlips;
@@ -20,7 +20,7 @@ contract RedeemIssueOrder is iboBoxSetup {
     address s_borrower = address(1);
     address s_lender = address(2);
 
-    function testRedeemIssueOrder(uint256 _fuzzPrice, uint256 _borrowAmount)
+    function testExecuteIssueOrder(uint256 _fuzzPrice, uint256 _borrowAmount)
         public
     {
         setupIBOBox(_fuzzPrice);
@@ -67,8 +67,8 @@ contract RedeemIssueOrder is iboBoxSetup {
 
         vm.prank(s_borrower);
         vm.expectEmit(true, true, true, true);
-        emit RedeemIssueOrder(s_borrower, _borrowAmount);
-        s_deployedIBOB.redeemIssueOrder(_borrowAmount);
+        emit ExecuteIssueOrder(s_borrower, _borrowAmount);
+        s_deployedIBOB.executeIssueOrder(_borrowAmount);
 
         assertions(before, adjustments);
     }

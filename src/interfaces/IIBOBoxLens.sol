@@ -59,7 +59,7 @@ interface IIBOBoxLens {
      * Requirements:
      */
 
-    function viewRedeemIssueOrderForDebtSlip(
+    function viewExecuteIssueOrderForDebtSlip(
         IIBOBox _IBOBox,
         uint256 _issueOrderAmount
     ) external view returns (uint256, uint256);
@@ -238,12 +238,12 @@ interface IIBOBoxLens {
         );
 
     /**
-     * @dev provides maximum input param for redeemIssueOrder
+     * @dev provides maximum input param for executeIssueOrder
      * @param _IBOBox The IBO box tied to the Convertible Bond
      * Requirements:
      */
 
-    function viewMaxRedeemIssueOrder(IIBOBox _IBOBox, address _account)
+    function viewMaxExecuteIssueOrder(IIBOBox _IBOBox, address _account)
         external
         view
         returns (uint256);
@@ -254,10 +254,10 @@ interface IIBOBoxLens {
      * Requirements:
      */
 
-    function viewMaxExecuteBuyOrderForBondSlip(IIBOBox _IBOBox, address _account)
-        external
-        view
-        returns (uint256);
+    function viewMaxExecuteBuyOrderForBondSlip(
+        IIBOBox _IBOBox,
+        address _account
+    ) external view returns (uint256);
 
     /**
      * @dev provides maximum input param when redeeming lend slips for stables
@@ -320,8 +320,8 @@ interface IIBOBoxLens {
      * Requirements:
      */
 
-    function viewMaxExecuteBuyOrderForTranches(IIBOBox _IBOBox, address _account)
-        external
-        view
-        returns (uint256);
+    function viewMaxExecuteBuyOrderForTranches(
+        IIBOBox _IBOBox,
+        address _account
+    ) external view returns (uint256);
 }
