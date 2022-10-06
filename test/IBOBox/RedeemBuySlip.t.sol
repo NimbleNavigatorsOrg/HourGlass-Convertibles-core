@@ -2,22 +2,22 @@ pragma solidity 0.8.13;
 
 import "./iboBoxSetup.t.sol";
 
-contract RedeemLendSlip is iboBoxSetup {
+contract RedeemBuySlip is iboBoxSetup {
     struct BeforeBalances {
-        uint256 lenderLendSlips;
+        uint256 lenderBuySlips;
         uint256 lenderBondSlips;
         uint256 IBOBondSlips;
     }
 
     struct LendAmounts {
-        uint256 lendSlipAmount;
+        uint256 buySlipAmount;
         uint256 bondSlipAmount;
     }
 
     address s_borrower = address(1);
     address s_lender = address(2);
 
-    function testRedeemLendSlip(uint256 _fuzzPrice, uint256 _lendAmount)
+    function testRedeemBuySlip(uint256 _fuzzPrice, uint256 _lendAmount)
         public
     {
         setupIBOBox(_fuzzPrice);
@@ -41,13 +41,13 @@ contract RedeemLendSlip is iboBoxSetup {
         s_deployedIBOB.transmitActivate(isLend);
 
         BeforeBalances memory before = BeforeBalances(
-            s_lendSlip.balanceOf(s_lender),
+            s_buySlip.balanceOf(s_lender),
             s_bondSlip.balanceOf(s_lender),
             s_bondSlip.balanceOf(s_deployedIBOBAddress)
         );
 
         uint256 maxLendAmount = Math.min(
-            before.lenderLendSlips,
+            before.lenderBuySlips,
             (before.IBOBondSlips *
                 s_deployedIBOB.initialPrice() *
                 s_deployedIBOB.stableDecimals()) /
@@ -68,8 +68,8 @@ contract RedeemLendSlip is iboBoxSetup {
 
         vm.prank(s_lender);
         vm.expectEmit(true, true, true, true);
-        emit RedeemLendSlip(s_lender, _lendAmount);
-        s_deployedIBOB.redeemLendSlip(_lendAmount);
+        emit RedeemBuySlip(s_lender, _lendAmount);
+        s_deployedIBOB.redeemBuySlip(_lendAmount);
 
         assertions(before, adjustments);
     }
@@ -79,8 +79,8 @@ contract RedeemLendSlip is iboBoxSetup {
         LendAmounts memory adjustments
     ) internal {
         assertEq(
-            before.lenderLendSlips - adjustments.lendSlipAmount,
-            s_lendSlip.balanceOf(s_lender)
+            before.lenderBuySlips - adjustments.buySlipAmount,
+            s_buySlip.balanceOf(s_lender)
         );
 
         assertEq(

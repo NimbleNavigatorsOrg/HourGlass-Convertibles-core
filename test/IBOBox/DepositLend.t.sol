@@ -4,7 +4,7 @@ import "./iboBoxSetup.t.sol";
 
 contract DepositLend is iboBoxSetup {
     struct BeforeBalances {
-        uint256 lenderLendSlips;
+        uint256 lenderBuySlips;
         uint256 routerStableTokens;
         uint256 IBOStableTokens;
     }
@@ -35,7 +35,7 @@ contract DepositLend is iboBoxSetup {
         setupIBOBox(_fuzzPrice);
 
         BeforeBalances memory before = BeforeBalances(
-            s_lendSlip.balanceOf(s_lender),
+            s_buySlip.balanceOf(s_lender),
             s_stableToken.balanceOf(address(this)),
             s_stableToken.balanceOf(s_deployedIBOBAddress)
         );
@@ -56,8 +56,8 @@ contract DepositLend is iboBoxSetup {
         LendAmounts memory adjustments
     ) internal {
         assertEq(
-            before.lenderLendSlips + adjustments.stableAmount,
-            s_lendSlip.balanceOf(s_lender)
+            before.lenderBuySlips + adjustments.stableAmount,
+            s_buySlip.balanceOf(s_lender)
         );
 
         assertEq(

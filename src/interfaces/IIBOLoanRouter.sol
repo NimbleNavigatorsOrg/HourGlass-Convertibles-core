@@ -50,21 +50,21 @@ interface IIBOLoanRouter {
     ) external;
 
     /**
-     * @dev redeems lendSlips for bondSlips and bondSlips for stables
+     * @dev redeems buySlips for bondSlips and bondSlips for stables
      * @param _IBOBox The IBO box tied to the Convertible Bond
-     * @param _lendSlipAmount The amount of lendSlips to be redeemed
+     * @param _buySlipAmount The amount of buySlips to be redeemed
      * Requirements:
      *  - can only be called when there are stables in the CBB to be repaid
      */
 
-    function redeemLendSlipsForStables(IIBOBox _IBOBox, uint256 _lendSlipAmount)
+    function redeemBuySlipsForStables(IIBOBox _IBOBox, uint256 _buySlipAmount)
         external;
 
     /**
      * @dev redeems bondSlips for tranches, redeems tranches for rebasing
      * collateral, unwraps rebasing collateral, and then swaps for stableToken
      * @param _IBOBox The IBO box tied to the Convertible Bond
-     * @param _bondSlipAmount The amount of lendSlips to be redeemed
+     * @param _bondSlipAmount The amount of buySlips to be redeemed
      * Requirements:
      *  - can only be called after maturity
      */
@@ -75,17 +75,17 @@ interface IIBOLoanRouter {
     ) external;
 
     /**
-     * @dev redeems lendSlips for bondSlips and bondSlips for tranches, redeems tranches for rebasing
+     * @dev redeems buySlips for bondSlips and bondSlips for tranches, redeems tranches for rebasing
      * collateral, unwraps rebasing collateral, and then swaps for stableToken
      * @param _IBOBox The IBO box tied to the Convertible Bond
-     * @param _lendSlipAmount The amount of lendSlips to be redeemed
+     * @param _buySlipAmount The amount of buySlips to be redeemed
      * Requirements:
      *  - can only be called after maturity
      */
 
-    function redeemLendSlipsForTranchesAndUnwrap(
+    function redeemBuySlipsForTranchesAndUnwrap(
         IIBOBox _IBOBox,
-        uint256 _lendSlipAmount
+        uint256 _buySlipAmount
     ) external;
 
     /**

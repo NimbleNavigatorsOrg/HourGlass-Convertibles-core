@@ -4,7 +4,7 @@ import "./iboBoxSetup.t.sol";
 
 contract WithdrawLend is iboBoxSetup {
     struct BeforeBalances {
-        uint256 lenderLendSlips;
+        uint256 lenderBuySlips;
         uint256 lenderStableTokens;
         uint256 IBOStableTokens;
     }
@@ -47,7 +47,7 @@ contract WithdrawLend is iboBoxSetup {
         _lendAmount = bound(
             _lendAmount,
             maxWithdrawAmount + 1,
-            Math.max(maxWithdrawAmount + 1, s_lendSlip.balanceOf(s_lender))
+            Math.max(maxWithdrawAmount + 1, s_buySlip.balanceOf(s_lender))
         );
 
         bytes memory customError = abi.encodeWithSignature(
@@ -70,12 +70,12 @@ contract WithdrawLend is iboBoxSetup {
         );
 
         BeforeBalances memory before = BeforeBalances(
-            s_lendSlip.balanceOf(s_lender),
+            s_buySlip.balanceOf(s_lender),
             s_stableToken.balanceOf(s_lender),
             s_stableToken.balanceOf(s_deployedIBOBAddress)
         );
 
-        _lendAmount = bound(_lendAmount, 1, before.lenderLendSlips);
+        _lendAmount = bound(_lendAmount, 1, before.lenderBuySlips);
 
         LendAmounts memory adjustments = LendAmounts(_lendAmount);
 
@@ -93,8 +93,8 @@ contract WithdrawLend is iboBoxSetup {
         LendAmounts memory adjustments
     ) internal {
         assertEq(
-            before.lenderLendSlips - adjustments.stableAmount,
-            s_lendSlip.balanceOf(s_lender)
+            before.lenderBuySlips - adjustments.stableAmount,
+            s_buySlip.balanceOf(s_lender)
         );
 
         assertEq(

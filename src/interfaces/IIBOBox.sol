@@ -6,10 +6,10 @@ import "../../utils/IIBOImmutableArgs.sol";
 interface IIBOBox is IIBOImmutableArgs {
     event LendDeposit(address lender, uint256 lendAmount);
     event BorrowDeposit(address borrower, uint256 safeTrancheAmount);
-    event LendWithdrawal(address lender, uint256 lendSlipAmount);
+    event LendWithdrawal(address lender, uint256 buySlipAmount);
     event BorrowWithdrawal(address borrower, uint256 borrowSlipAmount);
     event RedeemBorrowSlip(address caller, uint256 borrowSlipAmount);
-    event RedeemLendSlip(address caller, uint256 lendSlipAmount);
+    event RedeemBuySlip(address caller, uint256 buySlipAmount);
     event Initialized(address owner);
 
     error InitialPriceTooHigh(uint256 given, uint256 maxPrice);
@@ -30,7 +30,7 @@ interface IIBOBox is IIBOImmutableArgs {
     function depositBorrow(address _borrower, uint256 _borrowAmount) external;
 
     /**
-     * @dev deposit _lendAmount of stable-tokens for LendSlips
+     * @dev deposit _lendAmount of stable-tokens for BuySlips
      * @param _lender The recipent address of the LenderSlips
      * @param _lendAmount The amount of stable tokens to deposit
      * Requirements:
@@ -49,11 +49,11 @@ interface IIBOBox is IIBOImmutableArgs {
 
     /**
      * @dev Withdraws Lend Slips for unfilled BorrowSlips
-     * @param _lendSlipAmount The amount of stable tokens to withdraw
+     * @param _buySlipAmount The amount of stable tokens to withdraw
      * Requirements:
      */
 
-    function withdrawLend(uint256 _lendSlipAmount) external;
+    function withdrawLend(uint256 _buySlipAmount) external;
 
     /**
      * @dev Deposits _stableAmount of stable-tokens and then calls lend to CBB
@@ -65,11 +65,11 @@ interface IIBOBox is IIBOImmutableArgs {
 
     /**
      * @dev Deposits _collateralAmount of collateral-tokens and then calls borrow to CBB
-     * @param _lendSlipAmount amount of LendSlips to redeem BondSlips with
+     * @param _buySlipAmount amount of BuySlips to redeem BondSlips with
      * Requirements:
      */
 
-    function redeemLendSlip(uint256 _lendSlipAmount) external;
+    function redeemBuySlip(uint256 _buySlipAmount) external;
 
     /**
      * @dev Deposits _collateralAmount of collateral-tokens and then calls borrow to CBB
