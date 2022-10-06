@@ -2,7 +2,7 @@ pragma solidity 0.8.13;
 
 import "./iboBoxSetup.t.sol";
 
-contract WithdrawLend is iboBoxSetup {
+contract CancelBuy is iboBoxSetup {
     struct BeforeBalances {
         uint256 lenderBuyOrders;
         uint256 lenderStableTokens;
@@ -16,7 +16,7 @@ contract WithdrawLend is iboBoxSetup {
     address s_borrower = address(1);
     address s_lender = address(2);
 
-    function testCannotWithdrawLendWithdrawAmountTooHigh(
+    function testCannotCancelBuyWithdrawAmountTooHigh(
         uint256 _fuzzPrice,
         uint256 _lendAmount
     ) public {
@@ -58,10 +58,10 @@ contract WithdrawLend is iboBoxSetup {
 
         vm.prank(s_lender);
         vm.expectRevert(customError);
-        s_deployedIBOB.withdrawLend(_lendAmount);
+        s_deployedIBOB.cancelBuy(_lendAmount);
     }
 
-    function testWithdrawLend(uint256 _fuzzPrice, uint256 _lendAmount) public {
+    function testCancelBuy(uint256 _fuzzPrice, uint256 _lendAmount) public {
         setupIBOBox(_fuzzPrice);
 
         s_deployedIBOB.depositLend(
@@ -82,7 +82,7 @@ contract WithdrawLend is iboBoxSetup {
         vm.startPrank(s_lender);
         vm.expectEmit(true, true, true, true);
         emit LendWithdrawal(s_lender, _lendAmount);
-        s_deployedIBOB.withdrawLend(_lendAmount);
+        s_deployedIBOB.cancelBuy(_lendAmount);
         vm.stopPrank();
 
         assertions(before, adjustments);

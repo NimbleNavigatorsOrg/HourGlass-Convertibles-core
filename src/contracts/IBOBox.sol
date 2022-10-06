@@ -95,7 +95,7 @@ contract IBOBox is OwnableUpgradeable, IBOImmutableArgs, IIBOBox {
         emit LendDeposit(_lender, _lendAmount);
     }
 
-    function withdrawBorrow(uint256 _issueOrderAmount) external override {
+    function cancelBorrow(uint256 _issueOrderAmount) external override {
         //- Reverse of depositBorrow() function
         //- transfers `_issueOrderAmount` of SafeTranche Tokens from IBO to msg.sender
 
@@ -121,7 +121,7 @@ contract IBOBox is OwnableUpgradeable, IBOImmutableArgs, IIBOBox {
         emit BorrowWithdrawal(_msgSender(), _issueOrderAmount);
     }
 
-    function withdrawLend(uint256 _buyOrderAmount) external override {
+    function cancelBuy(uint256 _buyOrderAmount) external override {
         //- Reverse of depositBorrow() function
 
         //revert check for _buyOrderAmount after CBB activated

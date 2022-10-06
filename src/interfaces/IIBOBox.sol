@@ -41,19 +41,19 @@ interface IIBOBox is IIBOImmutableArgs {
 
     /**
      * @dev Withdraws SafeTranche + RiskTranche for unfilled IssueOrders
-     * @param _issueOrderAmount The amount of issueOrders to withdraw
+     * @param _issueOrderAmount The amount of issueOrders to cancel
      * Requirements:
      */
 
-    function withdrawBorrow(uint256 _issueOrderAmount) external;
+    function cancelBorrow(uint256 _issueOrderAmount) external;
 
     /**
      * @dev Withdraws Lend Slips for unfilled IssueOrders
-     * @param _buyOrderAmount The amount of stable tokens to withdraw
+     * @param _buyOrderAmount The amount of stable tokens to cancel
      * Requirements:
      */
 
-    function withdrawLend(uint256 _buyOrderAmount) external;
+    function cancelBuy(uint256 _buyOrderAmount) external;
 
     /**
      * @dev Deposits _stableAmount of stable-tokens and then calls lend to CBB

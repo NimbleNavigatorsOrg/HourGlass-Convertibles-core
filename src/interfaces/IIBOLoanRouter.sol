@@ -37,14 +37,14 @@ interface IIBOLoanRouter {
     ) external;
 
     /**
-     * @dev withdraws issueOrder and redeems w/ simple underlying bond (A/Z)
+     * @dev cancels issueOrder and redeems w/ simple underlying bond (A/Z)
      * @param _IBOBox The IBO box tied to the Convertible Bond
-     * @param _issueOrderAmount The amount of issueOrders to be withdrawn
+     * @param _issueOrderAmount The amount of issueOrders to be cancelled
      * Requirements:
      *  - `msg.sender` must have `approved` `_issueOrderAmount` IssueOrder tokens to this contract
      */
 
-    function simpleWithdrawBorrowUnwrap(
+    function simpleCancelBorrowUnwrap(
         IIBOBox _IBOBox,
         uint256 _issueOrderAmount
     ) external;

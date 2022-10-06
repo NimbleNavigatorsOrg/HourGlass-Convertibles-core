@@ -83,7 +83,7 @@ contract IBOBoxLens is IIBOBoxLens {
     /**
      * @inheritdoc IIBOBoxLens
      */
-    function viewSimpleWithdrawBorrowUnwrap(
+    function viewSimpleCancelBorrowUnwrap(
         IIBOBox _IBOBox,
         uint256 _issueOrderAmount
     ) public view returns (uint256, uint256) {
@@ -142,7 +142,7 @@ contract IBOBoxLens is IIBOBoxLens {
      * @inheritdoc IIBOBoxLens
      */
 
-    function viewWithdrawBuyOrder(IIBOBox _IBOBox, uint256 _buyOrderAmount)
+    function viewCancelBuyOrder(IIBOBox _IBOBox, uint256 _buyOrderAmount)
         external
         view
         returns (uint256)
@@ -765,7 +765,7 @@ contract IBOBoxLens is IIBOBoxLens {
      * @inheritdoc IIBOBoxLens
      */
 
-    function viewMaxWithdrawBuyOrders(IIBOBox _IBOBox, address _account)
+    function viewMaxCancelBuyOrders(IIBOBox _IBOBox, address _account)
         public
         view
         returns (uint256)
@@ -779,13 +779,13 @@ contract IBOBoxLens is IIBOBoxLens {
         uint256 maxWithdrawableBuyOrders = userBuyOrder;
 
         if (convertibleBondBox.s_startDate() > 0) {
-            uint256 withdrawableStables = _IBOBox.stableToken().balanceOf(
+            uint256 cancellableStables = _IBOBox.stableToken().balanceOf(
                 address(_IBOBox)
             ) - _IBOBox.s_activateLendAmount();
 
             maxWithdrawableBuyOrders = Math.min(
                 userBuyOrder,
-                withdrawableStables
+                cancellableStables
             );
         }
 
@@ -810,11 +810,11 @@ contract IBOBoxLens is IIBOBoxLens {
         uint256 maxWithdrawableIssueOrder = userIssueOrder;
 
         if (convertibleBondBox.s_startDate() > 0) {
-            uint256 withdrawableSafeTranche = _IBOBox.safeTranche().balanceOf(
+            uint256 cancellableSafeTranche = _IBOBox.safeTranche().balanceOf(
                 address(_IBOBox)
             );
 
-            uint256 withdrawableSafeTrancheToIssueOrder = (withdrawableSafeTranche *
+            uint256 cancellableSafeTrancheToIssueOrder = (cancellableSafeTranche *
                     _IBOBox.initialPrice() *
                     _IBOBox.stableDecimals()) /
                     _IBOBox.priceGranularity() /
@@ -822,7 +822,7 @@ contract IBOBoxLens is IIBOBoxLens {
 
             maxWithdrawableIssueOrder = Math.min(
                 userIssueOrder,
-                withdrawableSafeTrancheToIssueOrder
+                cancellableSafeTrancheToIssueOrder
             );
         }
 

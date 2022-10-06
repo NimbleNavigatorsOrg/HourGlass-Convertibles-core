@@ -2,7 +2,7 @@ pragma solidity 0.8.13;
 
 import "./iboBoxSetup.t.sol";
 
-contract WithdrawBorrow is iboBoxSetup {
+contract CancelBorrow is iboBoxSetup {
     struct BeforeBalances {
         uint256 borrowerIssueOrders;
         uint256 borrowerSafeTranche;
@@ -20,7 +20,7 @@ contract WithdrawBorrow is iboBoxSetup {
     address s_borrower = address(1);
     address s_lender = address(2);
 
-    function testWithdrawBorrow(uint256 _fuzzPrice, uint256 _borrowAmount)
+    function testCancelBorrow(uint256 _fuzzPrice, uint256 _borrowAmount)
         public
     {
         setupIBOBox(_fuzzPrice);
@@ -60,7 +60,7 @@ contract WithdrawBorrow is iboBoxSetup {
 
         vm.expectEmit(true, true, true, true);
         emit BorrowWithdrawal(s_borrower, _borrowAmount);
-        s_deployedIBOB.withdrawBorrow(_borrowAmount);
+        s_deployedIBOB.cancelBorrow(_borrowAmount);
         vm.stopPrank();
 
         assertions(before, adjustments);

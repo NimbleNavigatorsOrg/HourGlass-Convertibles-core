@@ -28,26 +28,26 @@ interface IIBOBoxLens {
         returns (uint256, uint256);
 
     /**
-     * @dev provides amount of raw collateral tokens expected in return for withdrawing borrowslips
+     * @dev provides amount of raw collateral tokens expected in return for cancelling borrowslips
      * @param _IBOBox The IBO box tied to the Convertible Bond
-     * @param _issueOrderAmount The amount of issueOrders to be withdrawn
+     * @param _issueOrderAmount The amount of issueOrders to be cancelled
      * Requirements:
      * - for A-Z convertible only
      */
 
-    function viewSimpleWithdrawBorrowUnwrap(
+    function viewSimpleCancelBorrowUnwrap(
         IIBOBox _IBOBox,
         uint256 _issueOrderAmount
     ) external view returns (uint256, uint256);
 
     /**
-     * @dev provides amount of stable tokens expected in return for withdrawing buyOrders
+     * @dev provides amount of stable tokens expected in return for cancelling buyOrders
      * @param _IBOBox The IBO box tied to the Convertible Bond
-     * @param _buyOrderAmount The amount of buyOrders to be withdrawn
+     * @param _buyOrderAmount The amount of buyOrders to be cancelled
      * Requirements:
      */
 
-    function viewWithdrawBuyOrder(IIBOBox _IBOBox, uint256 _buyOrderAmount)
+    function viewCancelBuyOrder(IIBOBox _IBOBox, uint256 _buyOrderAmount)
         external
         view
         returns (uint256);
@@ -282,18 +282,18 @@ interface IIBOBoxLens {
         returns (uint256);
 
     /**
-     * @dev provides maximum input param when withdrawing lend slips
+     * @dev provides maximum input param when cancelling lend slips
      * @param _IBOBox The IBO box tied to the Convertible Bond
      * Requirements:
      */
 
-    function viewMaxWithdrawBuyOrders(IIBOBox _IBOBox, address _account)
+    function viewMaxCancelBuyOrders(IIBOBox _IBOBox, address _account)
         external
         view
         returns (uint256);
 
     /**
-     * @dev provides maximum input param when withdrawing borrow slips
+     * @dev provides maximum input param when cancelling borrow slips
      * @param _IBOBox The IBO box tied to the Convertible Bond
      * Requirements:
      */
