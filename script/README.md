@@ -20,10 +20,19 @@ cast send $stagingLoanRouterAddress "simpleWrapTrancheBorrow(address,uint256,uin
 
 To run the CBB issuer, run the following, replacing your private key: 
 ```
-forge script script/GoerliCBBIssuer.s.sol --rpc-url $LOCAL_HOST_URL --private-key $PRIVATE_KEY_PERSONAL --broadcast --verify --etherscan-api-key 4DZZ49ARAJ8SXIC42GCWG3DF1WEEIJNQEI  -vvvv
+forge script script/GoerliCBBIssuer.s.sol --rpc-url $GOERLI_RPC_URL --private-key $PRIVATE_KEY_PERSONAL --broadcast --verify --etherscan-api-key 4DZZ49ARAJ8SXIC42GCWG3DF1WEEIJNQEI  -vvvv
 ```
 
 To run the batch deployer: 
 ```
 forge script script/GoerliBatchDeployer.s.sol --rpc-url $GOERLI_RPC_URL --private-key $PRIVATE_KEY_PERSONAL 
 ```
+
+forge script script/GoerliUserTesting.s.sol --rpc-url $GOERLI_RPC_URL --private-key $PRIVATE_KEY_PERSONAL 
+
+To create a contract: 
+```
+forge create --rpc-url $GOERLI_RPC_URL --private-key $PRIVATE_KEY_PERSONAL src/contracts/StagingBoxLens.sol:StagingBoxLens 
+```
+
+forge create --rpc-url $GOERLI_RPC_URL --private-key $PRIVATE_KEY_PERSONAL src/contracts/ConvertiblesDVLens.sol:ConvertiblesDVLens 

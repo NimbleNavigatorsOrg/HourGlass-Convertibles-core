@@ -22,9 +22,9 @@ import "../test/external/button-wrappers/ButtonToken.sol";
 
 contract GoerliCBBIssuer is Script {
     CBBFactory convertiblesFactory =
-        CBBFactory(0x476e7e6222AffffA6EfFBA67a1850644b7976609);
+        CBBFactory(0xD76BEAfB4239f7648844Eb7B478DCc4Ad00Dd1E3);
     StagingBoxFactory stagingFactory =
-        StagingBoxFactory(0x58980A96Be34Fd4515D982F7247CAb9D224B59B8);
+        StagingBoxFactory(0x528576d130099a33bea94E43f7752E7f5dAd0B50);
     SlipFactory slipFactory =
         SlipFactory(0xD96D4AF92CA2E89E6e423C2aC7144A0c60412156);
     StagingLoanRouter slr =
@@ -46,7 +46,7 @@ contract GoerliCBBIssuer is Script {
     address public token = 0xE7E0744803fEcdea6f2FCbC03a4804c825D0C2d4;
     address public button = 0x4FE19a2AEf89929FDA832f250b4e6d3E3e736f89;
 
-    address public stableCoin = 0xd3AB6Dc80c5a157397D9718a6AA778F30D82f70B;
+    address public stableCoin = 0xaFF4481D10270F50f203E0763e2597776068CBc5;
 
     address public weenus = 0xaFF4481D10270F50f203E0763e2597776068CBc5;
     address public poorStable = 0xd3AB6Dc80c5a157397D9718a6AA778F30D82f70B;
@@ -100,7 +100,7 @@ contract GoerliCBBIssuer is Script {
         );
 
         //create IBO CBBs + SBs
-        for (uint8 i = 0; i < repeatCount; i++) {
+        for (uint8 i = 1; i < repeatCount + 1; i++) {
             address createdSB = stagingFactory.createStagingBoxWithCBB(
                 (convertiblesFactory),
                 (slipFactory),
@@ -123,15 +123,15 @@ contract GoerliCBBIssuer is Script {
 
         //create active Bonds (token only)
 
-        for (uint8 i = 0; i < repeatCount; i++) {
+        for (uint8 i = 1; i < repeatCount + 1; i++) {
             address createdSB = stagingFactory.createStagingBoxWithCBB(
                 (convertiblesFactory),
                 (slipFactory),
                 bondActive,
-                i + basePenalty,
+                i * 2 + basePenalty,
                 stableCoin,
                 0,
-                basePrice + (i * 1e6),
+                basePrice + (i * 3 * 1e6),
                 msg.sender
             );
 
@@ -142,20 +142,23 @@ contract GoerliCBBIssuer is Script {
 
             StagingBox(createdSB).depositLend(
                 msg.sender,
-                100 * (10**ERC20(stableCoin).decimals())
+                325 * (10**ERC20(stableCoin).decimals())
             );
             StagingBox(createdSB).depositLend(
                 recipientA,
-                100 * (10**ERC20(stableCoin).decimals())
+                325 * (10**ERC20(stableCoin).decimals())
             );
             StagingBox(createdSB).depositLend(
                 recipientB,
-                100 * (10**ERC20(stableCoin).decimals())
+                325 * (10**ERC20(stableCoin).decimals())
             );
 
             //make borrowDeposits & distribute to 3 parties
-
-            uint256 tokenBalance = IERC20(token).balanceOf(msg.sender);
+            MockERC20(token).mint(
+                msg.sender,
+                3000 * 10**ERC20(token).decimals()
+            );
+            uint256 tokenBalance = 3000 * 10**ERC20(token).decimals();
 
             slr.simpleWrapTrancheBorrow(
                 IStagingBox(createdSB),
@@ -194,16 +197,22 @@ contract GoerliCBBIssuer is Script {
 
         //create Mature Bonds
 
-        for (uint8 i = 0; i < repeatCount; i++) {
+        for (uint8 i = 1; i < repeatCount + 1; i++) {
             address createdSB = stagingFactory.createStagingBoxWithCBB(
                 (convertiblesFactory),
                 (slipFactory),
                 bondMature,
-                i + basePenalty,
+                i * 3 + basePenalty,
                 stableCoin,
                 0,
-                basePrice + (i * 1e6),
+                basePrice + (i * 2 * 1e6),
                 msg.sender
+            );
+
+            StagingBox(createdSB).transferCBBOwnership(msg.sender);
+            StagingBox(createdSB).convertibleBondBox().setFee(50);
+            StagingBox(createdSB).convertibleBondBox().transferOwnership(
+                createdSB
             );
 
             IERC20(stableCoin).approve(createdSB, type(uint256).max);
@@ -213,20 +222,23 @@ contract GoerliCBBIssuer is Script {
 
             StagingBox(createdSB).depositLend(
                 msg.sender,
-                100 * (10**ERC20(stableCoin).decimals())
+                235 * (10**ERC20(stableCoin).decimals())
             );
             StagingBox(createdSB).depositLend(
                 recipientA,
-                100 * (10**ERC20(stableCoin).decimals())
+                235 * (10**ERC20(stableCoin).decimals())
             );
             StagingBox(createdSB).depositLend(
                 recipientB,
-                100 * (10**ERC20(stableCoin).decimals())
+                235 * (10**ERC20(stableCoin).decimals())
             );
 
             //make borrowDeposits & distribute to 3 parties
-
-            uint256 tokenBalance = IERC20(token).balanceOf(msg.sender);
+            MockERC20(token).mint(
+                msg.sender,
+                3000 * 10**ERC20(token).decimals()
+            );
+            uint256 tokenBalance = 3000 * 10**ERC20(token).decimals();
 
             slr.simpleWrapTrancheBorrow(
                 IStagingBox(createdSB),

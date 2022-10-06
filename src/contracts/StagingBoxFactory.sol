@@ -163,15 +163,15 @@ contract StagingBoxFactory is IStagingBoxFactory {
 
         // clone deploy lend slip
         address lendSlipTokenAddress = slipFactory.createSlip(
-            "Lender-IBO-Slip",
-            string(abi.encodePacked("LEND-SLIP-", collateralSymbolSafe)),
+            "IBO-Buy-Slip",
+            string(abi.encodePacked("IBO-BUY-SLIP-", collateralSymbolSafe)),
             stableToken
         );
 
         //clone deployborrow slip
         address borrowSlipTokenAddress = slipFactory.createSlip(
-            "Borrower-IBO-Slip",
-            string(abi.encodePacked("BORROW-SLIP-", collateralSymbolRisk)),
+            "IBO-Sell-Slip",
+            string(abi.encodePacked("IBO-SELL-SLIP-", collateralSymbolRisk)),
             stableToken
         );
 
