@@ -164,15 +164,15 @@ contract IBOBoxFactory is IIBOBoxFactory, Context {
 
         // clone deploy buyOrder
         address buyOrderTokenAddress = slipFactory.createSlip(
-            "IBO-Buy-Slip",
-            string(abi.encodePacked("IBO-BUY-SLIP-", collateralSymbolSafe)),
+            "IBO-Buy-Order",
+            string(abi.encodePacked("BUY-IBO-", collateralSymbolSafe)),
             stableToken
         );
 
         //clone deployissueOrder
         address issueOrderTokenAddress = slipFactory.createSlip(
-            "IBO-Sell-Slip",
-            string(abi.encodePacked("IBO-SELL-SLIP-", collateralSymbolRisk)),
+            "IBO-Issue-Order",
+            string(abi.encodePacked("ISSUE-IBO-", collateralSymbolRisk)),
             stableToken
         );
 

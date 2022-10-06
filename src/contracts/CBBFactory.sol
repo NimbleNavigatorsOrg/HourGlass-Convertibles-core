@@ -110,14 +110,14 @@ contract CBBFactory is ICBBFactory, Context {
         ).symbol();
 
         address bondSlipAddress = slipFactory.createSlip(
-            "Safe-CBB-Slip",
-            string(abi.encodePacked("CBB-SAFE-", collateralSymbolSafe)),
+            "CBB-Bond-Slip",
+            string(abi.encodePacked("BOND-CBB-", collateralSymbolSafe)),
             address(safeTranche)
         );
 
         address debtSlipAddress = slipFactory.createSlip(
-            "Risk-CBB-Slip",
-            string(abi.encodePacked("CBB-RISK-", collateralSymbolRisk)),
+            "CBB-Debt-Slip",
+            string(abi.encodePacked("DEBT-CBB-", collateralSymbolRisk)),
             address(riskTranche)
         );
 
