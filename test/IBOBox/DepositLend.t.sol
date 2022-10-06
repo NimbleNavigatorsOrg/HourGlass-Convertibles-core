@@ -16,14 +16,14 @@ contract DepositLend is iboBoxSetup {
     address s_borrower = address(1);
     address s_lender = address(2);
 
-    function testCannotDepositLendCBBNotReinitialized() public {
+    function testCannotDepositLendCBBNotActivated() public {
         setupIBOBox(0);
 
         vm.prank(s_deployedIBOBAddress);
-        s_deployedConvertibleBondBox.reinitialize(5);
+        s_deployedConvertibleBondBox.activate(5);
 
         bytes memory customError = abi.encodeWithSignature(
-            "CBBReinitialized(bool,bool)",
+            "CBBActivated(bool,bool)",
             true,
             false
         );

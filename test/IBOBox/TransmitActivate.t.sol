@@ -2,7 +2,7 @@ pragma solidity 0.8.13;
 
 import "./iboBoxSetup.t.sol";
 
-contract TransmitReinit is iboBoxSetup {
+contract TransmitActivate is iboBoxSetup {
     struct BeforeBalances {
         uint256 IBOSafeTranche;
         uint256 IBORiskTranche;
@@ -13,16 +13,16 @@ contract TransmitReinit is iboBoxSetup {
         uint256 CBBRiskTranche;
     }
 
-    struct ReinitAmounts {
+    struct ActivateAmounts {
         uint256 safeTrancheAmount;
         uint256 riskTrancheAmount;
-        uint256 reinitLendAmount;
+        uint256 activateLendAmount;
     }
 
     address s_borrower = address(1);
     address s_lender = address(2);
 
-    function testTransmitReinit(
+    function testTransmitActivate(
         uint256 _fuzzPrice,
         uint256 _borrowAmount,
         uint256 _lendAmount
@@ -67,21 +67,21 @@ contract TransmitReinit is iboBoxSetup {
             s_riskTranche.balanceOf(s_deployedCBBAddress)
         );
 
-        bool isLend = s_IBOLens.viewTransmitReInitBool(s_deployedIBOB);
+        bool isLend = s_IBOLens.viewTransmitActivateBool(s_deployedIBOB);
 
-        uint256 reinitLendAmount;
+        uint256 activateLendAmount;
         uint256 safeTrancheAmount;
 
         if (isLend) {
-            reinitLendAmount = before.IBOStableTokens;
+            activateLendAmount = before.IBOStableTokens;
             safeTrancheAmount =
-                (reinitLendAmount *
+                (activateLendAmount *
                     s_deployedIBOB.priceGranularity() *
                     s_deployedIBOB.trancheDecimals()) /
                 s_deployedIBOB.initialPrice() /
                 s_deployedIBOB.stableDecimals();
         } else {
-            reinitLendAmount =
+            activateLendAmount =
                 (before.IBOSafeTranche *
                     s_deployedIBOB.initialPrice() *
                     s_deployedIBOB.stableDecimals()) /
@@ -90,21 +90,21 @@ contract TransmitReinit is iboBoxSetup {
             safeTrancheAmount = before.IBOSafeTranche;
         }
 
-        ReinitAmounts memory adjustments = ReinitAmounts(
+        ActivateAmounts memory adjustments = ActivateAmounts(
             safeTrancheAmount,
             (safeTrancheAmount * s_riskRatio) / s_safeRatio,
-            reinitLendAmount
+            activateLendAmount
         );
 
         vm.startPrank(s_cbb_owner);
-        s_deployedIBOB.transmitReInit(isLend);
+        s_deployedIBOB.transmitActivate(isLend);
 
         assertions(before, adjustments);
     }
 
     function assertions(
         BeforeBalances memory before,
-        ReinitAmounts memory adjustments
+        ActivateAmounts memory adjustments
     ) internal {
         assertEq(
             before.IBOSafeTranche - adjustments.safeTrancheAmount,
@@ -135,8 +135,8 @@ contract TransmitReinit is iboBoxSetup {
             s_riskTranche.balanceOf(s_deployedCBBAddress)
         );
         assertEq(
-            adjustments.reinitLendAmount,
-            s_deployedIBOB.s_reinitLendAmount()
+            adjustments.activateLendAmount,
+            s_deployedIBOB.s_activateLendAmount()
         );
         assertEq(s_deployedConvertibleBondBox.owner(), s_cbb_owner);
     }

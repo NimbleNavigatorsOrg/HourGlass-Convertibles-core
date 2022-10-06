@@ -64,7 +64,7 @@ abstract contract CBBSetup is Test {
     event RedeemRiskTranche(address, uint256);
     event Repay(address, uint256, uint256, uint256);
     event Initialized(address);
-    event ReInitialized(uint256, uint256);
+    event Activated(uint256, uint256);
     event FeeUpdate(uint256);
 
     function setUp() public virtual {

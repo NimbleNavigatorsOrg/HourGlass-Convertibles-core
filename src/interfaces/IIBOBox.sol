@@ -15,9 +15,9 @@ interface IIBOBox is IIBOImmutableArgs {
     error InitialPriceTooHigh(uint256 given, uint256 maxPrice);
     error InitialPriceIsZero(uint256 given, uint256 maxPrice);
     error WithdrawAmountTooHigh(uint256 requestAmount, uint256 maxAmount);
-    error CBBReinitialized(bool state, bool requiredState);
+    error CBBActivated(bool state, bool requiredState);
 
-    function s_reinitLendAmount() external view returns (uint256);
+    function s_activateLendAmount() external view returns (uint256);
 
     /**
      * @dev Deposits collateral for BorrowSlips
@@ -73,11 +73,11 @@ interface IIBOBox is IIBOImmutableArgs {
 
     /**
      * @dev Deposits _collateralAmount of collateral-tokens and then calls borrow to CBB
-     * @param _lendOrBorrow boolean to indicate whether to reinitialize CBB based of stableToken balance or safeTranche balance
+     * @param _lendOrBorrow boolean to indicate whether to activate CBB based of stableToken balance or safeTranche balance
      * Requirements:
      */
 
-    function transmitReInit(bool _lendOrBorrow) external;
+    function transmitActivate(bool _lendOrBorrow) external;
 
     /**
      * @dev Transfers ownership of the contract to a new account (`newOwner`).

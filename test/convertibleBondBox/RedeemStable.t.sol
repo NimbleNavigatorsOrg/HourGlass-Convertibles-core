@@ -23,7 +23,7 @@ contract RedeemStable is CBBSetup {
 
     function initialSetup() internal {
         vm.prank(s_cbb_owner);
-        s_deployedConvertibleBondBox.reinitialize(s_initialPrice);
+        s_deployedConvertibleBondBox.activate(s_initialPrice);
 
         uint256 stablesToTranches = (s_stableToken.balanceOf(address(this)) *
             s_deployedConvertibleBondBox.s_priceGranularity() *

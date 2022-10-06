@@ -5,12 +5,12 @@ import "../interfaces/IIBOBox.sol";
 
 interface IIBOBoxLens {
     /**
-     * @dev provides the bool for limiting factor for the IBO box reinit
+     * @dev provides the bool for limiting factor for the IBO box activation
      * @param _IBOBox The IBO box tied to the Convertible Bond
      * Requirements:
      */
 
-    function viewTransmitReInitBool(IIBOBox _IBOBox)
+    function viewTransmitActivateBool(IIBOBox _IBOBox)
         external
         view
         returns (bool);

@@ -10,7 +10,7 @@ contract IBOBoxLens is IIBOBoxLens {
     /**
      * @inheritdoc IIBOBoxLens
      */
-    function viewTransmitReInitBool(IIBOBox _IBOBox)
+    function viewTransmitActivateBool(IIBOBox _IBOBox)
         public
         view
         returns (bool)
@@ -683,7 +683,7 @@ contract IBOBoxLens is IIBOBoxLens {
         returns (uint256)
     {
         uint256 userBorrowSlip = _IBOBox.borrowSlip().balanceOf(_account);
-        return Math.min(userBorrowSlip, _IBOBox.s_reinitLendAmount());
+        return Math.min(userBorrowSlip, _IBOBox.s_activateLendAmount());
     }
 
     /**
@@ -781,7 +781,7 @@ contract IBOBoxLens is IIBOBoxLens {
         if (convertibleBondBox.s_startDate() > 0) {
             uint256 withdrawableStables = _IBOBox.stableToken().balanceOf(
                 address(_IBOBox)
-            ) - _IBOBox.s_reinitLendAmount();
+            ) - _IBOBox.s_activateLendAmount();
 
             maxWithdrawableLendSlips = Math.min(
                 userLendSlip,

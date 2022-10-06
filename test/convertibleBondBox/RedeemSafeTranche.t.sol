@@ -24,7 +24,7 @@ contract RedeemSafeTranche is CBBSetup {
 
     function testCannotRedeemSafeTrancheBondNotMatureYet(uint256 time) public {
         vm.prank(s_cbb_owner);
-        s_deployedConvertibleBondBox.reinitialize(s_initialPrice);
+        s_deployedConvertibleBondBox.activate(s_initialPrice);
 
         time = bound(
             time,
@@ -46,7 +46,7 @@ contract RedeemSafeTranche is CBBSetup {
         public
     {
         vm.prank(s_cbb_owner);
-        s_deployedConvertibleBondBox.reinitialize(s_initialPrice);
+        s_deployedConvertibleBondBox.activate(s_initialPrice);
 
         vm.warp(s_maturityDate);
         safeSlipAmount = bound(safeSlipAmount, 0, 1e6 - 1);
@@ -67,7 +67,7 @@ contract RedeemSafeTranche is CBBSetup {
         uint256 fee
     ) public {
         vm.prank(s_cbb_owner);
-        s_deployedConvertibleBondBox.reinitialize(s_initialPrice);
+        s_deployedConvertibleBondBox.activate(s_initialPrice);
 
         //set fee
         fee = bound(fee, 0, s_maxFeeBPS);

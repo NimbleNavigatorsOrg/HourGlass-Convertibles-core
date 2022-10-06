@@ -176,13 +176,13 @@ contract GoerliCBBIssuer is Script {
                 borrowSlipDistributionAmount
             );
 
-            //transmitReinit
+            //transmitActivate
 
-            bool boolReturn = IBOLens.viewTransmitReInitBool(
+            bool boolReturn = IBOLens.viewTransmitActivateBool(
                 IIBOBox(createdIBO)
             );
 
-            IBOBox(createdIBO).transmitReInit(boolReturn);
+            IBOBox(createdIBO).transmitActivate(boolReturn);
 
             //repeat for AMPL-Token
 
@@ -256,12 +256,12 @@ contract GoerliCBBIssuer is Script {
                 borrowSlipDistributionAmount
             );
 
-            //transmitReInit
-            bool boolReturn = IBOLens.viewTransmitReInitBool(
+            //transmitActivate
+            bool boolReturn = IBOLens.viewTransmitActivateBool(
                 IIBOBox(createdIBO)
             );
 
-            IBOBox(createdIBO).transmitReInit(boolReturn);
+            IBOBox(createdIBO).transmitActivate(boolReturn);
 
             console2.log(createdIBO, "SB-MATURE-", i);
             console2.log(

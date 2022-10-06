@@ -69,7 +69,7 @@ contract RedeemRiskTranche is CBBSetup {
         fee = bound(fee, 0, s_maxFeeBPS);
 
         vm.prank(s_cbb_owner);
-        s_deployedConvertibleBondBox.reinitialize(s_initialPrice);
+        s_deployedConvertibleBondBox.activate(s_initialPrice);
 
         s_deployedConvertibleBondBox.borrow(
             s_borrowerAddress,

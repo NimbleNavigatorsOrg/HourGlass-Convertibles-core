@@ -7,17 +7,17 @@ import "../../utils/IBOImmutableArgs.sol";
 import "../interfaces/IIBOBox.sol";
 
 /**
- * @dev IBO Box for reinitializing a ConvertibleBondBox
+ * @dev IBO Box for activating a ConvertibleBondBox
  *
  * Invariants:
  *  - `initial Price must be < $1.00`
  */
 contract IBOBox is OwnableUpgradeable, IBOImmutableArgs, IIBOBox {
-    uint256 public s_reinitLendAmount;
+    uint256 public s_activateLendAmount;
 
-    modifier beforeReinitialize() {
+    modifier beforeActivate() {
         if (convertibleBondBox().s_startDate() != 0) {
-            revert CBBReinitialized({state: true, requiredState: false});
+            revert CBBActivated({state: true, requiredState: false});
         }
         _;
     }
@@ -44,7 +44,7 @@ contract IBOBox is OwnableUpgradeable, IBOImmutableArgs, IIBOBox {
     function depositBorrow(address _borrower, uint256 _borrowAmount)
         external
         override
-        beforeReinitialize
+        beforeActivate
     {
         //- transfers `_safeTrancheAmount` of SafeTranche Tokens from msg.sender to IBO
 
@@ -78,7 +78,7 @@ contract IBOBox is OwnableUpgradeable, IBOImmutableArgs, IIBOBox {
     function depositLend(address _lender, uint256 _lendAmount)
         external
         override
-        beforeReinitialize
+        beforeActivate
     {
         //- transfers `_lendAmount`of Stable Tokens from msg.sender to IBO
         TransferHelper.safeTransferFrom(
@@ -124,10 +124,10 @@ contract IBOBox is OwnableUpgradeable, IBOImmutableArgs, IIBOBox {
     function withdrawLend(uint256 _lendSlipAmount) external override {
         //- Reverse of depositBorrow() function
 
-        //revert check for _lendSlipAmount after CBB reinitialized
+        //revert check for _lendSlipAmount after CBB activated
         if (convertibleBondBox().s_startDate() != 0) {
             uint256 maxWithdrawAmount = stableToken().balanceOf(address(this)) -
-                s_reinitLendAmount;
+                s_activateLendAmount;
             if (_lendSlipAmount > maxWithdrawAmount) {
                 revert WithdrawAmountTooHigh({
                     requestAmount: _lendSlipAmount,
@@ -173,8 +173,8 @@ contract IBOBox is OwnableUpgradeable, IBOImmutableArgs, IIBOBox {
         // burns `_borrowSlipAmount` of msg.sender’s BorrowSlips
         borrowSlip().burn(_msgSender(), _borrowSlipAmount);
 
-        //decrement s_reinitLendAmount
-        s_reinitLendAmount -= _borrowSlipAmount;
+        //decrement s_activateLendAmount
+        s_activateLendAmount -= _borrowSlipAmount;
 
         //event stuff
         emit RedeemBorrowSlip(_msgSender(), _borrowSlipAmount);
@@ -195,9 +195,9 @@ contract IBOBox is OwnableUpgradeable, IBOImmutableArgs, IIBOBox {
         emit RedeemLendSlip(_msgSender(), _lendSlipAmount);
     }
 
-    function transmitReInit(bool _isLend) external override onlyOwner {
+    function transmitActivate(bool _isLend) external override onlyOwner {
         /*
-        - calls `CBB.reinitialize(…)`
+        - calls `CBB.activate(…)`
             - `Address(this)` as borrower + lender
             - if `_isLend` is true: calls CBB with balance of StableAmount
             - if `_isLend` is false: calls CBB with balance of SafeTrancheAmount
@@ -208,8 +208,8 @@ contract IBOBox is OwnableUpgradeable, IBOImmutableArgs, IIBOBox {
 
         if (_isLend) {
             uint256 stableAmount = stableToken().balanceOf(address(this));
-            s_reinitLendAmount = stableAmount;
-            convertibleBondBox().reinitialize(initialPrice());
+            s_activateLendAmount = stableAmount;
+            convertibleBondBox().activate(initialPrice());
             convertibleBondBox().lend(
                 address(this),
                 address(this),
@@ -219,12 +219,12 @@ contract IBOBox is OwnableUpgradeable, IBOImmutableArgs, IIBOBox {
 
         if (!_isLend) {
             uint256 safeTrancheBalance = safeTranche().balanceOf(address(this));
-            s_reinitLendAmount =
+            s_activateLendAmount =
                 (safeTrancheBalance * initialPrice() * stableDecimals()) /
                 priceGranularity() /
                 trancheDecimals();
 
-            convertibleBondBox().reinitialize(initialPrice());
+            convertibleBondBox().activate(initialPrice());
 
             convertibleBondBox().borrow(
                 address(this),

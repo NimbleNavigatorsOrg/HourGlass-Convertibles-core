@@ -19,7 +19,7 @@ contract ConvertibleBondBox is
     CBBImmutableArgs,
     IConvertibleBondBox
 {
-    // Set when reinitialized
+    // Set when activated
     uint256 public override s_startDate;
     uint256 public s_initialPrice;
 
@@ -36,7 +36,7 @@ contract ConvertibleBondBox is
     uint256 public constant override BPS = 10_000;
     uint256 public constant override maxFeeBPS = 50;
 
-    modifier afterReinitialize() {
+    modifier afterActivate() {
         if (s_startDate == 0) {
             revert ConvertibleBondBoxNotStarted({
                 given: 0,
@@ -73,11 +73,7 @@ contract ConvertibleBondBox is
         _;
     }
 
-    function initialize(address _owner)
-        external
-        initializer
-        beforeBondMature
-    {
+    function initialize(address _owner) external initializer beforeBondMature {
         require(
             _owner != address(0),
             "ConvertibleBondBox: invalid owner address"
@@ -101,7 +97,7 @@ contract ConvertibleBondBox is
     /**
      * @inheritdoc IConvertibleBondBox
      */
-    function reinitialize(uint256 _initialPrice)
+    function activate(uint256 _initialPrice)
         external
         reinitializer(2)
         onlyOwner
@@ -120,7 +116,7 @@ contract ConvertibleBondBox is
         //set ConvertibleBondBox Start Date to be time when init() is called
         s_startDate = block.timestamp;
 
-        emit ReInitialized(_initialPrice, block.timestamp);
+        emit Activated(_initialPrice, block.timestamp);
     }
 
     /**
@@ -133,7 +129,7 @@ contract ConvertibleBondBox is
     )
         external
         override
-        afterReinitialize
+        afterActivate
         beforeBondMature
         validAmount(_stableAmount)
     {
@@ -168,7 +164,7 @@ contract ConvertibleBondBox is
     )
         external
         override
-        afterReinitialize
+        afterActivate
         beforeBondMature
         validAmount(_safeTrancheAmount)
     {
@@ -202,9 +198,9 @@ contract ConvertibleBondBox is
      */
     function currentPrice() public view override returns (uint256) {
         if (block.timestamp < maturityDate()) {
-            uint price =
-                s_priceGranularity -
-                ((s_priceGranularity - s_initialPrice) * (maturityDate() - block.timestamp)) /
+            uint256 price = s_priceGranularity -
+                ((s_priceGranularity - s_initialPrice) *
+                    (maturityDate() - block.timestamp)) /
                 (maturityDate() - s_startDate);
 
             return price;
@@ -219,7 +215,7 @@ contract ConvertibleBondBox is
     function repay(uint256 _stableAmount)
         external
         override
-        afterReinitialize
+        afterActivate
         validAmount(_stableAmount)
     {
         //Load into memory
@@ -245,7 +241,7 @@ contract ConvertibleBondBox is
     function repayMax(uint256 _riskSlipAmount)
         external
         override
-        afterReinitialize
+        afterActivate
         validAmount(_riskSlipAmount)
     {
         // Load params into memory

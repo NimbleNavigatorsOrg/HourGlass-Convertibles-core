@@ -111,9 +111,9 @@ contract ConvertiblesDVLens is IConvertiblesDVLens {
             _IBOBox.riskTranche().balanceOf(address(_IBOBox)),
             _IBOBox.convertibleBondBox().safeSlip().balanceOf(address(_IBOBox)),
             _IBOBox.convertibleBondBox().riskSlip().balanceOf(address(_IBOBox)),
-            _IBOBox.s_reinitLendAmount(),
+            _IBOBox.s_activateLendAmount(),
             (_IBOBox.stableToken().balanceOf(address(_IBOBox)) -
-                _IBOBox.s_reinitLendAmount()),
+                _IBOBox.s_activateLendAmount()),
             _IBOBox.stableToken().balanceOf(address(_IBOBox))
         );
 
@@ -135,7 +135,7 @@ contract ConvertiblesDVLens is IConvertiblesDVLens {
                     simTrancheCollateral.risk +
                     simSlipCollateral.risk) *
                     10**decimals.stable +
-                    _IBOBox.s_reinitLendAmount() *
+                    _IBOBox.s_activateLendAmount() *
                     10**decimals.tranche),
                 decimals.tranche + decimals.stable
             ),

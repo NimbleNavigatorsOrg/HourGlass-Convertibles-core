@@ -35,10 +35,10 @@ contract RedeemLendSlip is iboBoxSetup {
             s_stableToken.balanceOf(address(this))
         );
 
-        bool isLend = s_IBOLens.viewTransmitReInitBool(s_deployedIBOB);
+        bool isLend = s_IBOLens.viewTransmitActivateBool(s_deployedIBOB);
 
         vm.prank(s_cbb_owner);
-        s_deployedIBOB.transmitReInit(isLend);
+        s_deployedIBOB.transmitActivate(isLend);
 
         BeforeBalances memory before = BeforeBalances(
             s_lendSlip.balanceOf(s_lender),

@@ -41,7 +41,7 @@ contract Lend is CBBSetup {
         stableLendAmount = bound(stableLendAmount, 0, minimumInput - 1);
 
         vm.prank(s_cbb_owner);
-        s_deployedConvertibleBondBox.reinitialize(s_initialPrice);
+        s_deployedConvertibleBondBox.activate(s_initialPrice);
 
         bytes memory customError = abi.encodeWithSignature(
             "MinimumInput(uint256,uint256)",
@@ -58,7 +58,7 @@ contract Lend is CBBSetup {
 
     function testCannotLendBondIsMature() public {
         vm.prank(s_cbb_owner);
-        s_deployedConvertibleBondBox.reinitialize(s_initialPrice);
+        s_deployedConvertibleBondBox.activate(s_initialPrice);
 
         vm.warp(s_maturityDate);
         bytes memory customError = abi.encodeWithSignature(
@@ -82,7 +82,7 @@ contract Lend is CBBSetup {
         );
 
         vm.prank(s_cbb_owner);
-        s_deployedConvertibleBondBox.reinitialize(startPrice);
+        s_deployedConvertibleBondBox.activate(startPrice);
 
         time = bound(
             time,

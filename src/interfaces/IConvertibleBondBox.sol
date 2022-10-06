@@ -32,7 +32,7 @@ interface IConvertibleBondBox is ICBBImmutableArgs {
         uint256 price
     );
     event Initialized(address owner);
-    event ReInitialized(uint256 initialPrice, uint256 timestamp);
+    event Activated(uint256 initialPrice, uint256 timestamp);
     event FeeUpdate(uint256 newFee);
 
     error PenaltyTooHigh(uint256 given, uint256 maxPenalty);
@@ -53,7 +53,7 @@ interface IConvertibleBondBox is ICBBImmutableArgs {
      *  - `msg.sender` is owner
      */
 
-    function reinitialize(uint256 _initialPrice) external;
+    function activate(uint256 _initialPrice) external;
 
     /**
      * @dev Lends stableAmount of stable-tokens for safe-Tranche slips when provided with matching borrow collateral

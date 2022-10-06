@@ -9,7 +9,7 @@ contract RedeemBorrowSlip is iboBoxSetup {
         uint256 borrowerStableTokens;
         uint256 IBORiskSlips;
         uint256 IBOStableTokens;
-        uint256 reinitLendAmount;
+        uint256 activateLendAmount;
     }
 
     struct BorrowAmounts {
@@ -38,10 +38,10 @@ contract RedeemBorrowSlip is iboBoxSetup {
             s_stableToken.balanceOf(address(this))
         );
 
-        bool isLend = s_IBOLens.viewTransmitReInitBool(s_deployedIBOB);
+        bool isLend = s_IBOLens.viewTransmitActivateBool(s_deployedIBOB);
 
         vm.prank(s_cbb_owner);
-        s_deployedIBOB.transmitReInit(isLend);
+        s_deployedIBOB.transmitActivate(isLend);
 
         BeforeBalances memory before = BeforeBalances(
             s_borrowSlip.balanceOf(s_borrower),
@@ -49,7 +49,7 @@ contract RedeemBorrowSlip is iboBoxSetup {
             s_stableToken.balanceOf(s_borrower),
             s_riskSlip.balanceOf(s_deployedIBOBAddress),
             s_stableToken.balanceOf(s_deployedIBOBAddress),
-            s_deployedIBOB.s_reinitLendAmount()
+            s_deployedIBOB.s_activateLendAmount()
         );
 
         _borrowAmount = bound(_borrowAmount, 1, before.borrowerBorrowSlips);
@@ -103,8 +103,8 @@ contract RedeemBorrowSlip is iboBoxSetup {
         );
 
         assertEq(
-            before.reinitLendAmount - adjustments.borrowSlipAmount,
-            s_deployedIBOB.s_reinitLendAmount()
+            before.activateLendAmount - adjustments.borrowSlipAmount,
+            s_deployedIBOB.s_activateLendAmount()
         );
     }
 }

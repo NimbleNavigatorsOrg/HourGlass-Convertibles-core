@@ -29,7 +29,7 @@ contract Repay is CBBSetup {
 
     function initialSetup() internal {
         vm.prank(s_cbb_owner);
-        s_deployedConvertibleBondBox.reinitialize(s_initialPrice);
+        s_deployedConvertibleBondBox.activate(s_initialPrice);
 
         uint256 stablesToTranches = (s_stableToken.balanceOf(address(this)) *
             s_deployedConvertibleBondBox.s_priceGranularity() *
@@ -62,7 +62,7 @@ contract Repay is CBBSetup {
             block.timestamp
         );
 
-        uint riskSlipAmount = s_riskSlip.balanceOf(s_borrower);
+        uint256 riskSlipAmount = s_riskSlip.balanceOf(s_borrower);
 
         vm.prank(s_borrower);
         vm.expectRevert(customError);

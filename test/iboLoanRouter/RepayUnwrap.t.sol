@@ -37,8 +37,8 @@ contract RepayUnwrap is IBOLoanRouterSetup {
         vm.stopPrank();
 
         vm.startPrank(s_cbb_owner);
-        s_deployedIBOB.transmitReInit(
-            s_IBOLens.viewTransmitReInitBool(s_deployedIBOB)
+        s_deployedIBOB.transmitActivate(
+            s_IBOLens.viewTransmitActivateBool(s_deployedIBOB)
         );
         vm.stopPrank();
 

@@ -38,7 +38,7 @@ contract Borrow is CBBSetup {
         safeTrancheAmount = bound(safeTrancheAmount, 0, 1e6 - 1);
 
         vm.prank(s_cbb_owner);
-        s_deployedConvertibleBondBox.reinitialize(s_initialPrice);
+        s_deployedConvertibleBondBox.activate(s_initialPrice);
 
         bytes memory customError = abi.encodeWithSignature(
             "MinimumInput(uint256,uint256)",
@@ -55,7 +55,7 @@ contract Borrow is CBBSetup {
 
     function testCannotBorrowBondIsMature() public {
         vm.prank(s_cbb_owner);
-        s_deployedConvertibleBondBox.reinitialize(s_initialPrice);
+        s_deployedConvertibleBondBox.activate(s_initialPrice);
 
         vm.warp(s_maturityDate);
         bytes memory customError = abi.encodeWithSignature(
@@ -79,7 +79,7 @@ contract Borrow is CBBSetup {
         );
 
         vm.prank(s_cbb_owner);
-        s_deployedConvertibleBondBox.reinitialize(startPrice);
+        s_deployedConvertibleBondBox.activate(startPrice);
 
         time = bound(
             time,
