@@ -77,7 +77,7 @@ contract IBOLoanRouter is IIBOLoanRouter {
             _IBOBox.priceGranularity() /
             _IBOBox.trancheDecimals();
 
-        _IBOBox.depositBorrow(msg.sender, borrowAmount);
+        _IBOBox.createIssueOrder(msg.sender, borrowAmount);
 
         if (borrowAmount < _minIssueOrders)
             revert SlippageExceeded({

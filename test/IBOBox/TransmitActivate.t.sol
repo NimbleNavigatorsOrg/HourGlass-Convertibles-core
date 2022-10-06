@@ -47,7 +47,7 @@ contract TransmitActivate is iboBoxSetup {
             maxBorrowAmount
         );
 
-        s_deployedIBOB.depositBorrow(s_borrower, _borrowAmount);
+        s_deployedIBOB.createIssueOrder(s_borrower, _borrowAmount);
 
         _lendAmount = bound(
             _lendAmount,

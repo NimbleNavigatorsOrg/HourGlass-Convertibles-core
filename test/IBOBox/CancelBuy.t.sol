@@ -28,7 +28,7 @@ contract CancelBuy is iboBoxSetup {
             s_deployedIBOB.priceGranularity() /
             s_deployedIBOB.trancheDecimals();
 
-        s_deployedIBOB.depositBorrow(s_borrower, maxBorrowAmount);
+        s_deployedIBOB.createIssueOrder(s_borrower, maxBorrowAmount);
 
         s_deployedIBOB.createBuyOrder(
             s_lender,

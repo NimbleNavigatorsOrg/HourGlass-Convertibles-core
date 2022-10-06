@@ -5,7 +5,7 @@ import "../../utils/IIBOImmutableArgs.sol";
 
 interface IIBOBox is IIBOImmutableArgs {
     event BuyOrderCreated(address lender, uint256 lendAmount);
-    event BorrowDeposit(address borrower, uint256 safeTrancheAmount);
+    event IssueOrderCreated(address borrower, uint256 safeTrancheAmount);
     event CancelledBuyOrder(address lender, uint256 buyOrderAmount);
     event CancelledIssueOrder(address borrower, uint256 issueOrderAmount);
     event RedeemIssueOrder(address caller, uint256 issueOrderAmount);
@@ -27,7 +27,8 @@ interface IIBOBox is IIBOImmutableArgs {
      *  - `msg.sender` must have `approved` `stableAmount` stable tokens to this contract
      */
 
-    function depositBorrow(address _borrower, uint256 _borrowAmount) external;
+    function createIssueOrder(address _borrower, uint256 _borrowAmount)
+        external;
 
     /**
      * @dev deposit _lendAmount of stable-tokens for BuyOrders

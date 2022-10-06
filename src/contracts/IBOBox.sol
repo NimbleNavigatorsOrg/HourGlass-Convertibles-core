@@ -41,7 +41,7 @@ contract IBOBox is OwnableUpgradeable, IBOImmutableArgs, IIBOBox {
         emit Initialized(_owner);
     }
 
-    function depositBorrow(address _borrower, uint256 _borrowAmount)
+    function createIssueOrder(address _borrower, uint256 _borrowAmount)
         external
         override
         beforeActivate
@@ -72,7 +72,7 @@ contract IBOBox is OwnableUpgradeable, IBOImmutableArgs, IIBOBox {
         issueOrder().mint(_borrower, _borrowAmount);
 
         //add event stuff
-        emit BorrowDeposit(_borrower, _borrowAmount);
+        emit IssueOrderCreated(_borrower, _borrowAmount);
     }
 
     function createBuyOrder(address _lender, uint256 _lendAmount)
@@ -96,7 +96,7 @@ contract IBOBox is OwnableUpgradeable, IBOImmutableArgs, IIBOBox {
     }
 
     function cancelIssue(uint256 _issueOrderAmount) external override {
-        //- Reverse of depositBorrow() function
+        //- Reverse of createIssueOrder() function
         //- transfers `_issueOrderAmount` of SafeTranche Tokens from IBO to msg.sender
 
         uint256 safeTrancheAmount = (_issueOrderAmount *
@@ -122,7 +122,7 @@ contract IBOBox is OwnableUpgradeable, IBOImmutableArgs, IIBOBox {
     }
 
     function cancelBuy(uint256 _buyOrderAmount) external override {
-        //- Reverse of depositBorrow() function
+        //- Reverse of createIssueOrder() function
 
         //revert check for _buyOrderAmount after CBB activated
         if (convertibleBondBox().s_startDate() != 0) {
