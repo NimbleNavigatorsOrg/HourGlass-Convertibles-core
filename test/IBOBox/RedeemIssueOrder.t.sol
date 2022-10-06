@@ -33,7 +33,7 @@ contract RedeemIssueOrder is iboBoxSetup {
 
         s_deployedIBOB.depositBorrow(s_borrower, maxBorrowAmount);
 
-        s_deployedIBOB.depositLend(
+        s_deployedIBOB.createBuyOrder(
             s_lender,
             s_stableToken.balanceOf(address(this))
         );

@@ -30,7 +30,7 @@ contract CancelBuy is iboBoxSetup {
 
         s_deployedIBOB.depositBorrow(s_borrower, maxBorrowAmount);
 
-        s_deployedIBOB.depositLend(
+        s_deployedIBOB.createBuyOrder(
             s_lender,
             s_stableToken.balanceOf(address(this))
         );
@@ -64,7 +64,7 @@ contract CancelBuy is iboBoxSetup {
     function testCancelBuy(uint256 _fuzzPrice, uint256 _lendAmount) public {
         setupIBOBox(_fuzzPrice);
 
-        s_deployedIBOB.depositLend(
+        s_deployedIBOB.createBuyOrder(
             s_lender,
             s_stableToken.balanceOf(address(this))
         );

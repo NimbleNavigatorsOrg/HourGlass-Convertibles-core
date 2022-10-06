@@ -2,7 +2,7 @@ pragma solidity 0.8.13;
 
 import "./iboBoxSetup.t.sol";
 
-contract DepositLend is iboBoxSetup {
+contract CreateBuyOrder is iboBoxSetup {
     struct BeforeBalances {
         uint256 lenderBuyOrders;
         uint256 routerStableTokens;
@@ -16,7 +16,7 @@ contract DepositLend is iboBoxSetup {
     address s_borrower = address(1);
     address s_lender = address(2);
 
-    function testCannotDepositLendCBBNotActivated() public {
+    function testCannotCreateBuyOrderCBBNotActivated() public {
         setupIBOBox(0);
 
         vm.prank(s_deployedIBOBAddress);
@@ -28,10 +28,10 @@ contract DepositLend is iboBoxSetup {
             false
         );
         vm.expectRevert(customError);
-        s_deployedIBOB.depositLend(s_lender, 1);
+        s_deployedIBOB.createBuyOrder(s_lender, 1);
     }
 
-    function testDepositLend(uint256 _fuzzPrice, uint256 _lendAmount) public {
+    function testCreateBuyOrder(uint256 _fuzzPrice, uint256 _lendAmount) public {
         setupIBOBox(_fuzzPrice);
 
         BeforeBalances memory before = BeforeBalances(
@@ -45,8 +45,8 @@ contract DepositLend is iboBoxSetup {
         LendAmounts memory adjustments = LendAmounts(_lendAmount);
 
         vm.expectEmit(true, true, true, true);
-        emit LendDeposit(s_lender, _lendAmount);
-        s_deployedIBOB.depositLend(s_lender, _lendAmount);
+        emit BuyOrderCreated(s_lender, _lendAmount);
+        s_deployedIBOB.createBuyOrder(s_lender, _lendAmount);
 
         assertions(before, adjustments);
     }

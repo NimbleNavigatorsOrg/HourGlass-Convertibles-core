@@ -23,7 +23,7 @@ contract RedeemBuyOrdersForStables is IBOLoanRouterSetup {
         vm.stopPrank();
 
         vm.startPrank(s_lender);
-        s_deployedIBOB.depositLend(
+        s_deployedIBOB.createBuyOrder(
             s_lender,
             (s_stableToken.balanceOf(s_lender) / 100)
         );

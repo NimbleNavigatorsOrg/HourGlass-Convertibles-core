@@ -55,7 +55,7 @@ contract TransmitActivate is iboBoxSetup {
             s_stableToken.balanceOf(address(this))
         );
 
-        s_deployedIBOB.depositLend(s_lender, _lendAmount);
+        s_deployedIBOB.createBuyOrder(s_lender, _lendAmount);
 
         BeforeBalances memory before = BeforeBalances(
             s_safeTranche.balanceOf(s_deployedIBOBAddress),

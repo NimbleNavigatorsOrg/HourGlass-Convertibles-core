@@ -139,15 +139,15 @@ contract GoerliCBBIssuer is Script {
 
             //make lendDeposits to 3 parties
 
-            IBOBox(createdIBO).depositLend(
+            IBOBox(createdIBO).createBuyOrder(
                 msg.sender,
                 325 * (10**ERC20(stableCoin).decimals())
             );
-            IBOBox(createdIBO).depositLend(
+            IBOBox(createdIBO).createBuyOrder(
                 recipientA,
                 325 * (10**ERC20(stableCoin).decimals())
             );
-            IBOBox(createdIBO).depositLend(
+            IBOBox(createdIBO).createBuyOrder(
                 recipientB,
                 325 * (10**ERC20(stableCoin).decimals())
             );
@@ -219,15 +219,15 @@ contract GoerliCBBIssuer is Script {
 
             //make lendDeposits to 3 parties
 
-            IBOBox(createdIBO).depositLend(
+            IBOBox(createdIBO).createBuyOrder(
                 msg.sender,
                 235 * (10**ERC20(stableCoin).decimals())
             );
-            IBOBox(createdIBO).depositLend(
+            IBOBox(createdIBO).createBuyOrder(
                 recipientA,
                 235 * (10**ERC20(stableCoin).decimals())
             );
-            IBOBox(createdIBO).depositLend(
+            IBOBox(createdIBO).createBuyOrder(
                 recipientB,
                 235 * (10**ERC20(stableCoin).decimals())
             );

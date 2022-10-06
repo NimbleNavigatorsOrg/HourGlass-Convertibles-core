@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 import "../../utils/IIBOImmutableArgs.sol";
 
 interface IIBOBox is IIBOImmutableArgs {
-    event LendDeposit(address lender, uint256 lendAmount);
+    event BuyOrderCreated(address lender, uint256 lendAmount);
     event BorrowDeposit(address borrower, uint256 safeTrancheAmount);
     event CancelledBuyOrder(address lender, uint256 buyOrderAmount);
     event CancelledIssueOrder(address borrower, uint256 issueOrderAmount);
@@ -37,7 +37,7 @@ interface IIBOBox is IIBOImmutableArgs {
      *  - `msg.sender` must have `approved` `stableAmount` stable tokens to this contract
      */
 
-    function depositLend(address _lender, uint256 _lendAmount) external;
+    function createBuyOrder(address _lender, uint256 _lendAmount) external;
 
     /**
      * @dev Withdraws SafeTranche + RiskTranche for unfilled IssueOrders

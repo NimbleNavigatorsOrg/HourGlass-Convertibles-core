@@ -18,7 +18,7 @@ contract iboBoxSetup is CBBSetup {
     ISlip s_issueOrder;
     ISlip s_buyOrder;
 
-    event LendDeposit(address, uint256);
+    event BuyOrderCreated(address, uint256);
     event BorrowDeposit(address, uint256);
     event CancelledBuyOrder(address, uint256);
     event CancelledIssueOrder(address, uint256);

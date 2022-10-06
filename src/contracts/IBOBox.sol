@@ -75,7 +75,7 @@ contract IBOBox is OwnableUpgradeable, IBOImmutableArgs, IIBOBox {
         emit BorrowDeposit(_borrower, _borrowAmount);
     }
 
-    function depositLend(address _lender, uint256 _lendAmount)
+    function createBuyOrder(address _lender, uint256 _lendAmount)
         external
         override
         beforeActivate
@@ -92,7 +92,7 @@ contract IBOBox is OwnableUpgradeable, IBOImmutableArgs, IIBOBox {
         buyOrder().mint(_lender, _lendAmount);
 
         //add event stuff
-        emit LendDeposit(_lender, _lendAmount);
+        emit BuyOrderCreated(_lender, _lendAmount);
     }
 
     function cancelIssue(uint256 _issueOrderAmount) external override {
