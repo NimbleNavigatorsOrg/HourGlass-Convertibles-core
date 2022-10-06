@@ -12,9 +12,15 @@ import "../interfaces/IStagingBox.sol";
  * Invariants:
  *  - `initial Price must be < $1.00`
  */
-
 contract StagingBox is OwnableUpgradeable, SBImmutableArgs, IStagingBox {
-    uint256 public s_reinitLendAmount = 0;
+    uint256 public s_reinitLendAmount;
+
+    modifier beforeReinitialize() {
+        if (convertibleBondBox().s_startDate() != 0) {
+            revert CBBReinitialized({state: true, requiredState: false});
+        }
+        _;
+    }
 
     function initialize(address _owner) external initializer {
         require(_owner != address(0), "StagingBox: invalid owner address");
@@ -38,12 +44,8 @@ contract StagingBox is OwnableUpgradeable, SBImmutableArgs, IStagingBox {
     function depositBorrow(address _borrower, uint256 _borrowAmount)
         external
         override
+        beforeReinitialize
     {
-        //- Ensure CBB not reinitialized
-        if (convertibleBondBox().s_startDate() != 0) {
-            revert CBBReinitialized({state: true, requiredState: false});
-        }
-
         //- transfers `_safeTrancheAmount` of SafeTranche Tokens from msg.sender to SB
 
         uint256 safeTrancheAmount = (_borrowAmount *
@@ -76,12 +78,8 @@ contract StagingBox is OwnableUpgradeable, SBImmutableArgs, IStagingBox {
     function depositLend(address _lender, uint256 _lendAmount)
         external
         override
+        beforeReinitialize
     {
-        //- Ensure CBB not reinitialized
-        if (convertibleBondBox().s_startDate() != 0) {
-            revert CBBReinitialized({state: true, requiredState: false});
-        }
-
         //- transfers `_lendAmount`of Stable Tokens from msg.sender to SB
         TransferHelper.safeTransferFrom(
             address(stableToken()),

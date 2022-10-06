@@ -10,7 +10,6 @@ contract StagingBoxLens is IStagingBoxLens {
     /**
      * @inheritdoc IStagingBoxLens
      */
-
     function viewTransmitReInitBool(IStagingBox _stagingBox)
         public
         view
@@ -41,7 +40,6 @@ contract StagingBoxLens is IStagingBoxLens {
     /**
      * @inheritdoc IStagingBoxLens
      */
-
     function viewSimpleWrapTrancheBorrow(
         IStagingBox _stagingBox,
         uint256 _amountRaw
@@ -84,7 +82,6 @@ contract StagingBoxLens is IStagingBoxLens {
     /**
      * @inheritdoc IStagingBoxLens
      */
-
     function viewSimpleWithdrawBorrowUnwrap(
         IStagingBox _stagingBox,
         uint256 _borrowSlipAmount
@@ -210,7 +207,6 @@ contract StagingBoxLens is IStagingBoxLens {
     /**
      * @inheritdoc IStagingBoxLens
      */
-
     function viewRedeemSafeSlipsForStables(
         IStagingBox _stagingBox,
         uint256 _safeSlipAmount
@@ -271,7 +267,6 @@ contract StagingBoxLens is IStagingBoxLens {
     /**
      * @inheritdoc IStagingBoxLens
      */
-
     function viewRedeemLendSlipsForTranches(
         IStagingBox _stagingBox,
         uint256 _lendSlipAmount
@@ -298,7 +293,6 @@ contract StagingBoxLens is IStagingBoxLens {
     /**
      * @inheritdoc IStagingBoxLens
      */
-
     function viewRedeemSafeSlipsForTranches(
         IStagingBox _stagingBox,
         uint256 _safeSlipAmount
@@ -319,7 +313,7 @@ contract StagingBoxLens is IStagingBoxLens {
         IStagingBox _stagingBox,
         uint256 _safeSlipAmount
     )
-        internal
+        public
         view
         returns (
             uint256,
@@ -392,7 +386,6 @@ contract StagingBoxLens is IStagingBoxLens {
     /**
      * @inheritdoc IStagingBoxLens
      */
-
     function viewRedeemRiskSlipsForTranches(
         IStagingBox _stagingBox,
         uint256 _riskSlipAmount
@@ -457,7 +450,6 @@ contract StagingBoxLens is IStagingBoxLens {
     /**
      * @inheritdoc IStagingBoxLens
      */
-
     function viewRepayAndUnwrapSimple(
         IStagingBox _stagingBox,
         uint256 _stableAmount
@@ -514,7 +506,6 @@ contract StagingBoxLens is IStagingBoxLens {
     /**
      * @inheritdoc IStagingBoxLens
      */
-
     function viewRepayMaxAndUnwrapSimple(
         IStagingBox _stagingBox,
         uint256 _riskSlipAmount
@@ -574,7 +565,6 @@ contract StagingBoxLens is IStagingBoxLens {
     /**
      * @inheritdoc IStagingBoxLens
      */
-
     function viewRepayAndUnwrapMature(
         IStagingBox _stagingBox,
         uint256 _stableAmount
@@ -632,7 +622,6 @@ contract StagingBoxLens is IStagingBoxLens {
     /**
      * @inheritdoc IStagingBoxLens
      */
-
     function viewRepayMaxAndUnwrapMature(
         IStagingBox _stagingBox,
         uint256 _riskSlipAmount

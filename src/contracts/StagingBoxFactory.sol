@@ -2,13 +2,14 @@
 pragma solidity 0.8.13;
 
 import "clones-with-immutable-args/ClonesWithImmutableArgs.sol";
+import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "./StagingBox.sol";
 import "./ConvertibleBondBox.sol";
 import "../interfaces/ICBBFactory.sol";
 import "../interfaces/IStagingBoxFactory.sol";
 
-contract StagingBoxFactory is IStagingBoxFactory {
+contract StagingBoxFactory is IStagingBoxFactory, Context {
     using ClonesWithImmutableArgs for address;
 
     address public immutable implementation;
@@ -85,7 +86,7 @@ contract StagingBoxFactory is IStagingBoxFactory {
         address owner
     ) public returns (address) {
         require(
-            msg.sender == convertibleBondBox.owner(),
+            _msgSender() == convertibleBondBox.owner(),
             "StagingBoxFactory: Deployer not owner of CBB"
         );
 
@@ -129,14 +130,14 @@ contract StagingBoxFactory is IStagingBoxFactory {
 
         if (oldStagingBox == address(0)) {
             emit StagingBoxCreated(
-                msg.sender,
+                _msgSender(),
                 address(clone),
                 address(slipFactory)
             );
         } else {
             emit StagingBoxReplaced(
                 convertibleBondBox,
-                msg.sender,
+                _msgSender(),
                 oldStagingBox,
                 address(clone),
                 address(slipFactory)

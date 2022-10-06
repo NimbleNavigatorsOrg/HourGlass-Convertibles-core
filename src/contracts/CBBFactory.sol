@@ -2,12 +2,13 @@
 pragma solidity 0.8.13;
 
 import "clones-with-immutable-args/ClonesWithImmutableArgs.sol";
+import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "./ConvertibleBondBox.sol";
 import "../interfaces/ICBBFactory.sol";
 import "../interfaces/ISlip.sol";
 
-contract CBBFactory is ICBBFactory {
+contract CBBFactory is ICBBFactory, Context {
     using ClonesWithImmutableArgs for address;
 
     address public immutable implementation;
@@ -89,7 +90,7 @@ contract CBBFactory is ICBBFactory {
 
         //emit Event
         emit ConvertibleBondBoxCreated(
-            msg.sender,
+            _msgSender(),
             address(clone),
             address(slipFactory)
         );
@@ -132,12 +133,20 @@ contract CBBFactory is ICBBFactory {
     {
         uint256 trancheCount = bond.trancheCount();
 
-        // Safe-Tranche cannot be the Z-Tranche
-        if (trancheIndex >= trancheCount - 1)
+        // Revert if only one tranche exists.
+        if (trancheCount == 1) {
+            revert InvalidTrancheCount();
+        }
+
+        // Revert if `trancheIndex` is Z-Tranche.
+        if (trancheIndex >= trancheCount - 1) {
+            // Note that the `trancheCount - 2` expression can not underflow
+            // due to check above.
             revert TrancheIndexOutOfBounds({
                 given: trancheIndex,
                 maxIndex: trancheCount - 2
             });
+        }
 
         (ITranche safeTranche, uint256 safeRatio) = bond.tranches(trancheIndex);
         (ITranche riskTranche, uint256 riskRatio) = bond.tranches(

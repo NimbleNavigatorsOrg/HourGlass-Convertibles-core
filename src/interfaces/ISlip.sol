@@ -8,6 +8,9 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  *
  */
 interface ISlip is IERC20 {
+
+    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+
     /**
      * @dev returns the bond box address which owns this slip contract
      *  It should have admin permissions to call mint, burn, and redeem functions

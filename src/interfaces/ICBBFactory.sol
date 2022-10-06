@@ -8,6 +8,12 @@ import "./ISlipFactory.sol";
  * @notice Interface for Convertible Bond Box factory contracts
  */
 interface ICBBFactory {
+
+    /// @notice Thrown if bond's tranche count invalid.
+    error InvalidTrancheCount();
+
+    // @todo Should be renamed to something like: TrancheIndexNotSafe?
+    /// @notice Thrown if given tranche index is Z-Tranche.
     error TrancheIndexOutOfBounds(uint256 given, uint256 maxIndex);
 
     event ConvertibleBondBoxCreated(
