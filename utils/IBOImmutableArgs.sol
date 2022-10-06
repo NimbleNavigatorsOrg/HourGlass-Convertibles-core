@@ -88,7 +88,7 @@ contract IBOImmutableArgs is Clone, IIBOImmutableArgs {
      * @inheritdoc IIBOImmutableArgs
      */
 
-    function riskSlipAddress() public pure returns (address) {
+    function issuerSlipAddress() public pure returns (address) {
         return (_getArgAddress(204));
     }
 

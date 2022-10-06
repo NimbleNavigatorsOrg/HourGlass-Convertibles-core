@@ -29,7 +29,7 @@ contract CBBImmutableArgs is Clone, ICBBImmutableArgs {
     /**
      * @inheritdoc ICBBImmutableArgs
      */
-    function riskSlip() public pure override returns (ISlip) {
+    function issuerSlip() public pure override returns (ISlip) {
         return ISlip(_getArgAddress(40));
     }
 

@@ -62,7 +62,7 @@ contract RedeemSafeTranche is CBBSetup {
 
     function testRedeemSafeTranche(
         uint256 safeSlipRedeemAmount,
-        uint256 riskSlipRedeemAmount,
+        uint256 issuerSlipRedeemAmount,
         uint256 time,
         uint256 fee
     ) public {
@@ -106,15 +106,15 @@ contract RedeemSafeTranche is CBBSetup {
 
         // do a riskTrancheRedeem
         {
-            riskSlipRedeemAmount = bound(
-                riskSlipRedeemAmount,
+            issuerSlipRedeemAmount = bound(
+                issuerSlipRedeemAmount,
                 1e6,
-                s_riskSlip.balanceOf(address(s_borrower))
+                s_issuerSlip.balanceOf(address(s_borrower))
             );
             vm.startPrank(s_borrower);
-            s_riskSlip.approve(s_deployedCBBAddress, type(uint256).max);
+            s_issuerSlip.approve(s_deployedCBBAddress, type(uint256).max);
             s_deployedConvertibleBondBox.redeemRiskTranche(
-                riskSlipRedeemAmount
+                issuerSlipRedeemAmount
             );
             vm.stopPrank();
         }
@@ -139,7 +139,7 @@ contract RedeemSafeTranche is CBBSetup {
 
         uint256 feeSlip = (safeSlipRedeemAmount * fee) / s_BPS;
         uint256 zTranchePayout = ((safeSlipRedeemAmount - feeSlip) *
-            (before.CBBRiskTranche - s_riskSlip.totalSupply())) /
+            (before.CBBRiskTranche - s_issuerSlip.totalSupply())) /
             (s_safeSlip.totalSupply() -
                 s_deployedConvertibleBondBox.s_repaidSafeSlips());
 

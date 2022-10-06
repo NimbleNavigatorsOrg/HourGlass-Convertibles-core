@@ -24,7 +24,7 @@ interface IConvertibleBondBox is ICBBImmutableArgs {
     );
     event RedeemStable(address caller, uint256 safeSlipAmount, uint256 price);
     event RedeemSafeTranche(address caller, uint256 safeSlipAmount);
-    event RedeemRiskTranche(address caller, uint256 riskSlipAmount);
+    event RedeemRiskTranche(address caller, uint256 issuerSlipAmount);
     event Repay(
         address caller,
         uint256 stablesPaid,
@@ -106,14 +106,14 @@ interface IConvertibleBondBox is ICBBImmutableArgs {
     function repay(uint256 _stableAmount) external;
 
     /**
-     * @dev enables full repayment of riskSlips
+     * @dev enables full repayment of issuerSlips
      * - any unpaid amount of Z-slips after maturity will be penalized upon redeeming
-     * @param _riskSlipAmount The amount of riskSlips to repaid
+     * @param _issuerSlipAmount The amount of issuerSlips to repaid
      * Requirements:
      *  - `msg.sender` must have `approved` calculated amount of stable tokens to this contract
      */
 
-    function repayMax(uint256 _riskSlipAmount) external;
+    function repayMax(uint256 _issuerSlipAmount) external;
 
     /**
      * @dev allows lender to redeem safe-slip for tranches
@@ -126,12 +126,12 @@ interface IConvertibleBondBox is ICBBImmutableArgs {
 
     /**
      * @dev allows borrower to redeem risk-slip for tranches without repaying
-     * @param _riskSlipAmount The amount of risk-slips to redeem
+     * @param _issuerSlipAmount The amount of risk-slips to redeem
      * Requirements:
-     *  - `msg.sender` must have `approved` `riskSlipAmount` of safe-Slip tokens to this contract
+     *  - `msg.sender` must have `approved` `issuerSlipAmount` of safe-Slip tokens to this contract
      */
 
-    function redeemRiskTranche(uint256 _riskSlipAmount) external;
+    function redeemRiskTranche(uint256 _issuerSlipAmount) external;
 
     /**
      * @dev allows lender to redeem safe-slip for stables

@@ -25,7 +25,7 @@ contract ConvertiblesDVLens is IConvertiblesDVLens {
         uint256 safeTranche;
         uint256 riskTranche;
         uint256 safeSlip;
-        uint256 riskSlip;
+        uint256 issuerSlip;
         uint256 stablesBorrow;
         uint256 stablesLend;
         uint256 stablesTotal;
@@ -98,7 +98,7 @@ contract ConvertiblesDVLens is IConvertiblesDVLens {
             convertibleBondBox,
             bond,
             convertibleBondBox.safeSlip().balanceOf(address(_IBOBox)),
-            convertibleBondBox.riskSlip().balanceOf(address(_IBOBox))
+            convertibleBondBox.issuerSlip().balanceOf(address(_IBOBox))
         );
 
         DecimalPair memory decimals = DecimalPair(
@@ -110,7 +110,9 @@ contract ConvertiblesDVLens is IConvertiblesDVLens {
             _IBOBox.safeTranche().balanceOf(address(_IBOBox)),
             _IBOBox.riskTranche().balanceOf(address(_IBOBox)),
             _IBOBox.convertibleBondBox().safeSlip().balanceOf(address(_IBOBox)),
-            _IBOBox.convertibleBondBox().riskSlip().balanceOf(address(_IBOBox)),
+            _IBOBox.convertibleBondBox().issuerSlip().balanceOf(
+                address(_IBOBox)
+            ),
             _IBOBox.s_activateLendAmount(),
             (_IBOBox.stableToken().balanceOf(address(_IBOBox)) -
                 _IBOBox.s_activateLendAmount()),
@@ -123,7 +125,7 @@ contract ConvertiblesDVLens is IConvertiblesDVLens {
             NumFixedPoint(IBO_Balances.safeTranche, decimals.tranche),
             NumFixedPoint(IBO_Balances.riskTranche, decimals.tranche),
             NumFixedPoint(IBO_Balances.safeSlip, decimals.tranche),
-            NumFixedPoint(IBO_Balances.riskSlip, decimals.tranche),
+            NumFixedPoint(IBO_Balances.issuerSlip, decimals.tranche),
             NumFixedPoint(IBO_Balances.stablesBorrow, decimals.stable),
             NumFixedPoint(IBO_Balances.stablesLend, decimals.stable),
             NumFixedPoint(simTrancheCollateral.safe, decimals.tranche),
@@ -182,7 +184,7 @@ contract ConvertiblesDVLens is IConvertiblesDVLens {
                 decimals.tranche
             ),
             NumFixedPoint(
-                _convertibleBondBox.riskSlip().totalSupply(),
+                _convertibleBondBox.issuerSlip().totalSupply(),
                 decimals.tranche
             ),
             NumFixedPoint(
@@ -245,7 +247,7 @@ contract ConvertiblesDVLens is IConvertiblesDVLens {
             .balanceOf(address(_convertibleBondBox));
 
         uint256 zPenaltyTrancheCollateral = ((riskTrancheBalance -
-            _convertibleBondBox.riskSlip().totalSupply()) *
+            _convertibleBondBox.issuerSlip().totalSupply()) *
             simTrancheCollateral.risk) / riskTrancheBalance;
 
         DecimalPair memory decimals = DecimalPair(
@@ -259,7 +261,7 @@ contract ConvertiblesDVLens is IConvertiblesDVLens {
                 decimals.tranche
             ),
             NumFixedPoint(
-                _convertibleBondBox.riskSlip().totalSupply(),
+                _convertibleBondBox.issuerSlip().totalSupply(),
                 decimals.tranche
             ),
             NumFixedPoint(
@@ -273,18 +275,18 @@ contract ConvertiblesDVLens is IConvertiblesDVLens {
                 decimals.tranche
             ),
             NumFixedPoint(
-                _convertibleBondBox.riskSlip().totalSupply(),
+                _convertibleBondBox.issuerSlip().totalSupply(),
                 decimals.tranche
             ),
             NumFixedPoint(
                 (riskTrancheBalance -
-                    _convertibleBondBox.riskSlip().totalSupply()),
+                    _convertibleBondBox.issuerSlip().totalSupply()),
                 decimals.tranche
             ),
             NumFixedPoint(stableBalance, decimals.stable),
             NumFixedPoint(simTrancheCollateral.safe, decimals.tranche),
             NumFixedPoint(
-                (_convertibleBondBox.riskSlip().totalSupply() *
+                (_convertibleBondBox.issuerSlip().totalSupply() *
                     simTrancheCollateral.risk) / riskTrancheBalance,
                 decimals.tranche
             ),

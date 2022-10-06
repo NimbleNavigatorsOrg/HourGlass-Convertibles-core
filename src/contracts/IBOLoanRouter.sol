@@ -269,9 +269,9 @@ contract IBOLoanRouter is IIBOLoanRouter {
     /**
      * @inheritdoc IIBOLoanRouter
      */
-    function redeemRiskSlipsForTranchesAndUnwrap(
+    function redeemIssuerSlipsForTranchesAndUnwrap(
         IIBOBox _IBOBox,
-        uint256 _riskSlipAmount
+        uint256 _issuerSlipAmount
     ) external {
         (
             IConvertibleBondBox convertibleBondBox,
@@ -280,15 +280,15 @@ contract IBOLoanRouter is IIBOLoanRouter {
 
         ) = fetchElasticStack(_IBOBox);
 
-        //Transfer riskSlips to router
-        convertibleBondBox.riskSlip().transferFrom(
+        //Transfer issuerSlips to router
+        convertibleBondBox.issuerSlip().transferFrom(
             msg.sender,
             address(this),
-            _riskSlipAmount
+            _issuerSlipAmount
         );
 
-        //Redeem riskSlips for riskTranches
-        convertibleBondBox.redeemRiskTranche(_riskSlipAmount);
+        //Redeem issuerSlips for riskTranches
+        convertibleBondBox.redeemRiskTranche(_issuerSlipAmount);
 
         //redeem riskTranche for underlying collateral
         uint256 riskTrancheAmount = convertibleBondBox.riskTranche().balanceOf(
@@ -310,7 +310,7 @@ contract IBOLoanRouter is IIBOLoanRouter {
         IIBOBox _IBOBox,
         uint256 _stableAmount,
         uint256 _stableFees,
-        uint256 _riskSlipAmount
+        uint256 _issuerSlipAmount
     ) external {
         (IConvertibleBondBox convertibleBondBox, , , ) = fetchElasticStack(
             _IBOBox
@@ -324,11 +324,11 @@ contract IBOLoanRouter is IIBOLoanRouter {
             _stableAmount + _stableFees
         );
 
-        //Calculate RiskSlips (minus fees) and transfer to router
-        convertibleBondBox.riskSlip().transferFrom(
+        //Calculate IssuerSlips (minus fees) and transfer to router
+        convertibleBondBox.issuerSlip().transferFrom(
             msg.sender,
             address(this),
-            _riskSlipAmount
+            _issuerSlipAmount
         );
 
         //call repay function
@@ -348,11 +348,11 @@ contract IBOLoanRouter is IIBOLoanRouter {
 
         _redeemTrancheImmatureUnwrap(_IBOBox);
 
-        //send unpaid riskSlip back
+        //send unpaid issuerSlip back
 
-        convertibleBondBox.riskSlip().transfer(
+        convertibleBondBox.issuerSlip().transfer(
             msg.sender,
-            IERC20(_IBOBox.riskSlipAddress()).balanceOf(address(this))
+            IERC20(_IBOBox.issuerSlipAddress()).balanceOf(address(this))
         );
     }
 
@@ -363,7 +363,7 @@ contract IBOLoanRouter is IIBOLoanRouter {
         IIBOBox _IBOBox,
         uint256 _stableAmount,
         uint256 _stableFees,
-        uint256 _riskSlipAmount
+        uint256 _issuerSlipAmount
     ) external {
         (IConvertibleBondBox convertibleBondBox, , , ) = fetchElasticStack(
             _IBOBox
@@ -378,10 +378,10 @@ contract IBOLoanRouter is IIBOLoanRouter {
         );
 
         //Transfer risk slips to CBB
-        convertibleBondBox.riskSlip().transferFrom(
+        convertibleBondBox.issuerSlip().transferFrom(
             msg.sender,
             address(this),
-            _riskSlipAmount
+            _issuerSlipAmount
         );
 
         //call repayMax function
@@ -397,7 +397,7 @@ contract IBOLoanRouter is IIBOLoanRouter {
                 type(uint256).max - _stableAmount - _stableFees
             );
         }
-        convertibleBondBox.repayMax(_riskSlipAmount);
+        convertibleBondBox.repayMax(_issuerSlipAmount);
 
         _redeemTrancheImmatureUnwrap(_IBOBox);
 
@@ -450,7 +450,7 @@ contract IBOLoanRouter is IIBOLoanRouter {
         IIBOBox _IBOBox,
         uint256 _stableAmount,
         uint256 _stableFees,
-        uint256 _riskSlipAmount
+        uint256 _issuerSlipAmount
     ) external {
         (
             IConvertibleBondBox convertibleBondBox,
@@ -468,10 +468,10 @@ contract IBOLoanRouter is IIBOLoanRouter {
         );
 
         //Transfer to router
-        convertibleBondBox.riskSlip().transferFrom(
+        convertibleBondBox.issuerSlip().transferFrom(
             msg.sender,
             address(this),
-            _riskSlipAmount
+            _issuerSlipAmount
         );
 
         //call repay function

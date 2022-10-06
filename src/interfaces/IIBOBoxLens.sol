@@ -53,13 +53,13 @@ interface IIBOBoxLens {
         returns (uint256);
 
     /**
-     * @dev provides amount of riskSlips and stableToken loan in return for borrowSlips
+     * @dev provides amount of issuerSlips and stableToken loan in return for borrowSlips
      * @param _IBOBox The IBO box tied to the Convertible Bond
      * @param _borrowSlipAmount The amount of borrowSlips to be redeemed
      * Requirements:
      */
 
-    function viewRedeemBorrowSlipForRiskSlip(
+    function viewRedeemBorrowSlipForIssuerSlip(
         IIBOBox _IBOBox,
         uint256 _borrowSlipAmount
     ) external view returns (uint256, uint256);
@@ -141,15 +141,15 @@ interface IIBOBoxLens {
         );
 
     /**
-     * @dev provides amount of unwrapped collateral tokens expected in return for redeeming riskSlips
+     * @dev provides amount of unwrapped collateral tokens expected in return for redeeming issuerSlips
      * @param _IBOBox The IBO box tied to the Convertible Bond
-     * @param _riskSlipAmount The amount of riskSlips to be redeemed
+     * @param _issuerSlipAmount The amount of issuerSlips to be redeemed
      * Requirements:
      */
 
-    function viewRedeemRiskSlipsForTranches(
+    function viewRedeemIssuerSlipsForTranches(
         IIBOBox _IBOBox,
-        uint256 _riskSlipAmount
+        uint256 _issuerSlipAmount
     )
         external
         view
@@ -180,7 +180,7 @@ interface IIBOBoxLens {
         );
 
     /**
-     * @dev provides amount of unwrapped collateral tokens expected in return for repaying in full the RiskSlips
+     * @dev provides amount of unwrapped collateral tokens expected in return for repaying in full the IssuerSlips
      * @param _IBOBox The IBO box tied to the Convertible Bond
      * Requirements:
      *      - Only for prior to maturity
@@ -189,7 +189,7 @@ interface IIBOBoxLens {
 
     function viewRepayMaxAndUnwrapSimple(
         IIBOBox _IBOBox,
-        uint256 _riskSlipAmount
+        uint256 _issuerSlipAmount
     )
         external
         view

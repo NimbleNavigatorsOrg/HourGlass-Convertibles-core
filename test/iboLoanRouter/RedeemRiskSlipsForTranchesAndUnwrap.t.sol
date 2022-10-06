@@ -2,14 +2,14 @@ pragma solidity 0.8.13;
 
 import "./IBOLoanRouterSetup.t.sol";
 
-contract RedeemRiskSlipsForTranchesAndUnwrap is IBOLoanRouterSetup {
+contract RedeemIssuerSlipsForTranchesAndUnwrap is IBOLoanRouterSetup {
     struct BeforeBalances {
-        uint256 borrowerRiskSlip;
+        uint256 borrowerIssuerSlip;
         uint256 borrowerCollateral;
     }
 
     struct RedeemAmounts {
-        uint256 riskSlipAmount;
+        uint256 issuerSlipAmount;
         uint256 collateralAmount;
     }
 
@@ -71,35 +71,35 @@ contract RedeemRiskSlipsForTranchesAndUnwrap is IBOLoanRouterSetup {
         s_buttonWoodBondController.mature();
     }
 
-    function testRiskSlipRedeemTrancheAndUnwrap(
-        uint256 riskSlipAmount,
+    function testIssuerSlipRedeemTrancheAndUnwrap(
+        uint256 issuerSlipAmount,
         uint256 data
     ) public {
         initialSetup(data);
 
-        riskSlipAmount = bound(
-            riskSlipAmount,
+        issuerSlipAmount = bound(
+            issuerSlipAmount,
             1e6,
-            s_riskSlip.balanceOf(s_borrower)
+            s_issuerSlip.balanceOf(s_borrower)
         );
 
         (uint256 collateralAmount, , , ) = s_IBOLens
-            .viewRedeemRiskSlipsForTranches(s_deployedIBOB, riskSlipAmount);
+            .viewRedeemIssuerSlipsForTranches(s_deployedIBOB, issuerSlipAmount);
 
         BeforeBalances memory before = BeforeBalances(
-            s_riskSlip.balanceOf(s_borrower),
+            s_issuerSlip.balanceOf(s_borrower),
             s_collateralToken.balanceOf(s_borrower)
         );
 
         RedeemAmounts memory adjustments = RedeemAmounts(
-            riskSlipAmount,
+            issuerSlipAmount,
             collateralAmount
         );
 
         vm.startPrank(s_borrower);
-        s_IBOLoanRouter.redeemRiskSlipsForTranchesAndUnwrap(
+        s_IBOLoanRouter.redeemIssuerSlipsForTranchesAndUnwrap(
             s_deployedIBOB,
-            riskSlipAmount
+            issuerSlipAmount
         );
         vm.stopPrank();
 
@@ -117,8 +117,8 @@ contract RedeemRiskSlipsForTranchesAndUnwrap is IBOLoanRouterSetup {
         );
 
         assertApproxEqRel(
-            before.borrowerRiskSlip - adjustments.riskSlipAmount,
-            s_riskSlip.balanceOf(s_borrower),
+            before.borrowerIssuerSlip - adjustments.issuerSlipAmount,
+            s_issuerSlip.balanceOf(s_borrower),
             1e15
         );
     }

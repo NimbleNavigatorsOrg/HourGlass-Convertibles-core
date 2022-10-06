@@ -23,12 +23,12 @@ interface ICBBImmutableArgs {
     function safeSlip() external pure returns (ISlip);
 
     /**
-     * @notice The riskSlip object
+     * @notice The issuerSlip object
      * @dev using ClonesWithImmutableArgs pattern here to save gas
      * @dev https://github.com/wighawag/clones-with-immutable-args
-     * @return The riskSlip Slip object
+     * @return The issuerSlip Slip object
      */
-    function riskSlip() external pure returns (ISlip);
+    function issuerSlip() external pure returns (ISlip);
 
     /**
      * @notice penalty for zslips
