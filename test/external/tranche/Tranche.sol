@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@uniswap/lib/contracts/libraries/TransferHelper.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
-import "@buttonwood-protocol/tranche/contracts/external/ERC20.sol";
+import "../../../src/contracts/external/ERC20.sol";
 
 /**
  * @dev ERC20 token to represent a single tranche for a ButtonTranche bond

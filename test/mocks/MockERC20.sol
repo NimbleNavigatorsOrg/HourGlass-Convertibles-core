@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.13;
 
-import "@buttonwood-protocol/tranche/contracts/external/ERC20.sol";
+import "../../src/contracts/external/ERC20.sol";
 
 contract MockERC20 is ERC20 {
     uint8 private _decimals;

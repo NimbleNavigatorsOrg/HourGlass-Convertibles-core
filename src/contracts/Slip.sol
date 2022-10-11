@@ -4,7 +4,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@uniswap/lib/contracts/libraries/TransferHelper.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@buttonwood-protocol/tranche/contracts/external/ERC20.sol";
+import "../contracts/external/ERC20.sol";
 
 import "../interfaces/ISlip.sol";
 

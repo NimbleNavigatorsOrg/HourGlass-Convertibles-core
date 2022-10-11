@@ -3,7 +3,7 @@ pragma solidity 0.8.13;
 
 import "../interfaces/IConvertiblesDVLens.sol";
 import "../interfaces/IConvertibleBondBox.sol";
-import "@buttonwood-protocol/tranche/contracts/external/ERC20.sol";
+import "../../src/contracts/external/ERC20.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 
 /**
