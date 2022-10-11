@@ -23,10 +23,7 @@ contract StagingBox is OwnableUpgradeable, SBImmutableArgs, IStagingBox {
     }
 
     function initialize(address _owner) external initializer {
-        require(
-            _owner != address(0),
-            "StagingBox: invalid owner address"
-        );
+        require(_owner != address(0), "StagingBox: invalid owner address");
         //check if valid initialPrice immutable arg
         if (initialPrice() > priceGranularity())
             revert InitialPriceTooHigh({
@@ -214,9 +211,7 @@ contract StagingBox is OwnableUpgradeable, SBImmutableArgs, IStagingBox {
                 address(this),
                 stableAmount
             );
-        }
-
-        if (!_isLend) {
+        } else {
             uint256 safeTrancheBalance = safeTranche().balanceOf(address(this));
             s_reinitLendAmount =
                 (safeTrancheBalance * initialPrice() * stableDecimals()) /
