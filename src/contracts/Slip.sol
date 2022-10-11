@@ -35,13 +35,10 @@ contract Slip is ISlip, ERC20, Initializable {
         address _boxOwner,
         address _collateralToken
     ) public initializer {
-        require(
-            _boxOwner != address(0),
-            "Tranche: invalid Convertible Bond Box address"
-        );
+        require(_boxOwner != address(0), "Slip: Invalid owner address");
         require(
             _collateralToken != address(0),
-            "Tranche: invalid collateralToken address"
+            "Slip: invalid collateralToken address"
         );
 
         boxOwner = _boxOwner;
