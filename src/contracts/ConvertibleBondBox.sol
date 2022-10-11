@@ -10,10 +10,17 @@ import "../interfaces/IConvertibleBondBox.sol";
  * @dev Convertible Bond Box for a ButtonTranche bond
  *
  * Invariants:
- *  - `initial Price must be < $1.00`
+ *  - initial Price must be <= $1.00
  *  - penalty ratio must be < 1.0
  *  - safeTranche index must not be Z-tranche
+ *
+ * Assumptions:
+ * - Stabletoken has a market price of $1.00
+ * - ButtonToken to be used as collateral in the underlying ButtonBond rebases to $1.00
+ *
+ * While it is possible to deploy a bond without the above assumptions enforced, it will produce faulty math and repayment prices
  */
+
 contract ConvertibleBondBox is
     OwnableUpgradeable,
     CBBImmutableArgs,
@@ -73,11 +80,7 @@ contract ConvertibleBondBox is
         _;
     }
 
-    function initialize(address _owner)
-        external
-        initializer
-        beforeBondMature
-    {
+    function initialize(address _owner) external initializer beforeBondMature {
         require(
             _owner != address(0),
             "ConvertibleBondBox: invalid owner address"
@@ -202,9 +205,9 @@ contract ConvertibleBondBox is
      */
     function currentPrice() public view override returns (uint256) {
         if (block.timestamp < maturityDate()) {
-            uint price =
-                s_priceGranularity -
-                ((s_priceGranularity - s_initialPrice) * (maturityDate() - block.timestamp)) /
+            uint256 price = s_priceGranularity -
+                ((s_priceGranularity - s_initialPrice) *
+                    (maturityDate() - block.timestamp)) /
                 (maturityDate() - s_startDate);
 
             return price;
