@@ -126,11 +126,12 @@ contract StagingBox is OwnableUpgradeable, SBImmutableArgs, IStagingBox {
 
         //revert check for _lendSlipAmount after CBB reinitialized
         if (convertibleBondBox().s_startDate() != 0) {
-            uint256 reinitAmount = s_reinitLendAmount;
-            if (_lendSlipAmount < reinitAmount) {
+            uint256 maxWithdrawAmount = stableToken().balanceOf(address(this)) -
+                s_reinitLendAmount;
+            if (_lendSlipAmount > maxWithdrawAmount) {
                 revert WithdrawAmountTooHigh({
                     requestAmount: _lendSlipAmount,
-                    maxAmount: reinitAmount
+                    maxAmount: maxWithdrawAmount
                 });
             }
         }
@@ -150,6 +151,9 @@ contract StagingBox is OwnableUpgradeable, SBImmutableArgs, IStagingBox {
     }
 
     function redeemBorrowSlip(uint256 _borrowSlipAmount) external override {
+        //decrement s_reinitLendAmount
+        s_reinitLendAmount -= _borrowSlipAmount;
+
         // Transfer `_borrowSlipAmount*riskRatio()/safeRatio()` of RiskSlips to msg.sender
         ISlip(riskSlipAddress()).transfer(
             _msgSender(),
