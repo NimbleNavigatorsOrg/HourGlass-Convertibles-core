@@ -10,8 +10,10 @@ import "../interfaces/IStagingBox.sol";
  * @dev Staging Box for reinitializing a ConvertibleBondBox
  *
  * Invariants:
- *  - `initial Price must be < $1.00`
+ *  - initialPrice should meet conditions needed to reinitialize CBB
+ *  - I.e. initialPrice <= priceGranularity, and initialPrice != 0
  */
+
 contract StagingBox is OwnableUpgradeable, SBImmutableArgs, IStagingBox {
     uint256 public s_reinitLendAmount;
 
