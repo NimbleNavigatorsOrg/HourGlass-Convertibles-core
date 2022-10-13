@@ -140,7 +140,7 @@ contract ConvertibleBondBox is
         beforeBondMature
         validAmount(_stableAmount)
     {
-        uint256 price = currentPrice();
+        uint256 price = _currentPrice();
 
         uint256 safeSlipAmount = (_stableAmount *
             s_priceGranularity *
@@ -175,7 +175,7 @@ contract ConvertibleBondBox is
         beforeBondMature
         validAmount(_safeTrancheAmount)
     {
-        uint256 price = currentPrice();
+        uint256 price = _currentPrice();
 
         uint256 zTrancheAmount = (_safeTrancheAmount * riskRatio()) /
             safeRatio();
@@ -203,17 +203,14 @@ contract ConvertibleBondBox is
     /**
      * @inheritdoc IConvertibleBondBox
      */
-    function currentPrice() public view override returns (uint256) {
-        if (block.timestamp < maturityDate()) {
-            uint256 price = s_priceGranularity -
-                ((s_priceGranularity - s_initialPrice) *
-                    (maturityDate() - block.timestamp)) /
-                (maturityDate() - s_startDate);
-
-            return price;
-        } else {
-            return s_priceGranularity;
-        }
+    function currentPrice()
+        public
+        view
+        override
+        afterReinitialize
+        returns (uint256)
+    {
+        return _currentPrice();
     }
 
     /**
@@ -226,7 +223,7 @@ contract ConvertibleBondBox is
         validAmount(_stableAmount)
     {
         //Load into memory
-        uint256 price = currentPrice();
+        uint256 price = _currentPrice();
 
         //calculate inputs for internal redeem function
         uint256 stableFees = (_stableAmount * feeBps) / BPS;
@@ -252,7 +249,7 @@ contract ConvertibleBondBox is
         validAmount(_riskSlipAmount)
     {
         // Load params into memory
-        uint256 price = currentPrice();
+        uint256 price = _currentPrice();
 
         // Calculate inputs for internal repay function
         uint256 safeTranchePayout = (_riskSlipAmount * safeRatio()) /
@@ -360,7 +357,7 @@ contract ConvertibleBondBox is
         safeSlip().burn(_msgSender(), _safeSlipAmount);
         s_repaidSafeSlips -= _safeSlipAmount;
 
-        emit RedeemStable(_msgSender(), _safeSlipAmount, currentPrice());
+        emit RedeemStable(_msgSender(), _safeSlipAmount, _currentPrice());
     }
 
     /**
@@ -463,5 +460,18 @@ contract ConvertibleBondBox is
 
         // Burn riskSlips
         riskSlip().burn(_msgSender(), _riskTranchePayout);
+    }
+
+    function _currentPrice() internal view returns (uint256) {
+        if (block.timestamp < maturityDate()) {
+            uint256 price = s_priceGranularity -
+                ((s_priceGranularity - s_initialPrice) *
+                    (maturityDate() - block.timestamp)) /
+                (maturityDate() - s_startDate);
+
+            return price;
+        } else {
+            return s_priceGranularity;
+        }
     }
 }
