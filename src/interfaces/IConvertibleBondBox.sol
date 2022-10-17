@@ -62,7 +62,7 @@ interface IConvertibleBondBox is ICBBImmutableArgs {
      * @param _stableAmount The amount of stable tokens to lend
      * Requirements:
      *  - `msg.sender` must have `approved` `stableAmount` stable tokens to this contract
-        - initial price of bond must be set
+        - CBB must be reinitialized
      */
 
     function lend(
@@ -79,7 +79,7 @@ interface IConvertibleBondBox is ICBBImmutableArgs {
      * @param _collateralAmount The buttonTranche bond tied to this Convertible Bond Box
      * Requirements:
      *  - `msg.sender` must have `approved` `collateralAmount` collateral tokens to this contract
-        - initial price of bond must be set
+        - CBB must be reinitialized
         - must be enough stable tokens inside convertible bond box to borrow 
      */
 

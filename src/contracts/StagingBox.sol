@@ -10,8 +10,10 @@ import "../interfaces/IStagingBox.sol";
  * @dev Staging Box for reinitializing a ConvertibleBondBox
  *
  * Invariants:
- *  - `initial Price must be < $1.00`
+ *  - initialPrice should meet conditions needed to reinitialize CBB
+ *  - I.e. initialPrice <= priceGranularity, and initialPrice != 0
  */
+
 contract StagingBox is OwnableUpgradeable, SBImmutableArgs, IStagingBox {
     uint256 public s_reinitLendAmount;
 
@@ -23,10 +25,7 @@ contract StagingBox is OwnableUpgradeable, SBImmutableArgs, IStagingBox {
     }
 
     function initialize(address _owner) external initializer {
-        require(
-            _owner != address(0),
-            "StagingBox: invalid owner address"
-        );
+        require(_owner != address(0), "StagingBox: invalid owner address");
         //check if valid initialPrice immutable arg
         if (initialPrice() > priceGranularity())
             revert InitialPriceTooHigh({
@@ -129,11 +128,12 @@ contract StagingBox is OwnableUpgradeable, SBImmutableArgs, IStagingBox {
 
         //revert check for _lendSlipAmount after CBB reinitialized
         if (convertibleBondBox().s_startDate() != 0) {
-            uint256 reinitAmount = s_reinitLendAmount;
-            if (_lendSlipAmount < reinitAmount) {
+            uint256 maxWithdrawAmount = stableToken().balanceOf(address(this)) -
+                s_reinitLendAmount;
+            if (_lendSlipAmount > maxWithdrawAmount) {
                 revert WithdrawAmountTooHigh({
                     requestAmount: _lendSlipAmount,
-                    maxAmount: reinitAmount
+                    maxAmount: maxWithdrawAmount
                 });
             }
         }
@@ -153,6 +153,9 @@ contract StagingBox is OwnableUpgradeable, SBImmutableArgs, IStagingBox {
     }
 
     function redeemBorrowSlip(uint256 _borrowSlipAmount) external override {
+        //decrement s_reinitLendAmount
+        s_reinitLendAmount -= _borrowSlipAmount;
+
         // Transfer `_borrowSlipAmount*riskRatio()/safeRatio()` of RiskSlips to msg.sender
         ISlip(riskSlipAddress()).transfer(
             _msgSender(),
@@ -214,9 +217,7 @@ contract StagingBox is OwnableUpgradeable, SBImmutableArgs, IStagingBox {
                 address(this),
                 stableAmount
             );
-        }
-
-        if (!_isLend) {
+        } else {
             uint256 safeTrancheBalance = safeTranche().balanceOf(address(this));
             s_reinitLendAmount =
                 (safeTrancheBalance * initialPrice() * stableDecimals()) /

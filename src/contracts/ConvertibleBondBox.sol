@@ -10,10 +10,17 @@ import "../interfaces/IConvertibleBondBox.sol";
  * @dev Convertible Bond Box for a ButtonTranche bond
  *
  * Invariants:
- *  - `initial Price must be < $1.00`
+ *  - initial Price must be <= $1.00
  *  - penalty ratio must be < 1.0
  *  - safeTranche index must not be Z-tranche
+ *
+ * Assumptions:
+ * - Stabletoken has a market price of $1.00
+ * - ButtonToken to be used as collateral in the underlying ButtonBond rebases to $1.00
+ *
+ * While it is possible to deploy a bond without the above assumptions enforced, it will produce faulty math and repayment prices
  */
+
 contract ConvertibleBondBox is
     OwnableUpgradeable,
     CBBImmutableArgs,
@@ -73,11 +80,7 @@ contract ConvertibleBondBox is
         _;
     }
 
-    function initialize(address _owner)
-        external
-        initializer
-        beforeBondMature
-    {
+    function initialize(address _owner) external initializer beforeBondMature {
         require(
             _owner != address(0),
             "ConvertibleBondBox: invalid owner address"
@@ -137,7 +140,7 @@ contract ConvertibleBondBox is
         beforeBondMature
         validAmount(_stableAmount)
     {
-        uint256 price = currentPrice();
+        uint256 price = _currentPrice();
 
         uint256 safeSlipAmount = (_stableAmount *
             s_priceGranularity *
@@ -172,7 +175,7 @@ contract ConvertibleBondBox is
         beforeBondMature
         validAmount(_safeTrancheAmount)
     {
-        uint256 price = currentPrice();
+        uint256 price = _currentPrice();
 
         uint256 zTrancheAmount = (_safeTrancheAmount * riskRatio()) /
             safeRatio();
@@ -200,17 +203,14 @@ contract ConvertibleBondBox is
     /**
      * @inheritdoc IConvertibleBondBox
      */
-    function currentPrice() public view override returns (uint256) {
-        if (block.timestamp < maturityDate()) {
-            uint price =
-                s_priceGranularity -
-                ((s_priceGranularity - s_initialPrice) * (maturityDate() - block.timestamp)) /
-                (maturityDate() - s_startDate);
-
-            return price;
-        } else {
-            return s_priceGranularity;
-        }
+    function currentPrice()
+        public
+        view
+        override
+        afterReinitialize
+        returns (uint256)
+    {
+        return _currentPrice();
     }
 
     /**
@@ -223,7 +223,7 @@ contract ConvertibleBondBox is
         validAmount(_stableAmount)
     {
         //Load into memory
-        uint256 price = currentPrice();
+        uint256 price = _currentPrice();
 
         //calculate inputs for internal redeem function
         uint256 stableFees = (_stableAmount * feeBps) / BPS;
@@ -249,7 +249,7 @@ contract ConvertibleBondBox is
         validAmount(_riskSlipAmount)
     {
         // Load params into memory
-        uint256 price = currentPrice();
+        uint256 price = _currentPrice();
 
         // Calculate inputs for internal repay function
         uint256 safeTranchePayout = (_riskSlipAmount * safeRatio()) /
@@ -357,7 +357,7 @@ contract ConvertibleBondBox is
         safeSlip().burn(_msgSender(), _safeSlipAmount);
         s_repaidSafeSlips -= _safeSlipAmount;
 
-        emit RedeemStable(_msgSender(), _safeSlipAmount, currentPrice());
+        emit RedeemStable(_msgSender(), _safeSlipAmount, _currentPrice());
     }
 
     /**
@@ -460,5 +460,18 @@ contract ConvertibleBondBox is
 
         // Burn riskSlips
         riskSlip().burn(_msgSender(), _riskTranchePayout);
+    }
+
+    function _currentPrice() internal view returns (uint256) {
+        if (block.timestamp < maturityDate()) {
+            uint256 price = s_priceGranularity -
+                ((s_priceGranularity - s_initialPrice) *
+                    (maturityDate() - block.timestamp)) /
+                (maturityDate() - s_startDate);
+
+            return price;
+        } else {
+            return s_priceGranularity;
+        }
     }
 }

@@ -6,7 +6,7 @@ import "../src/contracts/ConvertibleBondBox.sol";
 import "../src/contracts/CBBFactory.sol";
 import "./external/tranche/Tranche.sol";
 import "./external/tranche/TrancheFactory.sol";
-import "@buttonwood-protocol/tranche/contracts/external/ERC20.sol";
+import "../src/contracts/external/ERC20.sol";
 import "../src/contracts/Slip.sol";
 import "../src/contracts/SlipFactory.sol";
 import "forge-std/console2.sol";

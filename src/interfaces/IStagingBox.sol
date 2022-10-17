@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity 0.8.13;
 
 import "../../utils/ISBImmutableArgs.sol";
 
@@ -75,6 +75,8 @@ interface IStagingBox is ISBImmutableArgs {
      * @dev Deposits _collateralAmount of collateral-tokens and then calls borrow to CBB
      * @param _lendOrBorrow boolean to indicate whether to reinitialize CBB based of stableToken balance or safeTranche balance
      * Requirements:
+     * - StagingBox must be the owner of the CBB to call this function
+     * - Change owner of CBB to be the SB prior to calling this function if not already done
      */
 
     function transmitReInit(bool _lendOrBorrow) external;
