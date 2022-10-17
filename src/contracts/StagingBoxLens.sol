@@ -112,6 +112,55 @@ contract StagingBoxLens is IStagingBoxLens {
     /**
      * @inheritdoc IStagingBoxLens
      */
+
+    function viewWithdrawLendSlip(
+        IStagingBox _stagingBox,
+        uint256 _lendSlipAmount
+    ) external view returns (uint256) {
+        return _lendSlipAmount;
+    }
+
+    /**
+     * @inheritdoc IStagingBoxLens
+     */
+
+    function viewRedeemBorrowSlipForRiskSlip(
+        IStagingBox _stagingBox,
+        uint256 _borrowSlipAmount
+    ) external view returns (uint256, uint256) {
+        uint256 loanAmount = _borrowSlipAmount;
+
+        uint256 riskSlipAmount = (loanAmount *
+            _stagingBox.priceGranularity() *
+            _stagingBox.riskRatio() *
+            _stagingBox.trancheDecimals()) /
+            _stagingBox.initialPrice() /
+            _stagingBox.safeRatio() /
+            _stagingBox.stableDecimals();
+
+        return (riskSlipAmount, loanAmount);
+    }
+
+    /**
+     * @inheritdoc IStagingBoxLens
+     */
+
+    function viewRedeemLendSlipForSafeSlip(
+        IStagingBox _stagingBox,
+        uint256 _lendSlipAmount
+    ) external view returns (uint256) {
+        uint256 safeSlipAmount = (_lendSlipAmount *
+            _stagingBox.priceGranularity() *
+            _stagingBox.trancheDecimals()) /
+            _stagingBox.initialPrice() /
+            _stagingBox.stableDecimals();
+
+        return (safeSlipAmount);
+    }
+
+    /**
+     * @inheritdoc IStagingBoxLens
+     */
     function viewRedeemLendSlipsForStables(
         IStagingBox _stagingBox,
         uint256 _lendSlipAmount
