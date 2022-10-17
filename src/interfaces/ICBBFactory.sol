@@ -8,7 +8,6 @@ import "./ISlipFactory.sol";
  * @notice Interface for Convertible Bond Box factory contracts
  */
 interface ICBBFactory {
-
     /// @notice Thrown if bond's tranche count invalid.
     error InvalidTrancheCount();
 
@@ -17,11 +16,9 @@ interface ICBBFactory {
     error TrancheIndexOutOfBounds(uint256 given, uint256 maxIndex);
 
     event ConvertibleBondBoxCreated(
-        address stableToken,
-        uint256 trancheIndex,
-        uint256 penalty,
         address creator,
-        address newBondBoxAdress
+        address newBondBoxAdress,
+        address slipFactory
     );
 
     /// @notice Some parameters are invalid

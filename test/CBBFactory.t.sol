@@ -40,11 +40,9 @@ contract CBBFactoryTest is Test {
     address s_owner;
 
     event ConvertibleBondBoxCreated(
-        address s_stableToken,
-        uint256 trancheIndex,
-        uint256 penalty,
         address creator,
-        address newCBBAddress
+        address newCBBAddress,
+        address slipFactory
     );
 
     function setUp() public {
@@ -128,11 +126,9 @@ contract CBBFactoryTest is Test {
         // The event we expect
 
         emit ConvertibleBondBoxCreated(
-            address(s_stableToken),
-            s_trancheIndex,
-            s_penalty,
             s_owner,
-            address(0)
+            address(0),
+            address(s_slipFactory)
         );
         // The event we get
         vm.startPrank(s_owner);

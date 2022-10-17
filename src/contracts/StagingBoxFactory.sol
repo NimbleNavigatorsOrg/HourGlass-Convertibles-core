@@ -130,20 +130,17 @@ contract StagingBoxFactory is IStagingBoxFactory, Context {
 
         if (oldStagingBox == address(0)) {
             emit StagingBoxCreated(
-                convertibleBondBox,
-                initialPrice,
-                owner,
                 _msgSender(),
-                address(clone)
+                address(clone),
+                address(slipFactory)
             );
         } else {
             emit StagingBoxReplaced(
                 convertibleBondBox,
-                initialPrice,
-                owner,
                 _msgSender(),
                 oldStagingBox,
-                address(clone)
+                address(clone),
+                address(slipFactory)
             );
         }
 
