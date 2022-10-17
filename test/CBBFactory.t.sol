@@ -7,7 +7,7 @@ import "../src/contracts/CBBFactory.sol";
 import "./external/tranche/BondController.sol";
 import "./external/tranche/Tranche.sol";
 import "./external/tranche/TrancheFactory.sol";
-import "@buttonwood-protocol/tranche/contracts/external/ERC20.sol";
+import "../src/contracts/external/ERC20.sol";
 import "../src/contracts/Slip.sol";
 import "../src/contracts/SlipFactory.sol";
 
@@ -30,7 +30,7 @@ contract CBBFactoryTest is Test {
     uint256 constant s_price = 5e8;
     uint256 constant s_startDate = 1654100749;
     uint256 constant s_trancheIndex = 0;
-    uint256 constant s_maturityDate = 1664512517;
+    uint256 constant s_maturityDate = 1864512517;
     uint256 constant s_depositLimit = 1000e9;
     uint256 constant s_trancheGranularity = 1000;
     uint256 constant s_penaltyGranularity = 1000;

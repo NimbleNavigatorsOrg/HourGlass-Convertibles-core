@@ -4,6 +4,7 @@ pragma solidity 0.8.13;
 import "../interfaces/IStagingLoanRouter.sol";
 import "../interfaces/IConvertibleBondBox.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/utils/Context.sol";
 import "@uniswap/lib/contracts/libraries/TransferHelper.sol";
 import "@buttonwood-protocol/tranche/contracts/interfaces/IBondController.sol";
 import "@buttonwood-protocol/tranche/contracts/interfaces/ITranche.sol";
@@ -13,11 +14,10 @@ import "@openzeppelin/contracts/utils/math/Math.sol";
 
 import "forge-std/console2.sol";
 
-contract StagingLoanRouter is IStagingLoanRouter {
+contract StagingLoanRouter is IStagingLoanRouter, Context {
     /**
      * @inheritdoc IStagingLoanRouter
      */
-
     function simpleWrapTrancheBorrow(
         IStagingBox _stagingBox,
         uint256 _amountRaw,
@@ -32,7 +32,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
 
         TransferHelper.safeTransferFrom(
             address(underlying),
-            msg.sender,
+            _msgSender(),
             address(this),
             _amountRaw
         );
@@ -102,7 +102,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
             _stagingBox.priceGranularity() /
             _stagingBox.trancheDecimals();
 
-        _stagingBox.depositBorrow(msg.sender, borrowAmount);
+        _stagingBox.depositBorrow(_msgSender(), borrowAmount);
 
         if (borrowAmount < _minBorrowSlips)
             revert SlippageExceeded({
@@ -114,7 +114,6 @@ contract StagingLoanRouter is IStagingLoanRouter {
     /**
      * @inheritdoc IStagingLoanRouter
      */
-
     function multiWrapTrancheBorrow(
         IStagingBox _stagingBox,
         uint256 _amountRaw,
@@ -129,13 +128,16 @@ contract StagingLoanRouter is IStagingLoanRouter {
 
         ) = fetchElasticStack(_stagingBox);
 
-        //send back unused tranches to msg.sender
+        //send back unused tranches to _msgSender()
         uint256 trancheCount = bond.trancheCount();
         uint256 trancheIndex = convertibleBondBox.trancheIndex();
         for (uint256 i = 0; i < trancheCount; ) {
             if (i != trancheIndex && i != trancheCount - 1) {
                 (ITranche tranche, ) = bond.tranches(i);
-                tranche.transfer(msg.sender, tranche.balanceOf(address(this)));
+                tranche.transfer(
+                    _msgSender(),
+                    tranche.balanceOf(address(this))
+                );
             }
             unchecked {
                 ++i;
@@ -146,14 +148,13 @@ contract StagingLoanRouter is IStagingLoanRouter {
     /**
      * @inheritdoc IStagingLoanRouter
      */
-
     function simpleWithdrawBorrowUnwrap(
         IStagingBox _stagingBox,
         uint256 _borrowSlipAmount
     ) external {
         //transfer borrowSlips
         _stagingBox.borrowSlip().transferFrom(
-            msg.sender,
+            _msgSender(),
             address(this),
             _borrowSlipAmount
         );
@@ -226,7 +227,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
         );
 
         _stagingBox.lendSlip().transferFrom(
-            msg.sender,
+            _msgSender(),
             address(this),
             _lendSlipAmount
         );
@@ -247,7 +248,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
 
         TransferHelper.safeTransfer(
             address(convertibleBondBox.stableToken()),
-            msg.sender,
+            _msgSender(),
             stableBalance
         );
     }
@@ -255,14 +256,13 @@ contract StagingLoanRouter is IStagingLoanRouter {
     /**
      * @inheritdoc IStagingLoanRouter
      */
-
     function redeemLendSlipsForTranchesAndUnwrap(
         IStagingBox _stagingBox,
         uint256 _lendSlipAmount
     ) external {
         //Transfer lendslips to router
         _stagingBox.lendSlip().transferFrom(
-            msg.sender,
+            _msgSender(),
             address(this),
             _lendSlipAmount
         );
@@ -280,7 +280,6 @@ contract StagingLoanRouter is IStagingLoanRouter {
     /**
      * @inheritdoc IStagingLoanRouter
      */
-
     function redeemSafeSlipsForTranchesAndUnwrap(
         IStagingBox _stagingBox,
         uint256 _safeSlipAmount
@@ -290,7 +289,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
         );
         //Transfer safeslips to router
         convertibleBondBox.safeSlip().transferFrom(
-            msg.sender,
+            _msgSender(),
             address(this),
             _safeSlipAmount
         );
@@ -331,14 +330,13 @@ contract StagingLoanRouter is IStagingLoanRouter {
             );
         }
 
-        //unwrap to msg.sender
-        wrapper.withdrawAllTo(msg.sender);
+        //unwrap to _msgSender()
+        wrapper.withdrawAllTo(_msgSender());
     }
 
     /**
      * @inheritdoc IStagingLoanRouter
      */
-
     function redeemRiskSlipsForTranchesAndUnwrap(
         IStagingBox _stagingBox,
         uint256 _riskSlipAmount
@@ -352,7 +350,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
 
         //Transfer riskSlips to router
         convertibleBondBox.riskSlip().transferFrom(
-            msg.sender,
+            _msgSender(),
             address(this),
             _riskSlipAmount
         );
@@ -369,14 +367,13 @@ contract StagingLoanRouter is IStagingLoanRouter {
             riskTrancheAmount
         );
 
-        //unwrap to msg.sender
-        wrapper.withdrawAllTo(msg.sender);
+        //unwrap to _msgSender()
+        wrapper.withdrawAllTo(_msgSender());
     }
 
     /**
      * @inheritdoc IStagingLoanRouter
      */
-
     function repayAndUnwrapSimple(
         IStagingBox _stagingBox,
         uint256 _stableAmount,
@@ -390,14 +387,14 @@ contract StagingLoanRouter is IStagingLoanRouter {
         //Transfer Stables to Router
         TransferHelper.safeTransferFrom(
             address(convertibleBondBox.stableToken()),
-            msg.sender,
+            _msgSender(),
             address(this),
             _stableAmount + _stableFees
         );
 
         //Calculate RiskSlips (minus fees) and transfer to router
         convertibleBondBox.riskSlip().transferFrom(
-            msg.sender,
+            _msgSender(),
             address(this),
             _riskSlipAmount
         );
@@ -422,7 +419,7 @@ contract StagingLoanRouter is IStagingLoanRouter {
         //send unpaid riskSlip back
 
         convertibleBondBox.riskSlip().transfer(
-            msg.sender,
+            _msgSender(),
             IERC20(_stagingBox.riskSlipAddress()).balanceOf(address(this))
         );
     }
@@ -430,7 +427,6 @@ contract StagingLoanRouter is IStagingLoanRouter {
     /**
      * @inheritdoc IStagingLoanRouter
      */
-
     function repayMaxAndUnwrapSimple(
         IStagingBox _stagingBox,
         uint256 _stableAmount,
@@ -444,14 +440,14 @@ contract StagingLoanRouter is IStagingLoanRouter {
         //Transfer Stables + fees + slippage to Router
         TransferHelper.safeTransferFrom(
             address(convertibleBondBox.stableToken()),
-            msg.sender,
+            _msgSender(),
             address(this),
             _stableAmount + _stableFees
         );
 
         //Transfer risk slips to CBB
         convertibleBondBox.riskSlip().transferFrom(
-            msg.sender,
+            _msgSender(),
             address(this),
             _riskSlipAmount
         );
@@ -473,10 +469,10 @@ contract StagingLoanRouter is IStagingLoanRouter {
 
         _redeemTrancheImmatureUnwrap(_stagingBox);
 
-        //send unused stables back to msg.sender
+        //send unused stables back to _msgSender()
         TransferHelper.safeTransfer(
             address(convertibleBondBox.stableToken()),
-            msg.sender,
+            _msgSender(),
             convertibleBondBox.stableToken().balanceOf(address(this))
         );
     }
@@ -511,14 +507,13 @@ contract StagingLoanRouter is IStagingLoanRouter {
         redeemAmounts[1] -= redeemAmounts[1] % riskRatio;
 
         bond.redeem(redeemAmounts);
-        //unwrap rebasing collateral and send underlying to msg.sender
-        wrapper.withdrawAllTo(msg.sender);
+        //unwrap rebasing collateral and send underlying to _msgSender()
+        wrapper.withdrawAllTo(_msgSender());
     }
 
     /**
      * @inheritdoc IStagingLoanRouter
      */
-
     function repayAndUnwrapMature(
         IStagingBox _stagingBox,
         uint256 _stableAmount,
@@ -535,14 +530,14 @@ contract StagingLoanRouter is IStagingLoanRouter {
         //Transfer Stables to Router
         TransferHelper.safeTransferFrom(
             address(convertibleBondBox.stableToken()),
-            msg.sender,
+            _msgSender(),
             address(this),
             _stableAmount + _stableFees
         );
 
         //Transfer to router
         convertibleBondBox.riskSlip().transferFrom(
-            msg.sender,
+            _msgSender(),
             address(this),
             _riskSlipAmount
         );
@@ -573,8 +568,8 @@ contract StagingLoanRouter is IStagingLoanRouter {
             convertibleBondBox.riskTranche().balanceOf(address(this))
         );
 
-        //unwrap rebasing collateral to msg.sender
-        wrapper.withdrawAllTo(msg.sender);
+        //unwrap rebasing collateral to _msgSender()
+        wrapper.withdrawAllTo(_msgSender());
     }
 
     function fetchElasticStack(IStagingBox _stagingBox)

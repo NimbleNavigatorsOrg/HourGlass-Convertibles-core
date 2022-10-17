@@ -4,13 +4,13 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@uniswap/lib/contracts/libraries/TransferHelper.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "../contracts/external/ERC20.sol";
+
 import "../interfaces/ISlip.sol";
-import "@buttonwood-protocol/tranche/contracts/external/ERC20.sol";
 
 /**
  * @dev ERC20 token to represent a single slip for a bond box
  */
-
 contract Slip is ISlip, ERC20, Initializable {
     address public collateralToken;
     address public override boxOwner;
@@ -18,9 +18,8 @@ contract Slip is ISlip, ERC20, Initializable {
     /**
      * @dev Constructor for Tranche ERC20 token
      */
-
     constructor() ERC20("IMPLEMENTATION", "IMPL") {
-        collateralToken = address(0x0);
+        // NO-OP
     }
 
     /**
@@ -36,13 +35,10 @@ contract Slip is ISlip, ERC20, Initializable {
         address _boxOwner,
         address _collateralToken
     ) public initializer {
-        require(
-            _boxOwner != address(0),
-            "Tranche: invalid Convertible Bond Box address"
-        );
+        require(_boxOwner != address(0), "Slip: Invalid owner address");
         require(
             _collateralToken != address(0),
-            "Tranche: invalid collateralToken address"
+            "Slip: invalid collateralToken address"
         );
 
         boxOwner = _boxOwner;
@@ -79,9 +75,7 @@ contract Slip is ISlip, ERC20, Initializable {
      * be displayed to a user as `5,05` (`505 / 10 ** 2`).
      *
      * Uses the same number of decimals as the collateral token
-     *
      */
-
     function decimals() public view override returns (uint8) {
         return IERC20Metadata(collateralToken).decimals();
     }
@@ -90,6 +84,9 @@ contract Slip is ISlip, ERC20, Initializable {
      * @inheritdoc ISlip
      */
     function changeOwner(address newOwner) external override onlyBoxOwner {
-        boxOwner = newOwner;
+        if (newOwner != _msgSender()) {
+            emit OwnershipTransferred(_msgSender(), newOwner);
+            boxOwner = newOwner;
+        }
     }
 }

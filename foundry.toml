@@ -1,4 +1,4 @@
-[default]
+[profile.default]
 src = 'src'
 out = 'out'
 libs = ['lib']
@@ -6,5 +6,6 @@ fuzz_runs = 500
 eth_rpc_url = "https://goerli.infura.io/v3/6b24bef7e22b42a18f7a9c46fab104b3"
 etherscan_api_key = "5K9RU7RWUXAS1C6MZ6Z173I6REY9I6RTEU"
 
-
-# See more config options https://github.com/foundry-rs/foundry/tree/master/config
+[profile.ci]
+fuzz_runs = 1_000
+verbosity = 4

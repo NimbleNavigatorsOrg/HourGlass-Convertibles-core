@@ -41,7 +41,7 @@ abstract contract CBBSetup is Test {
     uint256 constant s_penalty = 500;
     uint256 constant s_initialPrice = 5e7;
     uint256 s_trancheIndex = 1;
-    uint256 constant s_maturityDate = 1664512517;
+    uint256 constant s_maturityDate = 1864512517;
     uint256 constant s_endOfUnixTime = 2147483647;
     uint256 constant s_trancheGranularity = 1000;
     uint256 constant s_penaltyGranularity = 1000;
