@@ -57,9 +57,16 @@ contract StagingBoxLens is IStagingBoxLens {
         //calculate safeTranche (borrowSlip amount) amount with tranche ratio & CDR
         uint256 bondCollateralBalance = wrapper.balanceOf(address(bond));
 
+        uint256 bondDebt = bond.totalDebt();
+
+        if (bondDebt == 0) {
+            bondDebt = buttonAmount;
+            bondCollateralBalance = buttonAmount;
+        }
+
         uint256 safeTrancheAmount = (buttonAmount *
             convertibleBondBox.safeRatio() *
-            bond.totalDebt()) /
+            bondDebt) /
             bondCollateralBalance /
             convertibleBondBox.s_trancheGranularity();
 
@@ -93,15 +100,37 @@ contract StagingBoxLens is IStagingBoxLens {
             _stagingBox.initialPrice() /
             _stagingBox.stableDecimals();
 
-        //calculate total amount of tranche tokens by dividing by safeRatio
-        uint256 trancheTotal = (safeTrancheAmount *
-            convertibleBondBox.s_trancheGranularity()) /
-            convertibleBondBox.safeRatio();
+        uint256 riskTrancheAmount = (safeTrancheAmount *
+            convertibleBondBox.riskRatio()) / convertibleBondBox.safeRatio();
 
-        ////multiply with CDR to get btn token amount
-        uint256 buttonAmount = (trancheTotal *
-            convertibleBondBox.collateralToken().balanceOf(address(bond))) /
-            bond.totalDebt();
+        //calculate total amount of tranche tokens by dividing by safeRatio
+        uint256 trancheTotal = safeTrancheAmount + riskTrancheAmount;
+
+        //multiply with CDR to get btn token amount
+        uint256 buttonAmount = 0;
+        if (bond.totalDebt() > 0) {
+            if (!bond.isMature()) {
+                buttonAmount =
+                    (trancheTotal *
+                        convertibleBondBox.collateralToken().balanceOf(
+                            address(bond)
+                        )) /
+                    bond.totalDebt();
+            } else {
+                buttonAmount =
+                    (safeTrancheAmount *
+                        convertibleBondBox.collateralToken().balanceOf(
+                            address(convertibleBondBox.safeTranche())
+                        )) /
+                    convertibleBondBox.safeTranche().totalSupply();
+                buttonAmount +=
+                    (riskTrancheAmount *
+                        convertibleBondBox.collateralToken().balanceOf(
+                            address(convertibleBondBox.riskTranche())
+                        )) /
+                    convertibleBondBox.riskTranche().totalSupply();
+            }
+        }
 
         //calculate underlying with ButtonTokenWrapper
         uint256 underlyingAmount = wrapper.wrapperToUnderlying(buttonAmount);
