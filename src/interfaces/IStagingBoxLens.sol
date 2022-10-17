@@ -216,8 +216,85 @@ interface IStagingBoxLens {
      * Requirements:
      */
 
-    function viewMaxRedeemBorrowSlip(IStagingBox _stagingBox)
+    function viewMaxRedeemBorrowSlip(IStagingBox _stagingBox, address _account)
         external
         view
         returns (uint256);
+
+    /**
+     * @dev provides maximum input param when redeeming lend slips for safe slips
+     * @param _stagingBox The staging box tied to the Convertible Bond
+     * Requirements:
+     */
+
+    function viewMaxRedeemLendSlipForSafeSlip(
+        IStagingBox _stagingBox,
+        address _account
+    ) external view returns (uint256);
+
+    /**
+     * @dev provides maximum input param when redeeming lend slips for stables
+     * @param _stagingBox The staging box tied to the Convertible Bond
+     * Requirements:
+     */
+
+    function viewMaxRedeemLendSlipForStables(
+        IStagingBox _stagingBox,
+        address _account
+    ) external view returns (uint256);
+
+    /**
+     * @dev provides maximum input param when redeeming safe slips for stables
+     * @param _stagingBox The staging box tied to the Convertible Bond
+     * Requirements:
+     */
+
+    function viewMaxRedeemSafeSlipForStables(
+        IStagingBox _stagingBox,
+        address _account
+    ) external view returns (uint256);
+
+    /**
+     * @dev provides maximum input param when withdrawing lend slips
+     * @param _stagingBox The staging box tied to the Convertible Bond
+     * Requirements:
+     */
+
+    function viewMaxWithdrawLendSlips(IStagingBox _stagingBox, address _account)
+        external
+        view
+        returns (uint256);
+
+    /**
+     * @dev provides maximum input param when withdrawing borrow slips
+     * @param _stagingBox The staging box tied to the Convertible Bond
+     * Requirements:
+     */
+
+    function viewMaxWithdrawBorrowSlips(
+        IStagingBox _stagingBox,
+        address _account
+    ) external view returns (uint256);
+
+    /**
+     * @dev provides maximum input param when redeeming safe slips for tranches
+     * @param _stagingBox The staging box tied to the Convertible Bond
+     * Requirements:
+     */
+
+    function viewMaxRedeemSafeSlipForTranches(
+        IStagingBox _stagingBox,
+        address _account
+    ) external view returns (uint256);
+
+    /**
+     * @dev provides maximum input param when redeeming lend slips for tranches
+     * @param _stagingBox The staging box tied to the Convertible Bond
+     * Requirements:
+     */
+
+    function viewMaxRedeemLendSlipForTranches(
+        IStagingBox _stagingBox,
+        address _account
+    ) external view returns (uint256);
 }

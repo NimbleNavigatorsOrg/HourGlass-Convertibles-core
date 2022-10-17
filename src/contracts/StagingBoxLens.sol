@@ -582,7 +582,92 @@ contract StagingBoxLens is IStagingBoxLens {
     /**
      * @inheritdoc IStagingBoxLens
      */
-    function viewMaxRedeemBorrowSlip(IStagingBox _stagingBox)
+    function viewMaxRedeemBorrowSlip(IStagingBox _stagingBox, address _account)
+        public
+        view
+        returns (uint256)
+    {
+        uint256 userBorrowSlip = _stagingBox.borrowSlip().balanceOf(_account);
+        return Math.min(userBorrowSlip, _stagingBox.s_reinitLendAmount());
+    }
+
+    /**
+     * @inheritdoc IStagingBoxLens
+     */
+
+    function viewMaxRedeemLendSlipForSafeSlip(
+        IStagingBox _stagingBox,
+        address _account
+    ) public view returns (uint256) {
+        (IConvertibleBondBox convertibleBondBox, , , ) = fetchElasticStack(
+            _stagingBox
+        );
+        uint256 userLendSlip = _stagingBox.lendSlip().balanceOf(_account);
+        uint256 sb_safeSlips = convertibleBondBox.safeSlip().balanceOf(
+            address(_stagingBox)
+        );
+
+        uint256 maxRedeemableLendSlips = (sb_safeSlips *
+            _stagingBox.initialPrice() *
+            _stagingBox.stableDecimals()) /
+            _stagingBox.priceGranularity() /
+            _stagingBox.trancheDecimals();
+
+        return Math.min(userLendSlip, maxRedeemableLendSlips);
+    }
+
+    /**
+     * @inheritdoc IStagingBoxLens
+     */
+
+    function viewMaxRedeemLendSlipForStables(
+        IStagingBox _stagingBox,
+        address _account
+    ) public view returns (uint256) {
+        (IConvertibleBondBox convertibleBondBox, , , ) = fetchElasticStack(
+            _stagingBox
+        );
+        uint256 userLendSlip = _stagingBox.lendSlip().balanceOf(_account);
+
+        uint256 sb_safeSlips = convertibleBondBox.safeSlip().balanceOf(
+            address(_stagingBox)
+        );
+
+        uint256 maxRedeemableLendSlips = (Math.min(
+            sb_safeSlips,
+            convertibleBondBox.s_repaidSafeSlips()
+        ) *
+            _stagingBox.initialPrice() *
+            _stagingBox.stableDecimals()) /
+            _stagingBox.priceGranularity() /
+            _stagingBox.trancheDecimals();
+
+        return Math.min(userLendSlip, maxRedeemableLendSlips);
+    }
+
+    /**
+     * @inheritdoc IStagingBoxLens
+     */
+
+    function viewMaxRedeemSafeSlipForStables(
+        IStagingBox _stagingBox,
+        address _account
+    ) public view returns (uint256) {
+        (IConvertibleBondBox convertibleBondBox, , , ) = fetchElasticStack(
+            _stagingBox
+        );
+        uint256 userSafeSlip = convertibleBondBox.safeSlip().balanceOf(
+            _account
+        );
+
+        return Math.min(userSafeSlip, convertibleBondBox.s_repaidSafeSlips());
+    }
+
+    /**
+     * @inheritdoc IStagingBoxLens
+     */
+
+    function viewMaxWithdrawLendSlips(IStagingBox _stagingBox, address _account)
         public
         view
         returns (uint256)
@@ -591,20 +676,106 @@ contract StagingBoxLens is IStagingBoxLens {
             _stagingBox
         );
 
-        uint256 riskSlipBalance = convertibleBondBox.riskSlip().balanceOf(
-            address(_stagingBox)
-        );
-        uint256 stableBalance = convertibleBondBox.stableToken().balanceOf(
-            address(_stagingBox)
+        uint256 userLendSlip = _stagingBox.lendSlip().balanceOf(_account);
+
+        uint256 maxWithdrawableLendSlips = userLendSlip;
+
+        if (convertibleBondBox.s_startDate() > 0) {
+            uint256 withdrawableStables = _stagingBox.stableToken().balanceOf(
+                address(_stagingBox)
+            ) - _stagingBox.s_reinitLendAmount();
+
+            maxWithdrawableLendSlips = Math.min(
+                userLendSlip,
+                withdrawableStables
+            );
+        }
+
+        return maxWithdrawableLendSlips;
+    }
+
+    /**
+     * @inheritdoc IStagingBoxLens
+     */
+
+    function viewMaxWithdrawBorrowSlips(
+        IStagingBox _stagingBox,
+        address _account
+    ) public view returns (uint256) {
+        (IConvertibleBondBox convertibleBondBox, , , ) = fetchElasticStack(
+            _stagingBox
         );
 
-        uint256 maxBorrowSlipAmountFromSlips = (riskSlipBalance *
-            _stagingBox.safeRatio()) / _stagingBox.riskRatio();
-        uint256 maxBorrowSlipAmountFromStables = (stableBalance *
-            _stagingBox.priceGranularity()) / _stagingBox.initialPrice();
+        uint256 userBorrowSlip = _stagingBox.borrowSlip().balanceOf(_account);
 
-        return
-            min(maxBorrowSlipAmountFromSlips, maxBorrowSlipAmountFromStables);
+        uint256 maxWithdrawableBorrowSlip = userBorrowSlip;
+
+        if (convertibleBondBox.s_startDate() > 0) {
+            uint256 withdrawableSafeTranche = _stagingBox
+                .safeTranche()
+                .balanceOf(address(_stagingBox));
+
+            uint256 withdrawableSafeTrancheToBorrowSlip = (withdrawableSafeTranche *
+                    _stagingBox.initialPrice() *
+                    _stagingBox.stableDecimals()) /
+                    _stagingBox.priceGranularity() /
+                    _stagingBox.trancheDecimals();
+
+            maxWithdrawableBorrowSlip = Math.min(
+                userBorrowSlip,
+                withdrawableSafeTrancheToBorrowSlip
+            );
+        }
+
+        return maxWithdrawableBorrowSlip;
+    }
+
+    /**
+     * @inheritdoc IStagingBoxLens
+     */
+
+    function viewMaxRedeemSafeSlipForTranches(
+        IStagingBox _stagingBox,
+        address _account
+    ) public view returns (uint256) {
+        (IConvertibleBondBox convertibleBondBox, , , ) = fetchElasticStack(
+            _stagingBox
+        );
+        uint256 userSafeSlip = convertibleBondBox.safeSlip().balanceOf(
+            _account
+        );
+
+        uint256 cbbSafeTrancheBalance = convertibleBondBox
+            .safeTranche()
+            .balanceOf(address(convertibleBondBox));
+
+        return Math.min(userSafeSlip, cbbSafeTrancheBalance);
+    }
+
+    /**
+     * @inheritdoc IStagingBoxLens
+     */
+
+    function viewMaxRedeemLendSlipForTranches(
+        IStagingBox _stagingBox,
+        address _account
+    ) public view returns (uint256) {
+        (IConvertibleBondBox convertibleBondBox, , , ) = fetchElasticStack(
+            _stagingBox
+        );
+        uint256 userLendSlip = _stagingBox.lendSlip().balanceOf(_account);
+
+        uint256 cbbSafeTrancheBalance = convertibleBondBox
+            .safeTranche()
+            .balanceOf(address(convertibleBondBox));
+
+        uint256 cbbSafeTrancheToLendSlip = (cbbSafeTrancheBalance *
+            _stagingBox.initialPrice() *
+            _stagingBox.stableDecimals()) /
+            _stagingBox.priceGranularity() /
+            _stagingBox.trancheDecimals();
+
+        return Math.min(userLendSlip, cbbSafeTrancheToLendSlip);
     }
 
     function fetchElasticStack(IStagingBox _stagingBox)
@@ -624,9 +795,5 @@ contract StagingBoxLens is IStagingBoxLens {
         IERC20 underlying = IERC20(wrapper.underlying());
 
         return (convertibleBondBox, bond, wrapper, underlying);
-    }
-
-    function min(uint256 a, uint256 b) private pure returns (uint256) {
-        return a <= b ? a : b;
     }
 }
