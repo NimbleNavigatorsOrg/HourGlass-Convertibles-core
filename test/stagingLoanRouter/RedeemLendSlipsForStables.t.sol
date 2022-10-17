@@ -102,7 +102,7 @@ contract RedeemLendSlipsForStables is StagingLoanRouterSetup {
             Math.min(maxRedeemableLendSlips, s_lendSlip.balanceOf(s_lender))
         );
 
-        uint256 stableAmount = s_SBLens.viewRedeemLendSlipsForStables(
+        (uint256 stableAmount, ) = s_SBLens.viewRedeemLendSlipsForStables(
             s_deployedSB,
             lendSlipAmount
         );

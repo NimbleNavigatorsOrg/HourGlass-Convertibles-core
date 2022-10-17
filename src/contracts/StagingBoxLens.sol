@@ -4,6 +4,7 @@ pragma solidity 0.8.13;
 import "../interfaces/IStagingBoxLens.sol";
 import "../interfaces/IConvertibleBondBox.sol";
 import "@buttonwood-protocol/button-wrappers/contracts/interfaces/IButtonToken.sol";
+import "@openzeppelin/contracts/utils/math/Math.sol";
 
 contract StagingBoxLens is IStagingBoxLens {
     /**
@@ -114,7 +115,7 @@ contract StagingBoxLens is IStagingBoxLens {
     function viewRedeemLendSlipsForStables(
         IStagingBox _stagingBox,
         uint256 _lendSlipAmount
-    ) public view returns (uint256) {
+    ) public view returns (uint256, uint256) {
         //calculate lendSlips to safeSlips w/ initialPrice
         uint256 safeSlipsAmount = (_lendSlipAmount *
             _stagingBox.priceGranularity() *
@@ -122,7 +123,7 @@ contract StagingBoxLens is IStagingBoxLens {
             _stagingBox.initialPrice() /
             _stagingBox.stableDecimals();
 
-        return _safeSlipsForStables(_stagingBox, safeSlipsAmount);
+        return _safeSlipsForStablesWithFees(_stagingBox, safeSlipsAmount);
     }
 
     /**
@@ -131,8 +132,28 @@ contract StagingBoxLens is IStagingBoxLens {
     function viewRedeemSafeSlipsForStables(
         IStagingBox _stagingBox,
         uint256 _safeSlipAmount
-    ) public view returns (uint256) {
-        return _safeSlipsForStables(_stagingBox, _safeSlipAmount);
+    ) public view returns (uint256, uint256) {
+        return _safeSlipsForStablesWithFees(_stagingBox, _safeSlipAmount);
+    }
+
+    function _safeSlipsForStablesWithFees(
+        IStagingBox _stagingBox,
+        uint256 _safeSlipAmount
+    ) internal view returns (uint256, uint256) {
+        (IConvertibleBondBox convertibleBondBox, , , ) = fetchElasticStack(
+            _stagingBox
+        );
+
+        uint256 feeSlip = (_safeSlipAmount * convertibleBondBox.feeBps()) /
+            convertibleBondBox.BPS();
+
+        uint256 stableAmount = _safeSlipsForStables(
+            _stagingBox,
+            _safeSlipAmount - feeSlip
+        );
+        uint256 feeAmount = _safeSlipsForStables(_stagingBox, feeSlip);
+
+        return (stableAmount, feeAmount);
     }
 
     function _safeSlipsForStables(
@@ -143,18 +164,18 @@ contract StagingBoxLens is IStagingBoxLens {
             _stagingBox
         );
 
-        //subtract fees
-        _safeSlipAmount -=
-            (_safeSlipAmount * convertibleBondBox.feeBps()) /
-            convertibleBondBox.BPS();
-
         //calculate safeSlips to stables via math for CBB redeemStable
         uint256 cbbStableBalance = _stagingBox.stableToken().balanceOf(
             address(convertibleBondBox)
         );
 
-        uint256 stableAmount = (_safeSlipAmount * cbbStableBalance) /
-            convertibleBondBox.s_repaidSafeSlips();
+        uint256 stableAmount = 0;
+
+        if (convertibleBondBox.s_repaidSafeSlips() > 0) {
+            stableAmount =
+                (_safeSlipAmount * cbbStableBalance) /
+                convertibleBondBox.s_repaidSafeSlips();
+        }
 
         return stableAmount;
     }
@@ -165,7 +186,16 @@ contract StagingBoxLens is IStagingBoxLens {
     function viewRedeemLendSlipsForTranches(
         IStagingBox _stagingBox,
         uint256 _lendSlipAmount
-    ) public view returns (uint256, uint256) {
+    )
+        public
+        view
+        returns (
+            uint256,
+            uint256,
+            uint256,
+            uint256
+        )
+    {
         //calculate lendSlips to safeSlips w/ initialPrice
         uint256 safeSlipsAmount = (_lendSlipAmount *
             _stagingBox.priceGranularity() *
@@ -173,7 +203,7 @@ contract StagingBoxLens is IStagingBoxLens {
             _stagingBox.initialPrice() /
             _stagingBox.stableDecimals();
 
-        return _safeSlipRedeemUnwrap(_stagingBox, safeSlipsAmount);
+        return _safeSlipRedeemUnwrapWithFees(_stagingBox, safeSlipsAmount);
     }
 
     /**
@@ -182,8 +212,50 @@ contract StagingBoxLens is IStagingBoxLens {
     function viewRedeemSafeSlipsForTranches(
         IStagingBox _stagingBox,
         uint256 _safeSlipAmount
-    ) public view returns (uint256, uint256) {
-        return _safeSlipRedeemUnwrap(_stagingBox, _safeSlipAmount);
+    )
+        public
+        view
+        returns (
+            uint256,
+            uint256,
+            uint256,
+            uint256
+        )
+    {
+        return _safeSlipRedeemUnwrapWithFees(_stagingBox, _safeSlipAmount);
+    }
+
+    function _safeSlipRedeemUnwrapWithFees(
+        IStagingBox _stagingBox,
+        uint256 _safeSlipAmount
+    )
+        internal
+        view
+        returns (
+            uint256,
+            uint256,
+            uint256,
+            uint256
+        )
+    {
+        (IConvertibleBondBox convertibleBondBox, , , ) = fetchElasticStack(
+            _stagingBox
+        );
+
+        uint256 feeSlip = (_safeSlipAmount * convertibleBondBox.feeBps()) /
+            convertibleBondBox.BPS();
+
+        (
+            uint256 underlyingAmount,
+            uint256 buttonAmount
+        ) = _safeSlipRedeemUnwrap(_stagingBox, _safeSlipAmount - feeSlip);
+
+        (uint256 underlyingFee, uint256 buttonFee) = _safeSlipRedeemUnwrap(
+            _stagingBox,
+            feeSlip
+        );
+
+        return (underlyingAmount, buttonAmount, underlyingFee, buttonFee);
     }
 
     function _safeSlipRedeemUnwrap(
@@ -196,11 +268,6 @@ contract StagingBoxLens is IStagingBoxLens {
             IButtonToken wrapper,
 
         ) = fetchElasticStack(_stagingBox);
-
-        //subtract fees
-        _safeSlipAmount -=
-            (_safeSlipAmount * convertibleBondBox.feeBps()) /
-            convertibleBondBox.BPS();
 
         //safeSlips = safeTranches
         //calculate safe tranches to rebasing collateral via balance of safeTranche address
@@ -238,7 +305,40 @@ contract StagingBoxLens is IStagingBoxLens {
     function viewRedeemRiskSlipsForTranches(
         IStagingBox _stagingBox,
         uint256 _riskSlipAmount
-    ) public view returns (uint256, uint256) {
+    )
+        public
+        view
+        returns (
+            uint256,
+            uint256,
+            uint256,
+            uint256
+        )
+    {
+        (IConvertibleBondBox convertibleBondBox, , , ) = fetchElasticStack(
+            _stagingBox
+        );
+
+        //subtract fees
+        uint256 feeSlip = (_riskSlipAmount * convertibleBondBox.feeBps()) /
+            convertibleBondBox.BPS();
+
+        (
+            uint256 underlyingAmount,
+            uint256 buttonAmount
+        ) = _redeemRiskSlipForTranches(_stagingBox, _riskSlipAmount - feeSlip);
+        (uint256 underlyingFee, uint256 buttonFee) = _redeemRiskSlipForTranches(
+            _stagingBox,
+            feeSlip
+        );
+
+        return (underlyingAmount, buttonAmount, underlyingFee, buttonFee);
+    }
+
+    function _redeemRiskSlipForTranches(
+        IStagingBox _stagingBox,
+        uint256 _riskSlipAmount
+    ) internal view returns (uint256, uint256) {
         (
             IConvertibleBondBox convertibleBondBox,
             ,
@@ -246,24 +346,16 @@ contract StagingBoxLens is IStagingBoxLens {
 
         ) = fetchElasticStack(_stagingBox);
 
-        //subtract fees
-        _riskSlipAmount -=
-            (_riskSlipAmount * convertibleBondBox.feeBps()) /
-            convertibleBondBox.BPS();
-
         //calculate riskSlip to riskTranche - penalty
         uint256 riskTrancheAmount = _riskSlipAmount -
             (_riskSlipAmount * convertibleBondBox.penalty()) /
             convertibleBondBox.s_penaltyGranularity();
-
         //calculate rebasing collateral redeemable for riskTranche - penalty via tranche balance
         uint256 buttonAmount = (wrapper.balanceOf(
             address(_stagingBox.riskTranche())
         ) * riskTrancheAmount) / _stagingBox.riskTranche().totalSupply();
-
         // convert rebasing collateral to collateralToken qty via wrapper
         uint256 underlyingAmount = wrapper.wrapperToUnderlying(buttonAmount);
-
         // return both
         return (underlyingAmount, buttonAmount);
     }

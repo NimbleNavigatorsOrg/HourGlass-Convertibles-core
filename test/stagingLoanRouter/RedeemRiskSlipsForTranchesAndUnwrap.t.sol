@@ -83,10 +83,8 @@ contract RedeemRiskSlipsForTranchesAndUnwrap is StagingLoanRouterSetup {
             s_riskSlip.balanceOf(s_borrower)
         );
 
-        (uint256 collateralAmount, ) = s_SBLens.viewRedeemRiskSlipsForTranches(
-            s_deployedSB,
-            riskSlipAmount
-        );
+        (uint256 collateralAmount, , , ) = s_SBLens
+            .viewRedeemRiskSlipsForTranches(s_deployedSB, riskSlipAmount);
 
         BeforeBalances memory before = BeforeBalances(
             s_riskSlip.balanceOf(s_borrower),

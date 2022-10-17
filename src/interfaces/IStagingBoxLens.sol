@@ -50,7 +50,7 @@ interface IStagingBoxLens {
     function viewRedeemLendSlipsForStables(
         IStagingBox _stagingBox,
         uint256 _lendSlipAmount
-    ) external view returns (uint256);
+    ) external view returns (uint256, uint256);
 
     /**
      * @dev provides amount of stableTokens expected in return for redeeming safeSlips
@@ -62,7 +62,7 @@ interface IStagingBoxLens {
     function viewRedeemSafeSlipsForStables(
         IStagingBox _stagingBox,
         uint256 _safeSlipAmount
-    ) external view returns (uint256);
+    ) external view returns (uint256, uint256);
 
     /**
      * @dev provides amount of unwrapped collateral tokens expected in return for redeeming lendSlips
@@ -74,7 +74,15 @@ interface IStagingBoxLens {
     function viewRedeemLendSlipsForTranches(
         IStagingBox _stagingBox,
         uint256 _lendSlipAmount
-    ) external view returns (uint256, uint256);
+    )
+        external
+        view
+        returns (
+            uint256,
+            uint256,
+            uint256,
+            uint256
+        );
 
     /**
      * @dev provides amount of unwrapped collateral tokens expected in return for redeeming safeSlips
@@ -86,7 +94,15 @@ interface IStagingBoxLens {
     function viewRedeemSafeSlipsForTranches(
         IStagingBox _stagingBox,
         uint256 _safeSlipAmount
-    ) external view returns (uint256, uint256);
+    )
+        external
+        view
+        returns (
+            uint256,
+            uint256,
+            uint256,
+            uint256
+        );
 
     /**
      * @dev provides amount of unwrapped collateral tokens expected in return for redeeming riskSlips
@@ -98,7 +114,15 @@ interface IStagingBoxLens {
     function viewRedeemRiskSlipsForTranches(
         IStagingBox _stagingBox,
         uint256 _riskSlipAmount
-    ) external view returns (uint256, uint256);
+    )
+        external
+        view
+        returns (
+            uint256,
+            uint256,
+            uint256,
+            uint256
+        );
 
     /**
      * @dev provides amount of unwrapped collateral tokens expected in return for repaying a specified amount of stables
