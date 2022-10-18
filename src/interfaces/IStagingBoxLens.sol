@@ -101,7 +101,7 @@ interface IStagingBoxLens {
     ) external view returns (uint256, uint256);
 
     /**
-     * @dev provides amount of unwrapped collateral tokens expected in return for redeeming lendSlips
+     * @dev provides amount of raw collateral tokens expected in return for redeeming lendSlips
      * @param _stagingBox The staging box tied to the Convertible Bond
      * @param _lendSlipAmount The amount of lendSlips to be redeemed
      * Requirements:
@@ -121,7 +121,7 @@ interface IStagingBoxLens {
         );
 
     /**
-     * @dev provides amount of unwrapped collateral tokens expected in return for redeeming safeSlips
+     * @dev provides amount of raw collateral tokens expected in return for redeeming safeSlips
      * @param _stagingBox The staging box tied to the Convertible Bond
      * @param _safeSlipAmount The amount of lendSlips to be redeemed
      * Requirements:
@@ -141,7 +141,7 @@ interface IStagingBoxLens {
         );
 
     /**
-     * @dev provides amount of unwrapped collateral tokens expected in return for redeeming riskSlips
+     * @dev provides amount of raw collateral tokens expected in return for redeeming riskSlips
      * @param _stagingBox The staging box tied to the Convertible Bond
      * @param _riskSlipAmount The amount of riskSlips to be redeemed
      * Requirements:
@@ -161,7 +161,7 @@ interface IStagingBoxLens {
         );
 
     /**
-     * @dev provides amount of unwrapped collateral tokens expected in return for repaying a specified amount of stables
+     * @dev provides amount of raw collateral tokens expected in return for repaying an exact amount of stables
      * @param _stagingBox The staging box tied to the Convertible Bond
      * @param _stableAmount The amount of stables being repaid
      * Requirements:
@@ -183,7 +183,7 @@ interface IStagingBoxLens {
         );
 
     /**
-     * @dev provides amount of unwrapped collateral tokens expected in return for repaying in full the RiskSlips
+     * @dev provides amount of raw collateral tokens expected in return for repaying an exact amount of RiskSlips
      * @param _stagingBox The staging box tied to the Convertible Bond
      * Requirements:
      *      - Only for prior to maturity
@@ -204,7 +204,7 @@ interface IStagingBoxLens {
         );
 
     /**
-     * @dev provides amount of unwrapped collateral tokens expected in return for repaying a specified amount of stables
+     * @dev provides amount of raw collateral tokens expected in return for repaying an exact amount of StableTokens (after maturity)
      * @param _stagingBox The staging box tied to the Convertible Bond
      * @param _stableAmount The amount of stables being repaid
      * Requirements:
@@ -226,16 +226,16 @@ interface IStagingBoxLens {
         );
 
     /**
-     * @dev provides amount of unwrapped collateral tokens expected in return for repaying a specified amount of stables
+     * @dev provides amount of raw collateral tokens expected in return for repaying an exact amount of RiskSlips (after maturity)
      * @param _stagingBox The staging box tied to the Convertible Bond
-     * @param _stableAmount The amount of stables being repaid
+     * @param _riskSlipAmount The amount of stables being repaid
      * Requirements:
      *      - Only for after maturity
      */
 
     function viewRepayMaxAndUnwrapMature(
         IStagingBox _stagingBox,
-        uint256 _stableAmount
+        uint256 _riskSlipAmount
     )
         external
         view
@@ -247,8 +247,9 @@ interface IStagingBoxLens {
         );
 
     /**
-     * @dev provides maximum input param for redeemBorrowSlip
+     * @dev provides maximum input param for a user redeeming BorrowSlips
      * @param _stagingBox The staging box tied to the Convertible Bond
+     * @param _account The address of the user
      * Requirements:
      */
 
@@ -258,8 +259,9 @@ interface IStagingBoxLens {
         returns (uint256);
 
     /**
-     * @dev provides maximum input param when redeeming lend slips for safe slips
+     * @dev provides maximum input param for a user redeeming LendSlips for SafeSlips
      * @param _stagingBox The staging box tied to the Convertible Bond
+     * @param _account The address of the user
      * Requirements:
      */
 
@@ -269,8 +271,9 @@ interface IStagingBoxLens {
     ) external view returns (uint256);
 
     /**
-     * @dev provides maximum input param when redeeming lend slips for stables
+     * @dev provides maximum input param for a user redeeming LendSlips for StableTokens
      * @param _stagingBox The staging box tied to the Convertible Bond
+     * @param _account The address of the user
      * Requirements:
      */
 
@@ -280,8 +283,9 @@ interface IStagingBoxLens {
     ) external view returns (uint256);
 
     /**
-     * @dev provides maximum input param when redeeming safe slips for stables
+     * @dev provides maximum input param for a user redeeming SafeSlips for StableTokens
      * @param _stagingBox The staging box tied to the Convertible Bond
+     * @param _account The address of the user
      * Requirements:
      */
 
@@ -291,8 +295,9 @@ interface IStagingBoxLens {
     ) external view returns (uint256);
 
     /**
-     * @dev provides maximum input param when withdrawing lend slips
+     * @dev provides maximum input param for a user withdrawing LendSlips
      * @param _stagingBox The staging box tied to the Convertible Bond
+     * @param _account The address of the user
      * Requirements:
      */
 
@@ -302,8 +307,9 @@ interface IStagingBoxLens {
         returns (uint256);
 
     /**
-     * @dev provides maximum input param when withdrawing borrow slips
+     * @dev provides maximum input param for a user withdrawing BorrowSlips
      * @param _stagingBox The staging box tied to the Convertible Bond
+     * @param _account The address of the user
      * Requirements:
      */
 
@@ -313,8 +319,9 @@ interface IStagingBoxLens {
     ) external view returns (uint256);
 
     /**
-     * @dev provides maximum input param when redeeming safe slips for tranches
+     * @dev provides maximum input param for a user redeeming SafeSlips for tranches
      * @param _stagingBox The staging box tied to the Convertible Bond
+     * @param _account The address of the user
      * Requirements:
      */
 
@@ -324,8 +331,9 @@ interface IStagingBoxLens {
     ) external view returns (uint256);
 
     /**
-     * @dev provides maximum input param when redeeming lend slips for tranches
+     * @dev provides maximum input param for a user redeeming lend slips for tranches
      * @param _stagingBox The staging box tied to the Convertible Bond
+     * @param _account The address of the user
      * Requirements:
      */
 

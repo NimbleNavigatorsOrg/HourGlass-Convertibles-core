@@ -56,12 +56,12 @@ interface IConvertibleBondBox is ICBBImmutableArgs {
     function reinitialize(uint256 _initialPrice) external;
 
     /**
-     * @dev Lends stableAmount of stable-tokens for safe-Tranche slips when provided with matching borrow collateral
-     * @param _borrower The address to send the Z* and stableTokens to 
-     * @param _lender The address to send the safeSlips to 
-     * @param _stableAmount The amount of stable tokens to lend
+     * @dev Lends StableTokens for SafeSlips when provided with matching borrow collateral
+     * @param _borrower The address to send the RiskSlip and StableTokens to 
+     * @param _lender The address to send the SafeSlips to 
+     * @param _stableAmount The amount of StableTokens to lend
      * Requirements:
-     *  - `msg.sender` must have `approved` `stableAmount` stable tokens to this contract
+     *  - `msg.sender` must have `approved` `_stableAmount` stable tokens to this contract
         - CBB must be reinitialized
      */
 
@@ -72,13 +72,13 @@ interface IConvertibleBondBox is ICBBImmutableArgs {
     ) external;
 
     /**
-     * @dev Borrows with collateralAmount of collateral-tokens when provided with a matching amount of stableTokens.
+     * @dev Borrows with tranches of CollateralTokens when provided with a matching amount of StableTokens
      * Collateral tokens get tranched and any non-convertible bond box tranches get sent back to borrower 
-     * @param _borrower The address to send the Z* and stableTokens to 
-     * @param _lender The address to send the safeSlips to 
-     * @param _collateralAmount The buttonTranche bond tied to this Convertible Bond Box
+     * @param _borrower The address to send the RiskSlip and StableTokens to 
+     * @param _lender The address to send the SafeSlips to 
+     * @param _safeTrancheAmount The amount of SafeTranche being borrowed against
      * Requirements:
-     *  - `msg.sender` must have `approved` `collateralAmount` collateral tokens to this contract
+     *  - `msg.sender` must have `approved` appropriate amount of tranches of tokens to this contract
         - CBB must be reinitialized
         - must be enough stable tokens inside convertible bond box to borrow 
      */
@@ -86,18 +86,17 @@ interface IConvertibleBondBox is ICBBImmutableArgs {
     function borrow(
         address _borrower,
         address _lender,
-        uint256 _collateralAmount
+        uint256 _safeTrancheAmount
     ) external;
 
     /**
-     * @dev returns time-weighted current price for Tranches, with final price as $1.00 at maturity
+     * @dev returns time-weighted current price for SafeSlip, with final price as $1.00 at maturity
      */
 
     function currentPrice() external view returns (uint256);
 
     /**
-     * @dev allows repayment of loan in exchange for proportional amount of safe-Tranche and Z-tranche
-     * - any unpaid amount of Z-slips after maturity will be penalized upon redeeming
+     * @dev allows repayment of loan in exchange for proportional amount of SafeTranche and Z-tranche
      * @param _stableAmount The amount of stable-Tokens to repay with
      * Requirements:
      *  - `msg.sender` must have `approved` `stableAmount` of stable tokens to this contract
@@ -106,44 +105,46 @@ interface IConvertibleBondBox is ICBBImmutableArgs {
     function repay(uint256 _stableAmount) external;
 
     /**
-     * @dev enables full repayment of riskSlips
-     * - any unpaid amount of Z-slips after maturity will be penalized upon redeeming
-     * @param _riskSlipAmount The amount of riskSlips to repaid
+     * @dev allows repayment of loan in exchange for proportional amount of SafeTranche and Z-tranche
+     * @param _riskSlipAmount The amount of riskSlips to be repaid
      * Requirements:
-     *  - `msg.sender` must have `approved` calculated amount of stable tokens to this contract
+     *  - `msg.sender` must have `approved` appropriate amount of stable tokens to this contract
      */
 
     function repayMax(uint256 _riskSlipAmount) external;
 
     /**
-     * @dev allows lender to redeem safe-slip for tranches
+     * @dev allows lender to redeem SafeSlips for SafeTranches
      * @param _safeSlipAmount The amount of safe-slips to redeem
      * Requirements:
-     *  - `msg.sender` must have `approved` `safeSlipAmount` of safe-Slip tokens to this contract
+     *  - can only be called after Bond is Mature
+     *  - `msg.sender` must have `approved` `safeSlipAmount` of SafeSlip tokens to this contract
      */
 
     function redeemSafeTranche(uint256 _safeSlipAmount) external;
 
     /**
-     * @dev allows borrower to redeem risk-slip for tranches without repaying
-     * @param _riskSlipAmount The amount of risk-slips to redeem
+     * @dev allows borrower to redeem RiskSlips for tranches (i.e. default)
+     * @param _riskSlipAmount The amount of RiskSlips to redeem
      * Requirements:
-     *  - `msg.sender` must have `approved` `riskSlipAmount` of safe-Slip tokens to this contract
+     *  - can only be called after Bond is Mature
+     *  - `msg.sender` must have `approved` `_riskSlipAmount` of RiskSlip tokens to this contract
      */
 
     function redeemRiskTranche(uint256 _riskSlipAmount) external;
 
     /**
-     * @dev allows lender to redeem safe-slip for stables
-     * @param _safeSlipAmount The amount of safe-slips to redeem
+     * @dev allows lender to redeem SafeSlips for StableTokens
+     * @param _safeSlipAmount The amount of SafeSlips to redeem
      * Requirements:
      *  - `msg.sender` must have `approved` `safeSlipAmount` of safe-Slip tokens to this contract
+     *  - can only be called when StableTokens are present inside CBB
      */
 
     function redeemStable(uint256 _safeSlipAmount) external;
 
     /**
-     * @dev Updates the fee taken on deposit to the given new fee
+     * @dev Updates the fee taken on redeem/repay to the given new fee
      *
      * Requirements
      * - `msg.sender` has admin role
@@ -199,7 +200,7 @@ interface IConvertibleBondBox is ICBBImmutableArgs {
     function transferOwnership(address newOwner) external;
 
     /**
-     * @dev Returns initialPrice of safeTranche.
+     * @dev Gets the initialPrice of SafeSlip.
      */
     function s_initialPrice() external view returns (uint256);
 }

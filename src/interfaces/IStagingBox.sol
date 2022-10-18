@@ -40,7 +40,7 @@ interface IStagingBox is ISBImmutableArgs {
     function depositLend(address _lender, uint256 _lendAmount) external;
 
     /**
-     * @dev Withdraws SafeTranche + RiskTranche for unfilled BorrowSlips
+     * @dev Burns BorrowSlips for Collateral
      * @param _borrowSlipAmount The amount of borrowSlips to withdraw
      * Requirements:
      */
@@ -48,15 +48,16 @@ interface IStagingBox is ISBImmutableArgs {
     function withdrawBorrow(uint256 _borrowSlipAmount) external;
 
     /**
-     * @dev Withdraws Lend Slips for unfilled BorrowSlips
+     * @dev burns LendSlips for Stables
      * @param _lendSlipAmount The amount of stable tokens to withdraw
      * Requirements:
+     * - Cannot withdraw more than s_reinitLendAmount after reinitialization
      */
 
     function withdrawLend(uint256 _lendSlipAmount) external;
 
     /**
-     * @dev Deposits _stableAmount of stable-tokens and then calls lend to CBB
+     * @dev Exchanges BorrowSlips for RiskSlips + Stablecoin loan
      * @param _borrowSlipAmount amount of BorrowSlips to redeem RiskSlips and USDT with
      * Requirements:
      */
@@ -64,7 +65,7 @@ interface IStagingBox is ISBImmutableArgs {
     function redeemBorrowSlip(uint256 _borrowSlipAmount) external;
 
     /**
-     * @dev Deposits _collateralAmount of collateral-tokens and then calls borrow to CBB
+     * @dev Exchanges lendSlips for safeSlips
      * @param _lendSlipAmount amount of LendSlips to redeem SafeSlips with
      * Requirements:
      */
@@ -72,8 +73,8 @@ interface IStagingBox is ISBImmutableArgs {
     function redeemLendSlip(uint256 _lendSlipAmount) external;
 
     /**
-     * @dev Deposits _collateralAmount of collateral-tokens and then calls borrow to CBB
-     * @param _lendOrBorrow boolean to indicate whether to reinitialize CBB based of stableToken balance or safeTranche balance
+     * @dev Transmits the the Reinitialization to the CBB
+     * @param _lendOrBorrow boolean to indicate whether to initial deposit should be a 'borrow' or a 'lend'
      * Requirements:
      * - StagingBox must be the owner of the CBB to call this function
      * - Change owner of CBB to be the SB prior to calling this function if not already done
