@@ -21,12 +21,12 @@ Implementation also includes a Staging Box which is an enhanced refundable escro
 
 
 ## Documentation
-See the link to our GitBooks and Technical Paper below
+See the link to our GitBooks below
 
-- [GitBooks](https://app.gitbook.com/s/Gik0CUdZJimrLH14a5vF/~/changes/nuk0LUx1x6lvYQyui4HH/the-elastic-finance-stack/what-are-buttontranches)
-- Technical Paper
+- [GitBooks](https://nimblenavigators.gitbook.io/hourglass/)
 
 ## Audits and Formal Verification
+- See audit folder
 
 ## Connect with the Community
 You can join at the [Discord](https://discord.gg/DGWD2Sms) channel and follow us on [Twitter](https://twitter.com/nimblenavis).
