@@ -83,10 +83,8 @@ contract RedeemSafeSlipsForTranchesAndUnwrap is StagingLoanRouterSetup {
             s_safeSlip.balanceOf(s_lender)
         );
 
-        (uint256 collateralAmount, ) = s_SBLens.viewRedeemSafeSlipsForTranches(
-            s_deployedSB,
-            safeSlipAmount
-        );
+        (uint256 collateralAmount, , , ) = s_SBLens
+            .viewRedeemSafeSlipsForTranches(s_deployedSB, safeSlipAmount);
 
         BeforeBalances memory before = BeforeBalances(
             s_safeSlip.balanceOf(s_lender),

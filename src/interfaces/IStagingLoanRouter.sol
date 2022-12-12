@@ -63,8 +63,7 @@ interface IStagingLoanRouter {
     ) external;
 
     /**
-     * @dev redeems safeSlips for tranches, redeems tranches for rebasing
-     * collateral, unwraps rebasing collateral, and then swaps for stableToken
+     * @dev redeems safeSlips for tranches, redeems tranches for rebasing collateral, unwraps rebasing collateral, and then swaps for stableToken
      * @param _stagingBox The staging box tied to the Convertible Bond
      * @param _safeSlipAmount The amount of lendSlips to be redeemed
      * Requirements:
@@ -77,8 +76,7 @@ interface IStagingLoanRouter {
     ) external;
 
     /**
-     * @dev redeems lendSlips for safeSlips and safeSlips for tranches, redeems tranches for rebasing
-     * collateral, unwraps rebasing collateral, and then swaps for stableToken
+     * @dev redeems lendSlips for safeSlips and safeSlips for tranches, redeems tranches for rebasing collateral, unwraps rebasing collateral, and then swaps for stableToken
      * @param _stagingBox The staging box tied to the Convertible Bond
      * @param _lendSlipAmount The amount of lendSlips to be redeemed
      * Requirements:
@@ -91,8 +89,7 @@ interface IStagingLoanRouter {
     ) external;
 
     /**
-     * @dev redeems riskSlips for riskTranches, redeems tranches for rebasing
-     * collateral, unwraps rebasing collateral
+     * @dev redeems riskSlips for riskTranches, redeems tranches for rebasing collateral, unwraps rebasing collateral
      * @param _stagingBox The staging box tied to the Convertible Bond
      * @param _riskSlipAmount The amount of riskSlips to be redeemed
      * Requirements:

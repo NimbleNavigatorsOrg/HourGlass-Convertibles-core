@@ -8,20 +8,17 @@ import "./IConvertibleBondBox.sol";
 
 interface IStagingBoxFactory {
     event StagingBoxCreated(
-        IConvertibleBondBox convertibleBondBox,
-        uint256 initialPrice,
-        address owner,
         address msgSender,
-        address stagingBox
+        address stagingBox,
+        address slipFactory
     );
 
     event StagingBoxReplaced(
         IConvertibleBondBox convertibleBondBox,
-        uint256 initialPrice,
-        address owner,
         address msgSender,
         address oldStagingBox,
-        address newStagingBox
+        address newStagingBox,
+        address slipFactory
     );
 
     /// @notice Some parameters are invalid

@@ -96,10 +96,8 @@ contract RedeemLendSlipsForTranchesAndUnwrap is StagingLoanRouterSetup {
             maxRedeemableLendSlips
         );
 
-        (uint256 collateralAmount, ) = s_SBLens.viewRedeemLendSlipsForTranches(
-            s_deployedSB,
-            lendSlipAmount
-        );
+        (uint256 collateralAmount, , , ) = s_SBLens
+            .viewRedeemLendSlipsForTranches(s_deployedSB, lendSlipAmount);
 
         BeforeBalances memory before = BeforeBalances(
             s_lendSlip.balanceOf(s_lender),

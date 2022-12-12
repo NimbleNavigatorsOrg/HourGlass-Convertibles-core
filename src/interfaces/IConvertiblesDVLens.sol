@@ -81,7 +81,7 @@ interface IConvertiblesDVLens {
         returns (StagingDataIBO memory);
 
     /**
-     * @dev provides the stats for Staging Box in IBO period
+     * @dev provides the stats for StagingBox after the IBO is completed
      * @param _stagingBox The staging box tied to the Convertible Bond
      * Requirements:
      */
@@ -92,8 +92,8 @@ interface IConvertiblesDVLens {
         returns (StagingDataActive memory);
 
     /**
-     * @dev provides the stats for Staging Box in IBO period
-     * @param _convertibleBondBox The staging box tied to the Convertible Bond
+     * @dev provides the stats for CBB after IBO
+     * @param _convertibleBondBox The CBB being queried
      * Requirements:
      */
 
@@ -103,8 +103,8 @@ interface IConvertiblesDVLens {
         returns (CBBDataActive memory);
 
     /**
-     * @dev provides the stats for Staging Box in IBO period
-     * @param _convertibleBondBox The staging box tied to the Convertible Bond
+     * @dev provides the stats for CBB after maturity
+     * @param _convertibleBondBox The CBB being queried
      * Requirements:
      */
 

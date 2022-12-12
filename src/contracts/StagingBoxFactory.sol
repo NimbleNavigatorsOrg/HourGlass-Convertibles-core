@@ -92,8 +92,8 @@ contract StagingBoxFactory is IStagingBoxFactory, Context {
 
         SlipPair memory SlipData = deploySlips(
             slipFactory,
-            address(convertibleBondBox.safeSlip()),
-            address(convertibleBondBox.riskSlip()),
+            address(convertibleBondBox.safeTranche()),
+            address(convertibleBondBox.riskTranche()),
             address(convertibleBondBox.stableToken())
         );
 
@@ -130,20 +130,17 @@ contract StagingBoxFactory is IStagingBoxFactory, Context {
 
         if (oldStagingBox == address(0)) {
             emit StagingBoxCreated(
-                convertibleBondBox,
-                initialPrice,
-                owner,
                 _msgSender(),
-                address(clone)
+                address(clone),
+                address(slipFactory)
             );
         } else {
             emit StagingBoxReplaced(
                 convertibleBondBox,
-                initialPrice,
-                owner,
                 _msgSender(),
                 oldStagingBox,
-                address(clone)
+                address(clone),
+                address(slipFactory)
             );
         }
 
@@ -154,21 +151,28 @@ contract StagingBoxFactory is IStagingBoxFactory, Context {
 
     function deploySlips(
         ISlipFactory slipFactory,
-        address safeSlip,
-        address riskSlip,
+        address safeTranche,
+        address riskTranche,
         address stableToken
     ) private returns (SlipPair memory) {
+        string memory collateralSymbolSafe = IERC20Metadata(
+            address(safeTranche)
+        ).symbol();
+        string memory collateralSymbolRisk = IERC20Metadata(
+            address(riskTranche)
+        ).symbol();
+
         // clone deploy lend slip
         address lendSlipTokenAddress = slipFactory.createSlip(
-            "Staging-Lender-Slip",
-            IERC20Metadata(safeSlip).name(),
+            "IBO-Buy-Order",
+            string(abi.encodePacked("IBO-BUY-", collateralSymbolSafe)),
             stableToken
         );
 
         //clone deployborrow slip
         address borrowSlipTokenAddress = slipFactory.createSlip(
-            "Staging-Borrower-Slip",
-            IERC20Metadata(riskSlip).name(),
+            "IBO-Issue-Order",
+            string(abi.encodePacked("IBO-ISSUE-", collateralSymbolRisk)),
             stableToken
         );
 
